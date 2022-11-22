@@ -1,0 +1,133 @@
+﻿using Picalines.OuterWilds.SceneRecorder.Utils;
+using UnityEngine;
+using UnityEngine.Rendering;
+
+namespace Picalines.OuterWilds.SceneRecorder.Recorders;
+
+internal sealed class HDRIRecorder : RenderTextureRecorder
+{
+    public int CubemapFaceSize { get; set; } = 2048;
+
+    public Vector3 LocalPositionOffset { get; set; } = Vector3.zero;
+
+    private RenderTexture? _CubemapFrameTexture = null;
+
+    private readonly OWCamera[] _OWCameras = new OWCamera[6];
+
+    private RenderTexture _SourceRenderTexture = null!;
+
+    private RenderTexture _FlippedFrameSourceTexture = null!;
+
+    private static readonly Quaternion[] _CameraRotations = new Quaternion[6]
+    {
+        Quaternion.Euler(0, 90, 0),
+        Quaternion.Euler(0, -90, 0),
+        Quaternion.Euler(90, 0, 0),
+        Quaternion.Euler(-90, 0, 0),
+        Quaternion.identity,
+        Quaternion.Euler(0, 180, 0),
+    };
+
+    public HDRIRecorder()
+    {
+        Awoken += OnAwoken;
+        BeforeRecordingStarted += OnBeforeRecordingStarted;
+        BeforeFrameRecorded += OnBeforeFrameRecorded;
+        AfterRecordingFinished += OnAfterRecordingFinished;
+    }
+
+    private void OnAwoken()
+    {
+        var playerCamera = Locator.GetPlayerCamera();
+
+        for (int i = 0; i < _OWCameras.Length; i++)
+        {
+            var cameraParent = new GameObject($"HDRI Camera #{i + 1}");
+            cameraParent.transform.parent = transform;
+            cameraParent.transform.localPosition = Vector3.zero;
+            cameraParent.transform.localRotation = _CameraRotations[i];
+            cameraParent.transform.localScale = Vector3.one;
+
+            var owCamera = playerCamera.CopyTo(cameraParent);
+
+            owCamera.mainCamera.eventMask = 0;
+            owCamera.useGUILayout = false;
+            owCamera.useViewmodels = false;
+            owCamera.mainCamera.depthTextureMode = DepthTextureMode.None;
+
+            owCamera.aspect = 1;
+            owCamera.fieldOfView = 90;
+
+            owCamera.enabled = false;
+            _OWCameras[i] = owCamera;
+        }
+    }
+
+    protected override RenderTexture ProvideSourceRenderTexture()
+    {
+        _SourceRenderTexture = new RenderTexture(CubemapFaceSize, CubemapFaceSize / 2, 16);
+
+        _FlippedFrameSourceTexture = new RenderTexture(_SourceRenderTexture);
+
+        _CubemapFrameTexture = new RenderTexture(CubemapFaceSize, CubemapFaceSize, 16)
+        {
+            dimension = TextureDimension.Cube,
+        };
+
+        return _SourceRenderTexture;
+    }
+
+    private void OnBeforeRecordingStarted()
+    {
+        for (int i = 0; i < _OWCameras.Length; i++)
+        {
+            var owCamera = _OWCameras[i];
+
+            owCamera.gameObject.transform.localPosition = LocalPositionOffset;
+
+            if (owCamera.targetTexture == null)
+            {
+                owCamera.targetTexture = new RenderTexture(CubemapFaceSize, CubemapFaceSize, 16);
+
+                var commandBuffer = new CommandBuffer();
+                commandBuffer.CopyTexture(owCamera.targetTexture, 0, _CubemapFrameTexture, i);
+                owCamera.mainCamera.AddCommandBuffer(CameraEvent.AfterEverything, commandBuffer);
+            }
+
+            owCamera.enabled = true;
+        }
+    }
+
+    private void OnBeforeFrameRecorded()
+    {
+        //for (int i = 0; i < _OWCameras.Length; i++)
+        //{
+        //    Graphics.CopyTexture(_OWCameras[i].targetTexture, 0, _CubemapFrameTexture, i);
+        //}
+
+        _CubemapFrameTexture!.ConvertToEquirect(_FlippedFrameSourceTexture, Camera.MonoOrStereoscopicEye.Mono);
+
+        Graphics.Blit(_FlippedFrameSourceTexture, _SourceRenderTexture, new Vector2(1, -1), new Vector2(0, 1));
+    }
+
+    private void OnAfterRecordingFinished()
+    {
+        foreach (var owCamera in _OWCameras)
+        {
+            owCamera.enabled = false;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        foreach (var owCamera in _OWCameras)
+        {
+            DestroyImmediate(owCamera.targetTexture);
+            Destroy(owCamera.gameObject);
+        }
+
+        Destroy(_CubemapFrameTexture);
+        Destroy(_FlippedFrameSourceTexture);
+        Destroy(_SourceRenderTexture);
+    }
+}

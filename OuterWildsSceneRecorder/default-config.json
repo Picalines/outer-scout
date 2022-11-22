@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "settings": {
+    "hidePlayerModel": true,
+    "outputDir": "..."
+  }
+}
