@@ -100,11 +100,6 @@ internal sealed class HDRIRecorder : RenderTextureRecorder
 
     private void OnBeforeFrameRecorded()
     {
-        //for (int i = 0; i < _OWCameras.Length; i++)
-        //{
-        //    Graphics.CopyTexture(_OWCameras[i].targetTexture, 0, _CubemapFrameTexture, i);
-        //}
-
         _CubemapFrameTexture!.ConvertToEquirect(_FlippedFrameSourceTexture, Camera.MonoOrStereoscopicEye.Mono);
 
         Graphics.Blit(_FlippedFrameSourceTexture, _SourceRenderTexture, new Vector2(1, -1), new Vector2(0, 1));
