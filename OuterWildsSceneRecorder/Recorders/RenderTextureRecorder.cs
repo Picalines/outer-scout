@@ -107,11 +107,11 @@ internal abstract class RenderTextureRecorder : MonoBehaviour, IRecorder
 
         GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), _SourceRenderTexture);
 
-        float renderedSeconds = (float)_VideoRenderer.FramesRendered / Framerate;
-        float elapsedSeconds = (float)(DateTime.Now - _StartedRecordingAt).TotalSeconds;
+        TimeSpan elapsedRealtime = DateTime.Now - _StartedRecordingAt;
+        TimeSpan elapsedVideo = TimeSpan.FromSeconds((float)_VideoRenderer.FramesRendered / Framerate);
 
         GUI.Box(new Rect(0, 0, 350, 80), GUIContent.none);
-        GUI.Label(new Rect(10, 10, 500, 30), $"Rendered {_VideoRenderer.FramesRendered} frames ({renderedSeconds:f3} seconds)");
-        GUI.Label(new Rect(10, 40, 500, 30), $"{elapsedSeconds:f3} seconds elapsed ({elapsedSeconds / renderedSeconds:f3} times more)");
+        GUI.Label(new Rect(10, 10, 500, 30), $"Rendered {elapsedVideo:hh':'mm':'ss} ({_VideoRenderer.FramesRendered} frames)");
+        GUI.Label(new Rect(10, 40, 500, 30), $"Elapsed {elapsedRealtime:hh':'mm':'ss} ({elapsedRealtime.TotalSeconds / elapsedVideo.TotalSeconds:f3} times more)");
     }
 }
