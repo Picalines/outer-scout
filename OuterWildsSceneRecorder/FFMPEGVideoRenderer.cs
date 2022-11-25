@@ -114,7 +114,7 @@ internal sealed class FFMPEGVideoRenderer : IDisposable
 
     private string RenderFFMPEGArguments()
     {
-        return $"-y -framerate {Framerate} -f image2pipe -i - -r {Framerate} -c:v: libx264 -movflags +faststart -pix_fmt yuv420p -crf 19 {OutFilePath}";
+        return $"-y -framerate {Framerate} -f image2pipe -i - -r {Framerate} -c:v: libx264 -movflags +faststart -pix_fmt yuv420p -crf 20 -q:v 0 {OutFilePath}";
     }
 
     private static unsafe void CopyToUnsafe<T>(in NativeArray<T> nativeArray, T[] array)

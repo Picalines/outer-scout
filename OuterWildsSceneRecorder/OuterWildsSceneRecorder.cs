@@ -2,6 +2,7 @@
 using OWML.ModHelper;
 using Picalines.OuterWilds.SceneRecorder.Recorders;
 using Picalines.OuterWilds.SceneRecorder.Utils;
+using Picalines.OuterWildsSceneRecorder;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -15,9 +16,7 @@ public sealed class OuterWildsSceneRecorder : ModBehaviour
 {
     private const Key _RecordKey = Key.F9;
 
-    private bool _HidePlayerModel = true;
-
-    private string _OutputDirSetting = null!;
+    private SceneRecorderSettings _Settings = null!;
 
     private string _RecordingOutputDir = null!;
 
@@ -33,8 +32,12 @@ public sealed class OuterWildsSceneRecorder : ModBehaviour
 
     public override void Configure(IModConfig config)
     {
-        _HidePlayerModel = config.GetSettingsValue<bool>("hidePlayerModel");
-        _OutputDirSetting = config.GetSettingsValue<string>("outputDir");
+        _Settings = new SceneRecorderSettings(config);
+
+        if (_ComposedRecorder != null)
+        {
+            Destroy(_ComposedRecorder);
+        }
     }
 
     private void Start()
@@ -82,35 +85,36 @@ public sealed class OuterWildsSceneRecorder : ModBehaviour
 
         // background recorder
         var backgroundRecorder = _FreeCamera.Object.gameObject.AddComponent<BackgroundRecorder>();
-        (backgroundRecorder.Width, backgroundRecorder.Height) = (1920, 1080);
+        (backgroundRecorder.Width, backgroundRecorder.Height) = (_Settings.Width, _Settings.Height);
         backgroundRecorder.RenderToGUI = false;
 
         // depth recorder
         var depthRecorder = _FreeCamera.Object.gameObject.AddComponent<DepthRecorder>();
-        (depthRecorder.Width, depthRecorder.Height) = (1920 / 2, 1080 / 2);
+        (depthRecorder.Width, depthRecorder.Height) = (_Settings.Width, _Settings.Height);
         depthRecorder.RenderToGUI = false;
 
         // hdri recorder
         var hdriRecorder = _PlayerCamera.Object.gameObject.AddComponent<HDRIRecorder>();
-        hdriRecorder.CubemapFaceSize = 1024;
-        //hdriRecorder.LocalPositionOffset = Vector3.down; // ?
+        hdriRecorder.CubemapFaceSize = _Settings.HDRIFaceSize;
+        hdriRecorder.LocalPositionOffset = _Settings.HDRIInFeet ? Vector3.down : Vector3.zero;
         hdriRecorder.RenderToGUI = true;
 
         // composed recorder
         _ComposedRecorder = gameObject.AddComponent<ComposedRecorder>();
         _ComposedRecorder.Recorders = new IRecorder[] { backgroundRecorder, depthRecorder, hdriRecorder };
-        _ComposedRecorder.Framerate = 60;
+        _ComposedRecorder.Framerate = _Settings.Framerate;
 
         // on before recording started event
         Action? showPlayerModelAction = null;
         _ComposedRecorder.BeforeRecordingStarted += () =>
         {
-            showPlayerModelAction = DisableEnabledRenderers(_Player.Object.gameObject);
+            showPlayerModelAction = _Settings.HidePlayerModel ? DisableEnabledRenderers(_Player.Object.gameObject) : null;
             _PlayerCamera.Object.gameObject.GetComponent<PlayerCameraController>().SetDegreesY(0);
             Locator.GetQuantumMoon().SetActivation(false);
+
+            ModHelper.Console.WriteLine($"Recording started ({_RecordingOutputDir})");
         };
 
-        // on after recording finished event
         _ComposedRecorder.AfterRecordingFinished += () =>
         {
             var sceneData = SceneData.Capture(_ComposedRecorder.FramesRecorded);
@@ -118,6 +122,8 @@ public sealed class OuterWildsSceneRecorder : ModBehaviour
 
             showPlayerModelAction?.Invoke();
             Locator.GetQuantumMoon().SetActivation(true);
+
+            ModHelper.Console.WriteLine($"Recording finished ({_RecordingOutputDir})");
         };
 
         gameObject.SetActive(true);
@@ -137,12 +143,19 @@ public sealed class OuterWildsSceneRecorder : ModBehaviour
         }
 
         var dateTime = DateTime.Now;
-        _RecordingOutputDir = Path.Combine(_OutputDirSetting, $"{dateTime:dd.MM.yyyy}_{dateTime.Ticks}/");
+        _RecordingOutputDir = Path.Combine(_Settings.OutputDirectory, $"{dateTime:dd.MM.yyyy}_{dateTime.Ticks}/");
         Directory.CreateDirectory(_RecordingOutputDir);
 
-        _ComposedRecorder.Recorders.OfType<BackgroundRecorder>().First().TargetFile = Path.Combine(_RecordingOutputDir, "background.mp4");
-        _ComposedRecorder.Recorders.OfType<DepthRecorder>().First().TargetFile = Path.Combine(_RecordingOutputDir, "depth.mp4");
-        _ComposedRecorder.Recorders.OfType<HDRIRecorder>().First().TargetFile = Path.Combine(_RecordingOutputDir, "hdri.mp4");
+        foreach (var recorder in _ComposedRecorder.Recorders.OfType<RenderTextureRecorder>())
+        {
+            recorder.TargetFile = Path.Combine(_RecordingOutputDir, recorder switch
+            {
+                BackgroundRecorder => "background.mp4",
+                DepthRecorder => "depth.mp4",
+                HDRIRecorder => "hdri.mp4",
+                _ => throw new NotImplementedException(),
+            });
+        }
 
         _ComposedRecorder!.enabled = true;
     }
