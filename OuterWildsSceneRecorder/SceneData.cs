@@ -1,6 +1,9 @@
 ﻿using Newtonsoft.Json;
 using Picalines.OuterWilds.SceneRecorder.Recorders;
 using Picalines.OuterWilds.SceneRecorder.Utils;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Picalines.OuterWilds.SceneRecorder;
@@ -15,29 +18,33 @@ internal sealed class SceneData
         [JsonProperty("rotation"), JsonConverter(typeof(QuaternionJsonConverter))]
         public Quaternion Rotation { get; private set; }
 
-        public TransformData(Vector3 position, Quaternion rotation)
+        [JsonProperty("scale"), JsonConverter(typeof(Vector3JsonConverter))]
+        public Vector3 Scale { get; private set; }
+
+        public TransformData(Vector3 position, Quaternion rotation, Vector3 scale)
         {
             Position = position;
             Rotation = rotation;
+            Scale = scale;
         }
 
         public TransformData(Transform transform, Vector3 localPositionOffset = default)
-            : this(transform.TransformPoint(localPositionOffset), transform.rotation)
+            : this(transform.TransformPoint(localPositionOffset), transform.rotation, transform.localScale)
         {
         }
     }
 
-    public sealed class BodyData
+    public sealed class GameObjectData
     {
-        [JsonProperty("name")]
-        public string Name { get; private set; }
+        [JsonProperty("path")]
+        public string Path { get; private set; }
 
         [JsonProperty("transform")]
         public TransformData Transform { get; private set; }
 
-        public BodyData(string name, TransformData transform)
+        public GameObjectData(string path, TransformData transform)
         {
-            Name = name;
+            Path = path;
             Transform = transform;
         }
     }
@@ -79,11 +86,17 @@ internal sealed class SceneData
     [JsonProperty("frames")]
     public int Frames { get; private set; }
 
-    [JsonProperty("body")]
-    public BodyData Body { get; private set; }
+    [JsonProperty("framerate")]
+    public int Framerate { get; private set; }
 
     [JsonProperty("player")]
     public PlayerData Player { get; private set; }
+
+    [JsonProperty("ground_body")]
+    public GameObjectData GroundBody { get; private set; }
+
+    [JsonProperty("sector_objects")]
+    public IReadOnlyList<GameObjectData> SectorObjects { get; private set; }
 
     [JsonProperty("player_camera")]
     public CameraData PlayerCamera { get; private set; }
@@ -96,21 +109,25 @@ internal sealed class SceneData
 
     private SceneData(
         int frames,
-        BodyData body,
+        int framerate,
         PlayerData player,
+        GameObjectData body,
+        IReadOnlyList<GameObjectData> sectorObjects,
         CameraData playerCamera,
         CameraData backgroundCamera,
         CameraData depthCamera)
     {
         Frames = frames;
-        Body = body;
+        Framerate = framerate;
         Player = player;
+        GroundBody = body;
+        SectorObjects = sectorObjects;
         PlayerCamera = playerCamera;
         BackgroundCamera = backgroundCamera;
         DepthCamera = depthCamera;
     }
 
-    public static SceneData Capture(int frames)
+    public static SceneData Capture(int frames, int framerate)
     {
         var player = Locator.GetPlayerBody();
         var playerCamera = Locator.GetPlayerCamera();
@@ -121,12 +138,19 @@ internal sealed class SceneData
             ?? Locator.GetAstroObject(AstroObject.Name.TimberHearth).GetOWRigidbody())
             .gameObject;
 
-        var bodyData = new BodyData(
-            name: playerGroundBody.name,
-            transform: new(playerGroundBody.transform));
+        var playerSectorDetector = Locator.GetPlayerSectorDetector();
 
         var playerData = new PlayerData(
             transform: new(player.transform, localPositionOffset: Vector3.down));
+
+        var bodyData = CaptureGameObjectData(playerGroundBody);
+
+        var sectorObjects = playerSectorDetector.IsWithinASector() is false
+            ? Array.Empty<GameObjectData>()
+            : playerSectorDetector.GetLastEnteredSector()
+                .GetComponentsInChildren<MeshRenderer>()
+                .Select(renderer => CaptureGameObjectData(renderer.gameObject))
+                .ToArray();
 
         var playerCameraData = CaptureCameraData(playerCamera);
 
@@ -134,20 +158,42 @@ internal sealed class SceneData
 
         var depthCameraData = CaptureCameraData(depthCamera);
 
-        return new SceneData(frames, bodyData, playerData, playerCameraData, freeCameraData, depthCameraData);
-
-        static CameraData CaptureCameraData(OWCamera owCamera)
-        {
-            return new CameraData(
-                fieldOfView: owCamera.fieldOfView,
-                nearClipPlane: owCamera.nearClipPlane,
-                farClipPlane: owCamera.farClipPlane,
-                transform: new(owCamera.transform));
-        }
+        return new SceneData(frames, framerate, playerData, bodyData, sectorObjects, playerCameraData, freeCameraData, depthCameraData);
     }
 
     public string ToJSON()
     {
         return JsonConvert.SerializeObject(this);
+    }
+
+    private static GameObjectData CaptureGameObjectData(GameObject gameObject)
+    {
+        return new GameObjectData(
+            path: PathToGameObject(gameObject),
+            transform: new(gameObject.transform));
+    }
+
+    private static CameraData CaptureCameraData(OWCamera owCamera)
+    {
+        return new CameraData(
+            fieldOfView: owCamera.fieldOfView,
+            nearClipPlane: owCamera.nearClipPlane,
+            farClipPlane: owCamera.farClipPlane,
+            transform: new(owCamera.transform));
+    }
+
+    private static string PathToGameObject(GameObject gameObject)
+    {
+        var path = new Stack<string>();
+
+        var currentTransform = gameObject.transform;
+
+        while (currentTransform != null)
+        {
+            path.Push(currentTransform.gameObject.name);
+            currentTransform = currentTransform.parent;
+        }
+
+        return string.Join("/", path);
     }
 }
