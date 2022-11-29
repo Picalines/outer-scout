@@ -117,7 +117,7 @@ public sealed class OuterWildsSceneRecorder : ModBehaviour
 
         _ComposedRecorder.AfterRecordingFinished += () =>
         {
-            var sceneData = SceneData.Capture(_ComposedRecorder.FramesRecorded, _Settings.Framerate);
+            var sceneData = SceneData.Capture(_ComposedRecorder.FramesRecorded, _Settings);
             File.WriteAllText(Path.Combine(_RecordingOutputDir, ".owscene"), sceneData.ToJSON());
 
             showPlayerModelAction?.Invoke();
