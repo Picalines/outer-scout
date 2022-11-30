@@ -35,18 +35,29 @@ internal sealed class SceneData
         }
     }
 
-    public sealed class GameObjectData
+    public class GameObjectData
     {
-        [JsonProperty("path")]
-        public string Path { get; private set; }
+        [JsonProperty("name")]
+        public string Name { get; private set; }
 
         [JsonProperty("transform")]
         public TransformData Transform { get; private set; }
 
-        public GameObjectData(string path, TransformData transform)
+        public GameObjectData(string name, TransformData transform)
         {
-            Path = path;
+            Name = name;
             Transform = transform;
+        }
+    }
+
+    public sealed class SectorObjectData : GameObjectData
+    {
+        [JsonProperty("mesh_asset_path")]
+        public string MeshAssetPath { get; private set; }
+
+        public SectorObjectData(string name, TransformData transform, string meshAssetPath) : base(name, transform)
+        {
+            MeshAssetPath = meshAssetPath;
         }
     }
 
@@ -97,7 +108,7 @@ internal sealed class SceneData
     public GameObjectData GroundBody { get; private set; }
 
     [JsonProperty("sector_objects")]
-    public IReadOnlyList<GameObjectData> SectorObjects { get; private set; }
+    public IReadOnlyList<SectorObjectData> SectorObjects { get; private set; }
 
     [JsonProperty("player_camera")]
     public CameraData PlayerCamera { get; private set; }
@@ -113,7 +124,7 @@ internal sealed class SceneData
         SceneRecorderSettings recorderSettings,
         PlayerData player,
         GameObjectData body,
-        IReadOnlyList<GameObjectData> sectorObjects,
+        IReadOnlyList<SectorObjectData> sectorObjects,
         CameraData playerCamera,
         CameraData backgroundCamera,
         CameraData depthCamera)
@@ -160,26 +171,41 @@ internal sealed class SceneData
         return JsonConvert.SerializeObject(this);
     }
 
-    private static GameObjectData[] CaptureSectorObjects(PlayerSectorDetector playerSectorDetector)
+    private static SectorObjectData[] CaptureSectorObjects(PlayerSectorDetector playerSectorDetector)
     {
+        if (StreamingManager.s_tableLoaded is false)
+        {
+            return Array.Empty<SectorObjectData>();
+        }
+
         return playerSectorDetector._sectorList switch
         {
-            { Count: 0 } => Array.Empty<GameObjectData>(),
+            { Count: 0 } => Array.Empty<SectorObjectData>(),
             { Count: 1 } singleSector => CaptureRenderersOf(singleSector[0].gameObject).ToArray(),
             { } sectors => CaptureRenderersOf(sectors[1].gameObject).ToArray(),
         };
 
-        static IEnumerable<GameObjectData> CaptureRenderersOf(GameObject sector)
+        static IEnumerable<SectorObjectData> CaptureRenderersOf(GameObject sector)
         {
-            return sector.GetComponentsInChildren<MeshRenderer>()
-                .Select(renerer => CaptureGameObjectData(renerer.gameObject));
+            return sector.GetComponentsInChildren<StreamingMeshHandle>()
+                .Select(handle => new SectorObjectData(
+                    handle.gameObject.name,
+                    new(handle.gameObject.transform),
+                    MeshAssetPath(StreamingManager.s_streamingAssetBundleTable, handle)));
+        }
+
+        static string MeshAssetPath(StreamingAssetBundleTable streamingAssetBundleTable, StreamingMeshHandle handle)
+        {
+            return streamingAssetBundleTable.assetBundles
+                .First(bundle => bundle.assetBundleName == handle.assetBundle)
+                .meshNamesByID[handle.meshIndex];
         }
     }
 
     private static GameObjectData CaptureGameObjectData(GameObject gameObject)
     {
         return new GameObjectData(
-            path: PathToGameObject(gameObject),
+            name: gameObject.name,
             transform: new(gameObject.transform));
     }
 
@@ -190,20 +216,5 @@ internal sealed class SceneData
             nearClipPlane: owCamera.nearClipPlane,
             farClipPlane: owCamera.farClipPlane,
             transform: new(owCamera.transform));
-    }
-
-    private static string PathToGameObject(GameObject gameObject)
-    {
-        var path = new Stack<string>();
-
-        var currentTransform = gameObject.transform;
-
-        while (currentTransform != null)
-        {
-            path.Push(currentTransform.gameObject.name);
-            currentTransform = currentTransform.parent;
-        }
-
-        return string.Join("/", path);
     }
 }
