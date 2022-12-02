@@ -1,12 +1,12 @@
 {
   "enabled": true,
   "settings": {
-    "hidePlayerModel": true,
-    "outputDir": "...",
+    "hide_player_model": true,
+    "output_dir": "...",
     "framerate": 60,
     "width": 1920,
     "height": 1080,
-    "hdriFaceSize": 1024,
-    "hdriInFeet": false
+    "hdri_face_size": 1024,
+    "hdri_in_feet": false
   }
 }

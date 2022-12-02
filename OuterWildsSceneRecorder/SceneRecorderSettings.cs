@@ -9,7 +9,7 @@ namespace Picalines.OuterWildsSceneRecorder;
 
 internal sealed class SceneRecorderSettings
 {
-    [JsonProperty("outputDir")]
+    [JsonProperty("output_dir")]
     public string OutputDirectory { get; private set; }
 
     [JsonProperty("framerate")]
@@ -21,13 +21,13 @@ internal sealed class SceneRecorderSettings
     [JsonProperty("height")]
     public int Height { get; private set; }
 
-    [JsonProperty("hdriFaceSize")]
+    [JsonProperty("hdri_face_size")]
     public int HDRIFaceSize { get; private set; }
 
-    [JsonProperty("hidePlayerModel")]
+    [JsonProperty("hide_player_model")]
     public bool HidePlayerModel { get; private set; }
 
-    [JsonProperty("hdriInFeet")]
+    [JsonProperty("hdri_in_feet")]
     public bool HDRIInFeet { get; private set; }
 
     private static readonly (PropertyInfo, JsonPropertyAttribute)[] _JsonProperties;
