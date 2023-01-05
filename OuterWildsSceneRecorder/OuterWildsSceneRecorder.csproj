@@ -9,14 +9,15 @@
 		<CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
 		<NoWarn>MSB3270</NoWarn>
 		<Nullable>enable</Nullable>
-		<RootNamespace>Picalines.OuterWildsSceneRecorder</RootNamespace>
+		<RootNamespace>Picalines.OuterWilds.SceneRecorder</RootNamespace>
+		<LangVersion>11.0</LangVersion>
 	</PropertyGroup>
 	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
 		<DebugType>none</DebugType>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Hafner.Compatibility.NullableReferenceTypeAttributes" Version="1.0.0" />
-		<PackageReference Include="OWML" Version="2.7.4" />
+		<PackageReference Include="OWML" Version="2.9.0" />
 		<PackageReference Include="OuterWildsGameLibs" Version="1.1.13.393" />
 		<PackageReference Include="HarmonyX" Version="2.10.1" />
 	</ItemGroup>

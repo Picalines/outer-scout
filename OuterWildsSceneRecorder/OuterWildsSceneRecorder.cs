@@ -86,18 +86,18 @@ public sealed class OuterWildsSceneRecorder : ModBehaviour
         // background recorder
         var backgroundRecorder = _FreeCamera.Object.gameObject.AddComponent<BackgroundRecorder>();
         (backgroundRecorder.Width, backgroundRecorder.Height) = (_Settings.Width, _Settings.Height);
-        backgroundRecorder.RenderToGUI = false;
+        backgroundRecorder.RenderInfoToGUI = false;
 
         // depth recorder
         var depthRecorder = _FreeCamera.Object.gameObject.AddComponent<DepthRecorder>();
         (depthRecorder.Width, depthRecorder.Height) = (_Settings.Width, _Settings.Height);
-        depthRecorder.RenderToGUI = false;
+        depthRecorder.RenderInfoToGUI = false;
 
         // hdri recorder
         var hdriRecorder = _PlayerCamera.Object.gameObject.AddComponent<HDRIRecorder>();
         hdriRecorder.CubemapFaceSize = _Settings.HDRIFaceSize;
         hdriRecorder.LocalPositionOffset = _Settings.HDRIInFeet ? Vector3.down : Vector3.zero;
-        hdriRecorder.RenderToGUI = true;
+        hdriRecorder.RenderInfoToGUI = true; // TODO: RecorderGUIRenderer
 
         // composed recorder
         _ComposedRecorder = gameObject.AddComponent<ComposedRecorder>();
@@ -117,11 +117,11 @@ public sealed class OuterWildsSceneRecorder : ModBehaviour
 
         _ComposedRecorder.AfterRecordingFinished += () =>
         {
-            var sceneData = SceneData.Capture(_ComposedRecorder.FramesRecorded, _Settings);
-            File.WriteAllText(Path.Combine(_RecordingOutputDir, ".owscene"), sceneData.ToJSON());
-
             showPlayerModelAction?.Invoke();
             Locator.GetQuantumMoon().SetActivation(true);
+
+            var sceneData = SceneData.Capture(_ComposedRecorder.FramesRecorded, _Settings);
+            File.WriteAllText(Path.Combine(_RecordingOutputDir, ".owscene"), sceneData.ToJSON());
 
             ModHelper.Console.WriteLine($"Recording finished ({_RecordingOutputDir})");
         };
@@ -148,6 +148,8 @@ public sealed class OuterWildsSceneRecorder : ModBehaviour
 
         foreach (var recorder in _ComposedRecorder.Recorders.OfType<RenderTextureRecorder>())
         {
+            recorder.ModConsole = ModHelper.Console;
+
             recorder.TargetFile = Path.Combine(_RecordingOutputDir, recorder switch
             {
                 BackgroundRecorder => "background.mp4",

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using OWML.Common;
+using Picalines.OuterWilds.SceneRecorder.FFmpeg;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
@@ -6,11 +8,13 @@ namespace Picalines.OuterWilds.SceneRecorder.Recorders;
 
 internal abstract class RenderTextureRecorder : MonoBehaviour, IRecorder
 {
+    public IModConsole ModConsole { get; set; } = null!;
+
     public string? TargetFile { get; set; }
 
     public int Framerate { get; set; }
 
-    public bool RenderToGUI { get; set; } = false;
+    public bool RenderInfoToGUI { get; set; } = false;
 
     public event Action? Awoken;
 
@@ -22,7 +26,7 @@ internal abstract class RenderTextureRecorder : MonoBehaviour, IRecorder
 
     private RenderTexture? _SourceRenderTexture = null;
 
-    private FFMPEGVideoRenderer? _VideoRenderer = null;
+    private FFmpegTextureRecorder? _VideoRenderer = null;
 
     private bool _IsInAwake = false;
 
@@ -64,7 +68,7 @@ internal abstract class RenderTextureRecorder : MonoBehaviour, IRecorder
         if (TargetFile is null)
             throw new ArgumentException(nameof(TargetFile));
 
-        _VideoRenderer = new FFMPEGVideoRenderer(_SourceRenderTexture, Framerate, TargetFile);
+        _VideoRenderer = new FFmpegTextureRecorder(ModConsole, _SourceRenderTexture, Framerate, TargetFile);
         _StartedRecordingAt = DateTime.Now;
         Time.captureFramerate = Framerate;
     }
@@ -78,7 +82,7 @@ internal abstract class RenderTextureRecorder : MonoBehaviour, IRecorder
 
         BeforeFrameRecorded?.Invoke();
 
-        _VideoRenderer.RenderFrameAsync();
+        _VideoRenderer.RenderFrame();
     }
 
     private void OnDisable()
@@ -100,7 +104,7 @@ internal abstract class RenderTextureRecorder : MonoBehaviour, IRecorder
 
     private void OnGUI()
     {
-        if (this is not { RenderToGUI: true, IsRecording: true })
+        if (this is not { RenderInfoToGUI: true, IsRecording: true })
         {
             return;
         }
