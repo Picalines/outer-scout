@@ -6,22 +6,22 @@ namespace Picalines.OuterWilds.SceneRecorder.FFmpeg;
 
 internal sealed class FFmpegTextureRecorder : IDisposable
 {
-    public int FrameRate { get; }
+    public int Framerate { get; }
 
     public string OutputFilePath { get; }
 
     public Texture SourceTexture { get; }
 
-    public int FramesRendered { get; private set; } = 0;
+    public int FramesRecorded { get; private set; } = 0;
 
-    private readonly FFmpegSession _FFmpegSession;
+    private readonly FFmpegAsyncGPUReadback _FFmpegReadback;
 
     private bool _IsDisposed = false;
 
     public FFmpegTextureRecorder(IModConsole modConsole, Texture sourceTexture, int framerate, string outputFilePath)
     {
         SourceTexture = sourceTexture;
-        FrameRate = framerate;
+        Framerate = framerate;
         OutputFilePath = outputFilePath;
 
         var ffmpegArguments = new CommandLineArguments()
@@ -30,7 +30,7 @@ internal sealed class FFmpegTextureRecorder : IDisposable
             .Add("-pix_fmt rgba")
             .Add("-colorspace bt709")
             .Add($"-video_size {sourceTexture.width}x{sourceTexture.height}")
-            .Add($"-r {FrameRate}")
+            .Add($"-r {Framerate}")
             .Add("-i -")
             .Add("-c:v libx264")
             .Add("-movflags +faststart")
@@ -40,14 +40,17 @@ internal sealed class FFmpegTextureRecorder : IDisposable
             .Add("-q:v 0")
             .Add(OutputFilePath);
 
-        FFmpegSession.TryCreate(modConsole, ffmpegArguments.ToString(), out _FFmpegSession!);
+        if (FFmpegAsyncGPUReadback.TryCreate(modConsole, ffmpegArguments.ToString(), out _FFmpegReadback!) is false)
+        {
+            throw new InvalidOperationException($"failed to create {nameof(FFmpegAsyncGPUReadback)}");
+        }
     }
 
-    public void RenderFrame()
+    public void RecordFrame()
     {
-        _FFmpegSession.PushFrame(SourceTexture);
-        _FFmpegSession.CompletePushFrames();
-        FramesRendered++;
+        _FFmpegReadback.PushFrame(SourceTexture);
+        _FFmpegReadback.CompletePushFrames();
+        FramesRecorded++;
     }
 
     public void Dispose()
@@ -57,7 +60,7 @@ internal sealed class FFmpegTextureRecorder : IDisposable
             return;
         }
 
-        _FFmpegSession.Dispose();
+        _FFmpegReadback.Dispose();
 
         _IsDisposed = true;
     }

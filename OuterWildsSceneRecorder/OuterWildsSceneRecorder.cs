@@ -2,7 +2,6 @@
 using OWML.ModHelper;
 using Picalines.OuterWilds.SceneRecorder.Recorders;
 using Picalines.OuterWilds.SceneRecorder.Utils;
-using Picalines.OuterWildsSceneRecorder;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -12,7 +11,7 @@ using UnityEngine.InputSystem;
 
 namespace Picalines.OuterWilds.SceneRecorder;
 
-public sealed class OuterWildsSceneRecorder : ModBehaviour
+internal sealed class OuterWildsSceneRecorder : ModBehaviour
 {
     private const Key _RecordKey = Key.F9;
 
@@ -86,23 +85,22 @@ public sealed class OuterWildsSceneRecorder : ModBehaviour
         // background recorder
         var backgroundRecorder = _FreeCamera.Object.gameObject.AddComponent<BackgroundRecorder>();
         (backgroundRecorder.Width, backgroundRecorder.Height) = (_Settings.Width, _Settings.Height);
-        backgroundRecorder.RenderInfoToGUI = false;
 
         // depth recorder
         var depthRecorder = _FreeCamera.Object.gameObject.AddComponent<DepthRecorder>();
         (depthRecorder.Width, depthRecorder.Height) = (_Settings.Width, _Settings.Height);
-        depthRecorder.RenderInfoToGUI = false;
 
         // hdri recorder
         var hdriRecorder = _PlayerCamera.Object.gameObject.AddComponent<HDRIRecorder>();
         hdriRecorder.CubemapFaceSize = _Settings.HDRIFaceSize;
         hdriRecorder.LocalPositionOffset = _Settings.HDRIInFeet ? Vector3.down : Vector3.zero;
-        hdriRecorder.RenderInfoToGUI = true; // TODO: RecorderGUIRenderer
+
+        hdriRecorder.gameObject.AddComponent<RenderTextureRecorderGUI>();
 
         // composed recorder
         _ComposedRecorder = gameObject.AddComponent<ComposedRecorder>();
         _ComposedRecorder.Recorders = new IRecorder[] { backgroundRecorder, depthRecorder, hdriRecorder };
-        _ComposedRecorder.Framerate = _Settings.Framerate;
+        _ComposedRecorder.Framerate = _Settings.FrameRate;
 
         // on before recording started event
         Action? showPlayerModelAction = null;

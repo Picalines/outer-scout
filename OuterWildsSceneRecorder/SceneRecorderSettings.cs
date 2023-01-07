@@ -3,7 +3,7 @@ using OWML.Common;
 using System.Linq;
 using System.Reflection;
 
-namespace Picalines.OuterWildsSceneRecorder;
+namespace Picalines.OuterWilds.SceneRecorder;
 
 #pragma warning disable CS8618
 
@@ -13,7 +13,7 @@ internal sealed class SceneRecorderSettings
     public string OutputDirectory { get; private set; }
 
     [JsonProperty("framerate")]
-    public int Framerate { get; private set; }
+    public int FrameRate { get; private set; }
 
     [JsonProperty("width")]
     public int Width { get; private set; }

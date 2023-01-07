@@ -14,8 +14,6 @@ internal abstract class RenderTextureRecorder : MonoBehaviour, IRecorder
 
     public int Framerate { get; set; }
 
-    public bool RenderInfoToGUI { get; set; } = false;
-
     public event Action? Awoken;
 
     public event Action? BeforeRecordingStarted;
@@ -26,25 +24,28 @@ internal abstract class RenderTextureRecorder : MonoBehaviour, IRecorder
 
     private RenderTexture? _SourceRenderTexture = null;
 
-    private FFmpegTextureRecorder? _VideoRenderer = null;
+    private FFmpegTextureRecorder? _FFmpegRecorder = null;
 
     private bool _IsInAwake = false;
 
-    private DateTime _StartedRecordingAt;
-
     private int _LastFramesRendered = 0;
 
-    [MemberNotNullWhen(true, nameof(_VideoRenderer))]
+    [MemberNotNullWhen(true, nameof(_FFmpegRecorder))]
     public bool IsRecording
     {
-        get => _VideoRenderer is not null;
+        get => _FFmpegRecorder is not null;
     }
 
     public int FramesRecorded
     {
-        get => _VideoRenderer is not null
-            ? _LastFramesRendered = _VideoRenderer.FramesRendered
+        get => _FFmpegRecorder is not null
+            ? _LastFramesRendered = _FFmpegRecorder.FramesRecorded
             : _LastFramesRendered;
+    }
+
+    public RenderTexture? SourceRenderTexture
+    {
+        get => _SourceRenderTexture;
     }
 
     protected abstract RenderTexture ProvideSourceRenderTexture();
@@ -68,8 +69,7 @@ internal abstract class RenderTextureRecorder : MonoBehaviour, IRecorder
         if (TargetFile is null)
             throw new ArgumentException(nameof(TargetFile));
 
-        _VideoRenderer = new FFmpegTextureRecorder(ModConsole, _SourceRenderTexture, Framerate, TargetFile);
-        _StartedRecordingAt = DateTime.Now;
+        _FFmpegRecorder = new FFmpegTextureRecorder(ModConsole, _SourceRenderTexture, Framerate, TargetFile);
         Time.captureFramerate = Framerate;
     }
 
@@ -82,7 +82,7 @@ internal abstract class RenderTextureRecorder : MonoBehaviour, IRecorder
 
         BeforeFrameRecorded?.Invoke();
 
-        _VideoRenderer.RenderFrame();
+        _FFmpegRecorder.RecordFrame();
     }
 
     private void OnDisable()
@@ -96,26 +96,9 @@ internal abstract class RenderTextureRecorder : MonoBehaviour, IRecorder
 
         _ = FramesRecorded; // update counter
 
-        _VideoRenderer.Dispose();
-        _VideoRenderer = null;
+        _FFmpegRecorder.Dispose();
+        _FFmpegRecorder = null;
 
         AfterRecordingFinished?.Invoke();
-    }
-
-    private void OnGUI()
-    {
-        if (this is not { RenderInfoToGUI: true, IsRecording: true })
-        {
-            return;
-        }
-
-        GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), _SourceRenderTexture);
-
-        TimeSpan elapsedRealtime = DateTime.Now - _StartedRecordingAt;
-        TimeSpan elapsedVideo = TimeSpan.FromSeconds((float)_VideoRenderer.FramesRendered / Framerate);
-
-        GUI.Box(new Rect(0, 0, 350, 80), GUIContent.none);
-        GUI.Label(new Rect(10, 10, 500, 30), $"Rendered {elapsedVideo:hh':'mm':'ss} ({_VideoRenderer.FramesRendered} frames)");
-        GUI.Label(new Rect(10, 40, 500, 30), $"Elapsed {elapsedRealtime:hh':'mm':'ss} ({elapsedRealtime.TotalSeconds / elapsedVideo.TotalSeconds:f3} times more)");
     }
 }

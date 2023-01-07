@@ -3,7 +3,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Utils;
+namespace Picalines.OuterWilds.SceneRecorder.Utils.Json;
 
 internal sealed class Vector3JsonConverter : JsonConverter<Vector3>
 {

@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Picalines.OuterWilds.SceneRecorder.Recorders;
-using Picalines.OuterWilds.SceneRecorder.Utils;
-using Picalines.OuterWildsSceneRecorder;
+using Picalines.OuterWilds.SceneRecorder.Utils.Json;
 using UnityEngine;
 
 namespace Picalines.OuterWilds.SceneRecorder;

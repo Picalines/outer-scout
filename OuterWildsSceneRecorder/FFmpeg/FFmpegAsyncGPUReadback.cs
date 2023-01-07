@@ -9,7 +9,7 @@ using UnityEngine.Rendering;
 
 namespace Picalines.OuterWilds.SceneRecorder.FFmpeg;
 
-internal sealed class FFmpegSession : IDisposable
+internal sealed class FFmpegAsyncGPUReadback : IDisposable
 {
     private readonly IModConsole _ModConsole;
 
@@ -17,7 +17,7 @@ internal sealed class FFmpegSession : IDisposable
 
     private readonly List<AsyncGPUReadbackRequest> _ReadbackQueue = new(4);
 
-    public static bool TryCreate(IModConsole modConsole, string arguments, [NotNullWhen(true)] out FFmpegSession? session)
+    public static bool TryCreate(IModConsole modConsole, string arguments, [NotNullWhen(true)] out FFmpegAsyncGPUReadback? session)
     {
         if (SystemInfo.supportsAsyncGPUReadback is false)
         {
@@ -26,22 +26,14 @@ internal sealed class FFmpegSession : IDisposable
             return false;
         }
 
-        session = new FFmpegSession(modConsole, arguments);
+        session = new FFmpegAsyncGPUReadback(modConsole, arguments);
         return true;
     }
 
-    private FFmpegSession(IModConsole modConsole, string arguments)
+    private FFmpegAsyncGPUReadback(IModConsole modConsole, string arguments)
     {
         _ModConsole = modConsole;
         _Pipe = new FFmpegPipe(modConsole, arguments);
-    }
-
-    ~FFmpegSession()
-    {
-        if (_Pipe is not null)
-        {
-            _ModConsole.WriteLine("ffmpeg pipe closed before work finished", MessageType.Error);
-        }
     }
 
     public void PushFrame(Texture source)

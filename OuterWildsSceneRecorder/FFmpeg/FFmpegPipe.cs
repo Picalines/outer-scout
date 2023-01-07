@@ -21,10 +21,10 @@ internal sealed class FFmpegPipe : IDisposable
     private readonly Thread _CopyThread;
     private readonly Thread _PipeThread;
 
-    private readonly AutoResetEvent _CopyPing = new(initialState: false);
-    private readonly AutoResetEvent _CopyPong = new(initialState: false);
-    private readonly AutoResetEvent _PipePing = new(initialState: false);
-    private readonly AutoResetEvent _PipePong = new(initialState: false);
+    private readonly AutoResetEvent _CopyEvent = new(initialState: false);
+    private readonly AutoResetEvent _CopiedEvent = new(initialState: false);
+    private readonly AutoResetEvent _PipeEvent = new(initialState: false);
+    private readonly AutoResetEvent _PipedEvent = new(initialState: false);
 
     private readonly Queue<NativeArray<byte>> _CopyQueue = new();
     private readonly Queue<byte[]> _PipeQueue = new();
@@ -56,33 +56,35 @@ internal sealed class FFmpegPipe : IDisposable
 
     public void PushFrameData(NativeArray<byte> data)
     {
-        lock (_CopyQueue)
-        {
-            _CopyQueue.Enqueue(data);
-        }
+        lock (_CopyQueue) _CopyQueue.Enqueue(data);
 
-        _CopyPing.Set();
+        _CopyEvent.Set();
     }
 
     public void SyncFrameData()
     {
         while (_CopyQueue.Count > 0)
         {
-            _CopyPong.WaitOne();
+            _CopiedEvent.WaitOne();
         }
 
         while (_PipeQueue.Count > 4)
         {
-            _PipePong.WaitOne();
+            _PipedEvent.WaitOne();
         }
     }
 
     public void Close()
     {
+        if (_ThreadsAreTerminated)
+        {
+            return;
+        }
+
         _ThreadsAreTerminated = true;
 
-        _CopyPing.Set();
-        _PipePing.Set();
+        _CopyEvent.Set();
+        _PipeEvent.Set();
 
         _CopyThread.Join();
         _PipeThread.Join();
@@ -96,10 +98,7 @@ internal sealed class FFmpegPipe : IDisposable
 
     public void Dispose()
     {
-        if (_ThreadsAreTerminated is false)
-        {
-            Close();
-        }
+        Close();
     }
 
     ~FFmpegPipe()
@@ -114,7 +113,7 @@ internal sealed class FFmpegPipe : IDisposable
     {
         while (_ThreadsAreTerminated is false)
         {
-            _CopyPing.WaitOne();
+            _CopyEvent.WaitOne();
 
             while (_CopyQueue.Count > 0)
             {
@@ -135,10 +134,10 @@ internal sealed class FFmpegPipe : IDisposable
                 }
 
                 lock (_PipeQueue) _PipeQueue.Enqueue(buffer!);
-                _PipePing.Set();
+                _PipeEvent.Set();
 
                 lock (_CopyQueue) _CopyQueue.Dequeue();
-                _CopyPong.Set();
+                _CopiedEvent.Set();
             }
         }
     }
@@ -149,7 +148,7 @@ internal sealed class FFmpegPipe : IDisposable
 
         while (_ThreadsAreTerminated is false)
         {
-            _PipePing.WaitOne();
+            _PipeEvent.WaitOne();
 
             while (_PipeQueue.Count > 0)
             {
@@ -157,19 +156,12 @@ internal sealed class FFmpegPipe : IDisposable
                 byte[] buffer;
                 lock (_PipeQueue) buffer = _PipeQueue.Dequeue();
 
-                try
-                {
-                    ffmpegPipe.Write(buffer, 0, buffer.Length);
-                    ffmpegPipe.Flush();
-                }
-                catch (Exception exception)
-                {
-                    lock (_ModConsole) _ModConsole.WriteLine($"{nameof(PipeThread)} exception: {exception}", MessageType.Error);
-                }
+                ffmpegPipe.Write(buffer, 0, buffer.Length);
+                ffmpegPipe.Flush();
 
                 lock (_FreeBuffer) _FreeBuffer.Enqueue(buffer);
 
-                _PipePong.Set();
+                _PipedEvent.Set();
             }
         }
     }
