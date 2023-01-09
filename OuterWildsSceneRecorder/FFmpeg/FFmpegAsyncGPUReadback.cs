@@ -30,6 +30,12 @@ internal sealed class FFmpegAsyncGPUReadback : IDisposable
         return true;
     }
 
+    [MemberNotNullWhen(false, nameof(_Pipe))]
+    public bool IsClosed
+    {
+        get => _Pipe is null;
+    }
+
     private FFmpegAsyncGPUReadback(IModConsole modConsole, string arguments)
     {
         _ModConsole = modConsole;
@@ -38,9 +44,9 @@ internal sealed class FFmpegAsyncGPUReadback : IDisposable
 
     public void PushFrame(Texture source)
     {
-        if (_Pipe is null)
+        if (IsClosed)
         {
-            return;
+            throw new InvalidOperationException($"{nameof(FFmpegAsyncGPUReadback)} is closed");
         }
 
         ProcessReadbackQueue();
@@ -57,7 +63,7 @@ internal sealed class FFmpegAsyncGPUReadback : IDisposable
 
     public void Close()
     {
-        if (_Pipe is null)
+        if (IsClosed)
         {
             return;
         }
@@ -75,7 +81,7 @@ internal sealed class FFmpegAsyncGPUReadback : IDisposable
     {
         if (_ReadbackQueue.Count > 6)
         {
-            _ModConsole.WriteLine("Too many GPU readback requests", MessageType.Error);
+            _ModConsole.WriteLine("too many GPU readback requests", MessageType.Error);
             return;
         }
 

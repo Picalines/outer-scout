@@ -25,7 +25,7 @@ internal static class OWCameraExtensions
 
         cameraParent.SetActive(true); // OWCamera.Awake
 
-        // after awake inorder to set properties on UnityEngine.Camera
+        // after awake in order to set properties on UnityEngine.Camera
         newOWCamera.backgroundColor = sourceOWCamera.backgroundColor;
         newOWCamera.clearFlags = sourceOWCamera.clearFlags;
         newOWCamera.cullingMask = sourceOWCamera.cullingMask;

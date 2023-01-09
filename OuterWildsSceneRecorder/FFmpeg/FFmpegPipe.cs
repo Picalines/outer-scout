@@ -54,6 +54,11 @@ internal sealed class FFmpegPipe : IDisposable
         _PipeThread.Start();
     }
 
+    public bool IsClosed
+    {
+        get => _ThreadsAreTerminated;
+    }
+
     public void PushFrameData(NativeArray<byte> data)
     {
         lock (_CopyQueue) _CopyQueue.Enqueue(data);
@@ -152,7 +157,6 @@ internal sealed class FFmpegPipe : IDisposable
 
             while (_PipeQueue.Count > 0)
             {
-
                 byte[] buffer;
                 lock (_PipeQueue) buffer = _PipeQueue.Dequeue();
 

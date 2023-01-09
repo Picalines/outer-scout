@@ -48,6 +48,11 @@ internal sealed class FFmpegTextureRecorder : IDisposable
 
     public void RecordFrame()
     {
+        if (_IsDisposed)
+        {
+            throw new InvalidOperationException($"{nameof(FFmpegPipe)} is disposed");
+        }
+
         _FFmpegReadback.PushFrame(SourceTexture);
         _FFmpegReadback.CompletePushFrames();
         FramesRecorded++;
