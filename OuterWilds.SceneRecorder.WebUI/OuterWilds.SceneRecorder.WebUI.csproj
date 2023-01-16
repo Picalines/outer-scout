@@ -8,4 +8,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<RootNamespace>Picalines.OuterWilds.SceneRecorder.WebUI</RootNamespace>
 	</PropertyGroup>
+	<ItemGroup>
+	  <None Include="OuterWilds.SceneRecorder.WebUI.csproj.user" />
+	</ItemGroup>
 </Project>

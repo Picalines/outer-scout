@@ -4,9 +4,11 @@ using Picalines.OuterWilds.SceneRecorder.Json;
 using Picalines.OuterWilds.SceneRecorder.Recorders;
 using Picalines.OuterWilds.SceneRecorder.Utils;
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -19,6 +21,8 @@ internal sealed class OuterWildsSceneRecorder : ModBehaviour
     private SceneRecorderSettings _Settings = null!;
 
     private string _RecordingOutputDir = null!;
+
+    private Process? _WebUIProcess = null;
 
     private readonly LazyUnityReference<OWRigidbody> _Player = new(Locator.GetPlayerBody);
 
@@ -42,6 +46,18 @@ internal sealed class OuterWildsSceneRecorder : ModBehaviour
 
     private void Start()
     {
+        _WebUIProcess = Process.Start(new ProcessStartInfo()
+        {
+            CreateNoWindow = true,
+            UseShellExecute = false,
+            FileName = "dotnet",
+            WorkingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
+            Arguments = "OuterWilds.SceneRecorder.WebUI.dll",
+            RedirectStandardInput = true,
+            RedirectStandardOutput = false,
+            RedirectStandardError = false,
+        });
+
         ModHelper.Console.WriteLine($"{nameof(OuterWildsSceneRecorder)} is loaded!", MessageType.Success);
     }
 
@@ -52,6 +68,12 @@ internal sealed class OuterWildsSceneRecorder : ModBehaviour
 
     private void OnDestroy()
     {
+        if (_WebUIProcess is not null)
+        {
+            _WebUIProcess.Kill();
+            _WebUIProcess.Dispose();
+        }
+
         Destroy(_ComposedRecorder);
     }
 

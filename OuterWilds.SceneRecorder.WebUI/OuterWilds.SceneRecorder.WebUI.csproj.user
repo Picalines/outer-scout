@@ -1,5 +1,11 @@
 ﻿<Project>
-  <PropertyGroup>
-    <OutputPath>$(AppData)\OuterWildsModManager\OWML\Mods\Picalines.OuterWilds.SceneRecorder</OutputPath>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputPath>$(AppData)\OuterWildsModManager\OWML\Mods\Picalines.OuterWilds.SceneRecorder</OutputPath>
+	</PropertyGroup>
+	<ItemGroup>
+		<None Include="wwwroot/**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<OutputPath>$(AppData)\OuterWildsModManager\OWML\Mods\Picalines.OuterWilds.SceneRecorder</OutputPath>
+		</None>
+	</ItemGroup>
 </Project>
