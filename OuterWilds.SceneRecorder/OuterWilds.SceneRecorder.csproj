@@ -30,7 +30,7 @@
 		</None>
 	</ItemGroup>
 	<ItemGroup>
-		<Content Include="OuterWildsSceneRecorder.csproj.user" />
+		<Content Include="OuterWilds.SceneRecorder.csproj.user" />
 	</ItemGroup>
 	<ProjectExtensions><VisualStudio><UserProperties manifest_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
 </Project>
