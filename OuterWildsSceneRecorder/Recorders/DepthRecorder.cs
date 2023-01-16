@@ -21,8 +21,8 @@ internal sealed class DepthRecorder : RenderTextureRecorder
     public DepthRecorder()
     {
         Awoken += OnAwoken;
-        BeforeRecordingStarted += OnBeforeRecordingStarted;
-        AfterRecordingFinished += OnAfterRecordingFinished;
+        RecordingStarted += OnRecordingStarted;
+        RecordingFinished += OnRecordingFinished;
         BeforeFrameRecorded += OnBeforeFrameRecorded;
     }
 
@@ -60,7 +60,7 @@ internal sealed class DepthRecorder : RenderTextureRecorder
         return _ColorRenderTexture;
     }
 
-    private void OnBeforeRecordingStarted()
+    private void OnRecordingStarted()
     {
         const float minFarClipPlane = 100f;
         var playerTransform = Locator.GetPlayerBody().transform;
@@ -75,7 +75,7 @@ internal sealed class DepthRecorder : RenderTextureRecorder
         Graphics.Blit(_DepthRenderTexture, _ColorRenderTexture);
     }
 
-    private void OnAfterRecordingFinished()
+    private void OnRecordingFinished()
     {
         _OWCamera.enabled = false;
     }

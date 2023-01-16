@@ -16,8 +16,8 @@ internal sealed class BackgroundRecorder : RenderTextureRecorder
     public BackgroundRecorder()
     {
         Awoken += OnAwoken;
-        BeforeRecordingStarted += OnBeforeRecordingStarted;
-        AfterRecordingFinished += OnAfterRecordingFinished;
+        RecordingStarted += OnRecordingStarted;
+        RecordingFinished += OnRecordingFinished;
     }
 
     protected override RenderTexture ProvideSourceRenderTexture()
@@ -30,12 +30,12 @@ internal sealed class BackgroundRecorder : RenderTextureRecorder
         _Camera = GetComponent<Camera>();
     }
 
-    private void OnBeforeRecordingStarted()
+    private void OnRecordingStarted()
     {
         _Camera.targetTexture = _SourceRenderTexture;
     }
 
-    private void OnAfterRecordingFinished()
+    private void OnRecordingFinished()
     {
         _Camera.targetTexture = null;
     }

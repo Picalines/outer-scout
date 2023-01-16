@@ -29,18 +29,6 @@ internal sealed class ComposedRecorder : MonoBehaviour, IRecorder
         get => Recorders[0];
     }
 
-    public int Framerate
-    {
-        get => MainRecorder.Framerate;
-        set
-        {
-            foreach (var recorder in Recorders)
-            {
-                recorder.Framerate = value;
-            }
-        }
-    }
-
     public bool IsRecording
     {
         get => MainRecorder.IsRecording;
@@ -51,10 +39,10 @@ internal sealed class ComposedRecorder : MonoBehaviour, IRecorder
         get => MainRecorder.FramesRecorded;
     }
 
-    public event Action BeforeRecordingStarted
+    public event Action RecordingStarted
     {
-        add => MainRecorder.BeforeRecordingStarted += value;
-        remove => MainRecorder.BeforeRecordingStarted -= value;
+        add => MainRecorder.RecordingStarted += value;
+        remove => MainRecorder.RecordingStarted -= value;
     }
 
     public event Action BeforeFrameRecorded
@@ -63,10 +51,10 @@ internal sealed class ComposedRecorder : MonoBehaviour, IRecorder
         remove => MainRecorder.BeforeFrameRecorded -= value;
     }
 
-    public event Action AfterRecordingFinished
+    public event Action RecordingFinished
     {
-        add => MainRecorder.AfterRecordingFinished += value;
-        remove => MainRecorder.AfterRecordingFinished -= value;
+        add => MainRecorder.RecordingFinished += value;
+        remove => MainRecorder.RecordingFinished -= value;
     }
 
     private void Awake()

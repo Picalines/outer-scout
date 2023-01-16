@@ -1,31 +1,14 @@
 ﻿using Newtonsoft.Json;
 using Picalines.OuterWilds.SceneRecorder.Recorders;
-using Picalines.OuterWilds.SceneRecorder.Utils.Json;
+using System.Collections.Generic;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder;
+using static Picalines.OuterWilds.SceneRecorder.Recorders.TransformRecorder;
+
+namespace Picalines.OuterWilds.SceneRecorder.Json;
 
 internal sealed class SceneData
 {
-    public sealed class TransformData
-    {
-        [JsonProperty("position"), JsonConverter(typeof(Vector3JsonConverter))]
-        public Vector3 Position { get; private set; }
-
-        [JsonProperty("rotation"), JsonConverter(typeof(QuaternionJsonConverter))]
-        public Quaternion Rotation { get; private set; }
-
-        [JsonProperty("scale"), JsonConverter(typeof(Vector3JsonConverter))]
-        public Vector3 Scale { get; private set; }
-
-        public TransformData(Vector3 position, Quaternion rotation, Vector3 scale)
-        {
-            Position = position;
-            Rotation = rotation;
-            Scale = scale;
-        }
-    }
-
     public sealed class GameObjectData
     {
         [JsonProperty("name")]
@@ -52,15 +35,15 @@ internal sealed class SceneData
         [JsonProperty("far_clip_plane")]
         public float FarClipPlane { get; private set; }
 
-        [JsonProperty("transform")]
-        public TransformData Transform { get; private set; }
+        [JsonProperty("initial_transform")]
+        public TransformData InitialTransform { get; private set; }
 
-        public CameraData(float fieldOfView, float nearClipPlane, float farClipPlane, TransformData transform)
+        public CameraData(float fieldOfView, float nearClipPlane, float farClipPlane, TransformData initialTransform)
         {
             FieldOfView = fieldOfView;
             NearClipPlane = nearClipPlane;
             FarClipPlane = farClipPlane;
-            Transform = transform;
+            InitialTransform = initialTransform;
         }
     }
 
@@ -85,6 +68,9 @@ internal sealed class SceneData
     [JsonProperty("depth_camera")]
     public CameraData DepthCamera { get; private set; }
 
+    [JsonProperty("free_camera_transforms")]
+    public IReadOnlyList<TransformData> FreeCameraTransforms { get; private set; }
+
     private SceneData(
         int frames,
         SceneRecorderSettings recorderSettings,
@@ -92,7 +78,8 @@ internal sealed class SceneData
         GameObjectData body,
         CameraData playerCamera,
         CameraData backgroundCamera,
-        CameraData depthCamera)
+        CameraData depthCamera,
+        IReadOnlyList<TransformData> freeCameraTransforms)
     {
         RecordedFrames = frames;
         RecorderSettings = recorderSettings;
@@ -101,9 +88,10 @@ internal sealed class SceneData
         PlayerCamera = playerCamera;
         FreeCamera = backgroundCamera;
         DepthCamera = depthCamera;
+        FreeCameraTransforms = freeCameraTransforms;
     }
 
-    public static SceneData Capture(int recordedFrames, SceneRecorderSettings recorderSettings)
+    public static SceneData Capture(SceneRecorderSettings recorderSettings, int recordedFrames, IReadOnlyList<TransformData> freeCameraTransforms)
     {
         var player = Locator.GetPlayerBody();
         var playerCamera = Locator.GetPlayerCamera();
@@ -124,12 +112,15 @@ internal sealed class SceneData
 
         var depthCameraData = CaptureCameraData(depthCamera);
 
-        return new SceneData(recordedFrames, recorderSettings, playerData, bodyData, playerCameraData, freeCameraData, depthCameraData);
+        return new SceneData(recordedFrames, recorderSettings, playerData, bodyData, playerCameraData, freeCameraData, depthCameraData, freeCameraTransforms);
     }
 
     public string ToJSON()
     {
-        return JsonConvert.SerializeObject(this);
+        return JsonConvert.SerializeObject(this, new JsonSerializerSettings()
+        {
+            Converters = { new TransformDataConverter() },
+        });
     }
 
     private static GameObjectData CaptureGameObjectData(GameObject gameObject)
@@ -145,7 +136,7 @@ internal sealed class SceneData
             fieldOfView: owCamera.fieldOfView,
             nearClipPlane: owCamera.nearClipPlane,
             farClipPlane: owCamera.farClipPlane,
-            transform: CaptureTransformData(owCamera.transform));
+            initialTransform: CaptureTransformData(owCamera.transform));
     }
 
     private static TransformData CaptureTransformData(Transform transform)

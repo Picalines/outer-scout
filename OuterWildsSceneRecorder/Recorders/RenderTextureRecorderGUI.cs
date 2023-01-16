@@ -14,17 +14,16 @@ internal sealed class RenderTextureRecorderGUI : MonoBehaviour
     {
         _TextureRecorder = GetComponent<RenderTextureRecorder>();
 
-        _TextureRecorder.BeforeRecordingStarted += OnRecordingStarted;
+        _TextureRecorder.RecordingStarted += OnRecordingStarted;
     }
 
     private void OnDestroy()
     {
-        _TextureRecorder.BeforeRecordingStarted -= OnRecordingStarted;
+        _TextureRecorder.RecordingStarted -= OnRecordingStarted;
     }
 
     private void OnRecordingStarted()
     {
-        Debug.Log(nameof(OnRecordingStarted));
         _StartedRecordingAt = DateTime.Now;
     }
 
@@ -38,7 +37,7 @@ internal sealed class RenderTextureRecorderGUI : MonoBehaviour
         GUI.DrawTexture(new Rect(0, 0, Screen.width, Screen.height), _TextureRecorder.SourceRenderTexture);
 
         TimeSpan elapsedRealtime = DateTime.Now - _StartedRecordingAt;
-        TimeSpan elapsedVideo = TimeSpan.FromSeconds((float)_TextureRecorder.FramesRecorded / _TextureRecorder.Framerate);
+        TimeSpan elapsedVideo = TimeSpan.FromSeconds((float)_TextureRecorder.FramesRecorded / _TextureRecorder.FrameRate);
         double videoToRealtimeRatio = elapsedRealtime.TotalSeconds / elapsedVideo.TotalSeconds;
 
         GUI.Box(new Rect(0, 0, 350, 80), GUIContent.none);

@@ -3,7 +3,7 @@ using OWML.Common;
 using System.Linq;
 using System.Reflection;
 
-namespace Picalines.OuterWilds.SceneRecorder;
+namespace Picalines.OuterWilds.SceneRecorder.Json;
 
 #pragma warning disable CS8618
 

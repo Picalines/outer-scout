@@ -31,9 +31,9 @@ internal sealed class HDRIRecorder : RenderTextureRecorder
     public HDRIRecorder()
     {
         Awoken += OnAwoken;
-        BeforeRecordingStarted += OnBeforeRecordingStarted;
+        RecordingStarted += OnRecordingStarted;
         BeforeFrameRecorded += OnBeforeFrameRecorded;
-        AfterRecordingFinished += OnAfterRecordingFinished;
+        RecordingFinished += OnRecordingFinished;
     }
 
     private void OnAwoken()
@@ -77,7 +77,7 @@ internal sealed class HDRIRecorder : RenderTextureRecorder
         return _SourceRenderTexture;
     }
 
-    private void OnBeforeRecordingStarted()
+    private void OnRecordingStarted()
     {
         for (int i = 0; i < _OWCameras.Length; i++)
         {
@@ -105,7 +105,7 @@ internal sealed class HDRIRecorder : RenderTextureRecorder
         Graphics.Blit(_FlippedFrameSourceTexture, _SourceRenderTexture, new Vector2(1, -1), new Vector2(0, 1));
     }
 
-    private void OnAfterRecordingFinished()
+    private void OnRecordingFinished()
     {
         foreach (var owCamera in _OWCameras)
         {

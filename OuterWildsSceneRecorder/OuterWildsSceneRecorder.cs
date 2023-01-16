@@ -1,5 +1,6 @@
 ﻿using OWML.Common;
 using OWML.ModHelper;
+using Picalines.OuterWilds.SceneRecorder.Json;
 using Picalines.OuterWilds.SceneRecorder.Recorders;
 using Picalines.OuterWilds.SceneRecorder.Utils;
 using System;
@@ -85,26 +86,31 @@ internal sealed class OuterWildsSceneRecorder : ModBehaviour
         // background recorder
         var backgroundRecorder = _FreeCamera.Object.gameObject.AddComponent<BackgroundRecorder>();
         (backgroundRecorder.Width, backgroundRecorder.Height) = (_Settings.Width, _Settings.Height);
+        backgroundRecorder.FrameRate = _Settings.FrameRate;
 
         // depth recorder
         var depthRecorder = _FreeCamera.Object.gameObject.AddComponent<DepthRecorder>();
         (depthRecorder.Width, depthRecorder.Height) = (_Settings.Width, _Settings.Height);
+        depthRecorder.FrameRate = _Settings.FrameRate;
 
         // hdri recorder
         var hdriRecorder = _PlayerCamera.Object.gameObject.AddComponent<HDRIRecorder>();
         hdriRecorder.CubemapFaceSize = _Settings.HDRIFaceSize;
         hdriRecorder.LocalPositionOffset = _Settings.HDRIInFeet ? Vector3.down : Vector3.zero;
+        hdriRecorder.FrameRate = _Settings.FrameRate;
 
         hdriRecorder.gameObject.AddComponent<RenderTextureRecorderGUI>();
 
+        // free camera transform recorder
+        var freeCameraTransformRecorder = _FreeCamera.Object.gameObject.AddComponent<TransformRecorder>();
+
         // composed recorder
         _ComposedRecorder = gameObject.AddComponent<ComposedRecorder>();
-        _ComposedRecorder.Recorders = new IRecorder[] { backgroundRecorder, depthRecorder, hdriRecorder };
-        _ComposedRecorder.Framerate = _Settings.FrameRate;
+        _ComposedRecorder.Recorders = new IRecorder[] { backgroundRecorder, depthRecorder, hdriRecorder, freeCameraTransformRecorder };
 
         // on before recording started event
         Action? showPlayerModelAction = null;
-        _ComposedRecorder.BeforeRecordingStarted += () =>
+        _ComposedRecorder.RecordingStarted += () =>
         {
             showPlayerModelAction = _Settings.HidePlayerModel ? DisableEnabledRenderers(_Player.Object.gameObject) : null;
             _PlayerCamera.Object.gameObject.GetComponent<PlayerCameraController>().SetDegreesY(0);
@@ -113,12 +119,12 @@ internal sealed class OuterWildsSceneRecorder : ModBehaviour
             ModHelper.Console.WriteLine($"Recording started ({_RecordingOutputDir})");
         };
 
-        _ComposedRecorder.AfterRecordingFinished += () =>
+        _ComposedRecorder.RecordingFinished += () =>
         {
             showPlayerModelAction?.Invoke();
             Locator.GetQuantumMoon().SetActivation(true);
 
-            var sceneData = SceneData.Capture(_ComposedRecorder.FramesRecorded, _Settings);
+            var sceneData = SceneData.Capture(_Settings, _ComposedRecorder.FramesRecorded, freeCameraTransformRecorder.RecordedValues);
             File.WriteAllText(Path.Combine(_RecordingOutputDir, ".owscene"), sceneData.ToJSON());
 
             ModHelper.Console.WriteLine($"Recording finished ({_RecordingOutputDir})");
