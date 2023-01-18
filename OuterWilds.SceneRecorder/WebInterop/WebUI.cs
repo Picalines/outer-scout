@@ -1,9 +1,13 @@
-﻿using OWML.Common;
+﻿using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
+using OWML.Common;
 using Picalines.OuterWilds.SceneRecorder.Json;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebInterop;
 
@@ -33,6 +37,30 @@ internal sealed class WebUI : IDisposable
         _UIProcess.ErrorDataReceived += OnUIProcessErrorReceived;
         _UIProcess.EnableRaisingEvents = true;
         _UIProcess.BeginOutputReadLine();
+
+        var host = WebHost.CreateDefaultBuilder()
+            .UseStartup<Startup>()
+            .UseUrls($"http://localhost:{settings.WebUIPort + 1}");
+
+        var app = host.Build();
+
+        Task.Run(async () =>
+        {
+            _ModConsole.WriteLine($"{nameof(SceneRecorder)} API started running");
+
+            try
+            {
+                await app.RunAsync();
+            }
+            catch (Exception exception)
+            {
+                _ModConsole.WriteLine($"{nameof(SceneRecorder)} API stopped running:", MessageType.Error);
+                _ModConsole.WriteLine(exception.ToString(), MessageType.Error);
+                return;
+            }
+
+            _ModConsole.WriteLine($"{nameof(SceneRecorder)} API stopped running");
+        });
     }
 
     public void Dispose()
