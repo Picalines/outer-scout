@@ -30,6 +30,9 @@ internal sealed class SceneRecorderSettings
     [JsonProperty("hdri_in_feet")]
     public bool HDRIInFeet { get; private set; }
 
+    [JsonProperty("web_ui_port"), JsonIgnore]
+    public int WebUIPort { get; private set; } = 5000;
+
     private static readonly (PropertyInfo, JsonPropertyAttribute)[] _JsonProperties;
 
     private static readonly MethodInfo _GetSettingsValueMethod;

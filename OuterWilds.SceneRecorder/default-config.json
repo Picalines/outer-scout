@@ -7,6 +7,7 @@
     "width": 1920,
     "height": 1080,
     "hdri_face_size": 1024,
-    "hdri_in_feet": false
+    "hdri_in_feet": false,
+    "web_ui_port": 5000
   }
 }
