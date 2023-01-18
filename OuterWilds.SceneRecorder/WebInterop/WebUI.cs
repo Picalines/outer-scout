@@ -22,7 +22,7 @@ internal sealed class WebUI : IDisposable
             CreateNoWindow = true,
             UseShellExecute = false,
             FileName = "dotnet",
-            WorkingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
+            WorkingDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "WebUI"),
             Arguments = $"OuterWilds.SceneRecorder.WebUI.dll --urls \"http://localhost:{settings.WebUIPort}\"",
             RedirectStandardInput = false,
             RedirectStandardOutput = true,
