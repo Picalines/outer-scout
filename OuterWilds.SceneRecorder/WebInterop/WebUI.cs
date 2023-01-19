@@ -1,8 +1,7 @@
-﻿using OWML.Common;
+﻿using OuterWilds.SceneRecorder.HttpServer;
+using OWML.Common;
 using Picalines.OuterWilds.SceneRecorder.Json;
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebInterop;
@@ -12,6 +11,8 @@ internal sealed class WebUI : IDisposable
     private readonly IModConsole _ModConsole;
 
     private Process? _UIProcess;
+
+    private HttpServer? _HttpServer;
 
     public WebUI(IModConsole modConsole, SceneRecorderSettings settings)
     {
@@ -33,6 +34,26 @@ internal sealed class WebUI : IDisposable
         _UIProcess.ErrorDataReceived += OnUIProcessErrorReceived;
         _UIProcess.EnableRaisingEvents = true;
         _UIProcess.BeginOutputReadLine();
+
+        var serverBuilder = new HttpServerBuilder($"http://localhost:{settings.WebUIPort + 1}/");
+
+        serverBuilder.MapGet("", request =>
+        {
+            return Response.Ok(new { Message = "Hello, world!" });
+        });
+
+        serverBuilder.MapGet("api", request =>
+        {
+            return Response.Ok(new { Message = "Hello, API!" });
+        });
+
+        serverBuilder.MapGet("api/nums/{number:\\d+}", context =>
+        {
+            return Response.Ok(new { Value = context.Request.RouteParameters["number"] });
+        });
+
+        _HttpServer = serverBuilder.Build();
+        _HttpServer.StartListening();
     }
 
     public void Dispose()
@@ -46,6 +67,12 @@ internal sealed class WebUI : IDisposable
 
             _UIProcess.Dispose();
             _UIProcess = null;
+        }
+
+        if (_HttpServer is not null)
+        {
+            _HttpServer.StopListening();
+            _HttpServer = null;
         }
     }
 
