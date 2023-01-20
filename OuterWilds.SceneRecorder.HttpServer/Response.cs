@@ -6,12 +6,34 @@ public sealed class Response<T>
 {
     public HttpStatusCode StatusCode { get; }
 
-    public T Value { get; }
+    private readonly T _Value;
 
-    public Response(HttpStatusCode statusCode, T value)
+    private readonly bool _HasValue;
+
+    internal Response(HttpStatusCode statusCode)
     {
         StatusCode = statusCode;
-        Value = value;
+        _Value = default!;
+        _HasValue = false;
+    }
+
+    internal Response(HttpStatusCode statusCode, T value)
+        : this(statusCode)
+    {
+        _Value = value;
+        _HasValue = true;
+    }
+
+    public bool HasValue
+    {
+        get => _HasValue;
+    }
+
+    public T Value
+    {
+        get => _HasValue
+            ? _Value
+            : throw new InvalidOperationException();
     }
 }
 
@@ -64,4 +86,52 @@ public static class Response
     public static Response<T> ServiceUnavailable<T>(T value) => new(HttpStatusCode.ServiceUnavailable, value);
     public static Response<T> GatewayTimeout<T>(T value) => new(HttpStatusCode.GatewayTimeout, value);
     public static Response<T> HttpVersionNotSupported<T>(T value) => new(HttpStatusCode.HttpVersionNotSupported, value);
+
+    public static Response<T> Continue<T>() => new(HttpStatusCode.Continue);
+    public static Response<T> SwitchingProtocols<T>() => new(HttpStatusCode.SwitchingProtocols);
+    public static Response<T> Ok<T>() => new(HttpStatusCode.OK);
+    public static Response<T> Created<T>() => new(HttpStatusCode.Created);
+    public static Response<T> Accepted<T>() => new(HttpStatusCode.Accepted);
+    public static Response<T> NonAuthoritativeInformation<T>() => new(HttpStatusCode.NonAuthoritativeInformation);
+    public static Response<T> NoContent<T>() => new(HttpStatusCode.NoContent);
+    public static Response<T> ResetContent<T>() => new(HttpStatusCode.ResetContent);
+    public static Response<T> PartialContent<T>() => new(HttpStatusCode.PartialContent);
+    public static Response<T> MultipleChoices<T>() => new(HttpStatusCode.MultipleChoices);
+    public static Response<T> Ambiguous<T>() => new(HttpStatusCode.Ambiguous);
+    public static Response<T> MovedPermanently<T>() => new(HttpStatusCode.MovedPermanently);
+    public static Response<T> Moved<T>() => new(HttpStatusCode.Moved);
+    public static Response<T> Found<T>() => new(HttpStatusCode.Found);
+    public static Response<T> Redirect<T>() => new(HttpStatusCode.Redirect);
+    public static Response<T> SeeOther<T>() => new(HttpStatusCode.SeeOther);
+    public static Response<T> RedirectMethod<T>() => new(HttpStatusCode.RedirectMethod);
+    public static Response<T> NotModified<T>() => new(HttpStatusCode.NotModified);
+    public static Response<T> UseProxy<T>() => new(HttpStatusCode.UseProxy);
+    public static Response<T> Unused<T>() => new(HttpStatusCode.Unused);
+    public static Response<T> TemporaryRedirect<T>() => new(HttpStatusCode.TemporaryRedirect);
+    public static Response<T> RedirectKeepVerb<T>() => new(HttpStatusCode.RedirectKeepVerb);
+    public static Response<T> BadRequest<T>() => new(HttpStatusCode.BadRequest);
+    public static Response<T> Unauthorized<T>() => new(HttpStatusCode.Unauthorized);
+    public static Response<T> PaymentRequired<T>() => new(HttpStatusCode.PaymentRequired);
+    public static Response<T> Forbidden<T>() => new(HttpStatusCode.Forbidden);
+    public static Response<T> NotFound<T>() => new(HttpStatusCode.NotFound);
+    public static Response<T> MethodNotAllowed<T>() => new(HttpStatusCode.MethodNotAllowed);
+    public static Response<T> NotAcceptable<T>() => new(HttpStatusCode.NotAcceptable);
+    public static Response<T> ProxyAuthenticationRequired<T>() => new(HttpStatusCode.ProxyAuthenticationRequired);
+    public static Response<T> RequestTimeout<T>() => new(HttpStatusCode.RequestTimeout);
+    public static Response<T> Conflict<T>() => new(HttpStatusCode.Conflict);
+    public static Response<T> Gone<T>() => new(HttpStatusCode.Gone);
+    public static Response<T> LengthRequired<T>() => new(HttpStatusCode.LengthRequired);
+    public static Response<T> PreconditionFailed<T>() => new(HttpStatusCode.PreconditionFailed);
+    public static Response<T> RequestEntityTooLarge<T>() => new(HttpStatusCode.RequestEntityTooLarge);
+    public static Response<T> RequestUriTooLong<T>() => new(HttpStatusCode.RequestUriTooLong);
+    public static Response<T> UnsupportedMediaType<T>() => new(HttpStatusCode.UnsupportedMediaType);
+    public static Response<T> RequestedRangeNotSatisfiable<T>() => new(HttpStatusCode.RequestedRangeNotSatisfiable);
+    public static Response<T> ExpectationFailed<T>() => new(HttpStatusCode.ExpectationFailed);
+    public static Response<T> UpgradeRequired<T>() => new(HttpStatusCode.UpgradeRequired);
+    public static Response<T> InternalServerError<T>() => new(HttpStatusCode.InternalServerError);
+    public static Response<T> NotImplemented<T>() => new(HttpStatusCode.NotImplemented);
+    public static Response<T> BadGateway<T>() => new(HttpStatusCode.BadGateway);
+    public static Response<T> ServiceUnavailable<T>() => new(HttpStatusCode.ServiceUnavailable);
+    public static Response<T> GatewayTimeout<T>() => new(HttpStatusCode.GatewayTimeout);
+    public static Response<T> HttpVersionNotSupported<T>() => new(HttpStatusCode.HttpVersionNotSupported);
 }

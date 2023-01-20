@@ -31,25 +31,31 @@ internal abstract class RequestHandler<T> : IRequestHandler
         }
         catch (Exception exception)
         {
-            response = Response.InternalServerError<T>(default!);
+            response = Response.InternalServerError<T>();
 
 #if DEBUG
             listenerResponse.StatusCode = (int)response.StatusCode;
-            listenerResponse.ContentType = "text/plain";
-            WriteContent(listenerResponse, exception.ToString());
+            WriteContent(listenerResponse, "text/plain", exception.ToString());
+            return;
 #endif
+        }
+
+        listenerResponse.StatusCode = (int)response.StatusCode;
+
+        if (response.HasValue is false)
+        {
+            WriteContent(listenerResponse, "text/plain", "");
+            return;
         }
 
         var jsonValue = JsonConvert.SerializeObject(response.Value, JsonSerializerSettings);
 
-        listenerResponse.StatusCode = (int)response.StatusCode;
-        listenerResponse.ContentType = "application/json";
-
-        WriteContent(listenerResponse, jsonValue);
+        WriteContent(listenerResponse, "application/json", jsonValue);
     }
 
-    private void WriteContent(HttpListenerResponse listenerResponse, string content)
+    private void WriteContent(HttpListenerResponse listenerResponse, string contentType, string content)
     {
+        listenerResponse.ContentType = contentType;
         listenerResponse.ContentLength64 = content.Length;
         using var writer = new StreamWriter(listenerResponse.OutputStream);
         writer.Write(content);

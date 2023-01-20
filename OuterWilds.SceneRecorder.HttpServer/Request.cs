@@ -6,9 +6,9 @@ public sealed class Request
 
     public string Url { get; }
 
-    private readonly Dictionary<string, string> _RouteParameters = new();
+    private readonly Dictionary<string, object?> _RouteParameters = new();
 
-    private readonly Dictionary<string, string> _QueryParameters = new();
+    private readonly Dictionary<string, object?> _QueryParameters = new();
 
     internal Request(HttpMethod httpMethod, string url)
     {
@@ -16,23 +16,35 @@ public sealed class Request
         Url = url;
     }
 
-    internal void AddRouteParameter(string name, string value)
+    internal void AddRouteParameter(string name, object? value)
     {
         _RouteParameters[name] = value;
     }
 
-    internal void AddQueryParameter(string name, string value)
+    internal void AddQueryParameter(string name, object? value)
     {
         _QueryParameters[name] = value;
     }
 
-    public IReadOnlyDictionary<string, string> RouteParameters
+    public T GetRouteParameter<T>(string name)
     {
-        get => _RouteParameters;
+        if (_RouteParameters.TryGetValue(name, out var parameterBoxValue) is false
+            || parameterBoxValue is not T parameterValue)
+        {
+            throw new InvalidOperationException();
+        }
+
+        return parameterValue;
     }
 
-    public IReadOnlyDictionary<string, string> QueryParameters
+    public T GetQueryParameter<T>(string name)
     {
-        get => _QueryParameters;
+        if (_QueryParameters.TryGetValue(name, out var parameterBoxValue) is false
+            || parameterBoxValue is not T parameterValue)
+        {
+            throw new InvalidOperationException();
+        }
+
+        return parameterValue;
     }
 }

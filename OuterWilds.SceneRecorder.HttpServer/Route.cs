@@ -2,17 +2,11 @@
 
 namespace OuterWilds.SceneRecorder.HttpServer;
 
-internal sealed record Route(
+internal sealed partial record Route(
     HttpMethod HttpMethod,
     IReadOnlyList<Route.Segment> Segments)
 {
-    public abstract record Segment;
-
-    public sealed record PlainSegment(string Value) : Segment;
-
-    public sealed record ParameterSegment(string ParameterName, Regex? Regex) : Segment;
-
-    private static readonly Regex _ParameterSegmentSyntaxRegex = new(@"\{(?<name>\w+)(:(?<regex>.*?))?\}");
+    private static readonly Regex _ParameterSegmentSyntaxRegex = new(@"\{(?<name>\w+):(?<type>.*?)\}");
 
     public static IReadOnlyList<Segment> ParsePathString(string pathString)
     {
@@ -21,48 +15,56 @@ internal sealed record Route(
             throw new ArgumentException("must not start with /", nameof(pathString));
         }
 
-        return pathString.Split('/')
-            .Select<string, Segment>((pathPart, index) =>
-            {
-                if (index > 0 && pathPart.Length is 0)
-                {
-                    throw new ArgumentException($"invalid route segment. Must not be empty");
-                }
-
-                if ((pathPart.Contains('{') || pathPart.Contains('}')) is false)
-                {
-                    return new PlainSegment(pathPart);
-                }
-
-                if (_ParameterSegmentSyntaxRegex.Match(pathPart) is not { Success: true } match)
-                {
-                    throw new ArgumentException($"invalid route parameter segment. Must match regex: {_ParameterSegmentSyntaxRegex}", nameof(pathString));
-                }
-
-                var matchRegexGroup = match.Groups["regex"];
-
-                return new ParameterSegment(
-                    match.Groups["name"].Value,
-                    matchRegexGroup.Value.Length > 0 ? new Regex(matchRegexGroup.Value) : null);
-            })
+        return GetUrlParts(pathString)
+            .Select((part, index) => PathPartToSegment(part.Value, index, part.IsQuery
+                ? ParameterSegmentType.Query : ParameterSegmentType.Path))
             .ToArray();
+
+        static Segment PathPartToSegment(string pathPart, int partIndex, ParameterSegmentType? parameterType)
+        {
+            if (partIndex > 0 && pathPart.Length is 0)
+            {
+                throw new ArgumentException($"invalid route segment at index {partIndex}: must not be empty", nameof(pathString));
+            }
+
+            if ((pathPart.Contains('{') || pathPart.Contains('}')) is false)
+            {
+                return new PlainSegment(pathPart);
+            }
+
+            if (_ParameterSegmentSyntaxRegex.Match(pathPart) is not { Success: true } match)
+            {
+                throw new ArgumentException($"invalid route segment at index {partIndex}: parameter must match regex: {_ParameterSegmentSyntaxRegex}", nameof(pathString));
+            }
+
+            var parameterName = match.Groups["name"].Value;
+
+            return match.Groups["type"].Value switch
+            {
+                "bool" => new BoolParameterSegment(parameterName, parameterType.GetValueOrDefault()),
+                "int" => new IntParameterSegment(parameterName, parameterType.GetValueOrDefault()),
+                "float" => new FloatParameterSegment(parameterName, parameterType.GetValueOrDefault()),
+                "string" => new StringParameterSegment(parameterName, parameterType.GetValueOrDefault()),
+                var type => throw new ArgumentException($"invalid route segment at index {partIndex}: type '{type}' is not supported")
+            };
+        }
     }
 
     public bool TrySetRequestParameters(Request request)
     {
-        var queryParts = request.Url.Split('&');
-        var urlRouteParts = queryParts[0].Split('/');
+        var urlRouteParts = GetUrlParts(request.Url).ToArray();
 
         if (Segments.Count != urlRouteParts.Length)
         {
             return false;
         }
 
-        var routeParameters = new Dictionary<string, string>();
+        var routeParameters = new Dictionary<string, object?>();
+        var queryParameters = new Dictionary<string, object?>();
 
         for (int i = 0; i < urlRouteParts.Length; i++)
         {
-            var urlPart = urlRouteParts[i];
+            var (urlPart, isQuery) = urlRouteParts[i];
             var segment = Segments[i];
 
             switch (segment)
@@ -78,12 +80,28 @@ internal sealed record Route(
 
                 case ParameterSegment parameterSegment:
                 {
-                    if (parameterSegment.Regex?.Match(urlPart) is { Success: false })
+                    if ((parameterSegment.Type, isQuery) is (not ParameterSegmentType.Query, true))
                     {
                         return false;
                     }
 
-                    routeParameters[parameterSegment.ParameterName] = urlPart;
+                    if (isQuery)
+                    {
+                        var queryParts = urlPart.Split('=');
+                        if (queryParts[0] != parameterSegment.ParameterName)
+                        {
+                            return false;
+                        }
+
+                        urlPart = queryParts[1];
+                    }
+
+                    if (parameterSegment.TryParseValue(urlPart, out var parameterValue) is false)
+                    {
+                        return false;
+                    }
+
+                    (isQuery ? queryParameters : routeParameters)[parameterSegment.ParameterName] = parameterValue;
                 }
                 break;
 
@@ -97,12 +115,19 @@ internal sealed record Route(
             request.AddRouteParameter(name, value);
         }
 
-        for (int i = 1; i < queryParts.Length; i++)
+        foreach (var (name, value) in queryParameters)
         {
-            var queryArgumentParts = queryParts[i].Split(new char[] { '=' }, 2);
-            request.AddQueryParameter(queryArgumentParts[0], queryArgumentParts[1]);
+            request.AddQueryParameter(name, value);
         }
 
         return true;
+    }
+
+    private static IEnumerable<(string Value, bool IsQuery)> GetUrlParts(string url)
+    {
+        int firstQueryParameterIndex = url.Count(chr => chr == '/') + 1;
+
+        return url.Split('/', '&')
+            .Select((pathPart, partIndex) => (pathPart, partIndex >= firstQueryParameterIndex));
     }
 }
