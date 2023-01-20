@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using OWML.Common;
-using System.Linq;
 using System.Reflection;
 
 namespace Picalines.OuterWilds.SceneRecorder.Json;
@@ -31,7 +30,10 @@ internal sealed class SceneRecorderSettings
     public bool HDRIInFeet { get; private set; }
 
     [JsonProperty("web_ui_port"), JsonIgnore]
-    public int WebUIPort { get; private set; } = 5000;
+    private readonly int _WebUIPort = 5000;
+
+    [JsonProperty("web_api_port"), JsonIgnore]
+    private readonly int _WebApiPort = 5001;
 
     private static readonly (PropertyInfo, JsonPropertyAttribute)[] _JsonProperties;
 
@@ -54,5 +56,15 @@ internal sealed class SceneRecorderSettings
             var getSettingsMethod = _GetSettingsValueMethod.MakeGenericMethod(property.PropertyType);
             property.SetValue(this, getSettingsMethod.Invoke(modConfig, new[] { jsonProperty.PropertyName }));
         }
+    }
+
+    public string WebUIUrl
+    {
+        get => $"http://localhost:{_WebUIPort}/";
+    }
+
+    public string WebApiUrl
+    {
+        get => $"http://localgost:{_WebApiPort}/";
     }
 }

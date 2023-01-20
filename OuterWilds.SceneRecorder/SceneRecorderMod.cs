@@ -4,22 +4,21 @@ using Picalines.OuterWilds.SceneRecorder.Json;
 using Picalines.OuterWilds.SceneRecorder.Recorders;
 using Picalines.OuterWilds.SceneRecorder.Utils;
 using Picalines.OuterWilds.SceneRecorder.WebInterop;
-using System;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace Picalines.OuterWilds.SceneRecorder;
 
-internal sealed class OuterWildsSceneRecorder : ModBehaviour
+internal sealed class SceneRecorderMod : ModBehaviour
 {
     private const Key _RecordKey = Key.F9;
 
+    public bool IsRecording { get; private set; } = false;
+
     private SceneRecorderSettings _Settings = null!;
 
-    private WebUI? _WebUI = null;
+    private WebUIHost? _WebUI = null;
 
     private string _RecordingOutputDir = null!;
 
@@ -39,7 +38,7 @@ internal sealed class OuterWildsSceneRecorder : ModBehaviour
 
         _Settings = new SceneRecorderSettings(config);
 
-        _WebUI = new WebUI(ModHelper.Console, _Settings);
+        _WebUI = new WebUIHost(ModHelper.Console, _Settings);
 
         if (_ComposedRecorder != null)
         {
@@ -49,7 +48,7 @@ internal sealed class OuterWildsSceneRecorder : ModBehaviour
 
     private void Start()
     {
-        ModHelper.Console.WriteLine($"{nameof(OuterWildsSceneRecorder)} is loaded!", MessageType.Success);
+        ModHelper.Console.WriteLine($"{nameof(SceneRecorder)} is loaded!", MessageType.Success);
     }
 
     private bool ListenToInput
@@ -74,11 +73,11 @@ internal sealed class OuterWildsSceneRecorder : ModBehaviour
         if (Keyboard.current[_RecordKey].isPressed)
         {
             InitializeRecordersIfNot();
-            StartRecordingIfNot();
+            TryStartRecording();
         }
         else
         {
-            StopRecordingIfCan();
+            TryStopRecording();
         }
     }
 
@@ -142,17 +141,22 @@ internal sealed class OuterWildsSceneRecorder : ModBehaviour
         gameObject.SetActive(true);
     }
 
-    private void StartRecordingIfNot()
+    public bool IsAbleToRecord
     {
-        if (_ComposedRecorder == null || _ComposedRecorder.enabled is true)
+        get => _ComposedRecorder != null;
+    }
+
+    public bool TryStartRecording()
+    {
+        if (IsRecording || _ComposedRecorder == null || _ComposedRecorder.enabled is true)
         {
-            return;
+            return false;
         }
 
         if (_FreeCamera.Object.GetComponent<Camera>() is { enabled: false })
         {
             _PlayerAudioController.Object.PlayNegativeUISound();
-            return;
+            return false;
         }
 
         var dateTime = DateTime.Now;
@@ -173,16 +177,18 @@ internal sealed class OuterWildsSceneRecorder : ModBehaviour
         }
 
         _ComposedRecorder!.enabled = true;
+        return IsRecording = true;
     }
 
-    private void StopRecordingIfCan()
+    public bool TryStopRecording()
     {
-        if (!(_ComposedRecorder != null && _ComposedRecorder.enabled))
+        if (!(IsRecording && _ComposedRecorder != null && _ComposedRecorder.enabled))
         {
-            return;
+            return false;
         }
 
-        _ComposedRecorder.enabled = false;
+        IsRecording = _ComposedRecorder.enabled = false;
+        return true;
     }
 
     private static Action DisableEnabledRenderers(GameObject gameObject)
