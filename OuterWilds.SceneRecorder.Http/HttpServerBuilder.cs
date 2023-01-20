@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace OuterWilds.SceneRecorder.HttpServer;
+namespace Picalines.OuterWilds.SceneRecorder.Http;
 
 public sealed class HttpServerBuilder
 {

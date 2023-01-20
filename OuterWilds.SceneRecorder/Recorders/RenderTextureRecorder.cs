@@ -1,6 +1,5 @@
 ﻿using OWML.Common;
-using Picalines.OuterWilds.SceneRecorder.FFmpeg;
-using System;
+using Picalines.OuterWilds.SceneRecorder.Recording.FFmpeg;
 using UnityEngine;
 
 namespace Picalines.OuterWilds.SceneRecorder.Recorders;

@@ -4,7 +4,7 @@ using Unity.Collections;
 
 // Modified from: https://github.com/keijiro/FFmpegOut
 
-namespace Picalines.OuterWilds.SceneRecorder.FFmpeg;
+namespace Picalines.OuterWilds.SceneRecorder.Recording.FFmpeg;
 
 internal sealed class FFmpegPipe : IDisposable
 {

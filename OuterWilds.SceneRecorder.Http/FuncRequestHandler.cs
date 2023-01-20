@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace OuterWilds.SceneRecorder.HttpServer;
+namespace Picalines.OuterWilds.SceneRecorder.Http;
 
 internal sealed class FuncRequestHandler<T> : RequestHandler<T>
 {

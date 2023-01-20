@@ -1,0 +1,5 @@
+﻿<Project>
+  <PropertyGroup>
+    <OutputPath>$(AppData)\OuterWildsModManager\OWML\Mods\Picalines.OuterWilds.SceneRecorder\Recording\FFmpeg</OutputPath>
+  </PropertyGroup>
+</Project>

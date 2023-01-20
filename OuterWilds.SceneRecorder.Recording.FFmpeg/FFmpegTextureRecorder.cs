@@ -1,9 +1,9 @@
 ﻿using OWML.Common;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.FFmpeg;
+namespace Picalines.OuterWilds.SceneRecorder.Recording.FFmpeg;
 
-internal sealed class FFmpegTextureRecorder : IDisposable
+public sealed class FFmpegTextureRecorder : IDisposable
 {
     public int Framerate { get; }
 

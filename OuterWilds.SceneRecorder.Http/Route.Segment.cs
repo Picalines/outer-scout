@@ -1,4 +1,4 @@
-﻿namespace OuterWilds.SceneRecorder.HttpServer;
+﻿namespace Picalines.OuterWilds.SceneRecorder.Http;
 
 internal sealed partial record Route
 {

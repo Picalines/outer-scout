@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System.Net;
 
-namespace OuterWilds.SceneRecorder.HttpServer;
+namespace Picalines.OuterWilds.SceneRecorder.Http;
 
 public sealed record RequestHandlerContext(Request Request);
 
