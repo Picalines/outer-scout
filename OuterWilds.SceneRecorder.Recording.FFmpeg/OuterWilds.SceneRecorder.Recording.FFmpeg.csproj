@@ -25,7 +25,4 @@
 		<PackageReference Include="OuterWildsGameLibs" Version="1.1.13.393" />
 		<PackageReference Include="HarmonyX" Version="2.10.1" />
 	</ItemGroup>
-	<ItemGroup>
-		<Content Include="OuterWilds.SceneRecorder.Recording.FFmpeg.csproj.user" />
-	</ItemGroup>
 </Project>

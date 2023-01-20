@@ -25,7 +25,4 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\OuterWilds.SceneRecorder.CompilerServices\OuterWilds.SceneRecorder.CompilerServices.csproj" />
 	</ItemGroup>
-	<ItemGroup>
-		<Content Include="OuterWilds.SceneRecorder.Http.csproj.user" />
-	</ItemGroup>
 </Project>

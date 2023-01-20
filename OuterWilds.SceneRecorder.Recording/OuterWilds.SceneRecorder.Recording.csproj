@@ -28,7 +28,4 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\OuterWilds.SceneRecorder.Recording.FFmpeg\OuterWilds.SceneRecorder.Recording.FFmpeg.csproj" />
 	</ItemGroup>
-	<ItemGroup>
-		<Content Include="OuterWilds.SceneRecorder.Recording.csproj.user" />
-	</ItemGroup>
 </Project>
