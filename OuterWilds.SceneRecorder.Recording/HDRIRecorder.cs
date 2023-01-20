@@ -1,10 +1,9 @@
-﻿using Picalines.OuterWilds.SceneRecorder.Utils;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recorders;
+namespace Picalines.OuterWilds.SceneRecorder.Recording;
 
-internal sealed class HDRIRecorder : RenderTextureRecorder
+public sealed class HDRIRecorder : RenderTextureRecorder
 {
     public int CubemapFaceSize { get; set; } = 2048;
 

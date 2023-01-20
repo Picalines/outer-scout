@@ -1,8 +1,6 @@
-﻿using System;
+﻿namespace Picalines.OuterWilds.SceneRecorder.Recording;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recorders;
-
-internal interface IRecorder
+public interface IRecorder
 {
     public bool IsRecording { get; }
 

@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recorders;
+namespace Picalines.OuterWilds.SceneRecorder.Recording;
 
-internal sealed class ComposedRecorder : MonoBehaviour, IRecorder
+public sealed class ComposedRecorder : MonoBehaviour, IRecorder
 {
     private IReadOnlyList<IRecorder> _Recorders = Array.Empty<IRecorder>();
 

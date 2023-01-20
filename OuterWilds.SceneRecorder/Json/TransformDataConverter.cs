@@ -1,8 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-
-using static Picalines.OuterWilds.SceneRecorder.Recorders.TransformRecorder;
+using static Picalines.OuterWilds.SceneRecorder.Recording.TransformRecorder;
 
 namespace Picalines.OuterWilds.SceneRecorder.Json;
 

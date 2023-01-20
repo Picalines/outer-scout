@@ -1,9 +1,8 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recorders;
+namespace Picalines.OuterWilds.SceneRecorder.Recording;
 
-internal abstract class RecorderComponent : MonoBehaviour, IRecorder
+public abstract class RecorderComponent : MonoBehaviour, IRecorder
 {
     public event Action? Awoken;
 

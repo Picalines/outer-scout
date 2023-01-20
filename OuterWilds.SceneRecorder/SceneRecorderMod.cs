@@ -1,7 +1,7 @@
 ﻿using OWML.Common;
 using OWML.ModHelper;
 using Picalines.OuterWilds.SceneRecorder.Json;
-using Picalines.OuterWilds.SceneRecorder.Recorders;
+using Picalines.OuterWilds.SceneRecorder.Recording;
 using Picalines.OuterWilds.SceneRecorder.Utils;
 using Picalines.OuterWilds.SceneRecorder.WebInterop;
 using System.Diagnostics.CodeAnalysis;

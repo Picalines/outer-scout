@@ -1,9 +1,9 @@
 ﻿using System.Runtime.InteropServices;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recorders;
+namespace Picalines.OuterWilds.SceneRecorder.Recording;
 
-internal sealed class TransformRecorder : ValueRecorder<TransformRecorder.TransformData>
+public sealed class TransformRecorder : ValueRecorder<TransformRecorder.TransformData>
 {
     [StructLayout(LayoutKind.Auto)]
     public record struct TransformData(

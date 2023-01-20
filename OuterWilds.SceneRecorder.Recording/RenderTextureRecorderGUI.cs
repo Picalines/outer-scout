@@ -1,10 +1,11 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recorders;
+namespace Picalines.OuterWilds.SceneRecorder.Recording;
+
+// TODO: replace with WebUI
 
 [RequireComponent(typeof(RenderTextureRecorder))]
-internal sealed class RenderTextureRecorderGUI : MonoBehaviour
+public sealed class RenderTextureRecorderGUI : MonoBehaviour
 {
     private RenderTextureRecorder _TextureRecorder = null!;
 

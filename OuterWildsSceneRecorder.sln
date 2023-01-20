@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OuterWilds.SceneRecorder.Re
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OuterWilds.SceneRecorder.Http", "OuterWilds.SceneRecorder.Http\OuterWilds.SceneRecorder.Http.csproj", "{09EB3052-AC9B-4798-B035-B3C0E1FC8B29}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OuterWilds.SceneRecorder.Recording", "OuterWilds.SceneRecorder.Recording\OuterWilds.SceneRecorder.Recording.csproj", "{5B465DBC-2690-4473-BD2F-1F68E3B9B9C3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{09EB3052-AC9B-4798-B035-B3C0E1FC8B29}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{09EB3052-AC9B-4798-B035-B3C0E1FC8B29}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{09EB3052-AC9B-4798-B035-B3C0E1FC8B29}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B465DBC-2690-4473-BD2F-1F68E3B9B9C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B465DBC-2690-4473-BD2F-1F68E3B9B9C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B465DBC-2690-4473-BD2F-1F68E3B9B9C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B465DBC-2690-4473-BD2F-1F68E3B9B9C3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
