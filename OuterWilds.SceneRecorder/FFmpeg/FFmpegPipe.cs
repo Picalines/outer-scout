@@ -1,8 +1,5 @@
 ﻿using OWML.Common;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
 using Unity.Collections;
 
 // Modified from: https://github.com/keijiro/FFmpegOut

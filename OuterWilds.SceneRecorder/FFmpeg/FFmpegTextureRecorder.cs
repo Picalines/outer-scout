@@ -1,5 +1,4 @@
 ﻿using OWML.Common;
-using System;
 using UnityEngine;
 
 namespace Picalines.OuterWilds.SceneRecorder.FFmpeg;
