@@ -1,9 +1,11 @@
 ﻿using Newtonsoft.Json;
+using Picalines.OuterWilds.SceneRecorder.Models;
 using Picalines.OuterWilds.SceneRecorder.Recording;
 using UnityEngine;
-using static Picalines.OuterWilds.SceneRecorder.Recording.TransformRecorder;
 
 namespace Picalines.OuterWilds.SceneRecorder.Json;
+
+// TODO: remove this :)
 
 internal sealed class SceneData
 {
@@ -13,9 +15,9 @@ internal sealed class SceneData
         public string Name { get; private set; }
 
         [JsonProperty("transform")]
-        public TransformData Transform { get; private set; }
+        public TransformModel Transform { get; private set; }
 
-        public GameObjectData(string name, TransformData transform)
+        public GameObjectData(string name, TransformModel transform)
         {
             Name = name;
             Transform = transform;
@@ -34,9 +36,9 @@ internal sealed class SceneData
         public float FarClipPlane { get; private set; }
 
         [JsonProperty("initial_transform")]
-        public TransformData InitialTransform { get; private set; }
+        public TransformModel InitialTransform { get; private set; }
 
-        public CameraData(float fieldOfView, float nearClipPlane, float farClipPlane, TransformData initialTransform)
+        public CameraData(float fieldOfView, float nearClipPlane, float farClipPlane, TransformModel initialTransform)
         {
             FieldOfView = fieldOfView;
             NearClipPlane = nearClipPlane;
@@ -67,7 +69,7 @@ internal sealed class SceneData
     public CameraData DepthCamera { get; private set; }
 
     [JsonProperty("free_camera_transforms")]
-    public IReadOnlyList<TransformData> FreeCameraTransforms { get; private set; }
+    public IReadOnlyList<TransformModel> FreeCameraTransforms { get; private set; }
 
     private SceneData(
         int frames,
@@ -77,7 +79,7 @@ internal sealed class SceneData
         CameraData playerCamera,
         CameraData backgroundCamera,
         CameraData depthCamera,
-        IReadOnlyList<TransformData> freeCameraTransforms)
+        IReadOnlyList<TransformModel> freeCameraTransforms)
     {
         RecordedFrames = frames;
         RecorderSettings = recorderSettings;
@@ -89,7 +91,7 @@ internal sealed class SceneData
         FreeCameraTransforms = freeCameraTransforms;
     }
 
-    public static SceneData Capture(SceneRecorderSettings recorderSettings, int recordedFrames, IReadOnlyList<TransformData> freeCameraTransforms)
+    public static SceneData Capture(SceneRecorderSettings recorderSettings, int recordedFrames, IReadOnlyList<TransformModel> freeCameraTransforms)
     {
         var player = Locator.GetPlayerBody();
         var playerCamera = Locator.GetPlayerCamera();
@@ -115,17 +117,14 @@ internal sealed class SceneData
 
     public string ToJSON()
     {
-        return JsonConvert.SerializeObject(this, new JsonSerializerSettings()
-        {
-            Converters = { new TransformDataConverter() },
-        });
+        return JsonConvert.SerializeObject(this);
     }
 
     private static GameObjectData CaptureGameObjectData(GameObject gameObject)
     {
         return new GameObjectData(
             name: gameObject.name,
-            transform: CaptureTransformData(gameObject.transform));
+            transform: TransformModel.FromGlobalTransform(gameObject.transform));
     }
 
     private static CameraData CaptureCameraData(OWCamera owCamera)
@@ -134,11 +133,6 @@ internal sealed class SceneData
             fieldOfView: owCamera.fieldOfView,
             nearClipPlane: owCamera.nearClipPlane,
             farClipPlane: owCamera.farClipPlane,
-            initialTransform: CaptureTransformData(owCamera.transform));
-    }
-
-    private static TransformData CaptureTransformData(Transform transform)
-    {
-        return new TransformData(transform.position, transform.rotation, transform.localScale);
+            initialTransform: TransformModel.FromGlobalTransform(owCamera.transform));
     }
 }

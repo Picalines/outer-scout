@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFramework>net48</TargetFramework>
 		<Copyright>Copyright © 2023 Picalines</Copyright>
-		<RootNamespace>Picalines.OuterWilds.SceneRecorder.Recording</RootNamespace>
+		<RootNamespace>Picalines.OuterWilds.SceneRecorder.BodyMeshExport</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -27,6 +27,5 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\SceneRecorder.Models\SceneRecorder.Models.csproj" />
-	  <ProjectReference Include="..\SceneRecorder.Recording.FFmpeg\SceneRecorder.Recording.FFmpeg.csproj" />
 	</ItemGroup>
 </Project>

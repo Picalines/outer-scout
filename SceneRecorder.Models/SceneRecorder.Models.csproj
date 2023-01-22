@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFramework>net48</TargetFramework>
 		<Copyright>Copyright © 2023 Picalines</Copyright>
-		<RootNamespace>Picalines.OuterWilds.SceneRecorder.Recording</RootNamespace>
+		<RootNamespace>Picalines.OuterWilds.SceneRecorder.Models</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -24,9 +24,5 @@
 		<PackageReference Include="OWML" Version="2.9.0" />
 		<PackageReference Include="OuterWildsGameLibs" Version="1.1.13.393" />
 		<PackageReference Include="HarmonyX" Version="2.10.1" />
-	</ItemGroup>
-	<ItemGroup>
-	  <ProjectReference Include="..\SceneRecorder.Models\SceneRecorder.Models.csproj" />
-	  <ProjectReference Include="..\SceneRecorder.Recording.FFmpeg\SceneRecorder.Recording.FFmpeg.csproj" />
 	</ItemGroup>
 </Project>
