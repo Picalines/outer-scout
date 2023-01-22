@@ -1,26 +1,25 @@
 ﻿using OWML.Common;
 using Picalines.OuterWilds.SceneRecorder.Http;
-using Picalines.OuterWilds.SceneRecorder.Json;
+using Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebInterop;
 
 internal sealed class WebApiServer : IDisposable
 {
-    private readonly IModConsole _ModConsole;
+    public string Url { get; }
 
-    private readonly SceneRecorderMod _SceneRecorderMod;
+    private readonly OutputRecorder _OutputRecorder;
 
     private HttpServer? _HttpServer;
 
     public WebApiServer(
-        IModConsole modConsole,
-        SceneRecorderSettings settings,
-        SceneRecorderMod sceneRecorderMod)
+        IModConfig modConfig,
+        OutputRecorder outputRecorder)
     {
-        _ModConsole = modConsole;
-        _SceneRecorderMod = sceneRecorderMod;
+        _OutputRecorder = outputRecorder;
 
-        var httpServerBuilder = new HttpServerBuilder(settings.WebApiUrl);
+        Url = $"http://localhost:{modConfig.GetSettingsValue<int>("web_api_port")}/";
+        var httpServerBuilder = new HttpServerBuilder(Url);
 
         MapRoutes(httpServerBuilder);
 
@@ -46,26 +45,19 @@ internal sealed class WebApiServer : IDisposable
         {
             var shouldRecord = context.Request.GetQueryParameter<bool>("enabled");
 
-            if ((shouldRecord, _SceneRecorderMod.IsAbleToRecord) is (true, false))
+            if ((shouldRecord, _OutputRecorder.IsAbleToRecord) is (true, false))
             {
                 return Response.ServiceUnavailable("Unable to record scene");
             }
 
-            if (shouldRecord == _SceneRecorderMod.IsRecording)
+            if (shouldRecord == _OutputRecorder.IsRecording)
             {
                 return Response.NotModified<string>();
             }
 
-            bool success = (shouldRecord, _SceneRecorderMod.IsRecording) switch
-            {
-                (true, false) => _SceneRecorderMod.TryStartRecording(),
-                (false, true) => success = _SceneRecorderMod.TryStopRecording(),
-                _ => throw new InvalidProgramException(),
-            };
+            _OutputRecorder.enabled = shouldRecord;
 
-            return success
-                ? Response.Ok<string>()
-                : Response.ServiceUnavailable($"Failed to {(shouldRecord ? "start" : "stop")} recording");
+            return Response.Ok<string>();
         });
     }
 }

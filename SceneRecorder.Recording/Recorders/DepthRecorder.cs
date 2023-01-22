@@ -1,8 +1,10 @@
-﻿using UnityEngine;
+﻿using Picalines.OuterWilds.SceneRecorder.Recording.Extensions;
+using Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
+using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording;
+namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
 
-public sealed class DepthRecorder : RenderTextureRecorder
+internal sealed class DepthRecorder : RenderTextureRecorder
 {
     public const string CameraGameObjectName = "Depth Camera";
 

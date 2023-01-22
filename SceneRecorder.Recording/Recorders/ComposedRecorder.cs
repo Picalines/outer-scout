@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording;
+namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
 
-public sealed class ComposedRecorder : MonoBehaviour, IRecorder
+internal sealed class ComposedRecorder : MonoBehaviour, IRecorder
 {
     private IReadOnlyList<IRecorder> _Recorders = Array.Empty<IRecorder>();
 
@@ -13,7 +13,7 @@ public sealed class ComposedRecorder : MonoBehaviour, IRecorder
         get => _Recorders;
         set
         {
-            if (_Awoken is true)
+            if (IsRecording is true)
             {
                 throw new InvalidOperationException();
             }
@@ -22,37 +22,61 @@ public sealed class ComposedRecorder : MonoBehaviour, IRecorder
         }
     }
 
-    public IRecorder MainRecorder
+    public IRecorder? MainRecorder
     {
-        get => Recorders[0];
+        get => Recorders.FirstOrDefault();
     }
 
     public bool IsRecording
     {
-        get => MainRecorder.IsRecording;
+        get => MainRecorder?.IsRecording ?? false;
     }
 
     public int FramesRecorded
     {
-        get => MainRecorder.FramesRecorded;
+        get => MainRecorder?.FramesRecorded ?? 0;
     }
 
     public event Action RecordingStarted
     {
-        add => MainRecorder.RecordingStarted += value;
-        remove => MainRecorder.RecordingStarted -= value;
+        add
+        {
+            if (MainRecorder is not null)
+                MainRecorder.RecordingStarted += value;
+        }
+        remove
+        {
+            if (MainRecorder is not null)
+                MainRecorder.RecordingStarted -= value;
+        }
     }
 
     public event Action BeforeFrameRecorded
     {
-        add => MainRecorder.BeforeFrameRecorded += value;
-        remove => MainRecorder.BeforeFrameRecorded -= value;
+        add
+        {
+            if (MainRecorder is not null)
+                MainRecorder.BeforeFrameRecorded += value;
+        }
+        remove
+        {
+            if (MainRecorder is not null)
+                MainRecorder.BeforeFrameRecorded -= value;
+        }
     }
 
     public event Action RecordingFinished
     {
-        add => MainRecorder.RecordingFinished += value;
-        remove => MainRecorder.RecordingFinished -= value;
+        add
+        {
+            if (MainRecorder is not null)
+                MainRecorder.RecordingFinished += value;
+        }
+        remove
+        {
+            if (MainRecorder is not null)
+                MainRecorder.RecordingFinished -= value;
+        }
     }
 
     private void Awake()

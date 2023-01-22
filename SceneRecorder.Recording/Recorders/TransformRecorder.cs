@@ -1,9 +1,10 @@
 ﻿using Picalines.OuterWilds.SceneRecorder.Models;
+using Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording;
+namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
 
-public sealed class TransformRecorder : ValueRecorder<TransformModel>
+internal sealed class TransformRecorder : ValueRecorder<TransformModel>
 {
     private Transform? _Transform;
 

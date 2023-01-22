@@ -1,9 +1,10 @@
-﻿using UnityEngine;
+﻿using Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
+using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording;
+namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
 
 [RequireComponent(typeof(Camera))]
-public sealed class BackgroundRecorder : RenderTextureRecorder
+internal sealed class BackgroundRecorder : RenderTextureRecorder
 {
     public int Width { get; set; } = 1920;
 

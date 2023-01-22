@@ -1,13 +1,13 @@
-﻿using UnityEngine;
+﻿using Picalines.OuterWilds.SceneRecorder.Recording.Extensions;
+using Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
+using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording;
+namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
 
-public sealed class HDRIRecorder : RenderTextureRecorder
+internal sealed class HDRIRecorder : RenderTextureRecorder
 {
     public int CubemapFaceSize { get; set; } = 2048;
-
-    public Vector3 LocalPositionOffset { get; set; } = Vector3.zero;
 
     private RenderTexture? _CubemapFrameTexture = null;
 
@@ -81,8 +81,6 @@ public sealed class HDRIRecorder : RenderTextureRecorder
         for (int i = 0; i < _OWCameras.Length; i++)
         {
             var owCamera = _OWCameras[i];
-
-            owCamera.gameObject.transform.localPosition = LocalPositionOffset;
 
             if (owCamera.targetTexture == null)
             {

@@ -1,6 +1,6 @@
-﻿namespace Picalines.OuterWilds.SceneRecorder.Recording;
+﻿namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
 
-public abstract class ValueRecorder<T> : RecorderComponent
+internal abstract class ValueRecorder<T> : RecorderComponent
 {
     private List<T>? _ValueFrames = null;
 

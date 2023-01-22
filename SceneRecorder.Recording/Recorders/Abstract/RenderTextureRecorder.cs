@@ -2,9 +2,9 @@
 using Picalines.OuterWilds.SceneRecorder.Recording.FFmpeg;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording;
+namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
 
-public abstract class RenderTextureRecorder : RecorderComponent
+internal abstract class RenderTextureRecorder : RecorderComponent
 {
     public IModConsole ModConsole { get; set; } = null!;
 

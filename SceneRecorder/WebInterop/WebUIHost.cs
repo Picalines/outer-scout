@@ -1,5 +1,4 @@
 ﻿using OWML.Common;
-using Picalines.OuterWilds.SceneRecorder.Json;
 using System.Diagnostics;
 using System.Reflection;
 
@@ -11,9 +10,12 @@ internal sealed class WebUIHost : IDisposable
 
     private Process? _UIProcess;
 
-    public WebUIHost(IModConsole modConsole, SceneRecorderSettings settings)
+    public WebUIHost(IModConfig modConfig, IModConsole modConsole)
     {
         _ModConsole = modConsole;
+
+        var webUIUrl = $"http://localhost:{modConfig.GetSettingsValue<int>("web_ui_port")}/";
+        var webApiUrl = $"http://localhost:{modConfig.GetSettingsValue<int>("web_api_port")}/";
 
         _UIProcess = Process.Start(new ProcessStartInfo()
         {
@@ -21,7 +23,7 @@ internal sealed class WebUIHost : IDisposable
             UseShellExecute = false,
             FileName = "dotnet",
             WorkingDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "WebUI"),
-            Arguments = $"OuterWilds.SceneRecorder.WebUI.dll --urls \"{settings.WebUIUrl}\" --api-url \"{settings.WebApiUrl}\"",
+            Arguments = $"OuterWilds.SceneRecorder.WebUI.dll --urls \"{webUIUrl}\" --api-url \"{webApiUrl}\"",
             RedirectStandardInput = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,

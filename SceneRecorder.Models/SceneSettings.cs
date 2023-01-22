@@ -30,4 +30,9 @@ public sealed class SceneSettings
     private SceneSettings()
     {
     }
+
+    public (int, int) Resolution
+    {
+        get => (ResolutionX, ResolutionY);
+    }
 }

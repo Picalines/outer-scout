@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording;
+namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
 
 public abstract class RecorderComponent : MonoBehaviour, IRecorder
 {
@@ -17,6 +17,10 @@ public abstract class RecorderComponent : MonoBehaviour, IRecorder
     public int FramesRecorded { get; private set; } = 0;
 
     private bool _IsInAwake = false;
+
+    internal RecorderComponent()
+    {
+    }
 
     private void Awake()
     {
