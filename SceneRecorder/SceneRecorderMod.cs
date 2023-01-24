@@ -3,15 +3,15 @@ using OWML.Common;
 using OWML.ModHelper;
 using Picalines.OuterWilds.SceneRecorder.Json;
 using Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
-using Picalines.OuterWilds.SceneRecorder.Utils;
-using Picalines.OuterWilds.SceneRecorder.WebInterop;
+using Picalines.OuterWilds.SceneRecorder.WebApi;
+using Picalines.OuterWilds.SceneRecorder.WebUI;
 using UnityEngine.InputSystem;
 
 namespace Picalines.OuterWilds.SceneRecorder;
 
 internal sealed class SceneRecorderMod : ModBehaviour
 {
-    private const Key _RecordKey = Key.F9;
+    private const Key _OpenWebUIKey = Key.F9;
 
     private string _SceneSettingsPath = null!;
 
@@ -23,19 +23,8 @@ internal sealed class SceneRecorderMod : ModBehaviour
 
     private WebUIHost? _WebUIHost = null;
 
-    private readonly LazyUnityReference<OWRigidbody> _Player = new(Locator.GetPlayerBody);
-
-    private readonly LazyUnityReference<OWCamera> _PlayerCamera = new(Locator.GetPlayerCamera);
-
-    private readonly LazyUnityReference<PlayerAudioController> _PlayerAudioController = new(Locator.GetPlayerAudioController);
-
-    private readonly LazyUnityReference<OWCamera> _FreeCamera = LazyUnityReference.FromFind<OWCamera>("FREECAM");
-
     public override void Configure(IModConfig config)
     {
-        _WebUIHost?.Dispose();
-        _WebApiServer?.Dispose();
-
         try
         {
             _SceneSettingsPath = config.GetSettingsValue<string>("owscene_path");
@@ -43,13 +32,11 @@ internal sealed class SceneRecorderMod : ModBehaviour
         }
         catch (Exception exception)
         {
-            ModHelper.Console.WriteLine($"Invalid {nameof(SceneRecorder)} settings. See exception:", MessageType.Error);
+            ModHelper.Console.WriteLine($"Invalid .owscene file. See exception:", MessageType.Error);
             ModHelper.Console.WriteLine(exception.ToString(), MessageType.Error);
         }
 
-        _WebApiServer = new WebApiServer(config, _OutputRecorder);
-
-        _WebUIHost = new WebUIHost(config, ModHelper.Console);
+        ConfigureComponents();
     }
 
     private void Start()
@@ -57,61 +44,44 @@ internal sealed class SceneRecorderMod : ModBehaviour
         ModHelper.Console.WriteLine($"{nameof(SceneRecorder)} is loaded!", MessageType.Success);
 
         _OutputRecorder = gameObject.AddComponent<OutputRecorder>();
+        _OutputRecorder.BeforeRecordingStarted += () =>
+        {
+            _OutputRecorder.ModConsole = ModHelper.Console;
+            _OutputRecorder.SceneSettings = _SceneSettings;
+            _OutputRecorder.OutputDirectory = Path.GetDirectoryName(_SceneSettingsPath);
+        };
+
+        _WebApiServer = gameObject.AddComponent<WebApiServer>();
+
+        _WebUIHost = gameObject.AddComponent<WebUIHost>();
+
+        ConfigureComponents();
     }
 
-    private bool ListenToInput
+    private void ConfigureComponents()
     {
-        get => _Player.ObjectExists;
+        _WebApiServer?.Configure(ModHelper.Config);
+        _WebUIHost?.Configure(ModHelper.Config, ModHelper.Console);
     }
 
     private void OnDestroy()
     {
-        _WebUIHost?.Dispose();
-        _WebApiServer?.Dispose();
-
+        Destroy(_WebUIHost);
+        Destroy(_WebApiServer);
         Destroy(_OutputRecorder);
     }
 
     private void Update()
     {
-        if (ListenToInput is false)
+        if (Keyboard.current[_OpenWebUIKey].wasPressedThisFrame)
         {
-            return;
+            if (_OutputRecorder.IsAbleToRecord is false)
+            {
+                Locator.GetPlayerAudioController().PlayNegativeUISound();
+                return;
+            }
+
+            _WebUIHost?.ToggleBrowser();
         }
-
-        if (Keyboard.current[_RecordKey].isPressed)
-        {
-            TryStartRecording();
-        }
-        else
-        {
-            TryStopRecording();
-        }
-    }
-
-    private void TryStartRecording()
-    {
-        if (_OutputRecorder == null || _OutputRecorder is { enabled: true } or { IsAbleToRecord: false })
-        {
-            return;
-        }
-
-        gameObject.SetActive(false);
-
-        _OutputRecorder.Configure(ModHelper.Console, _SceneSettings, Path.GetDirectoryName(_SceneSettingsPath));
-
-        gameObject.SetActive(true);
-
-        _OutputRecorder.enabled = true;
-    }
-
-    private void TryStopRecording()
-    {
-        if (!(_OutputRecorder != null && _OutputRecorder.enabled))
-        {
-            return;
-        }
-
-        _OutputRecorder.enabled = false;
     }
 }

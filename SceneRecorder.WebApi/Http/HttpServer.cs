@@ -1,21 +1,30 @@
-﻿using System.Net;
+﻿using System.Collections.Concurrent;
+using System.Net;
+using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Http;
+namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 
-public sealed class HttpServer
+internal sealed class HttpServer : MonoBehaviour
 {
     public bool Listening { get; private set; } = false;
 
-    private readonly string _BaseUrl;
+    private string _BaseUrl = null!;
 
-    private readonly HttpListener _HttpListener;
+    private HttpListener _HttpListener = null!;
 
-    private readonly IReadOnlyList<IRequestHandler> _RequestHandlers;
+    private IReadOnlyList<RequestHandler> _RequestHandlers = null!;
 
     private TaskCompletionSource<object?>? _StoppedListening;
 
-    internal HttpServer(string baseUrl, IReadOnlyList<IRequestHandler> requestHandlers)
+    private readonly ConcurrentQueue<Action> _UnityThreadActionQueue = new();
+
+    public void Configure(string baseUrl, IReadOnlyList<RequestHandler> requestHandlers)
     {
+        if (Listening)
+        {
+            throw new InvalidOperationException();
+        }
+
         if (baseUrl.EndsWith("/") is false)
         {
             throw new ArgumentException("must end with /", nameof(baseUrl));
@@ -77,9 +86,13 @@ public sealed class HttpServer
             bool handled = false;
             foreach (var handler in _RequestHandlers)
             {
-                if (handler.Route.TrySetRequestParameters(request))
+                if (handler.Route.MatchRequest(request))
                 {
-                    handler.BuildResponse(request, context.Response);
+                    _UnityThreadActionQueue.Enqueue(() =>
+                    {
+                        var response = handler.Handle(request);
+                        response.ToHttpListenerResponse(context.Response);
+                    });
                     handled = true;
                     break;
                 }
@@ -87,13 +100,19 @@ public sealed class HttpServer
 
             if (handled is false)
             {
-                var response = context.Response;
-                response.StatusCode = (int)HttpStatusCode.NotFound;
-                response.OutputStream.Close();
+                ResponseFabric.NotFound().ToHttpListenerResponse(context.Response);
             }
         }
 
         _HttpListener.Stop();
         _StoppedListening.SetResult(null);
+    }
+
+    private void Update()
+    {
+        if (_UnityThreadActionQueue.TryDequeue(out var action))
+        {
+            action();
+        }
     }
 }

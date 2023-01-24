@@ -1,29 +1,36 @@
 ﻿using OWML.Common;
 using System.Diagnostics;
 using System.Reflection;
+using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.WebInterop;
+namespace Picalines.OuterWilds.SceneRecorder.WebUI;
 
-internal sealed class WebUIHost : IDisposable
+public sealed class WebUIHost : MonoBehaviour
 {
-    private readonly IModConsole _ModConsole;
+    private IModConsole _ModConsole = null!;
+
+    private string _Url = null!;
 
     private Process? _UIProcess;
 
-    public WebUIHost(IModConfig modConfig, IModConsole modConsole)
+    private bool _IsBrowserOpened = false;
+
+    public void Configure(IModConfig modConfig, IModConsole modConsole)
     {
+        OnDestroy();
+
         _ModConsole = modConsole;
 
-        var webUIUrl = $"http://localhost:{modConfig.GetSettingsValue<int>("web_ui_port")}/";
-        var webApiUrl = $"http://localhost:{modConfig.GetSettingsValue<int>("web_api_port")}/";
+        _Url = $"http://localhost:{modConfig.GetSettingsValue<int>("web_ui_port")}/";
+        var apiUrl = $"http://localhost:{modConfig.GetSettingsValue<int>("web_api_port")}/";
 
         _UIProcess = Process.Start(new ProcessStartInfo()
         {
             CreateNoWindow = true,
             UseShellExecute = false,
             FileName = "dotnet",
-            WorkingDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "WebUI"),
-            Arguments = $"OuterWilds.SceneRecorder.WebUI.dll --urls \"{webUIUrl}\" --api-url \"{webApiUrl}\"",
+            WorkingDirectory = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "WebUI.BlazorApp"),
+            Arguments = $"SceneRecorder.WebUI.BlazorApp.dll --urls \"{_Url}\" --api-url \"{apiUrl}\"",
             RedirectStandardInput = false,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -35,7 +42,7 @@ internal sealed class WebUIHost : IDisposable
         _UIProcess.BeginOutputReadLine();
     }
 
-    public void Dispose()
+    private void OnDestroy()
     {
         if (_UIProcess is null)
         {
@@ -49,6 +56,18 @@ internal sealed class WebUIHost : IDisposable
 
         _UIProcess.Dispose();
         _UIProcess = null;
+    }
+
+    public void ToggleBrowser()
+    {
+        _IsBrowserOpened = !_IsBrowserOpened;
+
+        Screen.fullScreen = !_IsBrowserOpened;
+
+        if (_IsBrowserOpened)
+        {
+            Application.OpenURL(_Url);
+        }
     }
 
     private void OnUIProcessDataReceived(object sender, DataReceivedEventArgs args)

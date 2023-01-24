@@ -1,6 +1,6 @@
-﻿namespace Picalines.OuterWilds.SceneRecorder.Http;
+﻿namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 
-public sealed class Request
+internal sealed class Request
 {
     public HttpMethod HttpMethod { get; }
 

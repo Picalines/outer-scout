@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace Picalines.OuterWilds.SceneRecorder.Http;
+namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 
 internal sealed partial record Route(
     HttpMethod HttpMethod,
@@ -50,7 +50,7 @@ internal sealed partial record Route(
         }
     }
 
-    public bool TrySetRequestParameters(Request request)
+    public bool MatchRequest(Request request)
     {
         var urlRouteParts = GetUrlParts(request.Url).ToArray();
 
@@ -125,9 +125,14 @@ internal sealed partial record Route(
 
     private static IEnumerable<(string Value, bool IsQuery)> GetUrlParts(string url)
     {
-        int firstQueryParameterIndex = url.Count(chr => chr == '/') + 1;
+        var sections = url.Split('?');
 
-        return url.Split('/', '&')
-            .Select((pathPart, partIndex) => (pathPart, partIndex >= firstQueryParameterIndex));
+        var routeParts = sections[0].Split('/').Select(part => (part, false));
+
+        var queryParts = sections.Length > 1
+            ? sections[1].Split('&').Select(part => (part, true))
+            : Array.Empty<(string, bool)>();
+
+        return routeParts.Concat(queryParts);
     }
 }

@@ -5,9 +5,15 @@ using UnityEngine;
 
 namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
 
-public class OutputRecorder : RecorderComponent
+public sealed class OutputRecorder : RecorderComponent
 {
-    private bool _IsConfigured = false;
+    public event Action? BeforeRecordingStarted;
+
+    public IModConsole? ModConsole { get; set; } = null;
+
+    public SceneSettings? SceneSettings { get; set; } = null;
+
+    public string? OutputDirectory { get; set; } = null;
 
     private ComposedRecorder _ComposedRecorder = null!;
 
@@ -26,14 +32,14 @@ public class OutputRecorder : RecorderComponent
 
         RecordingStarted += OnRecordingStarted;
         RecordingFinished += OnRecordingFinished;
+        BeforeFrameRecorded += OnBeforeFrameRecorded;
     }
 
     private void OnRecordingStarted()
     {
-        if (_IsConfigured is false)
-        {
-            throw new InvalidOperationException($"recording started before the {nameof(Configure)} method");
-        }
+        BeforeRecordingStarted?.Invoke();
+
+        Configure();
 
         _OnRecordingStarted?.Invoke();
 
@@ -45,8 +51,14 @@ public class OutputRecorder : RecorderComponent
         _ComposedRecorder.enabled = false;
 
         _OnRecordingFinished?.Invoke();
+    }
 
-        _IsConfigured = false;
+    private void OnBeforeFrameRecorded()
+    {
+        if (FramesRecorded >= SceneSettings!.FrameCount)
+        {
+            enabled = false;
+        }
     }
 
     public bool IsAbleToRecord
@@ -56,13 +68,28 @@ public class OutputRecorder : RecorderComponent
             return Locator.GetPlayerBody() != null
                 && GameObject.Find("FREECAM") is var freeCamObject
                 && freeCamObject != null
-                && freeCamObject.TryGetComponent<OWCamera>(out var freeCam)
+                && freeCamObject.TryGetComponent<Camera>(out var freeCam)
                 && freeCam.enabled;
         }
     }
 
-    public void Configure(IModConsole modConsole, SceneSettings sceneSettings, string outputDirectory)
+    private void Configure()
     {
+        if (ModConsole is null)
+        {
+            throw new ArgumentNullException(nameof(ModConsole));
+        }
+
+        if (SceneSettings is null)
+        {
+            throw new ArgumentNullException(nameof(SceneSettings));
+        }
+
+        if (OutputDirectory is null)
+        {
+            throw new ArgumentNullException(nameof(OutputDirectory));
+        }
+
         if (IsAbleToRecord is false)
         {
             throw new InvalidOperationException("unable to record");
@@ -74,18 +101,18 @@ public class OutputRecorder : RecorderComponent
 
         // background recorder
         var backgroundRecorder = GetOrAddComponent<BackgroundRecorder>(freeCamera.gameObject);
-        (backgroundRecorder.Width, backgroundRecorder.Height) = sceneSettings.Resolution;
-        backgroundRecorder.FrameRate = sceneSettings.FrameRate;
+        (backgroundRecorder.Width, backgroundRecorder.Height) = SceneSettings.Resolution;
+        backgroundRecorder.FrameRate = SceneSettings.FrameRate;
 
         // depth recorder
         var depthRecorder = GetOrAddComponent<DepthRecorder>(freeCamera.gameObject);
-        (depthRecorder.Width, depthRecorder.Height) = sceneSettings.Resolution;
-        depthRecorder.FrameRate = sceneSettings.FrameRate;
+        (depthRecorder.Width, depthRecorder.Height) = SceneSettings.Resolution;
+        depthRecorder.FrameRate = SceneSettings.FrameRate;
 
         // hdri recorder
         var hdriRecorder = GetOrAddComponent<HDRIRecorder>(playerCameraContoller.gameObject);
-        hdriRecorder.CubemapFaceSize = sceneSettings.HDRIFaceSize;
-        hdriRecorder.FrameRate = sceneSettings.FrameRate;
+        hdriRecorder.CubemapFaceSize = SceneSettings.HDRIFaceSize;
+        hdriRecorder.FrameRate = SceneSettings.FrameRate;
 
         // render hdri to GUI (TODO: replace with web)
         GetOrAddComponent<RenderTextureRecorderGUI>(hdriRecorder.gameObject);
@@ -101,9 +128,9 @@ public class OutputRecorder : RecorderComponent
 
         foreach (var recorder in _ComposedRecorder.Recorders.OfType<RenderTextureRecorder>())
         {
-            recorder.ModConsole = modConsole;
+            recorder.ModConsole = ModConsole;
 
-            recorder.TargetFile = Path.Combine(outputDirectory, recorder switch
+            recorder.TargetFile = Path.Combine(OutputDirectory, recorder switch
             {
                 BackgroundRecorder => "background.mp4",
                 DepthRecorder => "depth.mp4",
@@ -112,7 +139,7 @@ public class OutputRecorder : RecorderComponent
             });
         }
 
-        var playerRenderersToToggle = sceneSettings.HidePlayerModel
+        var playerRenderersToToggle = SceneSettings.HidePlayerModel
             ? player.gameObject.GetComponentsInChildren<Renderer>()
                 .Where(renderer => renderer.enabled)
                 .ToArray()
@@ -124,7 +151,7 @@ public class OutputRecorder : RecorderComponent
             playerCameraContoller.SetDegreesY(0);
             Locator.GetQuantumMoon().SetActivation(false);
 
-            modConsole.WriteLine($"Recording started ({outputDirectory})");
+            ModConsole.WriteLine($"Recording started ({OutputDirectory})");
         };
 
         _OnRecordingFinished = () =>
@@ -132,10 +159,8 @@ public class OutputRecorder : RecorderComponent
             ForEach(playerRenderersToToggle, renderer => renderer.enabled = true);
             Locator.GetQuantumMoon().SetActivation(true);
 
-            modConsole.WriteLine($"Recording finished ({outputDirectory})");
+            ModConsole.WriteLine($"Recording finished ({OutputDirectory})");
         };
-
-        _IsConfigured = true;
 
         static void ForEach<T>(T[] array, Action<T> action)
         {

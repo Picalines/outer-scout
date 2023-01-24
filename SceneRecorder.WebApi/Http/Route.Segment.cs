@@ -1,4 +1,4 @@
-﻿namespace Picalines.OuterWilds.SceneRecorder.Http;
+﻿namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 
 internal sealed partial record Route
 {
@@ -23,8 +23,8 @@ internal sealed partial record Route
         {
             parameterValue = parameterUrlValue switch
             {
-                "true" => true,
-                "false" => false,
+                "true" or "True" => true,
+                "false" or "False" => false,
                 _ => null,
             };
             return parameterValue is not null;
