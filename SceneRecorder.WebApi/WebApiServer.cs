@@ -54,6 +54,11 @@ public sealed class WebApiServer : MonoBehaviour
             _ => ResponseFabric.ServiceUnavailable(),
         });
 
+        serverBuilder.MapGet("player/last_ground_body/name", request =>
+            LocatorExtensions.IsInSolarSystemScene()
+                ? ResponseFabric.Ok(Locator.GetPlayerController().GetLastGroundBodyOr(AstroObject.Name.TimberHearth).name)
+                : ResponseFabric.ServiceUnavailable());
+
         serverBuilder.MapGet("recorder/frames_recorded", request => _OutputRecorder switch
         {
             { IsAbleToRecord: false } => ResponseFabric.ServiceUnavailable(),

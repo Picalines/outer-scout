@@ -17,9 +17,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SceneRecorder.BodyMeshExpor
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SceneRecorder.WebUI.BlazorApp", "SceneRecorder.WebUI.BlazorApp\SceneRecorder.WebUI.BlazorApp.csproj", "{4DCF7E2B-B217-465C-8A99-E2C48F5B6091}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SceneRecorder.WebUI", "SceneRecorder.WebUI\SceneRecorder.WebUI.csproj", "{A61996C6-49BC-4A11-856C-D51C4C963CA2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SceneRecorder.WebUI", "SceneRecorder.WebUI\SceneRecorder.WebUI.csproj", "{A61996C6-49BC-4A11-856C-D51C4C963CA2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SceneRecorder.WebApi", "SceneRecorder.WebApi\SceneRecorder.WebApi.csproj", "{9ECB2436-87B7-40E6-A862-FE1F8E3BB45D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SceneRecorder.WebApi", "SceneRecorder.WebApi\SceneRecorder.WebApi.csproj", "{9ECB2436-87B7-40E6-A862-FE1F8E3BB45D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
