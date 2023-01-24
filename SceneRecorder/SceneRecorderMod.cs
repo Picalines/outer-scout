@@ -36,7 +36,15 @@ internal sealed class SceneRecorderMod : ModBehaviour
             ModHelper.Console.WriteLine(exception.ToString(), MessageType.Error);
         }
 
-        ConfigureComponents();
+        if (_OutputRecorder is not null)
+        {
+            _OutputRecorder.ModConsole = ModHelper.Console;
+            _OutputRecorder.SceneSettings = _SceneSettings;
+            _OutputRecorder.OutputDirectory = Path.GetDirectoryName(_SceneSettingsPath);
+        }
+
+        _WebApiServer?.Configure(ModHelper.Config);
+        _WebUIHost?.Configure(ModHelper.Config, ModHelper.Console);
     }
 
     private void Start()
@@ -44,24 +52,12 @@ internal sealed class SceneRecorderMod : ModBehaviour
         ModHelper.Console.WriteLine($"{nameof(SceneRecorder)} is loaded!", MessageType.Success);
 
         _OutputRecorder = gameObject.AddComponent<OutputRecorder>();
-        _OutputRecorder.BeforeRecordingStarted += () =>
-        {
-            _OutputRecorder.ModConsole = ModHelper.Console;
-            _OutputRecorder.SceneSettings = _SceneSettings;
-            _OutputRecorder.OutputDirectory = Path.GetDirectoryName(_SceneSettingsPath);
-        };
 
         _WebApiServer = gameObject.AddComponent<WebApiServer>();
 
         _WebUIHost = gameObject.AddComponent<WebUIHost>();
 
-        ConfigureComponents();
-    }
-
-    private void ConfigureComponents()
-    {
-        _WebApiServer?.Configure(ModHelper.Config);
-        _WebUIHost?.Configure(ModHelper.Config, ModHelper.Console);
+        Configure(ModHelper.Config);
     }
 
     private void OnDestroy()

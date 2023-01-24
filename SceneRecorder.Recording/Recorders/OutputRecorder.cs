@@ -1,14 +1,13 @@
 ﻿using OWML.Common;
 using Picalines.OuterWilds.SceneRecorder.Json;
 using Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
 namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
 
 public sealed class OutputRecorder : RecorderComponent
 {
-    public event Action? BeforeRecordingStarted;
-
     public IModConsole? ModConsole { get; set; } = null;
 
     public SceneSettings? SceneSettings { get; set; } = null;
@@ -37,8 +36,6 @@ public sealed class OutputRecorder : RecorderComponent
 
     private void OnRecordingStarted()
     {
-        BeforeRecordingStarted?.Invoke();
-
         Configure();
 
         _OnRecordingStarted?.Invoke();
@@ -61,11 +58,13 @@ public sealed class OutputRecorder : RecorderComponent
         }
     }
 
+    [MemberNotNullWhen(true, nameof(SceneSettings))]
     public bool IsAbleToRecord
     {
         get
         {
-            return Locator.GetPlayerBody() != null
+            return SceneSettings is not null
+                && Locator.GetPlayerBody() != null
                 && GameObject.Find("FREECAM") is var freeCamObject
                 && freeCamObject != null
                 && freeCamObject.TryGetComponent<Camera>(out var freeCam)

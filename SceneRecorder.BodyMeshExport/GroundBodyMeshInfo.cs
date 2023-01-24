@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
+using Picalines.OuterWilds.SceneRecorder.Models;
 
-namespace Picalines.OuterWilds.SceneRecorder.Models;
+namespace Picalines.OuterWilds.SceneRecorder.BodyMeshExport;
 
 public sealed class GroundBodyMeshInfo
 {

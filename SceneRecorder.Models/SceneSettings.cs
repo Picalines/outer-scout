@@ -1,4 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿#if IS_TARGET_MOD
+using Newtonsoft.Json;
+#else
+using JsonProperty = System.Text.Json.Serialization.JsonPropertyNameAttribute;
+#endif
 
 namespace Picalines.OuterWilds.SceneRecorder.Json;
 
@@ -7,29 +11,25 @@ namespace Picalines.OuterWilds.SceneRecorder.Json;
 public sealed class SceneSettings
 {
     [JsonProperty("ground_body_name")]
-    public string GroundBodyName { get; private set; }
+    public string GroundBodyName { get; init; }
 
     [JsonProperty("frame_count")]
-    public int FrameCount { get; private set; }
+    public int FrameCount { get; init; }
 
     [JsonProperty("frame_rate")]
-    public int FrameRate { get; private set; }
+    public int FrameRate { get; init; }
 
     [JsonProperty("resolution_x")]
-    public int ResolutionX { get; private set; }
+    public int ResolutionX { get; init; }
 
     [JsonProperty("resolution_y")]
-    public int ResolutionY { get; private set; }
+    public int ResolutionY { get; init; }
 
     [JsonProperty("hdri_face_size")]
-    public int HDRIFaceSize { get; private set; }
+    public int HDRIFaceSize { get; init; }
 
     [JsonProperty("hide_player_model")]
-    public bool HidePlayerModel { get; private set; }
-
-    private SceneSettings()
-    {
-    }
+    public bool HidePlayerModel { get; init; }
 
     public (int, int) Resolution
     {

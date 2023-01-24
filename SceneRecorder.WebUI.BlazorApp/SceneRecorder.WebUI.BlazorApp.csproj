@@ -11,4 +11,7 @@
 	<ItemGroup>
 	  <None Include="SceneRecorder.WebUI.BlazorApp.csproj.user" />
 	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\SceneRecorder.Models\SceneRecorder.Models.csproj" />
+	</ItemGroup>
 </Project>

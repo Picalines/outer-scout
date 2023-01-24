@@ -100,51 +100,60 @@ internal static class ResponseFabric
     public static Response GatewayTimeout(string message) => Response.FromString(HttpStatusCode.GatewayTimeout, message);
     public static Response HttpVersionNotSupported(string message) => Response.FromString(HttpStatusCode.HttpVersionNotSupported, message);
 
-    public static Response Continue<T>(T value) => Response.FromJson(HttpStatusCode.Continue, value);
-    public static Response SwitchingProtocols<T>(T value) => Response.FromJson(HttpStatusCode.SwitchingProtocols, value);
-    public static Response Ok<T>(T value) => Response.FromJson(HttpStatusCode.OK, value);
-    public static Response Created<T>(T value) => Response.FromJson(HttpStatusCode.Created, value);
-    public static Response Accepted<T>(T value) => Response.FromJson(HttpStatusCode.Accepted, value);
-    public static Response NonAuthoritativeInformation<T>(T value) => Response.FromJson(HttpStatusCode.NonAuthoritativeInformation, value);
-    public static Response NoContent<T>(T value) => Response.FromJson(HttpStatusCode.NoContent, value);
-    public static Response ResetContent<T>(T value) => Response.FromJson(HttpStatusCode.ResetContent, value);
-    public static Response PartialContent<T>(T value) => Response.FromJson(HttpStatusCode.PartialContent, value);
-    public static Response MultipleChoices<T>(T value) => Response.FromJson(HttpStatusCode.MultipleChoices, value);
-    public static Response Ambiguous<T>(T value) => Response.FromJson(HttpStatusCode.Ambiguous, value);
-    public static Response MovedPermanently<T>(T value) => Response.FromJson(HttpStatusCode.MovedPermanently, value);
-    public static Response Moved<T>(T value) => Response.FromJson(HttpStatusCode.Moved, value);
-    public static Response Found<T>(T value) => Response.FromJson(HttpStatusCode.Found, value);
-    public static Response Redirect<T>(T value) => Response.FromJson(HttpStatusCode.Redirect, value);
-    public static Response SeeOther<T>(T value) => Response.FromJson(HttpStatusCode.SeeOther, value);
-    public static Response RedirectMethod<T>(T value) => Response.FromJson(HttpStatusCode.RedirectMethod, value);
-    public static Response NotModified<T>(T value) => Response.FromJson(HttpStatusCode.NotModified, value);
-    public static Response UseProxy<T>(T value) => Response.FromJson(HttpStatusCode.UseProxy, value);
-    public static Response Unused<T>(T value) => Response.FromJson(HttpStatusCode.Unused, value);
-    public static Response TemporaryRedirect<T>(T value) => Response.FromJson(HttpStatusCode.TemporaryRedirect, value);
-    public static Response RedirectKeepVerb<T>(T value) => Response.FromJson(HttpStatusCode.RedirectKeepVerb, value);
-    public static Response BadRequest<T>(T value) => Response.FromJson(HttpStatusCode.BadRequest, value);
-    public static Response Unauthorized<T>(T value) => Response.FromJson(HttpStatusCode.Unauthorized, value);
-    public static Response PaymentRequired<T>(T value) => Response.FromJson(HttpStatusCode.PaymentRequired, value);
-    public static Response Forbidden<T>(T value) => Response.FromJson(HttpStatusCode.Forbidden, value);
-    public static Response NotFound<T>(T value) => Response.FromJson(HttpStatusCode.NotFound, value);
-    public static Response MethodNotAllowed<T>(T value) => Response.FromJson(HttpStatusCode.MethodNotAllowed, value);
-    public static Response NotAcceptable<T>(T value) => Response.FromJson(HttpStatusCode.NotAcceptable, value);
-    public static Response ProxyAuthenticationRequired<T>(T value) => Response.FromJson(HttpStatusCode.ProxyAuthenticationRequired, value);
-    public static Response RequestTimeout<T>(T value) => Response.FromJson(HttpStatusCode.RequestTimeout, value);
-    public static Response Conflict<T>(T value) => Response.FromJson(HttpStatusCode.Conflict, value);
-    public static Response Gone<T>(T value) => Response.FromJson(HttpStatusCode.Gone, value);
-    public static Response LengthRequired<T>(T value) => Response.FromJson(HttpStatusCode.LengthRequired, value);
-    public static Response PreconditionFailed<T>(T value) => Response.FromJson(HttpStatusCode.PreconditionFailed, value);
-    public static Response RequestEntityTooLarge<T>(T value) => Response.FromJson(HttpStatusCode.RequestEntityTooLarge, value);
-    public static Response RequestUriTooLong<T>(T value) => Response.FromJson(HttpStatusCode.RequestUriTooLong, value);
-    public static Response UnsupportedMediaType<T>(T value) => Response.FromJson(HttpStatusCode.UnsupportedMediaType, value);
-    public static Response RequestedRangeNotSatisfiable<T>(T value) => Response.FromJson(HttpStatusCode.RequestedRangeNotSatisfiable, value);
-    public static Response ExpectationFailed<T>(T value) => Response.FromJson(HttpStatusCode.ExpectationFailed, value);
-    public static Response UpgradeRequired<T>(T value) => Response.FromJson(HttpStatusCode.UpgradeRequired, value);
-    public static Response InternalServerError<T>(T value) => Response.FromJson(HttpStatusCode.InternalServerError, value);
-    public static Response NotImplemented<T>(T value) => Response.FromJson(HttpStatusCode.NotImplemented, value);
-    public static Response BadGateway<T>(T value) => Response.FromJson(HttpStatusCode.BadGateway, value);
-    public static Response ServiceUnavailable<T>(T value) => Response.FromJson(HttpStatusCode.ServiceUnavailable, value);
-    public static Response GatewayTimeout<T>(T value) => Response.FromJson(HttpStatusCode.GatewayTimeout, value);
-    public static Response HttpVersionNotSupported<T>(T value) => Response.FromJson(HttpStatusCode.HttpVersionNotSupported, value);
+    private static Response FromValue<T>(HttpStatusCode httpStatusCode, T value)
+    {
+        return value switch
+        {
+            string stringValue => Response.FromString(httpStatusCode, stringValue),
+            _ => Response.FromJson(httpStatusCode, value),
+        };
+    }
+
+    public static Response Continue<T>(T value) => FromValue(HttpStatusCode.Continue, value);
+    public static Response SwitchingProtocols<T>(T value) => FromValue(HttpStatusCode.SwitchingProtocols, value);
+    public static Response Ok<T>(T value) => FromValue(HttpStatusCode.OK, value);
+    public static Response Created<T>(T value) => FromValue(HttpStatusCode.Created, value);
+    public static Response Accepted<T>(T value) => FromValue(HttpStatusCode.Accepted, value);
+    public static Response NonAuthoritativeInformation<T>(T value) => FromValue(HttpStatusCode.NonAuthoritativeInformation, value);
+    public static Response NoContent<T>(T value) => FromValue(HttpStatusCode.NoContent, value);
+    public static Response ResetContent<T>(T value) => FromValue(HttpStatusCode.ResetContent, value);
+    public static Response PartialContent<T>(T value) => FromValue(HttpStatusCode.PartialContent, value);
+    public static Response MultipleChoices<T>(T value) => FromValue(HttpStatusCode.MultipleChoices, value);
+    public static Response Ambiguous<T>(T value) => FromValue(HttpStatusCode.Ambiguous, value);
+    public static Response MovedPermanently<T>(T value) => FromValue(HttpStatusCode.MovedPermanently, value);
+    public static Response Moved<T>(T value) => FromValue(HttpStatusCode.Moved, value);
+    public static Response Found<T>(T value) => FromValue(HttpStatusCode.Found, value);
+    public static Response Redirect<T>(T value) => FromValue(HttpStatusCode.Redirect, value);
+    public static Response SeeOther<T>(T value) => FromValue(HttpStatusCode.SeeOther, value);
+    public static Response RedirectMethod<T>(T value) => FromValue(HttpStatusCode.RedirectMethod, value);
+    public static Response NotModified<T>(T value) => FromValue(HttpStatusCode.NotModified, value);
+    public static Response UseProxy<T>(T value) => FromValue(HttpStatusCode.UseProxy, value);
+    public static Response Unused<T>(T value) => FromValue(HttpStatusCode.Unused, value);
+    public static Response TemporaryRedirect<T>(T value) => FromValue(HttpStatusCode.TemporaryRedirect, value);
+    public static Response RedirectKeepVerb<T>(T value) => FromValue(HttpStatusCode.RedirectKeepVerb, value);
+    public static Response BadRequest<T>(T value) => FromValue(HttpStatusCode.BadRequest, value);
+    public static Response Unauthorized<T>(T value) => FromValue(HttpStatusCode.Unauthorized, value);
+    public static Response PaymentRequired<T>(T value) => FromValue(HttpStatusCode.PaymentRequired, value);
+    public static Response Forbidden<T>(T value) => FromValue(HttpStatusCode.Forbidden, value);
+    public static Response NotFound<T>(T value) => FromValue(HttpStatusCode.NotFound, value);
+    public static Response MethodNotAllowed<T>(T value) => FromValue(HttpStatusCode.MethodNotAllowed, value);
+    public static Response NotAcceptable<T>(T value) => FromValue(HttpStatusCode.NotAcceptable, value);
+    public static Response ProxyAuthenticationRequired<T>(T value) => FromValue(HttpStatusCode.ProxyAuthenticationRequired, value);
+    public static Response RequestTimeout<T>(T value) => FromValue(HttpStatusCode.RequestTimeout, value);
+    public static Response Conflict<T>(T value) => FromValue(HttpStatusCode.Conflict, value);
+    public static Response Gone<T>(T value) => FromValue(HttpStatusCode.Gone, value);
+    public static Response LengthRequired<T>(T value) => FromValue(HttpStatusCode.LengthRequired, value);
+    public static Response PreconditionFailed<T>(T value) => FromValue(HttpStatusCode.PreconditionFailed, value);
+    public static Response RequestEntityTooLarge<T>(T value) => FromValue(HttpStatusCode.RequestEntityTooLarge, value);
+    public static Response RequestUriTooLong<T>(T value) => FromValue(HttpStatusCode.RequestUriTooLong, value);
+    public static Response UnsupportedMediaType<T>(T value) => FromValue(HttpStatusCode.UnsupportedMediaType, value);
+    public static Response RequestedRangeNotSatisfiable<T>(T value) => FromValue(HttpStatusCode.RequestedRangeNotSatisfiable, value);
+    public static Response ExpectationFailed<T>(T value) => FromValue(HttpStatusCode.ExpectationFailed, value);
+    public static Response UpgradeRequired<T>(T value) => FromValue(HttpStatusCode.UpgradeRequired, value);
+    public static Response InternalServerError<T>(T value) => FromValue(HttpStatusCode.InternalServerError, value);
+    public static Response NotImplemented<T>(T value) => FromValue(HttpStatusCode.NotImplemented, value);
+    public static Response BadGateway<T>(T value) => FromValue(HttpStatusCode.BadGateway, value);
+    public static Response ServiceUnavailable<T>(T value) => FromValue(HttpStatusCode.ServiceUnavailable, value);
+    public static Response GatewayTimeout<T>(T value) => FromValue(HttpStatusCode.GatewayTimeout, value);
+    public static Response HttpVersionNotSupported<T>(T value) => FromValue(HttpStatusCode.HttpVersionNotSupported, value);
 }

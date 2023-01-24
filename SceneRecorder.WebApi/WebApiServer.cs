@@ -48,13 +48,30 @@ public sealed class WebApiServer : MonoBehaviour
             return ResponseFabric.Ok(new { Message = $"Welcome to {nameof(SceneRecorder)} API!" });
         });
 
+        serverBuilder.MapGet("scene/settings", request => _OutputRecorder switch
+        {
+            { SceneSettings: { } sceneSettings } => ResponseFabric.Ok(sceneSettings),
+            _ => ResponseFabric.ServiceUnavailable(),
+        });
+
+        serverBuilder.MapGet("recorder/frames_recorded", request => _OutputRecorder switch
+        {
+            { IsAbleToRecord: false } => ResponseFabric.ServiceUnavailable(),
+            { IsAbleToRecord: true } => ResponseFabric.Ok(_OutputRecorder.FramesRecorded),
+        });
+
+        serverBuilder.MapGet("recorder/enabled", request =>
+        {
+            return ResponseFabric.Ok(_OutputRecorder.enabled);
+        });
+
         serverBuilder.MapPut("recorder?{enabled:bool}", request =>
         {
             var shouldRecord = request.GetQueryParameter<bool>("enabled");
 
             if ((shouldRecord, _OutputRecorder.IsAbleToRecord) is (true, false))
             {
-                return ResponseFabric.ServiceUnavailable("Unable to record scene");
+                return ResponseFabric.ServiceUnavailable();
             }
 
             if (shouldRecord == _OutputRecorder.IsRecording)
