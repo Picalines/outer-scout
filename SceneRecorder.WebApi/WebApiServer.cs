@@ -48,21 +48,34 @@ public sealed class WebApiServer : MonoBehaviour
             return ResponseFabric.Ok(new { Message = $"Welcome to {nameof(SceneRecorder)} API!" });
         });
 
-        serverBuilder.MapGet("scene/settings", request => _OutputRecorder switch
+        serverBuilder.MapGet("scene/settings", request =>
         {
-            { SceneSettings: { } sceneSettings } => ResponseFabric.Ok(sceneSettings),
-            _ => ResponseFabric.ServiceUnavailable(),
+            return _OutputRecorder switch
+            {
+                { SceneSettings: { } sceneSettings } => ResponseFabric.Ok(sceneSettings),
+                _ => ResponseFabric.ServiceUnavailable(),
+            };
         });
 
         serverBuilder.MapGet("player/last_ground_body/name", request =>
-            LocatorExtensions.IsInSolarSystemScene()
-                ? ResponseFabric.Ok(Locator.GetPlayerController().GetLastGroundBodyOr(AstroObject.Name.TimberHearth).name)
-                : ResponseFabric.ServiceUnavailable());
-
-        serverBuilder.MapGet("recorder/frames_recorded", request => _OutputRecorder switch
         {
-            { IsAbleToRecord: false } => ResponseFabric.ServiceUnavailable(),
-            { IsAbleToRecord: true } => ResponseFabric.Ok(_OutputRecorder.FramesRecorded),
+            return LocatorExtensions.IsInSolarSystemScene()
+                ? ResponseFabric.Ok(Locator.GetPlayerController().GetLastGroundBodyOr(AstroObject.Name.TimberHearth).name)
+                : ResponseFabric.ServiceUnavailable();
+        });
+
+        serverBuilder.MapGet("recorder/is_able_to_record", request =>
+        {
+            return ResponseFabric.Ok(_OutputRecorder.IsAbleToRecord);
+        });
+
+        serverBuilder.MapGet("recorder/frames_recorded", request =>
+        {
+            return _OutputRecorder switch
+            {
+                { IsAbleToRecord: false } => ResponseFabric.ServiceUnavailable(),
+                { IsAbleToRecord: true } => ResponseFabric.Ok(_OutputRecorder.FramesRecorded),
+            };
         });
 
         serverBuilder.MapGet("recorder/enabled", request =>
