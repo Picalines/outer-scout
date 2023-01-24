@@ -1,8 +1,4 @@
-﻿#if IS_TARGET_MOD
-using Newtonsoft.Json;
-#else
-using JsonProperty = System.Text.Json.Serialization.JsonPropertyNameAttribute;
-#endif
+﻿using Newtonsoft.Json;
 
 namespace Picalines.OuterWilds.SceneRecorder.Json;
 

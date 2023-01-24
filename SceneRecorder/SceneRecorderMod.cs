@@ -4,7 +4,6 @@ using OWML.ModHelper;
 using Picalines.OuterWilds.SceneRecorder.Json;
 using Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
 using Picalines.OuterWilds.SceneRecorder.WebApi;
-using Picalines.OuterWilds.SceneRecorder.WebUI;
 using UnityEngine.InputSystem;
 
 namespace Picalines.OuterWilds.SceneRecorder;
@@ -20,8 +19,6 @@ internal sealed class SceneRecorderMod : ModBehaviour
     private OutputRecorder _OutputRecorder = null!;
 
     private WebApiServer? _WebApiServer = null;
-
-    private WebUIHost? _WebUIHost = null;
 
     public override void Configure(IModConfig config)
     {
@@ -44,7 +41,6 @@ internal sealed class SceneRecorderMod : ModBehaviour
         }
 
         _WebApiServer?.Configure(ModHelper.Config);
-        _WebUIHost?.Configure(ModHelper.Config, ModHelper.Console);
     }
 
     private void Start()
@@ -55,29 +51,12 @@ internal sealed class SceneRecorderMod : ModBehaviour
 
         _WebApiServer = gameObject.AddComponent<WebApiServer>();
 
-        _WebUIHost = gameObject.AddComponent<WebUIHost>();
-
         Configure(ModHelper.Config);
     }
 
     private void OnDestroy()
     {
-        Destroy(_WebUIHost);
         Destroy(_WebApiServer);
         Destroy(_OutputRecorder);
-    }
-
-    private void Update()
-    {
-        if (Keyboard.current[_OpenWebUIKey].wasPressedThisFrame)
-        {
-            if (_OutputRecorder.IsAbleToRecord is false)
-            {
-                Locator.GetPlayerAudioController().PlayNegativeUISound();
-                return;
-            }
-
-            _WebUIHost?.ToggleBrowser();
-        }
     }
 }

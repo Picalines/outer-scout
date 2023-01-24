@@ -1,6 +1,4 @@
-﻿#if IS_TARGET_MOD
-
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace Picalines.OuterWilds.SceneRecorder.Models;
 
@@ -13,5 +11,3 @@ public sealed class SceneTransformAnimationModel
     {
     }
 }
-
-#endif

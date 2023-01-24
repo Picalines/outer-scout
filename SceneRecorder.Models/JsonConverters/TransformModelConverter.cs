@@ -1,6 +1,4 @@
-﻿#if IS_TARGET_MOD
-
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
@@ -87,5 +85,3 @@ internal sealed class TransformModelConverter : JsonConverter<TransformModel>
         ReadToken(reader, JsonToken.EndArray);
     }
 }
-
-#endif

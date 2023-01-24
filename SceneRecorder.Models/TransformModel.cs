@@ -1,6 +1,4 @@
-﻿#if IS_TARGET_MOD
-
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Picalines.OuterWilds.SceneRecorder.Models.JsonConverters;
 using UnityEngine;
 
@@ -17,5 +15,3 @@ public record struct TransformModel(
         return new TransformModel(transform.position, transform.rotation, transform.lossyScale);
     }
 }
-
-#endif

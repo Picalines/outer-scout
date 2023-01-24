@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net7.0;net48</TargetFrameworks>
+		<TargetFramework>net48</TargetFramework>
 		<Copyright>Copyright © 2023 Picalines</Copyright>
 		<RootNamespace>Picalines.OuterWilds.SceneRecorder.Models</RootNamespace>
 	</PropertyGroup>
@@ -19,10 +19,7 @@
 	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
 		<DebugType>none</DebugType>
 	</PropertyGroup>
-	<PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
-		<DefineConstants>IS_TARGET_MOD</DefineConstants>
-	</PropertyGroup>
-	<ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+	<ItemGroup>
 		<PackageReference Include="Hafner.Compatibility.NullableReferenceTypeAttributes" Version="1.0.0" />
 		<PackageReference Include="OWML" Version="2.9.0" />
 		<PackageReference Include="OuterWildsGameLibs" Version="1.1.13.393" />

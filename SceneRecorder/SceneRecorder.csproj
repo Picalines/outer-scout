@@ -28,7 +28,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\SceneRecorder.Recording\SceneRecorder.Recording.csproj" />
 		<ProjectReference Include="..\SceneRecorder.WebApi\SceneRecorder.WebApi.csproj" />
-		<ProjectReference Include="..\SceneRecorder.WebUI\SceneRecorder.WebUI.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="default-config.json" CopyToOutputDirectory="PreserveNewest" />
@@ -36,8 +35,5 @@
 	</ItemGroup>
 	<ItemGroup>
 		<Content Include="SceneRecorder.csproj.user" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="WebInterop\" />
 	</ItemGroup>
 </Project>
