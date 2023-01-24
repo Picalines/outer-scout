@@ -6,30 +6,28 @@ using JsonProperty = System.Text.Json.Serialization.JsonPropertyNameAttribute;
 
 namespace Picalines.OuterWilds.SceneRecorder.Json;
 
-#pragma warning disable CS8618
-
 public sealed class SceneSettings
 {
     [JsonProperty("ground_body_name")]
-    public string GroundBodyName { get; init; }
+    public required string GroundBodyName { get; init; }
 
     [JsonProperty("frame_count")]
-    public int FrameCount { get; init; }
+    public required int FrameCount { get; init; }
 
     [JsonProperty("frame_rate")]
-    public int FrameRate { get; init; }
+    public required int FrameRate { get; init; }
 
     [JsonProperty("resolution_x")]
-    public int ResolutionX { get; init; }
+    public required int ResolutionX { get; init; }
 
     [JsonProperty("resolution_y")]
-    public int ResolutionY { get; init; }
+    public required int ResolutionY { get; init; }
 
     [JsonProperty("hdri_face_size")]
-    public int HDRIFaceSize { get; init; }
+    public required int HDRIFaceSize { get; init; }
 
     [JsonProperty("hide_player_model")]
-    public bool HidePlayerModel { get; init; }
+    public required bool HidePlayerModel { get; init; }
 
     public (int, int) Resolution
     {
