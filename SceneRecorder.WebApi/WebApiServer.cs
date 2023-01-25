@@ -81,6 +81,32 @@ public sealed class WebApiServer : MonoBehaviour
             });
         });
 
+        serverBuilder.MapGet("free_camera/transform", request =>
+        {
+            return LocatorExtensions.IsInSolarSystemScene()
+                ? ResponseFabric.Ok(TransformModel.FromGlobalTransform(GameObject.Find("FREECAM").transform))
+                : ResponseFabric.ServiceUnavailable();
+        });
+
+        serverBuilder.MapGet("free_camera/info", request =>
+        {
+            if (LocatorExtensions.IsInSolarSystemScene() is false)
+            {
+                return ResponseFabric.ServiceUnavailable();
+            }
+
+            var freeCam = GameObject.Find("FREECAM").GetComponent<OWCamera>();
+
+            return ResponseFabric.Ok(new
+            {
+                fov = freeCam.fieldOfView,
+                near_clip_plane = freeCam.nearClipPlane,
+                far_clip_plane = freeCam.farClipPlane,
+                resolution_x = freeCam.pixelWidth,
+                resolution_y = freeCam.pixelHeight,
+            });
+        });
+
         serverBuilder.MapGet("recorder/is_able_to_record", request =>
         {
             return ResponseFabric.Ok(_OutputRecorder.IsAbleToRecord);
