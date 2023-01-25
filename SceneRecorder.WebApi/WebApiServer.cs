@@ -1,4 +1,6 @@
-﻿using OWML.Common;
+﻿using Newtonsoft.Json;
+using OWML.Common;
+using Picalines.OuterWilds.SceneRecorder.BodyMeshExport;
 using Picalines.OuterWilds.SceneRecorder.Models;
 using Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
@@ -143,6 +145,22 @@ public sealed class WebApiServer : MonoBehaviour
             _OutputRecorder.enabled = shouldRecord;
 
             return ResponseFabric.Ok();
+        });
+
+        serverBuilder.MapPost("player/ground_body/mesh_list?{output_file_path:string}", request =>
+        {
+            if (LocatorExtensions.IsInSolarSystemScene() is false)
+            {
+                return ResponseFabric.ServiceUnavailable();
+            }
+
+            var outputFilePath = request.GetQueryParameter<string>("output_file_path");
+
+            var groundBody = Locator.GetPlayerController().GetLastGroundBodySafe();
+            var meshInfo = GroundBodyMeshExport.CaptureMeshInfo(groundBody.gameObject);
+
+            File.WriteAllText(outputFilePath, JsonConvert.SerializeObject(meshInfo));
+            return ResponseFabric.Created();
         });
     }
 }

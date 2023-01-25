@@ -28,5 +28,6 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\SceneRecorder.CompilerServices\SceneRecorder.CompilerServices.csproj" />
 	  <ProjectReference Include="..\SceneRecorder.Recording\SceneRecorder.Recording.csproj" />
+	  <ProjectReference Include="..\SceneRecorder.BodyMeshExport\SceneRecorder.BodyMeshExport.csproj" />
 	</ItemGroup>
 </Project>
