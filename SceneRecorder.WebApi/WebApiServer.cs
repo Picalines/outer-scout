@@ -1,4 +1,5 @@
 ﻿using OWML.Common;
+using Picalines.OuterWilds.SceneRecorder.Models;
 using Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 using UnityEngine;
@@ -57,11 +58,27 @@ public sealed class WebApiServer : MonoBehaviour
             };
         });
 
-        serverBuilder.MapGet("player/last_ground_body/name", request =>
+        serverBuilder.MapGet("player/transform", request =>
         {
             return LocatorExtensions.IsInSolarSystemScene()
-                ? ResponseFabric.Ok(Locator.GetPlayerController().GetLastGroundBodyOr(AstroObject.Name.TimberHearth).name)
+                ? ResponseFabric.Ok(TransformModel.FromGlobalTransform(Locator.GetPlayerBody().transform))
                 : ResponseFabric.ServiceUnavailable();
+        });
+
+        serverBuilder.MapGet("player/ground_body", request =>
+        {
+            if (LocatorExtensions.IsInSolarSystemScene() is false)
+            {
+                return ResponseFabric.ServiceUnavailable();
+            }
+
+            var groundBody = Locator.GetPlayerController().GetLastGroundBodySafe();
+
+            return ResponseFabric.Ok(new
+            {
+                groundBody.name,
+                transform = TransformModel.FromGlobalTransform(groundBody.transform),
+            });
         });
 
         serverBuilder.MapGet("recorder/is_able_to_record", request =>

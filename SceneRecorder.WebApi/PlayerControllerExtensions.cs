@@ -2,10 +2,10 @@
 
 internal static class PlayerControllerExtensions
 {
-    public static OWRigidbody GetLastGroundBodyOr(this PlayerCharacterController playerCharacterController, AstroObject.Name defaultAstroObject)
+    public static OWRigidbody GetLastGroundBodySafe(this PlayerCharacterController playerCharacterController)
     {
         var lastGroundBody = playerCharacterController.GetLastGroundBody();
         return lastGroundBody
-            ?? Locator.GetAstroObject(defaultAstroObject).GetComponent<OWRigidbody>();
+            ?? Locator.GetAstroObject(AstroObject.Name.TimberHearth).GetComponent<OWRigidbody>();
     }
 }
