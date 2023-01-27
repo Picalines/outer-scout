@@ -17,6 +17,7 @@ public sealed class WebApiServer : HttpServer
         PlayerRouteDefinition.Instance,
         FreeCameraRouteDefinition.Instance,
         RecorderRouteDefinition.Instance,
+        GroundBodyRouteDefinition.Instance,
     };
 
     public void Configure(IModConfig modConfig)
