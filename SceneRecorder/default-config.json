@@ -1,7 +1,6 @@
 {
   "enabled": true,
   "settings": {
-    "owscene_path": "...",
     "web_api_port": 5000
   }
 }

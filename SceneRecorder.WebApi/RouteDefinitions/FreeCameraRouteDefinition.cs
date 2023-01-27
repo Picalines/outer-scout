@@ -19,7 +19,7 @@ internal sealed class FreeCameraRouteDefinition : IApiRouteDefinition
                 : ResponseFabric.ServiceUnavailable();
         });
 
-        serverBuilder.MapPatch("free_camera/transform/local", request =>
+        serverBuilder.MapPut("free_camera/transform/local", request =>
         {
             if (LocatorExtensions.IsInSolarSystemScene() is false)
             {

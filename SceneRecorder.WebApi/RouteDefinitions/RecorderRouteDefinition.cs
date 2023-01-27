@@ -1,4 +1,5 @@
-﻿using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
+﻿using Picalines.OuterWilds.SceneRecorder.Json;
+using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebApi.RouteDefinitions;
 
@@ -11,6 +12,37 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
     public void MapRoutes(HttpServerBuilder serverBuilder, IApiRouteDefinition.IContext context)
     {
         var outputRecorder = context.OutputRecorder;
+
+        serverBuilder.MapGet("recorder/scene_settings", request =>
+        {
+            return outputRecorder.SceneSettings is { } sceneSettings
+                ? ResponseFabric.Ok(sceneSettings)
+                : ResponseFabric.NotFound();
+        });
+
+        serverBuilder.MapPut("recorder/scene_settings", request =>
+        {
+            if (outputRecorder.IsRecording)
+            {
+                return ResponseFabric.ServiceUnavailable();
+            }
+
+            var newSceneSettings = request.ParseContentJson<SceneSettings>();
+            outputRecorder.SceneSettings = newSceneSettings;
+
+            return ResponseFabric.Ok();
+        });
+
+        serverBuilder.MapPut("recorder/output_directory", request =>
+        {
+            if (outputRecorder.IsRecording)
+            {
+                return ResponseFabric.ServiceUnavailable();
+            }
+
+            outputRecorder.OutputDirectory = request.Content;
+            return ResponseFabric.Ok();
+        });
 
         serverBuilder.MapGet("recorder/is_able_to_record", request =>
         {
@@ -31,9 +63,9 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
             return ResponseFabric.Ok(outputRecorder.enabled);
         });
 
-        serverBuilder.MapPatch("recorder?{enabled:bool}", request =>
+        serverBuilder.MapPut("recorder/enabled", request =>
         {
-            var shouldRecord = request.GetQueryParameter<bool>("enabled");
+            var shouldRecord = request.ParseContentJson<bool>();
 
             if ((shouldRecord, outputRecorder.IsAbleToRecord) is (true, false))
             {

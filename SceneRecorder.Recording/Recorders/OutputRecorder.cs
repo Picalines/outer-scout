@@ -58,40 +58,28 @@ public sealed class OutputRecorder : RecorderComponent
         }
     }
 
-    [MemberNotNullWhen(true, nameof(SceneSettings))]
+    [MemberNotNullWhen(true, nameof(SceneSettings), nameof(OutputDirectory), nameof(ModConsole))]
     public bool IsAbleToRecord
     {
         get
         {
-            return SceneSettings is not null
+            return IsRecording
+                || (SceneSettings is not null
+                && OutputDirectory is not null
+                && ModConsole is not null
                 && Locator.GetPlayerBody() != null
                 && GameObject.Find("FREECAM") is var freeCamObject
                 && freeCamObject != null
                 && freeCamObject.TryGetComponent<Camera>(out var freeCam)
-                && freeCam.enabled;
+                && freeCam.enabled);
         }
     }
 
     private void Configure()
     {
-        if (ModConsole is null)
-        {
-            throw new ArgumentNullException(nameof(ModConsole));
-        }
-
-        if (SceneSettings is null)
-        {
-            throw new ArgumentNullException(nameof(SceneSettings));
-        }
-
-        if (OutputDirectory is null)
-        {
-            throw new ArgumentNullException(nameof(OutputDirectory));
-        }
-
         if (IsAbleToRecord is false)
         {
-            throw new InvalidOperationException("unable to record");
+            throw new InvalidOperationException();
         }
 
         var player = Locator.GetPlayerBody();

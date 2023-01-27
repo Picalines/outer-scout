@@ -13,7 +13,6 @@ public sealed class WebApiServer : HttpServer
 
     private static readonly IApiRouteDefinition[] _ApiRouteDefinitions = new IApiRouteDefinition[]
     {
-        SceneRouteDefinition.Instance,
         PlayerRouteDefinition.Instance,
         FreeCameraRouteDefinition.Instance,
         RecorderRouteDefinition.Instance,

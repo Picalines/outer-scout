@@ -8,7 +8,7 @@ public sealed class Request
 
     public string Url { get; }
 
-    public string Concent { get; }
+    public string Content { get; }
 
     private readonly Dictionary<string, object?> _RouteParameters = new();
 
@@ -18,7 +18,7 @@ public sealed class Request
     {
         HttpMethod = httpMethod;
         Url = url;
-        Concent = concent;
+        Content = concent;
     }
 
     internal void AddRouteParameter(string name, object? value)
@@ -55,6 +55,6 @@ public sealed class Request
 
     public T ParseContentJson<T>()
     {
-        return JsonConvert.DeserializeObject<T>(Concent)!;
+        return JsonConvert.DeserializeObject<T>(Content)!;
     }
 }
