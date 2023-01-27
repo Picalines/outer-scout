@@ -1,19 +1,24 @@
-﻿namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
+﻿using Newtonsoft.Json;
 
-internal sealed class Request
+namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
+
+public sealed class Request
 {
     public HttpMethod HttpMethod { get; }
 
     public string Url { get; }
 
+    public string Concent { get; }
+
     private readonly Dictionary<string, object?> _RouteParameters = new();
 
     private readonly Dictionary<string, object?> _QueryParameters = new();
 
-    internal Request(HttpMethod httpMethod, string url)
+    internal Request(HttpMethod httpMethod, string url, string concent)
     {
         HttpMethod = httpMethod;
         Url = url;
+        Concent = concent;
     }
 
     internal void AddRouteParameter(string name, object? value)
@@ -46,5 +51,10 @@ internal sealed class Request
         }
 
         return parameterValue;
+    }
+
+    public T ParseContentJson<T>()
+    {
+        return JsonConvert.DeserializeObject<T>(Concent)!;
     }
 }

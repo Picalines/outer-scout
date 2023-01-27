@@ -1,6 +1,6 @@
 ﻿namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 
-internal enum HttpMethod
+public enum HttpMethod
 {
     GET,
     POST,

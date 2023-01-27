@@ -31,7 +31,7 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
             return ResponseFabric.Ok(outputRecorder.enabled);
         });
 
-        serverBuilder.MapPut("recorder?{enabled:bool}", request =>
+        serverBuilder.MapPatch("recorder?{enabled:bool}", request =>
         {
             var shouldRecord = request.GetQueryParameter<bool>("enabled");
 

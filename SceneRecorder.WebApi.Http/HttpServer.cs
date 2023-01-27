@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 
-internal sealed class HttpServer : MonoBehaviour
+public class HttpServer : MonoBehaviour
 {
     public bool Listening { get; private set; } = false;
 
@@ -18,7 +18,7 @@ internal sealed class HttpServer : MonoBehaviour
 
     private readonly ConcurrentQueue<Action> _UnityThreadActionQueue = new();
 
-    public void Configure(string baseUrl, IReadOnlyList<RequestHandler> requestHandlers)
+    internal void Configure(string baseUrl, IReadOnlyList<RequestHandler> requestHandlers)
     {
         if (Listening)
         {
@@ -67,6 +67,11 @@ internal sealed class HttpServer : MonoBehaviour
         await _StoppedListening!.Task;
     }
 
+    private void OnDestroy()
+    {
+        StopListening();
+    }
+
     private async Task Listen()
     {
         _StoppedListening = new();
@@ -81,7 +86,16 @@ internal sealed class HttpServer : MonoBehaviour
                 continue;
             }
 
-            var request = new Request(httpMethod, context.Request.Url.ToString().Substring(_BaseUrl.Length));
+            string requestContent;
+            using (var requestContentReader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding))
+            {
+                requestContent = requestContentReader.ReadToEnd();
+            }
+
+            var request = new Request(
+                httpMethod,
+                context.Request.Url.ToString().Substring(_BaseUrl.Length),
+                requestContent);
 
             bool handled = false;
             foreach (var handler in _RequestHandlers)

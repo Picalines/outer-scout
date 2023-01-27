@@ -12,11 +12,24 @@ internal sealed class FreeCameraRouteDefinition : IApiRouteDefinition
 
     public void MapRoutes(HttpServerBuilder serverBuilder, IApiRouteDefinition.IContext context)
     {
-        serverBuilder.MapGet("free_camera/transform", request =>
+        serverBuilder.MapGet("free_camera/transform/local", request =>
         {
             return LocatorExtensions.IsInSolarSystemScene()
-                ? ResponseFabric.Ok(TransformModel.FromGlobalTransform(GameObject.Find("FREECAM").transform))
+                ? ResponseFabric.Ok(TransformModel.FromLocalTransform(FindFreeCamera().transform))
                 : ResponseFabric.ServiceUnavailable();
+        });
+
+        serverBuilder.MapPatch("free_camera/transform/local", request =>
+        {
+            if (LocatorExtensions.IsInSolarSystemScene() is false)
+            {
+                return ResponseFabric.ServiceUnavailable();
+            }
+
+            var transformModel = request.ParseContentJson<TransformModel>();
+            transformModel.ApplyToLocalTransform(FindFreeCamera().transform);
+
+            return ResponseFabric.Ok();
         });
 
         serverBuilder.MapGet("free_camera/info", request =>
@@ -26,7 +39,7 @@ internal sealed class FreeCameraRouteDefinition : IApiRouteDefinition
                 return ResponseFabric.ServiceUnavailable();
             }
 
-            var freeCam = GameObject.Find("FREECAM").GetComponent<OWCamera>();
+            var freeCam = FindFreeCamera().GetComponent<OWCamera>();
 
             return ResponseFabric.Ok(new
             {
@@ -37,5 +50,10 @@ internal sealed class FreeCameraRouteDefinition : IApiRouteDefinition
                 resolution_y = freeCam.pixelHeight,
             });
         });
+    }
+
+    private static GameObject FindFreeCamera()
+    {
+        return GameObject.Find("FREECAM");
     }
 }

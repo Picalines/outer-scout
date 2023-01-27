@@ -14,4 +14,16 @@ public record struct TransformModel(
     {
         return new TransformModel(transform.position, transform.rotation, transform.lossyScale);
     }
+
+    public static TransformModel FromLocalTransform(Transform transform)
+    {
+        return new TransformModel(transform.localPosition, transform.localRotation, transform.localScale);
+    }
+
+    public void ApplyToLocalTransform(Transform transform)
+    {
+        transform.localPosition = Position;
+        transform.localRotation = Rotation;
+        transform.localScale = Scale;
+    }
 }

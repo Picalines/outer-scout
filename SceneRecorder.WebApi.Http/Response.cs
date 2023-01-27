@@ -3,7 +3,7 @@ using System.Net;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 
-internal sealed class Response
+public sealed class Response
 {
     public HttpStatusCode StatusCode { get; }
 

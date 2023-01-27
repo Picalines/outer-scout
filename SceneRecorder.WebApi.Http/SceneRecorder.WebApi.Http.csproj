@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFramework>net48</TargetFramework>
 		<Copyright>Copyright © 2023 Picalines</Copyright>
-		<RootNamespace>Picalines.OuterWilds.SceneRecorder.WebApi</RootNamespace>
+		<RootNamespace>Picalines.OuterWilds.SceneRecorder.WebApi.Http</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -26,9 +26,6 @@
 		<PackageReference Include="HarmonyX" Version="2.10.1" />
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\SceneRecorder.CompilerServices\SceneRecorder.CompilerServices.csproj" />
-	  <ProjectReference Include="..\SceneRecorder.Recording\SceneRecorder.Recording.csproj" />
-	  <ProjectReference Include="..\SceneRecorder.BodyMeshExport\SceneRecorder.BodyMeshExport.csproj" />
-	  <ProjectReference Include="..\SceneRecorder.WebApi.Http\SceneRecorder.WebApi.Http.csproj" />
+		<ProjectReference Include="..\SceneRecorder.CompilerServices\SceneRecorder.CompilerServices.csproj" />
 	</ItemGroup>
 </Project>

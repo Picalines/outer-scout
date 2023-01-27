@@ -2,7 +2,7 @@
 
 namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 
-internal static class ResponseFabric
+public static class ResponseFabric
 {
     public static Response Continue() => Response.Empty(HttpStatusCode.Continue);
     public static Response SwitchingProtocols() => Response.Empty(HttpStatusCode.SwitchingProtocols);
