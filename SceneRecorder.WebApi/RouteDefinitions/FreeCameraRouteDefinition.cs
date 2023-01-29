@@ -1,5 +1,6 @@
 ﻿using Picalines.OuterWilds.SceneRecorder.Shared.Models;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
+using Picalines.OuterWilds.SceneRecorder.WebApi.Models;
 using UnityEngine;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebApi.RouteDefinitions;
@@ -41,14 +42,22 @@ internal sealed class FreeCameraRouteDefinition : IApiRouteDefinition
 
             var freeCam = FindFreeCamera().GetComponent<OWCamera>();
 
-            return ResponseFabric.Ok(new
+            return ResponseFabric.Ok(CameraInfo.FromOWCamera(freeCam));
+        });
+
+        serverBuilder.MapPut("free_camera/info", request =>
+        {
+            if (LocatorExtensions.IsInSolarSystemScene() is false)
             {
-                fov = freeCam.fieldOfView,
-                near_clip_plane = freeCam.nearClipPlane,
-                far_clip_plane = freeCam.farClipPlane,
-                resolution_x = freeCam.pixelWidth,
-                resolution_y = freeCam.pixelHeight,
-            });
+                return ResponseFabric.ServiceUnavailable();
+            }
+
+            var freeCam = FindFreeCamera().GetComponent<OWCamera>();
+            var newInfo = request.ParseContentJson<CameraInfo>();
+
+            newInfo.ApplyToOWCamera(freeCam);
+
+            return ResponseFabric.Ok();
         });
     }
 
