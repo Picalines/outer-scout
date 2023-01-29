@@ -37,6 +37,11 @@ public sealed class WebApiServer : HttpServer
 
     private void MapRoutes(HttpServerBuilder serverBuilder)
     {
+        serverBuilder.MapGet("", request =>
+        {
+            return ResponseFabric.Ok();
+        });
+
         var context = new RouteDefinitionContext(OutputRecorder: GetComponent<OutputRecorder>());
 
         foreach (var routeDefinition in _ApiRouteDefinitions)
