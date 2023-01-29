@@ -61,15 +61,7 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
 
     private static GameObject? GetGroundBody()
     {
-        var freeCamera = FindFreeCamera();
-
-        return freeCamera.transform.parent != null
-            ? freeCamera.transform.parent.gameObject
-            : null;
-    }
-
-    private static GameObject FindFreeCamera()
-    {
-        return GameObject.Find("FREECAM");
+        return Locator.GetPlayerController().Nullable()?.GetLastGroundBody().Nullable()?.gameObject
+            ?? Locator.GetAstroObject(AstroObject.Name.TimberHearth).Nullable()?.gameObject;
     }
 }
