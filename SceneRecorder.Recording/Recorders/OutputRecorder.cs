@@ -10,7 +10,7 @@ public sealed class OutputRecorder : RecorderComponent
 {
     public IModConsole? ModConsole { get; set; } = null;
 
-    public SceneSettings? SceneSettings { get; set; } = null;
+    public RecorderSettings? Settings { get; set; } = null;
 
     public string? OutputDirectory { get; set; } = null;
 
@@ -52,19 +52,19 @@ public sealed class OutputRecorder : RecorderComponent
 
     private void OnBeforeFrameRecorded()
     {
-        if (FramesRecorded >= SceneSettings!.FrameCount)
+        if (FramesRecorded >= Settings!.FrameCount)
         {
             enabled = false;
         }
     }
 
-    [MemberNotNullWhen(true, nameof(SceneSettings), nameof(OutputDirectory), nameof(ModConsole))]
+    [MemberNotNullWhen(true, nameof(Settings), nameof(OutputDirectory), nameof(ModConsole))]
     public bool IsAbleToRecord
     {
         get
         {
             return IsRecording
-                || (SceneSettings is not null
+                || (Settings is not null
                 && OutputDirectory is not null
                 && ModConsole is not null
                 && Locator.GetPlayerBody() != null
@@ -88,18 +88,18 @@ public sealed class OutputRecorder : RecorderComponent
 
         // background recorder
         var backgroundRecorder = GetOrAddComponent<BackgroundRecorder>(freeCamera.gameObject);
-        (backgroundRecorder.Width, backgroundRecorder.Height) = SceneSettings.Resolution;
-        backgroundRecorder.FrameRate = SceneSettings.FrameRate;
+        (backgroundRecorder.Width, backgroundRecorder.Height) = Settings.Resolution;
+        backgroundRecorder.FrameRate = Settings.FrameRate;
 
         // depth recorder
         var depthRecorder = GetOrAddComponent<DepthRecorder>(freeCamera.gameObject);
-        (depthRecorder.Width, depthRecorder.Height) = SceneSettings.Resolution;
-        depthRecorder.FrameRate = SceneSettings.FrameRate;
+        (depthRecorder.Width, depthRecorder.Height) = Settings.Resolution;
+        depthRecorder.FrameRate = Settings.FrameRate;
 
         // hdri recorder
         var hdriRecorder = GetOrAddComponent<HDRIRecorder>(playerCameraContoller.gameObject);
-        hdriRecorder.CubemapFaceSize = SceneSettings.HDRIFaceSize;
-        hdriRecorder.FrameRate = SceneSettings.FrameRate;
+        hdriRecorder.CubemapFaceSize = Settings.HDRIFaceSize;
+        hdriRecorder.FrameRate = Settings.FrameRate;
 
         // render hdri to GUI (TODO: replace with web)
         GetOrAddComponent<RenderTextureRecorderGUI>(hdriRecorder.gameObject);
@@ -126,7 +126,7 @@ public sealed class OutputRecorder : RecorderComponent
             });
         }
 
-        var playerRenderersToToggle = SceneSettings.HidePlayerModel
+        var playerRenderersToToggle = Settings.HidePlayerModel
             ? player.gameObject.GetComponentsInChildren<Renderer>()
                 .Where(renderer => renderer.enabled)
                 .ToArray()

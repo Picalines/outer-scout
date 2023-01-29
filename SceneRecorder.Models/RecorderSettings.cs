@@ -2,7 +2,7 @@
 
 namespace Picalines.OuterWilds.SceneRecorder.Json;
 
-public sealed class SceneSettings
+public sealed class RecorderSettings
 {
     [JsonProperty("frame_count")]
     public required int FrameCount { get; init; }

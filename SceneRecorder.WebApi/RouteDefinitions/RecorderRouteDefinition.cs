@@ -13,22 +13,22 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
     {
         var outputRecorder = context.OutputRecorder;
 
-        serverBuilder.MapGet("recorder/scene_settings", request =>
+        serverBuilder.MapGet("recorder/settings", request =>
         {
-            return outputRecorder.SceneSettings is { } sceneSettings
+            return outputRecorder.Settings is { } sceneSettings
                 ? ResponseFabric.Ok(sceneSettings)
                 : ResponseFabric.NotFound();
         });
 
-        serverBuilder.MapPut("recorder/scene_settings", request =>
+        serverBuilder.MapPut("recorder/settings", request =>
         {
             if (outputRecorder.IsRecording)
             {
                 return ResponseFabric.ServiceUnavailable();
             }
 
-            var newSceneSettings = request.ParseContentJson<SceneSettings>();
-            outputRecorder.SceneSettings = newSceneSettings;
+            var newSceneSettings = request.ParseContentJson<RecorderSettings>();
+            outputRecorder.Settings = newSceneSettings;
 
             return ResponseFabric.Ok();
         });
