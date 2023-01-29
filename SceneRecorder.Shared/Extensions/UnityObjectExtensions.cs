@@ -1,6 +1,6 @@
-﻿namespace Picalines.OuterWilds.SceneRecorder.WebApi;
+﻿namespace Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
 
-internal static class UnityObjectExtensions
+public static class UnityObjectExtensions
 {
     public static T? Nullable<T>(this T? @object)
         where T : UnityEngine.Object

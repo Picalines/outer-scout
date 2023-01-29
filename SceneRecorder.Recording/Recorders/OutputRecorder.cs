@@ -1,5 +1,6 @@
 ﻿using OWML.Common;
 using Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
+using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
 using Picalines.OuterWilds.SceneRecorder.Shared.Models;
 using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
@@ -67,9 +68,8 @@ public sealed class OutputRecorder : RecorderComponent
                 || (Settings is not null
                 && OutputDirectory is not null
                 && ModConsole is not null
-                && Locator.GetPlayerBody() != null
-                && GameObject.Find("FREECAM") is var freeCamObject
-                && freeCamObject != null
+                && LocatorExtensions.IsInSolarSystemScene()
+                && GameObject.Find("FREECAM").Nullable() is { } freeCamObject
                 && freeCamObject.TryGetComponent<Camera>(out var freeCam)
                 && freeCam.enabled);
         }
@@ -97,20 +97,21 @@ public sealed class OutputRecorder : RecorderComponent
         depthRecorder.FrameRate = Settings.FrameRate;
 
         // hdri recorder
-        var hdriRecorder = GetOrAddComponent<HDRIRecorder>(playerCameraContoller.gameObject);
+        var hdriPivot = new GameObject($"{nameof(SceneRecorder)} HDRI Pivot");
+        hdriPivot.transform.parent = LocatorExtensions.GetCurrentGroundBody()!.transform;
+        playerCameraContoller.transform.CopyGlobalTransformTo(hdriPivot.transform);
+
+        var hdriRecorder = GetOrAddComponent<HDRIRecorder>(hdriPivot);
         hdriRecorder.CubemapFaceSize = Settings.HDRIFaceSize;
         hdriRecorder.FrameRate = Settings.FrameRate;
 
         // render hdri to GUI (TODO: replace with web)
         GetOrAddComponent<RenderTextureRecorderGUI>(hdriRecorder.gameObject);
 
-        // free camera transform recorder
-        var freeCameraTransformRecorder = GetOrAddComponent<TransformRecorder>(freeCamera.gameObject);
-
         // combine recorders
         if (_ComposedRecorder.Recorders.Count == 0)
         {
-            _ComposedRecorder.Recorders = new IRecorder[] { backgroundRecorder, depthRecorder, hdriRecorder, freeCameraTransformRecorder };
+            _ComposedRecorder.Recorders = new IRecorder[] { backgroundRecorder, depthRecorder, hdriRecorder };
         }
 
         foreach (var recorder in _ComposedRecorder.Recorders.OfType<RenderTextureRecorder>())
@@ -143,6 +144,7 @@ public sealed class OutputRecorder : RecorderComponent
 
         _OnRecordingFinished = () =>
         {
+            Destroy(hdriPivot);
             ForEach(playerRenderersToToggle, renderer => renderer.enabled = true);
             Locator.GetQuantumMoon().SetActivation(true);
 

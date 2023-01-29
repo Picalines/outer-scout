@@ -1,7 +1,7 @@
-﻿using Picalines.OuterWilds.SceneRecorder.Shared.Models;
+﻿using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
+using Picalines.OuterWilds.SceneRecorder.Shared.Models;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Models;
-using UnityEngine;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebApi.RouteDefinitions;
 
@@ -13,22 +13,35 @@ internal sealed class FreeCameraRouteDefinition : IApiRouteDefinition
 
     public void MapRoutes(HttpServerBuilder serverBuilder, IApiRouteDefinition.IContext context)
     {
-        serverBuilder.MapGet("free_camera/transform/local", request =>
-        {
-            return LocatorExtensions.IsInSolarSystemScene()
-                ? ResponseFabric.Ok(TransformModel.FromLocalTransform(FindFreeCamera().transform))
-                : ResponseFabric.ServiceUnavailable();
-        });
-
-        serverBuilder.MapPut("free_camera/transform/local", request =>
+        serverBuilder.MapGet("free_camera/transform/local_to/ground_body", request =>
         {
             if (LocatorExtensions.IsInSolarSystemScene() is false)
             {
                 return ResponseFabric.ServiceUnavailable();
             }
 
+            var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()!.transform;
+            var freeCameraTransform = LocatorExtensions.GetFreeCamera()!.transform;
+
+            return ResponseFabric.Ok(TransformModel.FromInverse(groundBodyTransform, freeCameraTransform));
+        });
+
+        serverBuilder.MapPut("free_camera/transform/local_to/ground_body", request =>
+        {
+            if (LocatorExtensions.IsInSolarSystemScene() is false)
+            {
+                return ResponseFabric.ServiceUnavailable();
+            }
+
+            var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()!.transform;
+            var freeCameraTransform = LocatorExtensions.GetFreeCamera()!.transform;
+
             var transformModel = request.ParseContentJson<TransformModel>();
-            transformModel.ApplyToLocalTransform(FindFreeCamera().transform);
+
+            var oldCameraParent = freeCameraTransform.parent;
+            freeCameraTransform.parent = groundBodyTransform;
+            transformModel.ApplyToLocalTransform(freeCameraTransform);
+            freeCameraTransform.parent = oldCameraParent;
 
             return ResponseFabric.Ok();
         });
@@ -40,7 +53,7 @@ internal sealed class FreeCameraRouteDefinition : IApiRouteDefinition
                 return ResponseFabric.ServiceUnavailable();
             }
 
-            var freeCam = FindFreeCamera().GetComponent<OWCamera>();
+            var freeCam = LocatorExtensions.GetFreeCamera()!.GetComponent<OWCamera>();
 
             return ResponseFabric.Ok(CameraInfo.FromOWCamera(freeCam));
         });
@@ -52,17 +65,12 @@ internal sealed class FreeCameraRouteDefinition : IApiRouteDefinition
                 return ResponseFabric.ServiceUnavailable();
             }
 
-            var freeCam = FindFreeCamera().GetComponent<OWCamera>();
+            var freeCam = LocatorExtensions.GetFreeCamera()!.GetComponent<OWCamera>();
             var newInfo = request.ParseContentJson<CameraInfo>();
 
             newInfo.ApplyToOWCamera(freeCam);
 
             return ResponseFabric.Ok();
         });
-    }
-
-    private static GameObject FindFreeCamera()
-    {
-        return GameObject.Find("FREECAM");
     }
 }

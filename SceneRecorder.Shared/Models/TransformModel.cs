@@ -20,6 +20,16 @@ public record struct TransformModel(
         return new TransformModel(transform.localPosition, transform.localRotation, transform.localScale);
     }
 
+    public static TransformModel FromInverse(Transform parentTransform, Transform childTransform)
+    {
+        return new()
+        {
+            Position = parentTransform.InverseTransformPoint(childTransform.position),
+            Rotation = parentTransform.InverseTransformRotation(childTransform.rotation),
+            Scale = childTransform.lossyScale,
+        };
+    }
+
     public void ApplyToLocalTransform(Transform transform)
     {
         transform.localPosition = Position;

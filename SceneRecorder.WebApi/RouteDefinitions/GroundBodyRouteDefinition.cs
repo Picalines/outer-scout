@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 using Picalines.OuterWilds.SceneRecorder.BodyMeshExport;
+using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
 using Picalines.OuterWilds.SceneRecorder.Shared.Models;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
-using UnityEngine;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebApi.RouteDefinitions;
 
@@ -21,7 +21,7 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
                 return ResponseFabric.ServiceUnavailable();
             }
 
-            return GetGroundBody() is { } groundBody
+            return LocatorExtensions.GetCurrentGroundBody() is { } groundBody
                 ? ResponseFabric.Ok(groundBody.name)
                 : ResponseFabric.NotFound();
         });
@@ -33,7 +33,7 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
                 return ResponseFabric.ServiceUnavailable();
             }
 
-            return GetGroundBody() is { transform: var transform }
+            return LocatorExtensions.GetCurrentGroundBody() is { transform: var transform }
                 ? ResponseFabric.Ok(TransformModel.FromGlobalTransform(transform))
                 : ResponseFabric.NotFound();
         });
@@ -47,7 +47,7 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
 
             var outputFilePath = request.GetQueryParameter<string>("output_file_path");
 
-            if (GetGroundBody() is not { } groundBody)
+            if (LocatorExtensions.GetCurrentGroundBody() is not { } groundBody)
             {
                 return ResponseFabric.NotFound();
             }
@@ -57,11 +57,5 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
             File.WriteAllText(outputFilePath, JsonConvert.SerializeObject(meshInfo));
             return ResponseFabric.Created();
         });
-    }
-
-    private static GameObject? GetGroundBody()
-    {
-        return Locator.GetPlayerController().Nullable()?.GetLastGroundBody().Nullable()?.gameObject
-            ?? Locator.GetAstroObject(AstroObject.Name.TimberHearth).Nullable()?.gameObject;
     }
 }
