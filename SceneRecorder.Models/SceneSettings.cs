@@ -4,9 +4,6 @@ namespace Picalines.OuterWilds.SceneRecorder.Json;
 
 public sealed class SceneSettings
 {
-    [JsonProperty("ground_body_name")]
-    public required string GroundBodyName { get; init; }
-
     [JsonProperty("frame_count")]
     public required int FrameCount { get; init; }
 
