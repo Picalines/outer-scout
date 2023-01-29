@@ -11,13 +11,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SceneRecorder.Recording", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SceneRecorder.Recording.FFmpeg", "SceneRecorder.Recording.FFmpeg\SceneRecorder.Recording.FFmpeg.csproj", "{7C8A5C12-9886-4B9A-9C65-2CAE0EEE3221}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SceneRecorder.Models", "SceneRecorder.Models\SceneRecorder.Models.csproj", "{AA4EE7CA-95A7-4654-8571-51331C050B8E}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SceneRecorder.BodyMeshExport", "SceneRecorder.BodyMeshExport\SceneRecorder.BodyMeshExport.csproj", "{89C966BB-C8AE-44B6-B3C1-03537AC80183}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SceneRecorder.WebApi", "SceneRecorder.WebApi\SceneRecorder.WebApi.csproj", "{9ECB2436-87B7-40E6-A862-FE1F8E3BB45D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SceneRecorder.WebApi.Http", "SceneRecorder.WebApi.Http\SceneRecorder.WebApi.Http.csproj", "{68CC6251-BE3D-4C64-883F-19182D273476}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SceneRecorder.WebApi.Http", "SceneRecorder.WebApi.Http\SceneRecorder.WebApi.Http.csproj", "{68CC6251-BE3D-4C64-883F-19182D273476}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SceneRecorder.Shared", "SceneRecorder.Shared\SceneRecorder.Shared.csproj", "{D1EFCEDF-5CB5-4A88-88AF-5C7ED50A7559}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,10 +41,6 @@ Global
 		{7C8A5C12-9886-4B9A-9C65-2CAE0EEE3221}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7C8A5C12-9886-4B9A-9C65-2CAE0EEE3221}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7C8A5C12-9886-4B9A-9C65-2CAE0EEE3221}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AA4EE7CA-95A7-4654-8571-51331C050B8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AA4EE7CA-95A7-4654-8571-51331C050B8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AA4EE7CA-95A7-4654-8571-51331C050B8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AA4EE7CA-95A7-4654-8571-51331C050B8E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{89C966BB-C8AE-44B6-B3C1-03537AC80183}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{89C966BB-C8AE-44B6-B3C1-03537AC80183}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89C966BB-C8AE-44B6-B3C1-03537AC80183}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -57,6 +53,10 @@ Global
 		{68CC6251-BE3D-4C64-883F-19182D273476}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{68CC6251-BE3D-4C64-883F-19182D273476}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{68CC6251-BE3D-4C64-883F-19182D273476}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1EFCEDF-5CB5-4A88-88AF-5C7ED50A7559}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1EFCEDF-5CB5-4A88-88AF-5C7ED50A7559}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1EFCEDF-5CB5-4A88-88AF-5C7ED50A7559}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1EFCEDF-5CB5-4A88-88AF-5C7ED50A7559}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

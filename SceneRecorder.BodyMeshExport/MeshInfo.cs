@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-using Picalines.OuterWilds.SceneRecorder.Models;
+using Picalines.OuterWilds.SceneRecorder.Shared.Models;
 
 namespace Picalines.OuterWilds.SceneRecorder.BodyMeshExport;
 

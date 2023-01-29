@@ -2,7 +2,7 @@
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Models.JsonConverters;
+namespace Picalines.OuterWilds.SceneRecorder.Shared.Models.JsonConverters;
 
 internal sealed class TransformModelConverter : JsonConverter<TransformModel>
 {

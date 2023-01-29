@@ -1,4 +1,4 @@
-﻿using Picalines.OuterWilds.SceneRecorder.Json;
+﻿using Picalines.OuterWilds.SceneRecorder.Shared.Models;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebApi.RouteDefinitions;

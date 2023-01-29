@@ -1,5 +1,5 @@
-﻿using Picalines.OuterWilds.SceneRecorder.Models;
-using Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
+﻿using Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
+using Picalines.OuterWilds.SceneRecorder.Shared.Models;
 using UnityEngine;
 
 namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders;

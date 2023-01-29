@@ -1,4 +1,4 @@
-﻿using Picalines.OuterWilds.SceneRecorder.Models;
+﻿using Picalines.OuterWilds.SceneRecorder.Shared.Models;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 using UnityEngine;
 

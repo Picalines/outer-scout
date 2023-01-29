@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFramework>net48</TargetFramework>
 		<Copyright>Copyright © 2023 Picalines</Copyright>
-		<RootNamespace>Picalines.OuterWilds.SceneRecorder.Models</RootNamespace>
+		<RootNamespace>Picalines.OuterWilds.SceneRecorder.Shared</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup>
 		<AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>

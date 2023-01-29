@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Picalines.OuterWilds.SceneRecorder.Json;
+namespace Picalines.OuterWilds.SceneRecorder.Shared.Models;
 
 public sealed class RecorderSettings
 {

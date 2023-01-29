@@ -26,7 +26,7 @@
 		<PackageReference Include="HarmonyX" Version="2.10.1" />
 	</ItemGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\SceneRecorder.Models\SceneRecorder.Models.csproj" />
 	  <ProjectReference Include="..\SceneRecorder.Recording.FFmpeg\SceneRecorder.Recording.FFmpeg.csproj" />
+	  <ProjectReference Include="..\SceneRecorder.Shared\SceneRecorder.Shared.csproj" />
 	</ItemGroup>
 </Project>

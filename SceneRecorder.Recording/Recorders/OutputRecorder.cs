@@ -1,6 +1,6 @@
 ﻿using OWML.Common;
-using Picalines.OuterWilds.SceneRecorder.Json;
 using Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
+using Picalines.OuterWilds.SceneRecorder.Shared.Models;
 using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
