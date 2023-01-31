@@ -36,4 +36,12 @@ public record struct TransformModel(
         transform.localRotation = Rotation;
         transform.localScale = Scale;
     }
+
+    public void ApplyLocalTo(Transform parentTransform, Transform childTransform)
+    {
+        var oldChildParent = childTransform.parent;
+        childTransform.parent = parentTransform;
+        ApplyToLocalTransform(childTransform);
+        childTransform.parent = oldChildParent;
+    }
 }
