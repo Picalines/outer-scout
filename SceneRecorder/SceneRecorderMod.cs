@@ -21,7 +21,7 @@ internal sealed class SceneRecorderMod : ModBehaviour
             _OutputRecorder.ModConsole = ModHelper.Console;
         }
 
-        _WebApiServer?.Configure(ModHelper.Config);
+        _WebApiServer?.Configure(ModHelper.Config, ModHelper.Console);
     }
 
     private void Start()

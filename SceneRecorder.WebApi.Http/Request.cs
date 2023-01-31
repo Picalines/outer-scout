@@ -14,11 +14,11 @@ public sealed class Request
 
     private readonly Dictionary<string, object?> _QueryParameters = new();
 
-    internal Request(HttpMethod httpMethod, string url, string concent)
+    internal Request(HttpMethod httpMethod, string url, string content)
     {
         HttpMethod = httpMethod;
         Url = url;
-        Content = concent;
+        Content = content;
     }
 
     internal void AddRouteParameter(string name, object? value)

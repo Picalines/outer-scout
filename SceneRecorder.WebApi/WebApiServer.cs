@@ -19,8 +19,10 @@ public sealed class WebApiServer : HttpServer
         GroundBodyRouteDefinition.Instance,
     };
 
-    public void Configure(IModConfig modConfig)
+    public void Configure(IModConfig modConfig, IModConsole modConsole)
     {
+        ModConsole = modConsole;
+
         var listenUrl = $"http://localhost:{modConfig.GetSettingsValue<int>("web_api_port")}/";
         var httpServerBuilder = new HttpServerBuilder(listenUrl);
 

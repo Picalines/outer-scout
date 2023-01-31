@@ -1,11 +1,15 @@
-﻿using System.Collections.Concurrent;
+﻿using OWML.Common;
+using System.Collections.Concurrent;
 using System.Net;
+using System.Web;
 using UnityEngine;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 
 public class HttpServer : MonoBehaviour
 {
+    public IModConsole? ModConsole { get; set; } = null;
+
     public bool Listening { get; private set; } = false;
 
     private string _BaseUrl = null!;
@@ -94,7 +98,7 @@ public class HttpServer : MonoBehaviour
 
             var request = new Request(
                 httpMethod,
-                context.Request.Url.ToString().Substring(_BaseUrl.Length),
+                HttpUtility.UrlDecode(context.Request.Url.ToString()).Substring(_BaseUrl.Length),
                 requestContent);
 
             bool handled = false;
@@ -104,7 +108,9 @@ public class HttpServer : MonoBehaviour
                 {
                     _UnityThreadActionQueue.Enqueue(() =>
                     {
+                        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: handling {request.HttpMethod} request at '{request.Url}'", MessageType.Info);
                         var response = handler.Handle(request);
+                        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: sending response {response.StatusCode} to {request.HttpMethod} request at '{request.Url}'", MessageType.Info);
                         response.ToHttpListenerResponse(context.Response);
                     });
                     handled = true;
