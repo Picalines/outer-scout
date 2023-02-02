@@ -17,9 +17,9 @@ internal abstract class RequestHandler
         {
             return HandleInternal(request);
         }
-        catch
+        catch (Exception exception)
         {
-            return ResponseFabric.InternalServerError();
+            return ResponseFabric.InternalServerError($"{exception.GetType().Name}: {exception.Message}");
         }
     }
 }

@@ -109,8 +109,16 @@ public class HttpServer : MonoBehaviour
                     _UnityThreadActionQueue.Enqueue(() =>
                     {
                         ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: handling {request.HttpMethod} request at '{request.Url}'", MessageType.Info);
+
                         var response = handler.Handle(request);
+
                         ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: sending response {response.StatusCode} to {request.HttpMethod} request at '{request.Url}'", MessageType.Info);
+
+                        if (response.StatusCode is HttpStatusCode.InternalServerError)
+                        {
+                            ModConsole?.WriteLine($"{nameof(SceneRecorder)} API internal error: {response.Content}", MessageType.Error);
+                        }
+
                         response.ToHttpListenerResponse(context.Response);
                     });
                     handled = true;
