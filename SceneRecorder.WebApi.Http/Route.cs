@@ -52,6 +52,11 @@ internal sealed partial record Route(
 
     public bool MatchRequest(Request request)
     {
+        if (request.HttpMethod != HttpMethod)
+        {
+            return false;
+        }
+
         var urlRouteParts = GetUrlParts(request.Url).ToArray();
 
         if (Segments.Count != urlRouteParts.Length)
