@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Picalines.OuterWilds.SceneRecorder.BodyMeshExport;
 using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
-using Picalines.OuterWilds.SceneRecorder.Shared.Models;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebApi.RouteDefinitions;
@@ -23,18 +22,6 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
 
             return LocatorExtensions.GetCurrentGroundBody() is { } groundBody
                 ? ResponseFabric.Ok(groundBody.name)
-                : ResponseFabric.NotFound();
-        });
-
-        serverBuilder.MapGet("ground_body/transform/global", request =>
-        {
-            if (LocatorExtensions.IsInSolarSystemScene() is false)
-            {
-                return ResponseFabric.ServiceUnavailable();
-            }
-
-            return LocatorExtensions.GetCurrentGroundBody() is { transform: var transform }
-                ? ResponseFabric.Ok(TransformModel.FromGlobalTransform(transform))
                 : ResponseFabric.NotFound();
         });
 
