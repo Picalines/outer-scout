@@ -51,11 +51,9 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
 
         serverBuilder.MapGet("recorder/frames_recorded", request =>
         {
-            return outputRecorder switch
-            {
-                { IsAbleToRecord: false } => ResponseFabric.ServiceUnavailable(),
-                { IsAbleToRecord: true } => ResponseFabric.Ok(outputRecorder.FramesRecorded),
-            };
+            return outputRecorder.IsAbleToRecord
+                ? ResponseFabric.Ok(outputRecorder.FramesRecorded)
+                : ResponseFabric.ServiceUnavailable();
         });
 
         serverBuilder.MapGet("recorder/enabled", request =>
@@ -72,12 +70,10 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
                 return ResponseFabric.ServiceUnavailable();
             }
 
-            if (shouldRecord == outputRecorder.IsRecording)
+            if (shouldRecord != outputRecorder.IsRecording)
             {
-                return ResponseFabric.NotModified();
+                outputRecorder.enabled = shouldRecord;
             }
-
-            outputRecorder.enabled = shouldRecord;
 
             return ResponseFabric.Ok();
         });
