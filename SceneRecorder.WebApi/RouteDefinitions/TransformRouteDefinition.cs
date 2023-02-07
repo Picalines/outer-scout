@@ -1,5 +1,6 @@
 ﻿using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
 using Picalines.OuterWilds.SceneRecorder.Shared.Models;
+using Picalines.OuterWilds.SceneRecorder.WebApi.Extensions;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 using UnityEngine;
 
@@ -13,6 +14,8 @@ internal sealed class TransformRouteDefinition : IApiRouteDefinition
 
     public void MapRoutes(HttpServerBuilder serverBuilder, IApiRouteDefinition.IContext context)
     {
+        using var precondition = serverBuilder.UseInGameScenePrecondition();
+
         var routeDefinitions = new Dictionary<string, (bool Mutable, Func<Transform> GetTransform)>
         {
             ["free_camera"] = (true, () => LocatorExtensions.GetFreeCamera()!.transform),
@@ -24,11 +27,6 @@ internal sealed class TransformRouteDefinition : IApiRouteDefinition
         {
             serverBuilder.MapGet($"{routePrefix}/transform/local_to/ground_body", request =>
             {
-                if (LocatorExtensions.IsInSolarSystemScene() is false)
-                {
-                    return ResponseFabric.ServiceUnavailable();
-                }
-
                 var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()!.transform;
                 var itemTransform = getTransform();
 
@@ -39,11 +37,6 @@ internal sealed class TransformRouteDefinition : IApiRouteDefinition
             {
                 serverBuilder.MapPut($"{routePrefix}/transform/local_to/ground_body", request =>
                 {
-                    if (LocatorExtensions.IsInSolarSystemScene() is false)
-                    {
-                        return ResponseFabric.ServiceUnavailable();
-                    }
-
                     var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()!.transform;
                     var itemTransform = getTransform();
 

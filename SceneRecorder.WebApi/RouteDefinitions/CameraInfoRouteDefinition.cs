@@ -1,4 +1,5 @@
 ﻿using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
+using Picalines.OuterWilds.SceneRecorder.WebApi.Extensions;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Models;
 
@@ -12,6 +13,8 @@ internal sealed class CameraInfoRouteDefinition : IApiRouteDefinition
 
     public void MapRoutes(HttpServerBuilder serverBuilder, IApiRouteDefinition.IContext context)
     {
+        using var precondition = serverBuilder.UseInGameScenePrecondition();
+
         var routeDefinitions = new Dictionary<string, (bool Mutable, Func<OWCamera> GetOWCamera)>()
         {
             ["free_camera"] = (true, () => LocatorExtensions.GetFreeCamera()!.GetAddComponent<OWCamera>()),
@@ -22,11 +25,6 @@ internal sealed class CameraInfoRouteDefinition : IApiRouteDefinition
         {
             serverBuilder.MapGet($"{routePrefix}/camera_info", request =>
             {
-                if (LocatorExtensions.IsInSolarSystemScene() is false)
-                {
-                    return ResponseFabric.ServiceUnavailable();
-                }
-
                 return ResponseFabric.Ok(CameraInfo.FromOWCamera(getOWCamera()));
             });
 
@@ -34,11 +32,6 @@ internal sealed class CameraInfoRouteDefinition : IApiRouteDefinition
             {
                 serverBuilder.MapPut($"{routePrefix}/camera_info", request =>
                 {
-                    if (LocatorExtensions.IsInSolarSystemScene() is false)
-                    {
-                        return ResponseFabric.ServiceUnavailable();
-                    }
-
                     request.ParseContentJson<CameraInfo>()
                         .ApplyToOWCamera(getOWCamera());
 

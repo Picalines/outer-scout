@@ -1,4 +1,5 @@
 ﻿using Picalines.OuterWilds.SceneRecorder.Shared.Models;
+using Picalines.OuterWilds.SceneRecorder.WebApi.Extensions;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebApi.RouteDefinitions;
@@ -11,6 +12,8 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
 
     public void MapRoutes(HttpServerBuilder serverBuilder, IApiRouteDefinition.IContext context)
     {
+        using var precondition = serverBuilder.UseInGameScenePrecondition();
+
         var outputRecorder = context.OutputRecorder;
 
         serverBuilder.MapGet("recorder/settings", request =>

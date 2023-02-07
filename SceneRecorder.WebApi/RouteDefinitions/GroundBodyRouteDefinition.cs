@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Picalines.OuterWilds.SceneRecorder.BodyMeshExport;
 using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
+using Picalines.OuterWilds.SceneRecorder.WebApi.Extensions;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebApi.RouteDefinitions;
@@ -13,13 +14,10 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
 
     public void MapRoutes(HttpServerBuilder serverBuilder, IApiRouteDefinition.IContext context)
     {
+        using var precondition = serverBuilder.UseInGameScenePrecondition();
+
         serverBuilder.MapGet("ground_body/name", request =>
         {
-            if (LocatorExtensions.IsInSolarSystemScene() is false)
-            {
-                return ResponseFabric.ServiceUnavailable();
-            }
-
             return LocatorExtensions.GetCurrentGroundBody() is { } groundBody
                 ? ResponseFabric.Ok(groundBody.name)
                 : ResponseFabric.NotFound();
@@ -27,11 +25,6 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
 
         serverBuilder.MapPost("ground_body/mesh_list?{output_file_path:string}", request =>
         {
-            if (LocatorExtensions.IsInSolarSystemScene() is false)
-            {
-                return ResponseFabric.ServiceUnavailable();
-            }
-
             var outputFilePath = request.GetQueryParameter<string>("output_file_path");
 
             if (LocatorExtensions.GetCurrentGroundBody() is not { } groundBody)
