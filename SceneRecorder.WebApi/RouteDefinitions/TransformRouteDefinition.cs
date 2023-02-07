@@ -41,7 +41,11 @@ internal sealed class TransformRouteDefinition : IApiRouteDefinition
                     var itemTransform = getTransform();
 
                     var transformModel = request.ParseContentJson<TransformModel>();
-                    transformModel.ApplyLocalTo(groundBodyTransform, itemTransform);
+
+                    var oldItemParent = itemTransform.parent;
+                    itemTransform.parent = groundBodyTransform;
+                    transformModel.ApplyToLocalTransform(itemTransform);
+                    itemTransform.parent = oldItemParent;
 
                     return ResponseFabric.Ok();
                 });
