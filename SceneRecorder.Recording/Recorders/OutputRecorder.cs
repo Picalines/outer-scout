@@ -15,6 +15,8 @@ public sealed class OutputRecorder : RecorderComponent
 
     public string? OutputDirectory { get; set; } = null;
 
+    public GameObject? HdriPivot { get; private set; } = null;
+
     private ComposedRecorder _ComposedRecorder = null!;
 
     private Action? _OnRecordingStarted = null;
@@ -87,24 +89,24 @@ public sealed class OutputRecorder : RecorderComponent
         var freeCamera = GameObject.Find("FREECAM").GetComponent<OWCamera>();
 
         // background recorder
-        var backgroundRecorder = GetOrAddComponent<BackgroundRecorder>(freeCamera.gameObject);
+        var backgroundRecorder = freeCamera.gameObject.GetOrAddComponent<BackgroundRecorder>();
         (backgroundRecorder.Width, backgroundRecorder.Height) = Settings.Resolution;
         backgroundRecorder.FrameRate = Settings.FrameRate;
 
         // render background to GUI
-        GetOrAddComponent<RenderTextureRecorderGUI>(freeCamera.gameObject);
+        freeCamera.gameObject.GetOrAddComponent<RenderTextureRecorderGUI>();
 
         // depth recorder
-        var depthRecorder = GetOrAddComponent<DepthRecorder>(freeCamera.gameObject);
+        var depthRecorder = freeCamera.gameObject.GetOrAddComponent<DepthRecorder>();
         (depthRecorder.Width, depthRecorder.Height) = Settings.Resolution;
         depthRecorder.FrameRate = Settings.FrameRate;
 
         // hdri recorder
-        var hdriPivot = new GameObject($"{nameof(SceneRecorder)} HDRI Pivot");
-        hdriPivot.transform.parent = LocatorExtensions.GetCurrentGroundBody()!.transform;
-        playerCameraContoller.transform.CopyGlobalTransformTo(hdriPivot.transform);
+        HdriPivot = new GameObject($"{nameof(SceneRecorder)} HDRI Pivot");
+        HdriPivot.transform.parent = LocatorExtensions.GetCurrentGroundBody()!.transform;
+        playerCameraContoller.transform.CopyGlobalTransformTo(HdriPivot.transform);
 
-        var hdriRecorder = GetOrAddComponent<HDRIRecorder>(hdriPivot);
+        var hdriRecorder = HdriPivot.GetOrAddComponent<HDRIRecorder>();
         hdriRecorder.CubemapFaceSize = Settings.HDRIFaceSize;
         hdriRecorder.FrameRate = Settings.FrameRate;
 
@@ -135,7 +137,7 @@ public sealed class OutputRecorder : RecorderComponent
 
         _OnRecordingStarted = () =>
         {
-            ForEach(playerRenderersToToggle, renderer => renderer.enabled = false);
+            Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = false);
             playerCameraContoller.SetDegreesY(0);
             Locator.GetQuantumMoon().SetActivation(false);
 
@@ -144,30 +146,13 @@ public sealed class OutputRecorder : RecorderComponent
 
         _OnRecordingFinished = () =>
         {
-            Destroy(hdriPivot);
-            ForEach(playerRenderersToToggle, renderer => renderer.enabled = true);
+            Destroy(HdriPivot);
+            HdriPivot = null;
+
+            Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = true);
             Locator.GetQuantumMoon().SetActivation(true);
 
             ModConsole.WriteLine($"Recording finished ({OutputDirectory})");
         };
-
-        static void ForEach<T>(T[] array, Action<T> action)
-        {
-            foreach (var item in array)
-            {
-                action(item);
-            }
-        }
-    }
-
-    private static TComponent GetOrAddComponent<TComponent>(GameObject gameObject)
-        where TComponent : Component
-    {
-        if (gameObject.TryGetComponent<TComponent>(out var component) is false)
-        {
-            component = gameObject.AddComponent<TComponent>();
-        }
-
-        return component;
     }
 }
