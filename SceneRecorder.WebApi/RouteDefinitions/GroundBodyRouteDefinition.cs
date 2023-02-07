@@ -23,6 +23,14 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
                 : ResponseFabric.NotFound();
         });
 
+        serverBuilder.MapGet("ground_body/sectors/current/path", request =>
+        {
+            var playerSectorDetector = Locator.GetPlayerDetector().GetComponent<SectorDetector>();
+            var lastEnteredSector = playerSectorDetector.GetLastEnteredSector();
+
+            return ResponseFabric.Ok(lastEnteredSector.transform.GetPath());
+        });
+
         serverBuilder.MapPost("ground_body/mesh_list?{output_file_path:string}", request =>
         {
             var outputFilePath = request.GetQueryParameter<string>("output_file_path");

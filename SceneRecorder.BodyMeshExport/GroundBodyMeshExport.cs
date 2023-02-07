@@ -1,4 +1,5 @@
-﻿using Picalines.OuterWilds.SceneRecorder.Shared.Models;
+﻿using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
+using Picalines.OuterWilds.SceneRecorder.Shared.Models;
 using UnityEngine;
 
 namespace Picalines.OuterWilds.SceneRecorder.BodyMeshExport;
@@ -10,7 +11,7 @@ public static class GroundBodyMeshExport
         var renderedMeshFilters = GetComponentsInChildrenWithSector<MeshFilter>(groundBodyObject)
             .Where(pair => pair.Component.TryGetComponent<Renderer>(out _) is true);
 
-        var noSectorMeshInfo = CreateEmptySectorMeshInfo(GetTransformPath(groundBodyObject.transform));
+        var noSectorMeshInfo = CreateEmptySectorMeshInfo(groundBodyObject.transform.GetPath());
         var sectorMeshInfos = new Dictionary<Sector, SectorMeshInfo>();
 
         foreach (var (sector, meshFilter) in renderedMeshFilters)
@@ -38,7 +39,7 @@ public static class GroundBodyMeshExport
                 var plainMeshes = (sectorMeshInfo.PlainMeshes as List<MeshInfo>)!;
                 plainMeshes.Add(new MeshInfo()
                 {
-                    Path = GetTransformPath(meshGameObject.transform),
+                    Path = meshGameObject.transform.GetPath(),
                     Transform = transformData,
                 });
             }
@@ -70,7 +71,7 @@ public static class GroundBodyMeshExport
 
         static SectorMeshInfo CreateEmptySectorMeshInfoFromSector(Sector sector)
         {
-            return CreateEmptySectorMeshInfo(GetTransformPath(sector.transform));
+            return CreateEmptySectorMeshInfo(sector.transform.GetPath());
         }
     }
 
@@ -91,13 +92,6 @@ public static class GroundBodyMeshExport
                 yield return recursivePair;
             }
         }
-    }
-
-    private static string GetTransformPath(Transform current)
-    {
-        return current.parent == null
-            ? current.name
-            : GetTransformPath(current.parent) + "/" + current.name;
     }
 
     private static V GetOrCreate<K, V>(IDictionary<K, V> dictionary, K key, Func<K, V> createValue)
