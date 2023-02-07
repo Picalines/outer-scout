@@ -41,8 +41,6 @@ public sealed class HttpServerBuilder
 
     private readonly Stack<PreconditionHandler> _PreconditionHandlerStack = new();
 
-    private PreconditionHandler[] _CurrentPreconditionHandlerQueue = Array.Empty<PreconditionHandler>();
-
     public HttpServerBuilder(string baseUrl)
     {
         _BaseUrl = baseUrl;
@@ -60,11 +58,7 @@ public sealed class HttpServerBuilder
 
     public IDisposable UsePrecondition(Func<Request, Response?> optionalRequestHandler)
     {
-        var preconditionHandler = new PreconditionHandler(_PreconditionHandlerStack, optionalRequestHandler);
-
-        _CurrentPreconditionHandlerQueue = _PreconditionHandlerStack.Reverse().ToArray();
-
-        return preconditionHandler;
+        return new PreconditionHandler(_PreconditionHandlerStack, optionalRequestHandler);
     }
 
     public void Build(HttpServer httpServer)
@@ -76,7 +70,7 @@ public sealed class HttpServerBuilder
     {
         var route = new Route(httpMethod, Route.ParsePathString(path));
 
-        var preconditionHandlers = _CurrentPreconditionHandlerQueue;
+        var preconditionHandlers = _PreconditionHandlerStack.Reverse().ToArray();
 
         _RequestHandlers.Add(new FuncRequestHandler(route, request =>
         {
