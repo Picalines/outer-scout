@@ -6,14 +6,8 @@ namespace Picalines.OuterWilds.SceneRecorder.BodyMeshExport;
 public sealed class MeshInfo
 {
     [JsonProperty("path")]
-    public string Path { get; private set; } // GameObject path for "static" meshes, Asset path for streamed ones
+    public required string Path { get; init; } // GameObject path for "static" meshes, Asset path for streamed ones
 
     [JsonProperty("transform")]
-    public TransformModel Transform { get; private set; }
-
-    public MeshInfo(string path, TransformModel transform)
-    {
-        Path = path;
-        Transform = transform;
-    }
+    public required TransformModel Transform { get; init; }
 }
