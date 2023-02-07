@@ -21,7 +21,14 @@ public sealed class Response
     public void ToHttpListenerResponse(HttpListenerResponse response)
     {
         response.StatusCode = (int)StatusCode;
-        response.ContentType = ContentType;
+
+        var contentType = ContentType;
+        if (contentType.Contains("charset") is false)
+        {
+            contentType += "; charset=utf-8";
+        }
+        response.ContentType = contentType;
+
         response.ContentLength64 = Content.Length;
         using var contentWriter = new StreamWriter(response.OutputStream);
         contentWriter.Write(Content);
@@ -29,7 +36,11 @@ public sealed class Response
 
     public static Response FromString(HttpStatusCode httpStatusCode, string value)
     {
-        return new(httpStatusCode, "text/plain", value);
+        var contentType = (value.StartsWith("<!DOCTYPE") || value.StartsWith("<html>"))
+            ? "text/html"
+            : "text/plain";
+
+        return new(httpStatusCode, contentType, value);
     }
 
     public static Response Empty(HttpStatusCode httpStatusCode)

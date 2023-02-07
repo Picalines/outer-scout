@@ -39,16 +39,16 @@ public sealed class WebApiServer : HttpServer
 
     private void MapRoutes(HttpServerBuilder serverBuilder)
     {
-        serverBuilder.MapGet("", request =>
-        {
-            return ResponseFabric.Ok();
-        });
-
         var context = new RouteDefinitionContext(OutputRecorder: GetComponent<OutputRecorder>());
 
         foreach (var routeDefinition in _ApiRouteDefinitions)
         {
             routeDefinition.MapRoutes(serverBuilder, context);
         }
+
+        serverBuilder.MapGet("", request =>
+        {
+            return ResponseFabric.Ok(new { Message = $"Welcome to Outer Wilds {nameof(SceneRecorder)} API!" });
+        });
     }
 }
