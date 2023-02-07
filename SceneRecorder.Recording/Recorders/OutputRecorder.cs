@@ -85,8 +85,8 @@ public sealed class OutputRecorder : RecorderComponent
         }
 
         var player = Locator.GetPlayerBody();
-        var playerCameraContoller = Locator.GetPlayerCamera().GetComponent<PlayerCameraController>();
         var freeCamera = GameObject.Find("FREECAM").GetComponent<OWCamera>();
+        var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()!.transform;
 
         // background recorder
         var backgroundRecorder = freeCamera.gameObject.GetOrAddComponent<BackgroundRecorder>();
@@ -103,8 +103,7 @@ public sealed class OutputRecorder : RecorderComponent
 
         // hdri recorder
         HdriPivot = new GameObject($"{nameof(SceneRecorder)} HDRI Pivot");
-        HdriPivot.transform.parent = LocatorExtensions.GetCurrentGroundBody()!.transform;
-        playerCameraContoller.transform.CopyGlobalTransformTo(HdriPivot.transform);
+        HdriPivot.transform.parent = groundBodyTransform;
 
         var hdriRecorder = HdriPivot.GetOrAddComponent<HDRIRecorder>();
         hdriRecorder.CubemapFaceSize = Settings.HDRIFaceSize;
@@ -138,8 +137,9 @@ public sealed class OutputRecorder : RecorderComponent
         _OnRecordingStarted = () =>
         {
             Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = false);
-            playerCameraContoller.SetDegreesY(0);
             Locator.GetQuantumMoon().SetActivation(false);
+
+            freeCamera.transform.parent = groundBodyTransform;
 
             ModConsole.WriteLine($"Recording started ({OutputDirectory})");
         };
