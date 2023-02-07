@@ -91,6 +91,9 @@ public sealed class OutputRecorder : RecorderComponent
         (backgroundRecorder.Width, backgroundRecorder.Height) = Settings.Resolution;
         backgroundRecorder.FrameRate = Settings.FrameRate;
 
+        // render background to GUI
+        GetOrAddComponent<RenderTextureRecorderGUI>(freeCamera.gameObject);
+
         // depth recorder
         var depthRecorder = GetOrAddComponent<DepthRecorder>(freeCamera.gameObject);
         (depthRecorder.Width, depthRecorder.Height) = Settings.Resolution;
@@ -104,9 +107,6 @@ public sealed class OutputRecorder : RecorderComponent
         var hdriRecorder = GetOrAddComponent<HDRIRecorder>(hdriPivot);
         hdriRecorder.CubemapFaceSize = Settings.HDRIFaceSize;
         hdriRecorder.FrameRate = Settings.FrameRate;
-
-        // render hdri to GUI (TODO: replace with web)
-        GetOrAddComponent<RenderTextureRecorderGUI>(hdriRecorder.gameObject);
 
         // combine recorders
         if (_ComposedRecorder.Recorders.Count == 0)
