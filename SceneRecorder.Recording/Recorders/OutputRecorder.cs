@@ -1,4 +1,5 @@
 ﻿using OWML.Common;
+using Picalines.OuterWilds.SceneRecorder.Recording.Animators;
 using Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
 using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
 using Picalines.OuterWilds.SceneRecorder.Shared.Models;
@@ -7,21 +8,29 @@ using UnityEngine;
 
 namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
 
+using TransformAnimator = Animators.TransformAnimator;
+
 public sealed class OutputRecorder : RecorderComponent
 {
     public IModConsole? ModConsole { get; set; } = null;
 
-    public RecorderSettings? Settings { get; set; } = null;
-
     public string? OutputDirectory { get; set; } = null;
 
-    public GameObject? HdriPivot { get; private set; } = null;
+    public IAnimator<TransformModel>? FreeCameraTransformAnimator { get; private set; } = null;
+
+    public IAnimator<TransformModel>? HdriTransformAnimator { get; private set; } = null;
+
+    private RecorderSettings? _Settings = null;
 
     private ComposedRecorder _ComposedRecorder = null!;
+
+    private ComposedAnimator _ComposedAnimator = null!;
 
     private Action? _OnRecordingStarted = null;
 
     private Action? _OnRecordingFinished = null;
+
+    private GameObject? _HdriPivot = null;
 
     public OutputRecorder()
     {
@@ -39,8 +48,6 @@ public sealed class OutputRecorder : RecorderComponent
 
     private void OnRecordingStarted()
     {
-        Configure();
-
         _OnRecordingStarted?.Invoke();
 
         _ComposedRecorder.enabled = true;
@@ -55,9 +62,21 @@ public sealed class OutputRecorder : RecorderComponent
 
     private void OnBeforeFrameRecorded()
     {
+        _ComposedAnimator.SetFrame(FramesRecorded);
+
         if (FramesRecorded >= Settings!.FrameCount)
         {
             enabled = false;
+        }
+    }
+
+    public RecorderSettings? Settings
+    {
+        get => _Settings;
+        set
+        {
+            _Settings = value;
+            Configure();
         }
     }
 
@@ -79,7 +98,7 @@ public sealed class OutputRecorder : RecorderComponent
 
     private void Configure()
     {
-        if (IsAbleToRecord is false)
+        if (IsRecording || !IsAbleToRecord)
         {
             throw new InvalidOperationException();
         }
@@ -102,10 +121,11 @@ public sealed class OutputRecorder : RecorderComponent
         depthRecorder.FrameRate = Settings.FrameRate;
 
         // hdri recorder
-        HdriPivot = new GameObject($"{nameof(SceneRecorder)} HDRI Pivot");
-        HdriPivot.transform.parent = groundBodyTransform;
+        _HdriPivot = _HdriPivot.Nullable();
+        _HdriPivot ??= new GameObject($"{nameof(SceneRecorder)} HDRI Pivot");
+        _HdriPivot.transform.parent = groundBodyTransform;
 
-        var hdriRecorder = HdriPivot.GetOrAddComponent<HDRIRecorder>();
+        var hdriRecorder = _HdriPivot.GetOrAddComponent<HDRIRecorder>();
         hdriRecorder.CubemapFaceSize = Settings.HDRIFaceSize;
         hdriRecorder.FrameRate = Settings.FrameRate;
 
@@ -128,6 +148,17 @@ public sealed class OutputRecorder : RecorderComponent
             });
         }
 
+        // transform animators
+        FreeCameraTransformAnimator = new TransformAnimator(freeCamera.transform);
+        HdriTransformAnimator = new TransformAnimator(_HdriPivot.transform);
+
+        _ComposedAnimator = new ComposedAnimator()
+        {
+            Animators = new[] { FreeCameraTransformAnimator, HdriTransformAnimator }!,
+            FrameCount = Settings.FrameCount,
+        };
+
+        // start & end handlers
         var playerRenderersToToggle = Settings.HidePlayerModel
             ? player.gameObject.GetComponentsInChildren<Renderer>()
                 .Where(renderer => renderer.enabled)
@@ -146,9 +177,6 @@ public sealed class OutputRecorder : RecorderComponent
 
         _OnRecordingFinished = () =>
         {
-            Destroy(HdriPivot);
-            HdriPivot = null;
-
             Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = true);
             Locator.GetQuantumMoon().SetActivation(true);
 

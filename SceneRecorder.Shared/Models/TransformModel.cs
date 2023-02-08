@@ -36,4 +36,10 @@ public record struct TransformModel(
         transform.localRotation = Rotation;
         transform.localScale = Scale;
     }
+
+    public void ApplyToGlobalPositionAndRotation(Transform transform)
+    {
+        transform.position = Position;
+        transform.rotation = Rotation;
+    }
 }
