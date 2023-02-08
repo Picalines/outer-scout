@@ -62,12 +62,13 @@ public sealed class OutputRecorder : RecorderComponent
 
     private void OnBeforeFrameRecorded()
     {
-        _ComposedAnimator.SetFrame(FramesRecorded);
-
         if (FramesRecorded >= Settings!.FrameCount)
         {
             enabled = false;
+            return;
         }
+
+        _ComposedAnimator.SetFrame(FramesRecorded);
     }
 
     public RecorderSettings? Settings

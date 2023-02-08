@@ -16,6 +16,7 @@ public sealed class WebApiServer : HttpServer
         TransformRouteDefinition.Instance,
         CameraInfoRouteDefinition.Instance,
         RecorderRouteDefinition.Instance,
+        AnimationRouteDefinition.Instance,
         GroundBodyRouteDefinition.Instance,
     };
 
