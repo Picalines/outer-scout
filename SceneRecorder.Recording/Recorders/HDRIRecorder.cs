@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 
 namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
 
-internal sealed class HDRIRecorder : RenderTextureRecorder
+internal sealed class HdriRecorder : RenderTextureRecorder
 {
     public int CubemapFaceSize { get; set; } = 2048;
 
@@ -27,7 +27,7 @@ internal sealed class HDRIRecorder : RenderTextureRecorder
         Quaternion.Euler(0, 180, 0),
     };
 
-    public HDRIRecorder()
+    public HdriRecorder()
     {
         Awoken += OnAwoken;
         RecordingStarted += OnRecordingStarted;

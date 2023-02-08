@@ -125,8 +125,8 @@ public sealed class OutputRecorder : RecorderComponent
         _HdriPivot ??= new GameObject($"{nameof(SceneRecorder)} HDRI Pivot");
         _HdriPivot.transform.parent = groundBodyTransform;
 
-        var hdriRecorder = _HdriPivot.GetOrAddComponent<HDRIRecorder>();
-        hdriRecorder.CubemapFaceSize = Settings.HDRIFaceSize;
+        var hdriRecorder = _HdriPivot.GetOrAddComponent<HdriRecorder>();
+        hdriRecorder.CubemapFaceSize = Settings.HdriFaceSize;
         hdriRecorder.FrameRate = Settings.FrameRate;
 
         // combine recorders
@@ -143,7 +143,7 @@ public sealed class OutputRecorder : RecorderComponent
             {
                 BackgroundRecorder => "background.mp4",
                 DepthRecorder => "depth.mp4",
-                HDRIRecorder => "hdri.mp4",
+                HdriRecorder => "hdri.mp4",
                 _ => throw new NotImplementedException(),
             });
         }

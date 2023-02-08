@@ -17,7 +17,7 @@ public sealed class RecorderSettings
     public required int ResolutionY { get; init; }
 
     [JsonProperty("hdri_face_size")]
-    public required int HDRIFaceSize { get; init; }
+    public required int HdriFaceSize { get; init; }
 
     [JsonProperty("hide_player_model")]
     public required bool HidePlayerModel { get; init; }
