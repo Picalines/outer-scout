@@ -4,6 +4,9 @@ namespace Picalines.OuterWilds.SceneRecorder.Shared.Models;
 
 public sealed class RecorderSettings
 {
+    [JsonProperty("output_directory")]
+    public required string OutputDirectory { get; init; }
+
     [JsonProperty("frame_count")]
     public required int FrameCount { get; init; }
 

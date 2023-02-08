@@ -26,26 +26,6 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
 
     private void MapAnimatorRoutes<T>(HttpServerBuilder serverBuilder, string routeName, Func<IAnimator<T>> getAnimator)
     {
-        serverBuilder.MapGet($"animation/{routeName}/frame_count", request =>
-        {
-            var animator = getAnimator();
-            return ResponseFabric.Ok(animator.FrameCount);
-        });
-
-        serverBuilder.MapPut($"animation/{routeName}/frame_count?{{new_count:int}}", request =>
-        {
-            var newCount = request.GetRouteParameter<int>("new_count");
-            if (newCount <= 0)
-            {
-                return ResponseFabric.BadRequest();
-            }
-
-            var animator = getAnimator();
-            animator.FrameCount = newCount;
-
-            return ResponseFabric.Ok();
-        });
-
         serverBuilder.MapPut($"animation/{routeName}/value_at_frame/{{frame_index:int}}", request =>
         {
             var frameIndex = request.GetRouteParameter<int>("frame_index");
@@ -54,15 +34,19 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
                 return ResponseFabric.BadRequest();
             }
 
-            var newValue = request.ParseContentJson<T>();
-
             var animator = getAnimator();
+            if (frameIndex >= animator.FrameCount)
+            {
+                return ResponseFabric.BadRequest();
+            }
+
+            var newValue = request.ParseContentJson<T>();
             animator.SetValueAtFrame(frameIndex, newValue);
 
             return ResponseFabric.Ok();
         });
 
-        serverBuilder.MapPut($"animation/{routeName}/value_at_frame/{{start_frame_index:int}}/bulk", request =>
+        serverBuilder.MapPut($"animation/{routeName}/values_from_frame/{{start_frame_index:int}}", request =>
         {
             var startFrameIndex = request.GetRouteParameter<int>("start_frame_index");
             if (startFrameIndex < 0)
@@ -70,9 +54,14 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
                 return ResponseFabric.BadRequest();
             }
 
+            var animator = getAnimator();
             var newValues = request.ParseContentJson<T[]>();
 
-            var animator = getAnimator();
+            if ((startFrameIndex + newValues.Length) > animator.FrameCount)
+            {
+                return ResponseFabric.BadRequest();
+            }
+
             for (int frameOffset = 0; frameOffset < newValues.Length; frameOffset++)
             {
                 animator.SetValueAtFrame(startFrameIndex + frameOffset, newValues[frameOffset]);

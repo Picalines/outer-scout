@@ -37,7 +37,7 @@ public sealed class FFmpegTextureRecorder : IDisposable
             .Add("-an")
             .Add("-crf 20")
             .Add("-q:v 0")
-            .Add(OutputFilePath);
+            .Add($"\"{OutputFilePath}\"");
 
         if (FFmpegAsyncGPUReadback.TryCreate(modConsole, ffmpegArguments.ToString(), out _FFmpegReadback!) is false)
         {

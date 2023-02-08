@@ -14,8 +14,6 @@ public sealed class OutputRecorder : RecorderComponent
 {
     public IModConsole? ModConsole { get; set; } = null;
 
-    public string? OutputDirectory { get; set; } = null;
-
     public IAnimator<TransformModel>? FreeCameraTransformAnimator { get; private set; } = null;
 
     public IAnimator<TransformModel>? HdriTransformAnimator { get; private set; } = null;
@@ -76,19 +74,23 @@ public sealed class OutputRecorder : RecorderComponent
         get => _Settings;
         set
         {
+            if (IsRecording)
+            {
+                throw new InvalidOperationException();
+            }
+
             _Settings = value;
             Configure();
         }
     }
 
-    [MemberNotNullWhen(true, nameof(Settings), nameof(OutputDirectory), nameof(ModConsole))]
+    [MemberNotNullWhen(true, nameof(Settings), nameof(ModConsole))]
     public bool IsAbleToRecord
     {
         get
         {
             return IsRecording
                 || (Settings is not null
-                && OutputDirectory is not null
                 && ModConsole is not null
                 && LocatorExtensions.IsInSolarSystemScene()
                 && GameObject.Find("FREECAM").Nullable() is { } freeCamObject
@@ -99,9 +101,9 @@ public sealed class OutputRecorder : RecorderComponent
 
     private void Configure()
     {
-        if (IsRecording || !IsAbleToRecord)
+        if (Settings is null)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"{nameof(Settings)} is null");
         }
 
         var player = Locator.GetPlayerBody();
@@ -138,9 +140,9 @@ public sealed class OutputRecorder : RecorderComponent
 
         foreach (var recorder in _ComposedRecorder.Recorders.OfType<RenderTextureRecorder>())
         {
-            recorder.ModConsole = ModConsole;
+            recorder.ModConsole = ModConsole!;
 
-            recorder.TargetFile = Path.Combine(OutputDirectory, recorder switch
+            recorder.TargetFile = Path.Combine(Settings.OutputDirectory, recorder switch
             {
                 BackgroundRecorder => "background.mp4",
                 DepthRecorder => "depth.mp4",
@@ -173,7 +175,7 @@ public sealed class OutputRecorder : RecorderComponent
 
             freeCamera.transform.parent = groundBodyTransform;
 
-            ModConsole.WriteLine($"Recording started ({OutputDirectory})");
+            ModConsole?.WriteLine($"Recording started ({Settings.OutputDirectory})");
         };
 
         _OnRecordingFinished = () =>
@@ -181,7 +183,7 @@ public sealed class OutputRecorder : RecorderComponent
             Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = true);
             Locator.GetQuantumMoon().SetActivation(true);
 
-            ModConsole.WriteLine($"Recording finished ({OutputDirectory})");
+            ModConsole?.WriteLine($"Recording finished ({Settings.OutputDirectory})");
         };
     }
 }

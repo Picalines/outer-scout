@@ -36,17 +36,6 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
             return ResponseFabric.Ok();
         });
 
-        serverBuilder.MapPut("recorder/output_directory", request =>
-        {
-            if (outputRecorder.IsRecording)
-            {
-                return ResponseFabric.ServiceUnavailable();
-            }
-
-            outputRecorder.OutputDirectory = request.Content;
-            return ResponseFabric.Ok();
-        });
-
         serverBuilder.MapGet("recorder/is_able_to_record", request =>
         {
             return ResponseFabric.Ok(outputRecorder.IsAbleToRecord);
