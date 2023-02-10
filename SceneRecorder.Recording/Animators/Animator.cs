@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace Picalines.OuterWilds.SceneRecorder.Recording.Animators;
 
 internal abstract class Animator<T> : IAnimator<T>
