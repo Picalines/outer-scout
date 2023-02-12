@@ -106,21 +106,7 @@ public class HttpServer : MonoBehaviour
             {
                 if (handler.Route.MatchRequest(request))
                 {
-                    _UnityThreadActionQueue.Enqueue(() =>
-                    {
-                        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: handling {request.HttpMethod} request at '{request.Url}'", MessageType.Info);
-
-                        var response = handler.Handle(request);
-
-                        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: sending response {response.StatusCode} to {request.HttpMethod} request at '{request.Url}'", MessageType.Info);
-
-                        if (response.StatusCode is HttpStatusCode.InternalServerError)
-                        {
-                            ModConsole?.WriteLine($"{nameof(SceneRecorder)} API internal error: {response.Content}", MessageType.Error);
-                        }
-
-                        response.ToHttpListenerResponse(context.Response);
-                    });
+                    _UnityThreadActionQueue.Enqueue(() => HandleRequest(context, request, handler));
                     handled = true;
                     break;
                 }
@@ -134,6 +120,22 @@ public class HttpServer : MonoBehaviour
 
         _HttpListener.Stop();
         _StoppedListening.SetResult(null);
+    }
+
+    private void HandleRequest(HttpListenerContext context, Request request, RequestHandler handler)
+    {
+        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: handling {request.HttpMethod} request at '{request.Url}'", MessageType.Info);
+
+        var response = handler.Handle(request);
+
+        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: sending response {response.StatusCode} to {request.HttpMethod} request at '{request.Url}'", MessageType.Info);
+
+        if (response.StatusCode is HttpStatusCode.InternalServerError)
+        {
+            ModConsole?.WriteLine($"{nameof(SceneRecorder)} API internal error: {response.Content}", MessageType.Error);
+        }
+
+        response.ToHttpListenerResponse(context.Response);
     }
 
     private void Update()

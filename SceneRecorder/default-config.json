@@ -1,6 +1,8 @@
 {
   "enabled": true,
   "settings": {
-    "web_api_port": 5000
+    "Web API port": 5000,
+    "Web API log only errors": true,
+    "FFmpeg logs":  false
   }
 }

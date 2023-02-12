@@ -175,7 +175,7 @@ public sealed class OutputRecorder : RecorderComponent
 
             freeCamera.transform.parent = groundBodyTransform;
 
-            ModConsole?.WriteLine($"Recording started ({Settings.OutputDirectory})");
+            ModConsole?.WriteLine($"Recording started ({Settings.OutputDirectory})", MessageType.Info);
         };
 
         _OnRecordingFinished = () =>
@@ -183,7 +183,7 @@ public sealed class OutputRecorder : RecorderComponent
             Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = true);
             Locator.GetQuantumMoon().SetActivation(true);
 
-            ModConsole?.WriteLine($"Recording finished ({Settings.OutputDirectory})");
+            ModConsole?.WriteLine($"Recording finished ({Settings.OutputDirectory})", MessageType.Success);
         };
     }
 }

@@ -1,5 +1,6 @@
 ﻿using OWML.Common;
 using Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
+using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 using Picalines.OuterWilds.SceneRecorder.WebApi.RouteDefinitions;
 using UnityEngine;
@@ -22,9 +23,12 @@ public sealed class WebApiServer : HttpServer
 
     public void Configure(IModConfig modConfig, IModConsole modConsole)
     {
-        ModConsole = modConsole;
+        var logOnlyErrors = modConfig.GetSettingsValue<bool>("Web API log only errors");
+        ModConsole = logOnlyErrors
+            ? modConsole.WithOnlyMessagesOfType(MessageType.Error)
+            : modConsole;
 
-        var listenUrl = $"http://localhost:{modConfig.GetSettingsValue<int>("web_api_port")}/";
+        var listenUrl = $"http://localhost:{modConfig.GetSettingsValue<int>("Web API port")}/";
         var httpServerBuilder = new HttpServerBuilder(listenUrl);
 
         MapRoutes(httpServerBuilder);

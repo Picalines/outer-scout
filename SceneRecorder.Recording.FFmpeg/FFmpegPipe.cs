@@ -45,6 +45,8 @@ internal sealed class FFmpegPipe : IDisposable
         _FFmpegProcess.ErrorDataReceived += (sender, args) => OutputReceived?.Invoke(args.Data);
         _FFmpegProcess.BeginErrorReadLine();
 
+        OutputReceived += line => _ModConsole.WriteLine($"FFmpeg: {line}", MessageType.Info);
+
         _CopyThread = new Thread(CopyThread);
         _PipeThread = new Thread(PipeThread);
         _CopyThread.Start();

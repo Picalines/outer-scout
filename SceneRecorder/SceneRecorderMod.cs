@@ -1,6 +1,7 @@
 ﻿using OWML.Common;
 using OWML.ModHelper;
 using Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
+using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
 using Picalines.OuterWilds.SceneRecorder.WebApi;
 using UnityEngine.InputSystem;
 
@@ -18,7 +19,9 @@ internal sealed class SceneRecorderMod : ModBehaviour
     {
         if (_OutputRecorder is not null)
         {
-            _OutputRecorder.ModConsole = ModHelper.Console;
+            _OutputRecorder.ModConsole = config.GetSettingsValue<bool>("FFmpeg logs")
+                ? ModHelper.Console
+                : ModHelper.Console.WithFiltering((line, _) => !line.StartsWith("FFmpeg: "));
         }
 
         _WebApiServer?.Configure(ModHelper.Config, ModHelper.Console);
