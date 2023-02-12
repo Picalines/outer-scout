@@ -3,14 +3,11 @@ using OWML.ModHelper;
 using Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
 using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
 using Picalines.OuterWilds.SceneRecorder.WebApi;
-using UnityEngine.InputSystem;
 
 namespace Picalines.OuterWilds.SceneRecorder;
 
 internal sealed class SceneRecorderMod : ModBehaviour
 {
-    private const Key _OpenWebUIKey = Key.F9;
-
     private OutputRecorder _OutputRecorder = null!;
 
     private WebApiServer? _WebApiServer = null;
