@@ -16,6 +16,8 @@ public sealed class OutputRecorder : RecorderComponent
 
     public IAnimator<TransformModel>? FreeCameraTransformAnimator { get; private set; } = null;
 
+    public IAnimator<CameraInfo>? FreeCameraInfoAnimator { get; private set; } = null;
+
     public IAnimator<TransformModel>? HdriTransformAnimator { get; private set; } = null;
 
     private RecorderSettings? _Settings = null;
@@ -153,11 +155,12 @@ public sealed class OutputRecorder : RecorderComponent
 
         // transform animators
         FreeCameraTransformAnimator = new TransformAnimator(freeCamera.transform);
+        FreeCameraInfoAnimator = new CameraInfoAnimator(freeCamera);
         HdriTransformAnimator = new TransformAnimator(_HdriPivot.transform);
 
         _ComposedAnimator = new ComposedAnimator()
         {
-            Animators = new[] { FreeCameraTransformAnimator, HdriTransformAnimator }!,
+            Animators = new[] { FreeCameraTransformAnimator, FreeCameraTransformAnimator, HdriTransformAnimator }!,
             FrameCount = Settings.FrameCount,
         };
 

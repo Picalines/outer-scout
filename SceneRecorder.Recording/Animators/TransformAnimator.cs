@@ -13,9 +13,10 @@ internal sealed class TransformAnimator : Animator<TransformModel>
 
     public Transform TargetTransform { get; }
 
-    public TransformApplyMode ApplyMode { get; init; } = TransformApplyMode.Local;
+    public TransformApplyMode ApplyMode { get; }
 
-    public TransformAnimator(Transform targetTransform)
+    public TransformAnimator(Transform targetTransform, TransformApplyMode applyMode = TransformApplyMode.Local)
+        : base(GetDefaultFrameValue(targetTransform, applyMode))
     {
         TargetTransform = targetTransform;
     }
@@ -35,5 +36,15 @@ internal sealed class TransformAnimator : Animator<TransformModel>
             default:
                 throw new NotImplementedException();
         }
+    }
+
+    private static TransformModel GetDefaultFrameValue(Transform targetTransform, TransformApplyMode applyMode)
+    {
+        return applyMode switch
+        {
+            TransformApplyMode.Local => TransformModel.FromLocalTransform(targetTransform),
+            TransformApplyMode.GlobalPositionAndRotation => TransformModel.FromGlobalTransform(targetTransform),
+            _ => throw new NotImplementedException(),
+        };
     }
 }

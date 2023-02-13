@@ -1,7 +1,7 @@
 ﻿using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Extensions;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
-using Picalines.OuterWilds.SceneRecorder.WebApi.Models;
+using Picalines.OuterWilds.SceneRecorder.Shared.Models;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebApi.RouteDefinitions;
 

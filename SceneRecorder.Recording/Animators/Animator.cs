@@ -4,10 +4,17 @@ internal abstract class Animator<T> : IAnimator<T>
 {
     private readonly List<T> _ValuesAtFrames = new();
 
+    private readonly T _DefaultFrameValue;
+
+    public Animator(T? defaultValue)
+    {
+        _DefaultFrameValue = defaultValue!;
+    }
+
     public int FrameCount
     {
         get => _ValuesAtFrames.Count;
-        set => ResizeList(_ValuesAtFrames, value, default!);
+        set => ResizeList(_ValuesAtFrames, value, _DefaultFrameValue);
     }
 
     public void SetValueAtFrame(int frameIndex, T value)
