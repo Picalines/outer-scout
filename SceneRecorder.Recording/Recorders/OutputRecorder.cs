@@ -20,6 +20,8 @@ public sealed class OutputRecorder : RecorderComponent
 
     public IAnimator<TransformModel>? HdriTransformAnimator { get; private set; } = null;
 
+    public IAnimator<float>? TimeScaleAnimator { get; private set; } = null;
+
     private RecorderSettings? _Settings = null;
 
     private ComposedRecorder _ComposedRecorder = null!;
@@ -153,14 +155,16 @@ public sealed class OutputRecorder : RecorderComponent
             });
         }
 
-        // transform animators
-        FreeCameraTransformAnimator = new TransformAnimator(freeCamera.transform);
-        FreeCameraInfoAnimator = new CameraInfoAnimator(freeCamera);
-        HdriTransformAnimator = new TransformAnimator(_HdriPivot.transform);
-
+        // animators
         _ComposedAnimator = new ComposedAnimator()
         {
-            Animators = new[] { FreeCameraTransformAnimator, FreeCameraTransformAnimator, HdriTransformAnimator }!,
+            Animators = new IAnimator[]
+            {
+                FreeCameraTransformAnimator = new TransformAnimator(freeCamera.transform),
+                FreeCameraInfoAnimator = new CameraInfoAnimator(freeCamera),
+                HdriTransformAnimator = new TransformAnimator(_HdriPivot.transform),
+                TimeScaleAnimator = Animators.TimeScaleAnimator.Instance,
+            }!,
             FrameCount = Settings.FrameCount,
         };
 
@@ -171,8 +175,12 @@ public sealed class OutputRecorder : RecorderComponent
                 .ToArray()
             : Array.Empty<Renderer>();
 
+        float initialTimeScale = 0;
+
         _OnRecordingStarted = () =>
         {
+            initialTimeScale = Time.timeScale;
+
             Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = false);
             Locator.GetQuantumMoon().SetActivation(false);
 
@@ -183,6 +191,8 @@ public sealed class OutputRecorder : RecorderComponent
 
         _OnRecordingFinished = () =>
         {
+            Time.timeScale = initialTimeScale;
+
             Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = true);
             Locator.GetQuantumMoon().SetActivation(true);
 
