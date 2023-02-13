@@ -12,48 +12,25 @@ internal sealed class TransformModelConverter : JsonConverter<TransformModel>
 
     public override TransformModel ReadJson(JsonReader reader, Type objectType, TransformModel existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
-        var baseArray = JArray.Load(reader);
+        var baseArray = JArray.Load(reader).Values<JArray>().ToArray();
 
-        var positionArray = ((JArray)baseArray.ElementAt(0)).Values<float>().ToArray();
-        var rotationArray = ((JArray)baseArray.ElementAt(1)).Values<float>().ToArray();
-        var scaleArray = ((JArray)baseArray.ElementAt(2)).Values<float>().ToArray();
+        var position = serializer.Deserialize<Vector3>(baseArray[0]!.CreateReader());
+        var rotation = serializer.Deserialize<Quaternion>(baseArray[1]!.CreateReader());
+        var scale = serializer.Deserialize<Vector3>(baseArray[2]!.CreateReader());
 
-        var transform = new TransformModel(
-            Position: new Vector3(positionArray[0], positionArray[1], positionArray[2]),
-            Rotation: new Quaternion(rotationArray[0], rotationArray[1], rotationArray[2], rotationArray[3]),
-            Scale: new Vector3(scaleArray[0], scaleArray[1], scaleArray[2]));
-
-        return transform;
+        return new TransformModel(position, rotation, scale);
     }
 
     public override void WriteJson(JsonWriter writer, TransformModel value, JsonSerializer serializer)
     {
         var (position, rotation, scale) = (value.Position, value.Rotation, value.Scale);
 
-        var array = new JArray()
-        {
-            new JArray()
-            {
-                position.x,
-                position.y,
-                position.z,
-            },
+        var array = new JArray();
 
-            new JArray()
-            {
-                rotation.x,
-                rotation.y,
-                rotation.z,
-                rotation.w,
-            },
-
-            new JArray()
-            {
-                scale.x,
-                scale.y,
-                scale.z,
-            },
-        };
+        var arrayWriter = array.CreateWriter();
+        serializer.Serialize(arrayWriter, position);
+        serializer.Serialize(arrayWriter, rotation);
+        serializer.Serialize(arrayWriter, scale);
 
         array.WriteTo(writer);
     }
