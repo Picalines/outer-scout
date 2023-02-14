@@ -2,6 +2,7 @@
 using Picalines.OuterWilds.SceneRecorder.Recording.Animators;
 using Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
 using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
+using Picalines.OuterWilds.SceneRecorder.Shared.Interfaces;
 using Picalines.OuterWilds.SceneRecorder.Shared.Models;
 using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
@@ -13,6 +14,8 @@ using TransformAnimator = Animators.TransformAnimator;
 public sealed class OutputRecorder : RecorderComponent
 {
     public IModConsole? ModConsole { get; set; } = null;
+
+    public ICommonCameraAPI? CommonCameraAPI { get; set; } = null;
 
     public IAnimator<TransformModel>? FreeCameraTransformAnimator { get; private set; } = null;
 
@@ -50,6 +53,11 @@ public sealed class OutputRecorder : RecorderComponent
 
     private void OnRecordingStarted()
     {
+        if (IsAbleToRecord is false)
+        {
+            throw new InvalidOperationException($"{nameof(IsAbleToRecord)} is false");
+        }
+
         _OnRecordingStarted?.Invoke();
 
         _ComposedRecorder.enabled = true;
@@ -96,23 +104,27 @@ public sealed class OutputRecorder : RecorderComponent
             return IsRecording
                 || (Settings is not null
                 && ModConsole is not null
+                && CommonCameraAPI is not null
                 && LocatorExtensions.IsInSolarSystemScene()
-                && GameObject.Find("FREECAM").Nullable() is { } freeCamObject
-                && freeCamObject.TryGetComponent<Camera>(out var freeCam)
-                && freeCam.enabled);
+                && GameObject.Find("FREECAM") != null);
         }
     }
 
     private void Configure()
     {
-        if (Settings is null)
+        if ((Settings, CommonCameraAPI) is not ({ }, { }))
         {
-            throw new InvalidOperationException($"{nameof(Settings)} is null");
+            throw new ArgumentNullException();
         }
 
-        var player = Locator.GetPlayerBody();
-        var freeCamera = GameObject.Find("FREECAM").GetComponent<OWCamera>();
-        var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()!.transform;
+        var player = Locator.GetPlayerBody().Nullable();
+        var freeCamera = GameObject.Find("FREECAM").Nullable()?.GetComponent<OWCamera>();
+        var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()?.transform;
+
+        if ((player, freeCamera, groundBodyTransform) is not ({ }, { }, { }))
+        {
+            throw new InvalidOperationException();
+        }
 
         // background recorder
         var backgroundRecorder = freeCamera.gameObject.GetOrAddComponent<BackgroundRecorder>();
@@ -179,6 +191,8 @@ public sealed class OutputRecorder : RecorderComponent
 
         _OnRecordingStarted = () =>
         {
+            CommonCameraAPI.EnterCamera(freeCamera);
+
             initialTimeScale = Time.timeScale;
 
             Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = false);
@@ -191,6 +205,8 @@ public sealed class OutputRecorder : RecorderComponent
 
         _OnRecordingFinished = () =>
         {
+            CommonCameraAPI.ExitCamera(freeCamera);
+
             Time.timeScale = initialTimeScale;
 
             Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = true);

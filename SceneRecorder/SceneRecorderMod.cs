@@ -2,6 +2,7 @@
 using OWML.ModHelper;
 using Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
 using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
+using Picalines.OuterWilds.SceneRecorder.Shared.Interfaces;
 using Picalines.OuterWilds.SceneRecorder.WebApi;
 
 namespace Picalines.OuterWilds.SceneRecorder;
@@ -19,6 +20,8 @@ internal sealed class SceneRecorderMod : ModBehaviour
             _OutputRecorder.ModConsole = config.GetSettingsValue<bool>("FFmpeg logs")
                 ? ModHelper.Console
                 : ModHelper.Console.WithFiltering((line, _) => !line.StartsWith("FFmpeg: "));
+
+            _OutputRecorder.CommonCameraAPI = ModHelper.Interaction.TryGetModApi<ICommonCameraAPI>("xen.CommonCameraUtility");
         }
 
         _WebApiServer?.Configure(ModHelper.Config, ModHelper.Console);
