@@ -21,7 +21,7 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
         });
 
         MapAnimatorRoutes(serverBuilder, "free_camera/transform", () => context.OutputRecorder.FreeCameraTransformAnimator!);
-        MapAnimatorRoutes(serverBuilder, "free_camera/info", () => context.OutputRecorder.FreeCameraInfoAnimator!);
+        MapAnimatorRoutes(serverBuilder, "free_camera/camera_info", () => context.OutputRecorder.FreeCameraInfoAnimator!);
         MapAnimatorRoutes(serverBuilder, "hdri_pivot/transform", () => context.OutputRecorder.HdriTransformAnimator!);
         MapAnimatorRoutes(serverBuilder, "time/scale", () => context.OutputRecorder.TimeScaleAnimator!);
     }

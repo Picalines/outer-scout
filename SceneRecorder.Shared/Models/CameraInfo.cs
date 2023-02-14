@@ -6,7 +6,7 @@ namespace Picalines.OuterWilds.SceneRecorder.Shared.Models;
 
 public sealed class CameraInfo
 {
-    [JsonProperty("senson_size")]
+    [JsonProperty("sensor_size")]
     [JsonConverter(typeof(Vector2Converter))]
     public required Vector2 SensorSize { get; init; }
 

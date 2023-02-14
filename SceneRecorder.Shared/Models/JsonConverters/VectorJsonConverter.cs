@@ -15,13 +15,19 @@ public abstract class VectorJsonConverter<TVector> : JsonConverter<TVector>
     {
         TVector vector = default;
 
-        reader.Read();
-        for (int i = 0; i < NumberOfAxes; i++)
+        int axisIndex = 0;
+        while (reader.Read())
         {
-            var axisValue = reader.ReadAsDouble().GetValueOrDefault();
-            SetAxis(ref vector, i, axisValue);
+            if (reader.TokenType is JsonToken.EndArray)
+            {
+                break;
+            }
+
+            if (reader.TokenType is JsonToken.Float or JsonToken.Integer)
+            {
+                SetAxis(ref vector, axisIndex++, (double)(reader.Value ?? 0.0));
+            }
         }
-        reader.Read();
 
         return vector;
     }
@@ -29,9 +35,9 @@ public abstract class VectorJsonConverter<TVector> : JsonConverter<TVector>
     public sealed override void WriteJson(JsonWriter writer, TVector value, JsonSerializer serializer)
     {
         writer.WriteStartArray();
-        for (int i = 0; i < NumberOfAxes; i++)
+        for (int axisIndex = 0; axisIndex < NumberOfAxes; axisIndex++)
         {
-            writer.WriteValue(GetAxis(value, i));
+            writer.WriteValue(GetAxis(value, axisIndex));
         }
         writer.WriteEndArray();
     }
