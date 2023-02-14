@@ -1,19 +1,18 @@
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Picalines.OuterWilds.SceneRecorder.Shared.Models.JsonConverters;
 
-public sealed class Vector3Converter : JsonConverter<Vector3>
+public sealed class Vector3Converter : VectorJsonConverter<Vector3>
 {
-    public override Vector3 ReadJson(JsonReader reader, Type objectType, Vector3 existingValue, bool hasExistingValue, JsonSerializer serializer)
+    protected override int NumberOfAxes => 3;
+
+    protected override double GetAxis(in Vector3 vector, int axisIndex)
     {
-        var vectorComponents = JArray.Load(reader).Values<float>().ToArray();
-        return new Vector3(vectorComponents[0], vectorComponents[1], vectorComponents[2]);
+        return vector[axisIndex];
     }
 
-    public override void WriteJson(JsonWriter writer, Vector3 value, JsonSerializer serializer)
+    protected override void SetAxis(ref Vector3 vector, int axisIndex, double axisValue)
     {
-        new JArray() { value.x, value.y, value.z }.WriteTo(writer);
+        vector[axisIndex] = (float)axisValue;
     }
 }
