@@ -118,10 +118,12 @@ public sealed class OutputRecorder : RecorderComponent
         }
 
         var player = Locator.GetPlayerBody().Nullable();
+        var playerResources = Locator.GetPlayerTransform().Nullable()?.GetComponent<PlayerResources>().Nullable();
         var freeCamera = GameObject.Find("FREECAM").Nullable()?.GetComponent<OWCamera>();
         var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()?.transform;
+        var deathManager = Locator.GetDeathManager().Nullable();
 
-        if ((player, freeCamera, groundBodyTransform) is not ({ }, { }, { }))
+        if ((player, playerResources, freeCamera, groundBodyTransform, deathManager) is not ({ }, { }, { }, { }, { }))
         {
             throw new InvalidOperationException();
         }
@@ -193,6 +195,16 @@ public sealed class OutputRecorder : RecorderComponent
         {
             CommonCameraAPI.EnterCamera(freeCamera);
 
+            if (playerResources.IsInvincible() is false)
+            {
+                playerResources.ToggleInvincibility();
+            }
+
+            if (deathManager._invincible is false)
+            {
+                deathManager.ToggleInvincibility();
+            }
+
             initialTimeScale = Time.timeScale;
 
             Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = false);
@@ -206,6 +218,9 @@ public sealed class OutputRecorder : RecorderComponent
         _OnRecordingFinished = () =>
         {
             CommonCameraAPI.ExitCamera(freeCamera);
+
+            playerResources.ToggleInvincibility();
+            deathManager.ToggleInvincibility();
 
             Time.timeScale = initialTimeScale;
 
