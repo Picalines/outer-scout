@@ -17,7 +17,7 @@ internal abstract class Animator<T> : IAnimator<T>
         set => ResizeList(_ValuesAtFrames, value, _DefaultFrameValue);
     }
 
-    public void SetValueAtFrame(int frameIndex, T value)
+    public void SetValueAtFrame(int frameIndex, in T value)
     {
         _ValuesAtFrames[frameIndex] = value;
     }

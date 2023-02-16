@@ -28,9 +28,9 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
 
     private void MapAnimatorRoutes<T>(HttpServerBuilder serverBuilder, string routeName, Func<IAnimator<T>> getAnimator)
     {
-        serverBuilder.MapPut($"animation/{routeName}/value_at_frame/{{frame_index:int}}", request =>
+        serverBuilder.MapPut($"animation/{routeName}/value?{{at_frame_index:int}}", request =>
         {
-            var frameIndex = request.GetRouteParameter<int>("frame_index");
+            var frameIndex = request.GetRouteParameter<int>("at_frame_index");
             if (frameIndex < 0)
             {
                 return ResponseFabric.BadRequest();
@@ -48,12 +48,37 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
             return ResponseFabric.Ok();
         });
 
-        serverBuilder.MapPut($"animation/{routeName}/values_from_frame/{{start_frame_index:int}}", request =>
+        serverBuilder.MapPut($"animation/{routeName}/value?{{from_frame_index:int}}&{{to_frame_index:int}}", request =>
         {
-            var startFrameIndex = request.GetRouteParameter<int>("start_frame_index");
+            var fromFrameIndex = request.GetRouteParameter<int>("from_frame_index");
+            var toFrameIndex = request.GetRouteParameter<int>("to_frame_index");
+            if (fromFrameIndex < 0 || toFrameIndex < 0 || fromFrameIndex > toFrameIndex)
+            {
+                return ResponseFabric.BadRequest("invalid frame range");
+            }
+
+            var animator = getAnimator();
+            if (toFrameIndex >= animator.FrameCount)
+            {
+                return ResponseFabric.BadRequest("frame range out of bounds");
+            }
+
+            var newValue = request.ParseContentJson<T>();
+
+            for (int frameIndex = fromFrameIndex; frameIndex <= toFrameIndex; frameIndex++)
+            {
+                animator.SetValueAtFrame(frameIndex, newValue);
+            }
+
+            return ResponseFabric.Ok();
+        });
+
+        serverBuilder.MapPut($"animation/{routeName}/values?{{from_frame_index:int}}", request =>
+        {
+            var startFrameIndex = request.GetRouteParameter<int>("from_frame_index");
             if (startFrameIndex < 0)
             {
-                return ResponseFabric.BadRequest();
+                return ResponseFabric.BadRequest("invalid 'from_frame_index'");
             }
 
             var animator = getAnimator();
@@ -61,7 +86,7 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
 
             if ((startFrameIndex + newValues.Length) > animator.FrameCount)
             {
-                return ResponseFabric.BadRequest();
+                return ResponseFabric.BadRequest("frame range out of bounds");
             }
 
             for (int frameOffset = 0; frameOffset < newValues.Length; frameOffset++)

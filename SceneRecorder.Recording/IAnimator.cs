@@ -9,5 +9,5 @@ public interface IAnimator
 
 public interface IAnimator<T> : IAnimator
 {
-    public void SetValueAtFrame(int frameIndex, T value);
+    public void SetValueAtFrame(int frameIndex, in T value);
 }
