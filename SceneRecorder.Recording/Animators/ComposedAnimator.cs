@@ -9,23 +9,29 @@ internal sealed class ComposedAnimator : IAnimator
         get => Animators.FirstOrDefault();
     }
 
-    public int FrameCount
+    public int StartFrame
     {
-        get => MainAnimator?.FrameCount ?? 0;
-        set
-        {
-            foreach (var animator in Animators)
-            {
-                animator.FrameCount = value;
-            }
-        }
+        get => MainAnimator?.StartFrame ?? 0;
     }
 
-    public void SetFrame(int frameIndex)
+    public int EndFrame
+    {
+        get => MainAnimator?.EndFrame ?? 0;
+    }
+
+    public void SetFrameRange(int startFrame, int endFrame)
     {
         foreach (var animator in Animators)
         {
-            animator.SetFrame(frameIndex);
+            animator.SetFrameRange(startFrame, endFrame);
+        }
+    }
+
+    public void SetFrame(int frame)
+    {
+        foreach (var animator in Animators)
+        {
+            animator.SetFrame(frame);
         }
     }
 }

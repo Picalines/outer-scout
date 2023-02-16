@@ -11,23 +11,49 @@ internal abstract class Animator<T> : IAnimator<T>
         _DefaultFrameValue = defaultValue!;
     }
 
-    public int FrameCount
+    public int StartFrame { get; private set; } = 0;
+
+    public int EndFrame { get; private set; } = 0;
+
+    public void SetFrameRange(int startFrame, int endFrame)
     {
-        get => _ValuesAtFrames.Count;
-        set => ResizeList(_ValuesAtFrames, value, _DefaultFrameValue);
+        if (startFrame > endFrame)
+        {
+            throw new ArgumentOutOfRangeException();
+        }
+
+        StartFrame = startFrame;
+        EndFrame = endFrame;
+
+        ResizeList(_ValuesAtFrames, this.GetFrameCount(), _DefaultFrameValue);
     }
 
-    public void SetValueAtFrame(int frameIndex, in T value)
+    public void SetValueAtFrame(int frame, in T value)
     {
-        _ValuesAtFrames[frameIndex] = value;
+        AssertFrameInRange(frame);
+        _ValuesAtFrames[FrameNumberToIndex(frame)] = value;
     }
 
-    public void SetFrame(int frameIndex)
+    public void SetFrame(int frame)
     {
-        ApplyValue(_ValuesAtFrames[frameIndex]);
+        AssertFrameInRange(frame);
+        ApplyValue(_ValuesAtFrames[FrameNumberToIndex(frame)]);
     }
 
     protected abstract void ApplyValue(T value);
+
+    private int FrameNumberToIndex(int frame)
+    {
+        return frame - StartFrame;
+    }
+
+    private void AssertFrameInRange(int frame)
+    {
+        if (frame < StartFrame || frame > EndFrame)
+        {
+            throw new ArgumentOutOfRangeException(nameof(frame));
+        }
+    }
 
     private static void ResizeList<TValue>(List<TValue> list, int newSize, TValue newItemValue)
     {

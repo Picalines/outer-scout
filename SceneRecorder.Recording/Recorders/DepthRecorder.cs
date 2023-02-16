@@ -23,7 +23,7 @@ internal sealed class DepthRecorder : RenderTextureRecorder
         Awoken += OnAwoken;
         RecordingStarted += OnRecordingStarted;
         RecordingFinished += OnRecordingFinished;
-        BeforeFrameRecorded += OnBeforeFrameRecorded;
+        FrameEnded += OnFrameEnded;
     }
 
     private void OnAwoken()
@@ -70,7 +70,7 @@ internal sealed class DepthRecorder : RenderTextureRecorder
         _OWCamera.enabled = true;
     }
 
-    private void OnBeforeFrameRecorded()
+    private void OnFrameEnded()
     {
         Graphics.Blit(_DepthRenderTexture, _ColorRenderTexture);
     }

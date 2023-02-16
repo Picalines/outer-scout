@@ -7,8 +7,11 @@ public sealed class RecorderSettings
     [JsonProperty("output_directory")]
     public required string OutputDirectory { get; init; }
 
-    [JsonProperty("frame_count")]
-    public required int FrameCount { get; init; }
+    [JsonProperty("start_frame")]
+    public required int StartFrame { get; init; }
+
+    [JsonProperty("end_frame")]
+    public required int EndFrame { get; init; }
 
     [JsonProperty("frame_rate")]
     public required int FrameRate { get; init; }

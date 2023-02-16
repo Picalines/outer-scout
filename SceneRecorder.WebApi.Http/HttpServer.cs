@@ -26,7 +26,7 @@ public class HttpServer : MonoBehaviour
     {
         if (Listening)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"{nameof(Configure)} method called before {nameof(StopListening)}");
         }
 
         if (baseUrl.EndsWith("/") is false)
@@ -46,7 +46,7 @@ public class HttpServer : MonoBehaviour
     {
         if (Listening)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"{nameof(StartListening)} method called before {nameof(StopListening)}");
         }
 
         Listening = true;
@@ -58,7 +58,7 @@ public class HttpServer : MonoBehaviour
     {
         if (Listening is false)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"{nameof(StopListening)} method called before {nameof(StartListening)}");
         }
 
         Listening = false;
@@ -128,9 +128,12 @@ public class HttpServer : MonoBehaviour
 
         var response = handler.Handle(request);
 
-        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: sending response {response.StatusCode} to {request.HttpMethod} request at '{request.Url}'", MessageType.Info);
+        var isInternalError = response.StatusCode is HttpStatusCode.InternalServerError;
 
-        if (response.StatusCode is HttpStatusCode.InternalServerError)
+        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: sending response {response.StatusCode} to {request.HttpMethod} request at '{request.Url}'",
+            isInternalError ? MessageType.Error : MessageType.Info);
+
+        if (isInternalError)
         {
             ModConsole?.WriteLine($"{nameof(SceneRecorder)} API internal error: {response.Content}", MessageType.Error);
         }

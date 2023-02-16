@@ -66,6 +66,8 @@ internal sealed class FFmpegAsyncGPUReadback : IDisposable
             return;
         }
 
+        ProcessReadbackQueue();
+        CompletePushFrames();
         _Pipe.Dispose();
         _Pipe = null;
     }

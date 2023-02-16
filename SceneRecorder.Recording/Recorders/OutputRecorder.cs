@@ -37,6 +37,8 @@ public sealed class OutputRecorder : RecorderComponent
 
     private GameObject? _HdriPivot = null;
 
+    private IEnumerator<int>? _CurrentFrame = null;
+
     public OutputRecorder()
     {
         Awoken += OnAwake;
@@ -48,7 +50,8 @@ public sealed class OutputRecorder : RecorderComponent
 
         RecordingStarted += OnRecordingStarted;
         RecordingFinished += OnRecordingFinished;
-        BeforeFrameRecorded += OnBeforeFrameRecorded;
+        FrameStarted += OnFrameStarted;
+        FrameEnded += OnFrameEnded;
     }
 
     private void OnRecordingStarted()
@@ -58,27 +61,39 @@ public sealed class OutputRecorder : RecorderComponent
             throw new InvalidOperationException($"{nameof(IsAbleToRecord)} is false");
         }
 
+        _CurrentFrame = _ComposedAnimator.GetFrameNumbers().GetEnumerator();
+        _CurrentFrame.MoveNext();
+
         _OnRecordingStarted?.Invoke();
 
         _ComposedRecorder.enabled = true;
+
+        ModConsole?.WriteLine($"Recording started ({Settings.OutputDirectory})", MessageType.Info);
     }
 
     private void OnRecordingFinished()
     {
+        _CurrentFrame = null;
+
         _ComposedRecorder.enabled = false;
 
         _OnRecordingFinished?.Invoke();
+
+        ModConsole?.WriteLine($"Recording finished ({Settings!.OutputDirectory})", MessageType.Success);
     }
 
-    private void OnBeforeFrameRecorded()
+    private void OnFrameStarted()
     {
-        if (FramesRecorded >= Settings!.FrameCount)
+        _ComposedAnimator.SetFrame(_CurrentFrame!.Current);
+    }
+
+    private void OnFrameEnded()
+    {
+        if (_CurrentFrame?.MoveNext() is not true)
         {
             enabled = false;
             return;
         }
-
-        _ComposedAnimator.SetFrame(FramesRecorded);
     }
 
     public RecorderSettings? Settings
@@ -88,7 +103,7 @@ public sealed class OutputRecorder : RecorderComponent
         {
             if (IsRecording)
             {
-                throw new InvalidOperationException();
+                throw new InvalidOperationException($"cannot modify {nameof(Settings)} while recording");
             }
 
             _Settings = value;
@@ -178,9 +193,10 @@ public sealed class OutputRecorder : RecorderComponent
                 FreeCameraInfoAnimator = new CameraInfoAnimator(freeCamera),
                 HdriTransformAnimator = new TransformAnimator(_HdriPivot.transform),
                 TimeScaleAnimator = Animators.TimeScaleAnimator.Instance,
-            }!,
-            FrameCount = Settings.FrameCount,
+            },
         };
+
+        _ComposedAnimator.SetFrameRange(Settings.StartFrame, Settings.EndFrame);
 
         // start & end handlers
         var playerRenderersToToggle = Settings.HidePlayerModel
@@ -211,8 +227,6 @@ public sealed class OutputRecorder : RecorderComponent
             Locator.GetQuantumMoon().SetActivation(false);
 
             freeCamera.transform.parent = groundBodyTransform;
-
-            ModConsole?.WriteLine($"Recording started ({Settings.OutputDirectory})", MessageType.Info);
         };
 
         _OnRecordingFinished = () =>
@@ -226,8 +240,6 @@ public sealed class OutputRecorder : RecorderComponent
 
             Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = true);
             Locator.GetQuantumMoon().SetActivation(true);
-
-            ModConsole?.WriteLine($"Recording finished ({Settings.OutputDirectory})", MessageType.Success);
         };
     }
 }

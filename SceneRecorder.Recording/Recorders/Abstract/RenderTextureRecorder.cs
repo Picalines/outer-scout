@@ -16,6 +16,8 @@ internal abstract class RenderTextureRecorder : RecorderComponent
 
     private FFmpegTextureRecorder? _FFmpegRecorder = null;
 
+    private bool _InitializedFrameEnded = false;
+
     public RenderTexture? SourceRenderTexture
     {
         get => _SourceRenderTexture;
@@ -26,8 +28,6 @@ internal abstract class RenderTextureRecorder : RecorderComponent
     public RenderTextureRecorder()
     {
         RecordingStarted += OnRecordingStarted;
-
-        BeforeFrameRecorded += OnBeforeFrameRecorded;
 
         RecordingFinished += OnRecordingFinished;
     }
@@ -41,9 +41,15 @@ internal abstract class RenderTextureRecorder : RecorderComponent
 
         _FFmpegRecorder = new FFmpegTextureRecorder(ModConsole, _SourceRenderTexture, FrameRate, TargetFile);
         Time.captureFramerate = FrameRate;
+
+        if (_InitializedFrameEnded is false)
+        {
+            FrameEnded += OnFrameEnded;
+            _InitializedFrameEnded = true;
+        }
     }
 
-    private void OnBeforeFrameRecorded()
+    private void OnFrameEnded()
     {
         _FFmpegRecorder!.RecordFrame();
     }

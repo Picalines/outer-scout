@@ -31,7 +31,7 @@ internal sealed class HdriRecorder : RenderTextureRecorder
     {
         Awoken += OnAwoken;
         RecordingStarted += OnRecordingStarted;
-        BeforeFrameRecorded += OnBeforeFrameRecorded;
+        FrameStarted += OnFrameStarted;
         RecordingFinished += OnRecordingFinished;
     }
 
@@ -95,7 +95,7 @@ internal sealed class HdriRecorder : RenderTextureRecorder
         }
     }
 
-    private void OnBeforeFrameRecorded()
+    private void OnFrameStarted()
     {
         _CubemapFrameTexture!.ConvertToEquirect(_FlippedFrameSourceTexture, Camera.MonoOrStereoscopicEye.Mono);
 

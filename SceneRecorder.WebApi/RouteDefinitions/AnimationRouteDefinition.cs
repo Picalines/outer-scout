@@ -28,70 +28,68 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
 
     private void MapAnimatorRoutes<T>(HttpServerBuilder serverBuilder, string routeName, Func<IAnimator<T>> getAnimator)
     {
-        serverBuilder.MapPut($"animation/{routeName}/value?{{at_frame_index:int}}", request =>
+        serverBuilder.MapPut($"animation/{routeName}/value?{{at_frame:int}}", request =>
         {
-            var frameIndex = request.GetRouteParameter<int>("at_frame_index");
-            if (frameIndex < 0)
-            {
-                return ResponseFabric.BadRequest();
-            }
-
             var animator = getAnimator();
-            if (frameIndex >= animator.FrameCount)
+            var frame = request.GetQueryParameter<int>("at_frame");
+
+            if (animator.GetFrameNumbers().Contains(frame) is false)
             {
                 return ResponseFabric.BadRequest();
             }
 
             var newValue = request.ParseContentJson<T>();
-            animator.SetValueAtFrame(frameIndex, newValue);
+            animator.SetValueAtFrame(frame, newValue);
 
             return ResponseFabric.Ok();
         });
 
-        serverBuilder.MapPut($"animation/{routeName}/value?{{from_frame_index:int}}&{{to_frame_index:int}}", request =>
+        serverBuilder.MapPut($"animation/{routeName}/value?{{from_frame:int}}&{{to_frame:int}}", request =>
         {
-            var fromFrameIndex = request.GetRouteParameter<int>("from_frame_index");
-            var toFrameIndex = request.GetRouteParameter<int>("to_frame_index");
-            if (fromFrameIndex < 0 || toFrameIndex < 0 || fromFrameIndex > toFrameIndex)
+            var fromFrame = request.GetQueryParameter<int>("from_frame");
+            var toFrame = request.GetQueryParameter<int>("to_frame");
+
+            var animator = getAnimator();
+            var allFameNumbers = animator.GetFrameNumbers();
+
+            if (fromFrame > toFrame
+                || (allFameNumbers.Contains(fromFrame), allFameNumbers.Contains(toFrame)) is not (true, true))
             {
                 return ResponseFabric.BadRequest("invalid frame range");
             }
 
-            var animator = getAnimator();
-            if (toFrameIndex >= animator.FrameCount)
-            {
-                return ResponseFabric.BadRequest("frame range out of bounds");
-            }
-
             var newValue = request.ParseContentJson<T>();
 
-            for (int frameIndex = fromFrameIndex; frameIndex <= toFrameIndex; frameIndex++)
+            for (int frame = fromFrame; frame <= toFrame; frame++)
             {
-                animator.SetValueAtFrame(frameIndex, newValue);
+                animator.SetValueAtFrame(frame, newValue);
             }
 
             return ResponseFabric.Ok();
         });
 
-        serverBuilder.MapPut($"animation/{routeName}/values?{{from_frame_index:int}}", request =>
+        serverBuilder.MapPut($"animation/{routeName}/values?{{from_frame:int}}", request =>
         {
-            var startFrameIndex = request.GetRouteParameter<int>("from_frame_index");
-            if (startFrameIndex < 0)
+            var fromFrame = request.GetQueryParameter<int>("from_frame");
+            var animator = getAnimator();
+            var allFrameNumbers = animator.GetFrameNumbers();
+
+            if (allFrameNumbers.Contains(fromFrame) is false)
             {
-                return ResponseFabric.BadRequest("invalid 'from_frame_index'");
+                return ResponseFabric.BadRequest("invalid 'from_frame'");
             }
 
-            var animator = getAnimator();
             var newValues = request.ParseContentJson<T[]>();
+            var toFrame = fromFrame + newValues.Length - 1;
 
-            if ((startFrameIndex + newValues.Length) > animator.FrameCount)
+            if (allFrameNumbers.Contains(toFrame) is false)
             {
                 return ResponseFabric.BadRequest("frame range out of bounds");
             }
 
-            for (int frameOffset = 0; frameOffset < newValues.Length; frameOffset++)
+            for (int frame = fromFrame; frame <= toFrame; frame++)
             {
-                animator.SetValueAtFrame(startFrameIndex + frameOffset, newValues[frameOffset]);
+                animator.SetValueAtFrame(frame, newValues[frame - fromFrame]);
             }
 
             return ResponseFabric.Ok();

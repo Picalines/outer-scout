@@ -8,7 +8,7 @@ public interface IRecorder
 
     public event Action RecordingStarted;
 
-    public event Action BeforeFrameRecorded;
+    public event Action FrameStarted;
 
     public event Action RecordingFinished;
 }

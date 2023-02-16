@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
 
@@ -8,7 +9,9 @@ public abstract class RecorderComponent : MonoBehaviour, IRecorder
 
     public event Action? RecordingStarted;
 
-    public event Action? BeforeFrameRecorded;
+    public event Action? FrameStarted;
+
+    public event Action? FrameEnded;
 
     public event Action? RecordingFinished;
 
@@ -17,6 +20,8 @@ public abstract class RecorderComponent : MonoBehaviour, IRecorder
     public int FramesRecorded { get; private set; } = 0;
 
     private bool _IsInAwake = false;
+
+    private static readonly WaitForEndOfFrame _WaitForEndOfFrame = new();
 
     internal RecorderComponent()
     {
@@ -34,30 +39,42 @@ public abstract class RecorderComponent : MonoBehaviour, IRecorder
 
     private void OnEnable()
     {
-        RecordingStarted?.Invoke();
-        FramesRecorded = 0;
-        IsRecording = true;
-    }
-
-    private void LateUpdate()
-    {
-        if (IsRecording is false)
+        if (IsRecording)
         {
             return;
         }
 
-        BeforeFrameRecorded?.Invoke();
-        FramesRecorded++;
+        IsRecording = true;
+        StartCoroutine(RecorderCoroutine());
     }
 
     private void OnDisable()
     {
-        if (_IsInAwake || IsRecording is false)
+        if (_IsInAwake)
         {
             return;
         }
 
         IsRecording = false;
+    }
+
+    private IEnumerator RecorderCoroutine()
+    {
+        FramesRecorded = 0;
+        RecordingStarted?.Invoke();
+
+        while (IsRecording)
+        {
+            FrameStarted?.Invoke();
+
+            yield return _WaitForEndOfFrame;
+
+            FramesRecorded++;
+            FrameEnded?.Invoke();
+        }
+
+        yield return null;
+
         RecordingFinished?.Invoke();
     }
 }

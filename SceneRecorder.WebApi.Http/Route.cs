@@ -69,44 +69,44 @@ internal sealed partial record Route(
 
         for (int i = 0; i < urlRouteParts.Length; i++)
         {
-            var (urlPart, isQuery) = urlRouteParts[i];
+            var (parameterUrlValue, isQuery) = urlRouteParts[i];
             var segment = Segments[i];
 
             switch (segment)
             {
                 case PlainSegment plainSegment:
                 {
-                    if (plainSegment.Value != urlPart)
+                    if (plainSegment.Value != parameterUrlValue)
                     {
                         return false;
                     }
                 }
                 break;
 
-                case ParameterSegment parameterSegment:
+                case ParameterSegment { ParameterName: var parameterName, Type: var parameterType } parameterSegment:
                 {
-                    if ((parameterSegment.Type, isQuery) is (not ParameterSegmentType.Query, true))
+                    if ((parameterType, isQuery) is (not ParameterSegmentType.Query, true))
                     {
                         return false;
                     }
 
                     if (isQuery)
                     {
-                        var queryParts = urlPart.Split('=');
-                        if (queryParts[0] != parameterSegment.ParameterName)
+                        var queryParts = parameterUrlValue.Split('=');
+                        if (queryParts[0] != parameterName)
                         {
                             return false;
                         }
 
-                        urlPart = queryParts[1];
+                        parameterUrlValue = queryParts[1];
                     }
 
-                    if (parameterSegment.TryParseValue(urlPart, out var parameterValue) is false)
+                    if (parameterSegment.TryParseValue(parameterUrlValue, out var parameterValue) is false)
                     {
                         return false;
                     }
 
-                    (isQuery ? queryParameters : routeParameters)[parameterSegment.ParameterName] = parameterValue;
+                    (isQuery ? queryParameters : routeParameters)[parameterName] = parameterValue;
                 }
                 break;
 
@@ -126,6 +126,17 @@ internal sealed partial record Route(
         }
 
         return true;
+    }
+
+    public override string ToString()
+    {
+        return string.Join("/", Segments.Select(segment => segment switch
+        {
+            PlainSegment { Value: var plainPart } => plainPart,
+            ParameterSegment { ParameterName: var parameterName, Type: ParameterSegmentType.Path } => $"{{{parameterName}}}",
+            ParameterSegment { ParameterName: var parameterName, Type: ParameterSegmentType.Query } => $"{{?{parameterName}}}",
+            _ => throw new NotImplementedException(),
+        }));
     }
 
     private static IEnumerable<(string Value, bool IsQuery)> GetUrlParts(string url)

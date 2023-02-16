@@ -15,7 +15,7 @@ internal sealed class ComposedRecorder : MonoBehaviour, IRecorder
         {
             if (IsRecording is true)
             {
-                throw new InvalidOperationException();
+                throw new InvalidOperationException($"cannot modify {nameof(Recorders)} while recording");
             }
 
             _Recorders = value;
@@ -51,17 +51,17 @@ internal sealed class ComposedRecorder : MonoBehaviour, IRecorder
         }
     }
 
-    public event Action BeforeFrameRecorded
+    public event Action FrameStarted
     {
         add
         {
             if (MainRecorder is not null)
-                MainRecorder.BeforeFrameRecorded += value;
+                MainRecorder.FrameStarted += value;
         }
         remove
         {
             if (MainRecorder is not null)
-                MainRecorder.BeforeFrameRecorded -= value;
+                MainRecorder.FrameStarted -= value;
         }
     }
 

@@ -36,7 +36,7 @@ public sealed class Request
         if (_RouteParameters.TryGetValue(name, out var parameterBoxValue) is false
             || parameterBoxValue is not T parameterValue)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"missing route parameter '{name}' of type {typeof(T)}, found {parameterBoxValue?.GetType().Name ?? "null"}");
         }
 
         return parameterValue;
@@ -47,7 +47,7 @@ public sealed class Request
         if (_QueryParameters.TryGetValue(name, out var parameterBoxValue) is false
             || parameterBoxValue is not T parameterValue)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"missing query parameter '{name}' of type {typeof(T)}, found {parameterBoxValue?.GetType().Name ?? "null"}");
         }
 
         return parameterValue;
