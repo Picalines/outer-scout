@@ -39,6 +39,8 @@ public sealed class OutputRecorder : RecorderComponent
 
     private IEnumerator<int>? _CurrentFrame = null;
 
+    private bool _QueueEnd = false;
+
     public OutputRecorder()
     {
         Awoken += OnAwake;
@@ -67,6 +69,7 @@ public sealed class OutputRecorder : RecorderComponent
         _OnRecordingStarted?.Invoke();
 
         _ComposedRecorder.enabled = true;
+        _QueueEnd = false;
 
         ModConsole?.WriteLine($"Recording started ({Settings.OutputDirectory})", MessageType.Info);
     }
@@ -89,10 +92,15 @@ public sealed class OutputRecorder : RecorderComponent
 
     private void OnFrameEnded()
     {
-        if (_CurrentFrame?.MoveNext() is not true)
+        if (_QueueEnd is true)
         {
             enabled = false;
             return;
+        }
+
+        if (_CurrentFrame?.MoveNext() is not true)
+        {
+            _QueueEnd = true;
         }
     }
 
