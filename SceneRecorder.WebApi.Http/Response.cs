@@ -18,7 +18,7 @@ public sealed class Response
         Content = content;
     }
 
-    public void ToHttpListenerResponse(HttpListenerResponse response)
+    internal void Send(HttpListenerResponse response)
     {
         response.StatusCode = (int)StatusCode;
 
@@ -30,8 +30,12 @@ public sealed class Response
         response.ContentType = contentType;
 
         response.ContentLength64 = Content.Length;
-        using var contentWriter = new StreamWriter(response.OutputStream);
-        contentWriter.Write(Content);
+        using (var contentWriter = new StreamWriter(response.OutputStream))
+        {
+            contentWriter.Write(Content);
+        }
+
+        response.Close();
     }
 
     public static Response FromString(HttpStatusCode httpStatusCode, string value)

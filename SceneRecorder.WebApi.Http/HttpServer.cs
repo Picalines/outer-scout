@@ -51,6 +51,8 @@ public class HttpServer : MonoBehaviour
 
         Listening = true;
 
+        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: started listening at {_HttpListener.Prefixes.Single()}", MessageType.Info);
+
         Task.Run(Listen);
     }
 
@@ -62,6 +64,8 @@ public class HttpServer : MonoBehaviour
         }
 
         Listening = false;
+
+        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: stopped listening", MessageType.Info);
     }
 
     public async Task StopListeningAsync()
@@ -114,7 +118,7 @@ public class HttpServer : MonoBehaviour
 
             if (handled is false)
             {
-                ResponseFabric.NotFound().ToHttpListenerResponse(context.Response);
+                ResponseFabric.NotFound().Send(context.Response);
             }
         }
 
@@ -130,15 +134,15 @@ public class HttpServer : MonoBehaviour
 
         var isInternalError = response.StatusCode is HttpStatusCode.InternalServerError;
 
-        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: sending response {response.StatusCode} to {request.HttpMethod} request at '{request.Url}'",
-            isInternalError ? MessageType.Error : MessageType.Info);
-
         if (isInternalError)
         {
             ModConsole?.WriteLine($"{nameof(SceneRecorder)} API internal error: {response.Content}", MessageType.Error);
         }
 
-        response.ToHttpListenerResponse(context.Response);
+        response.Send(context.Response);
+
+        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: sent response {response.StatusCode} to {request.HttpMethod} request at '{request.Url}'",
+            isInternalError ? MessageType.Error : MessageType.Info);
     }
 
     private void Update()
