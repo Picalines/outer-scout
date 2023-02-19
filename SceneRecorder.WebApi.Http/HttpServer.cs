@@ -1,4 +1,5 @@
 ﻿using OWML.Common;
+using Picalines.OuterWilds.SceneRecorder.WebApi.Http.Extensions;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Web;
@@ -17,6 +18,8 @@ public class HttpServer : MonoBehaviour
     private HttpListener _HttpListener = null!;
 
     private IReadOnlyList<RequestHandler> _RequestHandlers = null!;
+
+    private CancellationTokenSource? _CancellationTokenSource = null;
 
     private TaskCompletionSource<object?>? _StoppedListening;
 
@@ -64,6 +67,8 @@ public class HttpServer : MonoBehaviour
         }
 
         Listening = false;
+        _CancellationTokenSource!.Cancel();
+        _StoppedListening!.Task.Wait();
 
         ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: stopped listening", MessageType.Info);
     }
@@ -85,9 +90,21 @@ public class HttpServer : MonoBehaviour
         _StoppedListening = new();
         _HttpListener.Start();
 
+        using var cancellationTokenSource = new CancellationTokenSource();
+        _CancellationTokenSource = cancellationTokenSource;
+        var cancellationToken = _CancellationTokenSource.Token;
+
         while (Listening)
         {
-            var context = await _HttpListener.GetContextAsync();
+            HttpListenerContext context;
+            try
+            {
+                context = await _HttpListener.GetContextAsync().AsCancellable(cancellationToken);
+            }
+            catch (TaskCanceledException)
+            {
+                break;
+            }
 
             if (Enum.TryParse(context.Request.HttpMethod, out HttpMethod httpMethod) is false)
             {
@@ -121,6 +138,8 @@ public class HttpServer : MonoBehaviour
                 ResponseFabric.NotFound().Send(context.Response);
             }
         }
+
+        _UnityThreadActionQueue.Clear();
 
         _HttpListener.Stop();
         _StoppedListening.SetResult(null);
