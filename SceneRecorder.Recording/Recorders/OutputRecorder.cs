@@ -198,7 +198,14 @@ public sealed class OutputRecorder : RecorderComponent
             Animators = new IAnimator[]
             {
                 FreeCameraTransformAnimator = new TransformAnimator(freeCamera.transform),
-                FreeCameraInfoAnimator = new CameraInfoAnimator(freeCamera),
+                FreeCameraInfoAnimator = new ComposedAnimator<CameraInfo>()
+                {
+                    Animators = new IAnimator<CameraInfo>[]
+                    {
+                        new CameraInfoAnimator(freeCamera),
+                        new CameraInfoAnimator(depthRecorder.DepthCamera),
+                    },
+                },
                 HdriTransformAnimator = new TransformAnimator(_HdriPivot.transform),
                 TimeScaleAnimator = Animators.TimeScaleAnimator.Instance,
             },
