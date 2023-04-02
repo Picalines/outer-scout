@@ -17,7 +17,7 @@ public class HttpServer : MonoBehaviour
 
     private HttpListener _HttpListener = null!;
 
-    private IReadOnlyList<RequestHandler> _RequestHandlers = null!;
+    private Router _Router;
 
     private CancellationTokenSource? _CancellationTokenSource = null;
 
@@ -37,10 +37,11 @@ public class HttpServer : MonoBehaviour
             throw new ArgumentException("must end with /", nameof(baseUrl));
         }
 
+        _Router = new(requestHandlers);
+
         _BaseUrl = baseUrl;
 
         _HttpListener = new();
-        _RequestHandlers = requestHandlers;
 
         _HttpListener.Prefixes.Add(_BaseUrl);
     }
@@ -122,18 +123,13 @@ public class HttpServer : MonoBehaviour
                 HttpUtility.UrlDecode(context.Request.Url.ToString()).Substring(_BaseUrl.Length),
                 requestContent);
 
-            bool handled = false;
-            foreach (var handler in _RequestHandlers)
-            {
-                if (handler.Route.MatchRequest(request))
-                {
-                    _UnityThreadActionQueue.Enqueue(() => HandleRequest(context, request, handler));
-                    handled = true;
-                    break;
-                }
-            }
+            var requestHandler = _Router.Match(request);
 
-            if (handled is false)
+            if (requestHandler is not null)
+            {
+                _UnityThreadActionQueue.Enqueue(() => HandleRequest(context, request, requestHandler));
+            }
+            else
             {
                 ResponseFabric.NotFound().Send(context.Response);
             }

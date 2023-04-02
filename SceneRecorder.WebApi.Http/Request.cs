@@ -10,9 +10,9 @@ public sealed class Request
 
     public string Content { get; }
 
-    private readonly Dictionary<string, object?> _RouteParameters = new();
+    internal Dictionary<string, string> MutableRouteParameters { get; } = new();
 
-    private readonly Dictionary<string, object?> _QueryParameters = new();
+    internal Dictionary<string, string> MutableQueryParameters { get; } = new();
 
     internal Request(HttpMethod httpMethod, string url, string content)
     {
@@ -21,37 +21,9 @@ public sealed class Request
         Content = content;
     }
 
-    internal void AddRouteParameter(string name, object? value)
-    {
-        _RouteParameters[name] = value;
-    }
+    public IReadOnlyDictionary<string, string> RouteParameters => MutableRouteParameters;
 
-    internal void AddQueryParameter(string name, object? value)
-    {
-        _QueryParameters[name] = value;
-    }
-
-    public T GetRouteParameter<T>(string name)
-    {
-        if (_RouteParameters.TryGetValue(name, out var parameterBoxValue) is false
-            || parameterBoxValue is not T parameterValue)
-        {
-            throw new InvalidOperationException($"missing route parameter '{name}' of type {typeof(T)}, found {parameterBoxValue?.GetType().Name ?? "null"}");
-        }
-
-        return parameterValue;
-    }
-
-    public T GetQueryParameter<T>(string name)
-    {
-        if (_QueryParameters.TryGetValue(name, out var parameterBoxValue) is false
-            || parameterBoxValue is not T parameterValue)
-        {
-            throw new InvalidOperationException($"missing query parameter '{name}' of type {typeof(T)}, found {parameterBoxValue?.GetType().Name ?? "null"}");
-        }
-
-        return parameterValue;
-    }
+    public IReadOnlyDictionary<string, string> QueryParameters => MutableQueryParameters;
 
     public T ParseContentJson<T>()
     {

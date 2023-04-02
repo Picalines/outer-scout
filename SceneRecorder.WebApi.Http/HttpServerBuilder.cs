@@ -68,7 +68,10 @@ public sealed class HttpServerBuilder
 
     private void Map(HttpMethod httpMethod, string path, Func<Request, Response> handler)
     {
-        var route = new Route(httpMethod, Route.ParsePathString(path));
+        if (Route.TryFromString(httpMethod, path, out var route) is false)
+        {
+            throw new InvalidOperationException($"invalid {httpMethod} route {path}");
+        }
 
         var preconditionHandlers = _PreconditionHandlerStack.Reverse().ToArray();
 
