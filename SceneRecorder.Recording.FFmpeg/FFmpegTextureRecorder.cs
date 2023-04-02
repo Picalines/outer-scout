@@ -31,12 +31,12 @@ public sealed class FFmpegTextureRecorder : IDisposable
             .Add($"-video_size {sourceTexture.width}x{sourceTexture.height}")
             .Add($"-r {Framerate}")
             .Add("-i -")
-            .Add("-c:v libx264")
-            .Add("-movflags +faststart")
-            .Add("-pix_fmt yuv420p")
             .Add("-an")
-            .Add("-crf 20")
+            .Add("-c:v libx265")
+            .Add("-movflags +faststart")
+            .Add("-crf 18")
             .Add("-q:v 0")
+            .Add("-pix_fmt yuv420p")
             .Add($"\"{OutputFilePath}\"");
 
         if (FFmpegAsyncGPUReadback.TryCreate(modConsole, ffmpegArguments.ToString(), out _FFmpegReadback!) is false)
