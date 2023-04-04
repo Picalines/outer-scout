@@ -17,7 +17,7 @@ public class HttpServer : MonoBehaviour
 
     private HttpListener _HttpListener = null!;
 
-    private Router _Router;
+    private Router _Router = null!;
 
     private CancellationTokenSource? _CancellationTokenSource = null;
 
@@ -118,10 +118,7 @@ public class HttpServer : MonoBehaviour
                 requestContent = requestContentReader.ReadToEnd();
             }
 
-            var request = new Request(
-                httpMethod,
-                HttpUtility.UrlDecode(context.Request.Url.ToString()).Substring(_BaseUrl.Length),
-                requestContent);
+            var request = new Request(httpMethod, context.Request.Url, requestContent);
 
             var requestHandler = _Router.Match(request);
 
@@ -143,7 +140,7 @@ public class HttpServer : MonoBehaviour
 
     private void HandleRequest(HttpListenerContext context, Request request, RequestHandler handler)
     {
-        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: handling {request.HttpMethod} request at '{request.Url}'", MessageType.Info);
+        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: handling {request.HttpMethod} request at '{request.Uri}'", MessageType.Info);
 
         var response = handler.Handle(request);
 
@@ -156,7 +153,7 @@ public class HttpServer : MonoBehaviour
 
         response.Send(context.Response);
 
-        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: sent response {response.StatusCode} to {request.HttpMethod} request at '{request.Url}'",
+        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: sent response {response.StatusCode} to {request.HttpMethod} request at '{request.Uri}'",
             isInternalError ? MessageType.Error : MessageType.Info);
     }
 

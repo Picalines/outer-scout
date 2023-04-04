@@ -51,7 +51,7 @@ public sealed class WebApiServer : HttpServer
             routeDefinition.MapRoutes(serverBuilder, context);
         }
 
-        serverBuilder.MapGet("", request =>
+        serverBuilder.Map(Http.HttpMethod.GET, "", request =>
         {
             return ResponseFabric.Ok(new { Message = $"Welcome to Outer Wilds {nameof(SceneRecorder)} API!" });
         });

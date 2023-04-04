@@ -1,6 +1,7 @@
 ﻿using Picalines.OuterWilds.SceneRecorder.Recording;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Extensions;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
+using HttpMethod = Picalines.OuterWilds.SceneRecorder.WebApi.Http.HttpMethod;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebApi.RouteDefinitions;
 
@@ -28,7 +29,7 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
 
     private void MapAnimatorRoutes<T>(HttpServerBuilder serverBuilder, string routeName, Func<IAnimator<T>> getAnimator)
     {
-        serverBuilder.MapPut($"animation/{routeName}/value", (Request request, int at_frame) =>
+        serverBuilder.Map(HttpMethod.PUT, $"animation/{routeName}/value", (Request request, int at_frame) =>
         {
             var animator = getAnimator();
 
@@ -43,23 +44,20 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
             return ResponseFabric.Ok();
         });
 
-        serverBuilder.MapPut($"animation/{routeName}/value?{{from_frame:int}}&{{to_frame:int}}", request =>
+        serverBuilder.Map(HttpMethod.PUT, $"animation/{routeName}/value", (Request request, int from_frame, int to_frame) =>
         {
-            var fromFrame = request.GetQueryParameter<int>("from_frame");
-            var toFrame = request.GetQueryParameter<int>("to_frame");
-
             var animator = getAnimator();
             var allFameNumbers = animator.GetFrameNumbers();
 
-            if (fromFrame > toFrame
-                || (allFameNumbers.Contains(fromFrame), allFameNumbers.Contains(toFrame)) is not (true, true))
+            if (from_frame > to_frame
+                || (allFameNumbers.Contains(from_frame), allFameNumbers.Contains(to_frame)) is not (true, true))
             {
                 return ResponseFabric.BadRequest("invalid frame range");
             }
 
             var newValue = request.ParseContentJson<T>();
 
-            for (int frame = fromFrame; frame <= toFrame; frame++)
+            for (int frame = from_frame; frame <= to_frame; frame++)
             {
                 animator.SetValueAtFrame(frame, newValue);
             }
@@ -67,28 +65,27 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
             return ResponseFabric.Ok();
         });
 
-        serverBuilder.MapPut($"animation/{routeName}/values?{{from_frame:int}}", request =>
+        serverBuilder.Map(HttpMethod.PUT, $"animation/{routeName}/values", (Request request, int from_frame) =>
         {
-            var fromFrame = request.GetQueryParameter<int>("from_frame");
             var animator = getAnimator();
             var allFrameNumbers = animator.GetFrameNumbers();
 
-            if (allFrameNumbers.Contains(fromFrame) is false)
+            if (allFrameNumbers.Contains(from_frame) is false)
             {
                 return ResponseFabric.BadRequest("invalid 'from_frame'");
             }
 
             var newValues = request.ParseContentJson<T[]>();
-            var toFrame = fromFrame + newValues.Length - 1;
+            var toFrame = from_frame + newValues.Length - 1;
 
             if (allFrameNumbers.Contains(toFrame) is false)
             {
                 return ResponseFabric.BadRequest("frame range out of bounds");
             }
 
-            for (int frame = fromFrame; frame <= toFrame; frame++)
+            for (int frame = from_frame; frame <= toFrame; frame++)
             {
-                animator.SetValueAtFrame(frame, newValues[frame - fromFrame]);
+                animator.SetValueAtFrame(frame, newValues[frame - from_frame]);
             }
 
             return ResponseFabric.Ok();

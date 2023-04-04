@@ -46,15 +46,32 @@ public sealed class HttpServerBuilder
         _BaseUrl = baseUrl;
     }
 
-    public void MapGet(string route, Func<Request, Response> handler) => Map(HttpMethod.GET, route, handler);
+    public void Map(HttpMethod httpMethod, string path, Func<Request, Response> handler)
+        => Map(FuncRequestHandler.Create(RouteFromString(httpMethod, path), handler));
 
-    public void MapPost(string route, Func<Request, Response> handler) => Map(HttpMethod.POST, route, handler);
+    public void Map<T1>(HttpMethod httpMethod, string path, Func<Request, T1, Response> handler)
+        => Map(FuncRequestHandler.Create(RouteFromString(httpMethod, path), handler));
 
-    public void MapPut(string route, Func<Request, Response> handler) => Map(HttpMethod.PUT, route, handler);
+    public void Map<T1, T2>(HttpMethod httpMethod, string path, Func<Request, T1, T2, Response> handler)
+        => Map(FuncRequestHandler.Create(RouteFromString(httpMethod, path), handler));
 
-    public void MapDelete(string route, Func<Request, Response> handler) => Map(HttpMethod.DELETE, route, handler);
+    public void Map<T1, T2, T3>(HttpMethod httpMethod, string path, Func<Request, T1, T2, T3, Response> handler)
+        => Map(FuncRequestHandler.Create(RouteFromString(httpMethod, path), handler));
 
-    public void MapPatch(string route, Func<Request, Response> handler) => Map(HttpMethod.PATCH, route, handler);
+    public void Map<T1, T2, T3, T4>(HttpMethod httpMethod, string path, Func<Request, T1, T2, T3, T4, Response> handler)
+        => Map(FuncRequestHandler.Create(RouteFromString(httpMethod, path), handler));
+
+    public void Map<T1, T2, T3, T4, T5>(HttpMethod httpMethod, string path, Func<Request, T1, T2, T3, T4, T5, Response> handler)
+        => Map(FuncRequestHandler.Create(RouteFromString(httpMethod, path), handler));
+
+    public void Map<T1, T2, T3, T4, T5, T6>(HttpMethod httpMethod, string path, Func<Request, T1, T2, T3, T4, T5, T6, Response> handler)
+        => Map(FuncRequestHandler.Create(RouteFromString(httpMethod, path), handler));
+
+    public void Map<T1, T2, T3, T4, T5, T6, T7>(HttpMethod httpMethod, string path, Func<Request, T1, T2, T3, T4, T5, T6, T7, Response> handler)
+        => Map(FuncRequestHandler.Create(RouteFromString(httpMethod, path), handler));
+
+    public void Map<T1, T2, T3, T4, T5, T6, T7, T8>(HttpMethod httpMethod, string path, Func<Request, T1, T2, T3, T4, T5, T6, T7, T8, Response> handler)
+        => Map(FuncRequestHandler.Create(RouteFromString(httpMethod, path), handler));
 
     public IDisposable UsePrecondition(Func<Request, Response?> optionalRequestHandler)
     {
@@ -66,16 +83,11 @@ public sealed class HttpServerBuilder
         httpServer.Configure(_BaseUrl, _RequestHandlers.ToArray());
     }
 
-    private void Map(HttpMethod httpMethod, string path, Func<Request, Response> handler)
+    private void Map(RequestHandler handler)
     {
-        if (Route.TryFromString(httpMethod, path, out var route) is false)
-        {
-            throw new InvalidOperationException($"invalid {httpMethod} route {path}");
-        }
-
         var preconditionHandlers = _PreconditionHandlerStack.Reverse().ToArray();
 
-        _RequestHandlers.Add(new FuncRequestHandler(route, request =>
+        _RequestHandlers.Add(FuncRequestHandler.Create(handler.Route, request =>
         {
             foreach (var preconditionHandler in preconditionHandlers)
             {
@@ -86,7 +98,17 @@ public sealed class HttpServerBuilder
                 }
             }
 
-            return handler(request);
+            return handler.Handle(request);
         }));
+    }
+
+    private static Route RouteFromString(HttpMethod httpMethod, string path)
+    {
+        if (Route.TryFromString(httpMethod, path, out var route) is false)
+        {
+            throw new InvalidOperationException($"invalid {httpMethod} route {path}");
+        }
+
+        return route;
     }
 }

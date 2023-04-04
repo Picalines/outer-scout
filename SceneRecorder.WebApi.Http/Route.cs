@@ -36,6 +36,7 @@ internal sealed record Route(HttpMethod HttpMethod, IReadOnlyList<Route.Segment>
 
         var strSegments = str.Split('/');
         var segments = new List<Segment>();
+        var parameterNames = new HashSet<string>();
 
         foreach (var strSegment in strSegments)
         {
@@ -44,11 +45,25 @@ internal sealed record Route(HttpMethod HttpMethod, IReadOnlyList<Route.Segment>
                 return false;
             }
 
-            bool isParameter = strSegment.StartsWith(":");
+            Segment segment;
 
-            segments.Add(isParameter
-                ? new(SegmentType.Parameter, strSegment.Substring(1))
-                : new(SegmentType.Plain, strSegment));
+            bool isParameter = strSegment.StartsWith(":");
+            if (isParameter)
+            {
+                var parameterName = strSegment.Substring(1);
+                if (parameterNames.Add(parameterName) is false)
+                {
+                    return false;
+                }
+
+                segment = new(SegmentType.Parameter, parameterName);
+            }
+            else
+            {
+                segment = new(SegmentType.Plain, strSegment);
+            }
+
+            segments.Add(segment);
         }
 
         route = new Route(method, segments.ToArray());

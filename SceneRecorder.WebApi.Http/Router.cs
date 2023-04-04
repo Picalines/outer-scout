@@ -22,7 +22,7 @@ internal sealed class Router
     {
         request.MutableRouteParameters.Clear();
 
-        var urlRouteSegments = request.Url.Split('?')[0].Split('/');
+        var urlRouteSegments = request.Uri.LocalPath.Split('/');
 
         if (urlRouteSegments.Length is 0)
         {
