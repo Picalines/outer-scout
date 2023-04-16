@@ -28,10 +28,16 @@ internal sealed record Route(HttpMethod HttpMethod, IReadOnlyList<Route.Segment>
         return string.Join("/", Segments);
     }
 
-    private static readonly Regex _StringSegmentRegex = new("^:?[a-z]+$");
+    private static readonly Regex _StringSegmentRegex = new("^:?\\w+$");
 
     public static bool TryFromString(HttpMethod method, string str, [NotNullWhen(true)] out Route? route)
     {
+        if (str == "")
+        {
+            route = new Route(method, Array.Empty<Segment>());
+            return true;
+        }
+
         route = null;
 
         var strSegments = str.Split('/');

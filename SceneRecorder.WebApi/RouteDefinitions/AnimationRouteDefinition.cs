@@ -1,7 +1,6 @@
 ﻿using Picalines.OuterWilds.SceneRecorder.Recording;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Extensions;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
-using HttpMethod = Picalines.OuterWilds.SceneRecorder.WebApi.Http.HttpMethod;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebApi.RouteDefinitions;
 
@@ -29,7 +28,7 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
 
     private void MapAnimatorRoutes<T>(HttpServerBuilder serverBuilder, string routeName, Func<IAnimator<T>> getAnimator)
     {
-        serverBuilder.Map(HttpMethod.PUT, $"animation/{routeName}/value", (Request request, int at_frame) =>
+        serverBuilder.Map(HttpMethod.Put, $"animation/{routeName}/value", (Request request, int at_frame) =>
         {
             var animator = getAnimator();
 
@@ -44,7 +43,7 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
             return ResponseFabric.Ok();
         });
 
-        serverBuilder.Map(HttpMethod.PUT, $"animation/{routeName}/value", (Request request, int from_frame, int to_frame) =>
+        serverBuilder.Map(HttpMethod.Put, $"animation/{routeName}/value", (Request request, int from_frame, int to_frame) =>
         {
             var animator = getAnimator();
             var allFameNumbers = animator.GetFrameNumbers();
@@ -65,7 +64,7 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
             return ResponseFabric.Ok();
         });
 
-        serverBuilder.Map(HttpMethod.PUT, $"animation/{routeName}/values", (Request request, int from_frame) =>
+        serverBuilder.Map(HttpMethod.Put, $"animation/{routeName}/values", (Request request, int from_frame) =>
         {
             var animator = getAnimator();
             var allFrameNumbers = animator.GetFrameNumbers();

@@ -23,14 +23,14 @@ internal sealed class CameraInfoRouteDefinition : IApiRouteDefinition
 
         foreach (var (routePrefix, (mutable, getOWCamera)) in routeDefinitions)
         {
-            serverBuilder.MapGet($"{routePrefix}/camera_info", request =>
+            serverBuilder.Map(HttpMethod.Get, $"{routePrefix}/camera_info", request =>
             {
                 return ResponseFabric.Ok(CameraInfo.FromOWCamera(getOWCamera()));
             });
 
             if (mutable)
             {
-                serverBuilder.MapPut($"{routePrefix}/camera_info", request =>
+                serverBuilder.Map(HttpMethod.Put, $"{routePrefix}/camera_info", request =>
                 {
                     request.ParseContentJson<CameraInfo>()
                         .ApplyToOWCamera(getOWCamera());

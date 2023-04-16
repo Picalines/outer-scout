@@ -1,4 +1,6 @@
-﻿namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
+﻿using System.ComponentModel;
+
+namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 
 internal sealed class FuncRequestHandler : RequestHandler
 {
@@ -46,8 +48,8 @@ internal sealed class FuncRequestHandler : RequestHandler
 
     private static Func<Request, Response> CreateHandlerWithParameters(Route route, Delegate handlerFunc)
     {
-        var routeParameters = new Dictionary<string, Type>();
-        var queryParameters = new Dictionary<string, Type>();
+        var routeParamConverters = new Dictionary<string, TypeConverter>();
+        var queryParamConverters = new Dictionary<string, TypeConverter>();
 
         var handlerParameters = handlerFunc.Method.GetParameters().Skip(1).ToArray();
         var handlerParametersCount = handlerParameters.Length;
@@ -66,16 +68,47 @@ internal sealed class FuncRequestHandler : RequestHandler
         foreach (var (param, type) in handlerParameterTypes)
         {
             var isRouteParameter = routeParameterNames.Contains(param);
-            (isRouteParameter ? routeParameters : queryParameters)[param] = type;
+            var typeConverter = TypeDescriptor.GetConverter(type);
+            (isRouteParameter ? routeParamConverters : queryParamConverters)[param] = typeConverter;
         }
 
         return request =>
         {
-            var parameters = new object[handlerParametersCount];
+            if (queryParamConverters.Count > request.QueryParameters.Count)
+            {
+                var unexpectedParameterName = request.QueryParameters.Keys
+                    .Except(queryParamConverters.Keys)
+                    .First();
 
-            // TODO
+                return ResponseFabric.BadRequest($"unexpected query parameter '{unexpectedParameterName}'");
+            }
 
-            return (Response)handlerFunc.Method.Invoke(null, parameters);
+            if (queryParamConverters.Count < request.QueryParameters.Count)
+            {
+                var missingParameterName = queryParamConverters.Keys
+                    .Except(request.QueryParameters.Keys)
+                    .First();
+
+                return ResponseFabric.BadRequest($"missing query parameter '{missingParameterName}'");
+            }
+
+            var handlerParameters = new object[handlerParametersCount + 1];
+
+            handlerParameters[0] = request;
+
+            foreach (var (name, strValue) in request.RouteParameters)
+            {
+                var value = routeParamConverters[name].ConvertFromInvariantString(strValue);
+                handlerParameters[handlerParameterIndexes[name] + 1] = value;
+            }
+
+            foreach (var (name, strValue) in request.QueryParameters)
+            {
+                var value = queryParamConverters[name].ConvertFromInvariantString(strValue);
+                handlerParameters[handlerParameterIndexes[name] + 1] = value;
+            }
+
+            return (Response)handlerFunc.Method.Invoke(handlerFunc.Target, handlerParameters);
         };
     }
 }

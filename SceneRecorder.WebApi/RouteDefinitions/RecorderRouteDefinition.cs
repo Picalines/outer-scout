@@ -16,14 +16,14 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
 
         var outputRecorder = context.OutputRecorder;
 
-        serverBuilder.MapGet("recorder/settings", request =>
+        serverBuilder.Map(HttpMethod.Get, "recorder/settings", request =>
         {
             return outputRecorder.Settings is { } sceneSettings
                 ? ResponseFabric.Ok(sceneSettings)
                 : ResponseFabric.NotFound();
         });
 
-        serverBuilder.MapPut("recorder/settings", request =>
+        serverBuilder.Map(HttpMethod.Put, "recorder/settings", request =>
         {
             if (outputRecorder.IsRecording)
             {
@@ -36,24 +36,24 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
             return ResponseFabric.Ok();
         });
 
-        serverBuilder.MapGet("recorder/is_able_to_record", request =>
+        serverBuilder.Map(HttpMethod.Get, "recorder/is_able_to_record", request =>
         {
             return ResponseFabric.Ok(outputRecorder.IsAbleToRecord);
         });
 
-        serverBuilder.MapGet("recorder/frames_recorded", request =>
+        serverBuilder.Map(HttpMethod.Get, "recorder/frames_recorded", request =>
         {
             return outputRecorder.IsAbleToRecord
                 ? ResponseFabric.Ok(outputRecorder.FramesRecorded)
                 : ResponseFabric.ServiceUnavailable();
         });
 
-        serverBuilder.MapGet("recorder/enabled", request =>
+        serverBuilder.Map(HttpMethod.Get, "recorder/enabled", request =>
         {
             return ResponseFabric.Ok(outputRecorder.enabled);
         });
 
-        serverBuilder.MapPut("recorder/enabled", request =>
+        serverBuilder.Map(HttpMethod.Put, "recorder/enabled", request =>
         {
             var shouldRecord = request.ParseContentJson<bool>();
 

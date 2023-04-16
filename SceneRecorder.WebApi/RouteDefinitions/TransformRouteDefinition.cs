@@ -25,7 +25,7 @@ internal sealed class TransformRouteDefinition : IApiRouteDefinition
 
         foreach (var (routePrefix, (mutable, getTransform)) in routeDefinitions)
         {
-            serverBuilder.MapGet($"{routePrefix}/transform/local_to/ground_body", request =>
+            serverBuilder.Map(HttpMethod.Get, $"{routePrefix}/transform/local_to/ground_body", request =>
             {
                 var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()!.transform;
                 var itemTransform = getTransform();
@@ -35,7 +35,7 @@ internal sealed class TransformRouteDefinition : IApiRouteDefinition
 
             if (mutable)
             {
-                serverBuilder.MapPut($"{routePrefix}/transform/local_to/ground_body", request =>
+                serverBuilder.Map(HttpMethod.Put, $"{routePrefix}/transform/local_to/ground_body", request =>
                 {
                     var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()!.transform;
                     var itemTransform = getTransform();

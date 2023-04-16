@@ -16,14 +16,14 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
     {
         using var precondition = serverBuilder.UseInGameScenePrecondition();
 
-        serverBuilder.MapGet("ground_body/name", request =>
+        serverBuilder.Map(HttpMethod.Get, "ground_body/name", request =>
         {
             return LocatorExtensions.GetCurrentGroundBody() is { } groundBody
                 ? ResponseFabric.Ok(groundBody.name)
                 : ResponseFabric.NotFound();
         });
 
-        serverBuilder.MapGet("ground_body/sectors/current/path", request =>
+        serverBuilder.Map(HttpMethod.Get, "ground_body/sectors/current/path", request =>
         {
             var playerSectorDetector = Locator.GetPlayerDetector().GetComponent<SectorDetector>();
             var lastEnteredSector = playerSectorDetector.GetLastEnteredSector();
@@ -31,10 +31,8 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
             return ResponseFabric.Ok(lastEnteredSector.transform.GetPath());
         });
 
-        serverBuilder.MapPost("ground_body/mesh_list?{output_file_path:string}", request =>
+        serverBuilder.Map(HttpMethod.Post, "ground_body/mesh_list", (Request request, string output_file_path) =>
         {
-            var outputFilePath = request.GetQueryParameter<string>("output_file_path");
-
             if (LocatorExtensions.GetCurrentGroundBody() is not { } groundBody)
             {
                 return ResponseFabric.NotFound();
@@ -42,7 +40,7 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
 
             var meshInfo = GroundBodyMeshExport.CaptureMeshInfo(groundBody.gameObject);
 
-            File.WriteAllText(outputFilePath, JsonConvert.SerializeObject(meshInfo));
+            File.WriteAllText(output_file_path, JsonConvert.SerializeObject(meshInfo));
             return ResponseFabric.Created();
         });
     }

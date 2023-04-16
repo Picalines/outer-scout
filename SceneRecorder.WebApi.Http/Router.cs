@@ -4,7 +4,7 @@ internal sealed class Router
 {
     private sealed class RouteNode
     {
-        public RequestHandler? Handler { get; set; }
+        public Dictionary<HttpMethod, RequestHandler> Handlers { get; } = new();
 
         public Dictionary<string, RouteNode> PlainChildren { get; } = new();
 
@@ -20,13 +20,17 @@ internal sealed class Router
 
     public RequestHandler? Match(Request request)
     {
+        var httpMethod = request.HttpMethod;
+
         request.MutableRouteParameters.Clear();
 
         var urlRouteSegments = request.Uri.LocalPath.Split('/');
 
         if (urlRouteSegments.Length is 0)
         {
-            return _RouteTreeRoot.Handler;
+            return _RouteTreeRoot.Handlers.TryGetValue(httpMethod, out var requestHandler)
+                ? requestHandler
+                : null;
         }
 
         var currentNode = _RouteTreeRoot;
@@ -43,7 +47,7 @@ internal sealed class Router
                 request.MutableRouteParameters[parameterName] = urlRouteSegment;
             }
 
-            if (isLast && currentNode.Handler is { } requestHandler)
+            if (isLast && currentNode.Handlers.TryGetValue(httpMethod, out var requestHandler))
             {
                 return requestHandler;
             }
@@ -90,18 +94,18 @@ internal sealed class Router
 
                 if (isLast)
                 {
-                    currentNode.Handler = requestHandler;
+                    currentNode.Handlers[route.HttpMethod] = requestHandler;
                 }
             }
 
             if (route.Segments.Count is 0)
             {
-                if (root.Handler is not null)
+                if (root.Handlers.ContainsKey(route.HttpMethod))
                 {
                     throw new InvalidOperationException("index route is ambiguous");
                 }
 
-                root.Handler = requestHandler;
+                root.Handlers[route.HttpMethod] = requestHandler;
             }
         }
 

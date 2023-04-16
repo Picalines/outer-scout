@@ -2,7 +2,6 @@
 using Picalines.OuterWilds.SceneRecorder.WebApi.Http.Extensions;
 using System.Collections.Concurrent;
 using System.Net;
-using System.Web;
 using UnityEngine;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
@@ -107,17 +106,13 @@ public class HttpServer : MonoBehaviour
                 break;
             }
 
-            if (Enum.TryParse(context.Request.HttpMethod, out HttpMethod httpMethod) is false)
-            {
-                continue;
-            }
-
             string requestContent;
             using (var requestContentReader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding))
             {
                 requestContent = requestContentReader.ReadToEnd();
             }
 
+            var httpMethod = new HttpMethod(context.Request.HttpMethod);
             var request = new Request(httpMethod, context.Request.Url, requestContent);
 
             var requestHandler = _Router.Match(request);
