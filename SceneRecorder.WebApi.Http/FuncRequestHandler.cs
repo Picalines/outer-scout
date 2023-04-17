@@ -18,97 +18,98 @@ internal sealed class FuncRequestHandler : RequestHandler
     }
 
     public static FuncRequestHandler Create(Route route, Func<Request, Response> handlerFunc)
-    {
-        return new FuncRequestHandler(route, handlerFunc);
-    }
+        => new(route, CreateHandler(route, handlerFunc));
 
     public static FuncRequestHandler Create<T1>(Route route, Func<Request, T1, Response> handlerFunc)
-        => Create(route, CreateHandlerWithParameters(route, handlerFunc));
+        => new(route, CreateHandler(route, handlerFunc));
 
     public static FuncRequestHandler Create<T1, T2>(Route route, Func<Request, T1, T2, Response> handlerFunc)
-        => Create(route, CreateHandlerWithParameters(route, handlerFunc));
+        => new(route, CreateHandler(route, handlerFunc));
 
     public static FuncRequestHandler Create<T1, T2, T3>(Route route, Func<Request, T1, T2, T3, Response> handlerFunc)
-        => Create(route, CreateHandlerWithParameters(route, handlerFunc));
+        => new(route, CreateHandler(route, handlerFunc));
 
     public static FuncRequestHandler Create<T1, T2, T3, T4>(Route route, Func<Request, T1, T2, T3, T4, Response> handlerFunc)
-        => Create(route, CreateHandlerWithParameters(route, handlerFunc));
+        => new(route, CreateHandler(route, handlerFunc));
 
     public static FuncRequestHandler Create<T1, T2, T3, T4, T5>(Route route, Func<Request, T1, T2, T3, T4, T5, Response> handlerFunc)
-        => Create(route, CreateHandlerWithParameters(route, handlerFunc));
+        => new(route, CreateHandler(route, handlerFunc));
 
     public static FuncRequestHandler Create<T1, T2, T3, T4, T5, T6>(Route route, Func<Request, T1, T2, T3, T4, T5, T6, Response> handlerFunc)
-        => Create(route, CreateHandlerWithParameters(route, handlerFunc));
+        => new(route, CreateHandler(route, handlerFunc));
 
     public static FuncRequestHandler Create<T1, T2, T3, T4, T5, T6, T7>(Route route, Func<Request, T1, T2, T3, T4, T5, T6, T7, Response> handlerFunc)
-        => Create(route, CreateHandlerWithParameters(route, handlerFunc));
+        => new(route, CreateHandler(route, handlerFunc));
 
     public static FuncRequestHandler Create<T1, T2, T3, T4, T5, T6, T7, T8>(Route route, Func<Request, T1, T2, T3, T4, T5, T6, T7, T8, Response> handlerFunc)
-        => Create(route, CreateHandlerWithParameters(route, handlerFunc));
+        => new(route, CreateHandler(route, handlerFunc));
 
-    private static Func<Request, Response> CreateHandlerWithParameters(Route route, Delegate handlerFunc)
+    private static Func<Request, Response> CreateHandler(Route route, Delegate handlerFunc)
     {
-        var routeParamConverters = new Dictionary<string, TypeConverter>();
-        var queryParamConverters = new Dictionary<string, TypeConverter>();
+        var handlerParameters = handlerFunc.Method
+            .GetParameters()
+            .Skip(1)
+            .Select((param, index) => new
+            {
+                Index = index,
+                param.Name,
+                TypeName = param.ParameterType.Name,
+                TypeConverter = TypeDescriptor.GetConverter(param.ParameterType),
+            })
+            .ToDictionary(param => param.Name, param => param);
 
-        var handlerParameters = handlerFunc.Method.GetParameters().Skip(1).ToArray();
-        var handlerParametersCount = handlerParameters.Length;
+        var queryParameterNames = new HashSet<string>(handlerParameters.Values
+            .Select(param => param.Name)
+            .Except(
+                route.Segments
+                .Where(segment => segment.Type is Route.SegmentType.Parameter)
+                .Select(segment => segment.Value)
+            ));
 
-        var handlerParameterTypes = handlerParameters
-            .ToDictionary(param => param.Name, param => param.ParameterType);
-
-        var handlerParameterIndexes = handlerParameters
-            .Select((param, index) => new { param.Name, index })
-            .ToDictionary(param => param.Name, param => param.index);
-
-        var routeParameterNames = new HashSet<string>(route.Segments
-            .Where(segment => segment.Type is Route.SegmentType.Parameter)
-            .Select(segment => segment.Value));
-
-        foreach (var (param, type) in handlerParameterTypes)
-        {
-            var isRouteParameter = routeParameterNames.Contains(param);
-            var typeConverter = TypeDescriptor.GetConverter(type);
-            (isRouteParameter ? routeParamConverters : queryParamConverters)[param] = typeConverter;
-        }
+        var queryParametersCount = queryParameterNames.Count;
 
         return request =>
         {
-            if (queryParamConverters.Count > request.QueryParameters.Count)
+            if (request.QueryParameters.Count < queryParametersCount)
             {
-                var unexpectedParameterName = request.QueryParameters.Keys
-                    .Except(queryParamConverters.Keys)
-                    .First();
-
-                return ResponseFabric.BadRequest($"unexpected query parameter '{unexpectedParameterName}'");
-            }
-
-            if (queryParamConverters.Count < request.QueryParameters.Count)
-            {
-                var missingParameterName = queryParamConverters.Keys
+                var missingParameterName = queryParameterNames
                     .Except(request.QueryParameters.Keys)
                     .First();
 
                 return ResponseFabric.BadRequest($"missing query parameter '{missingParameterName}'");
             }
 
-            var handlerParameters = new object[handlerParametersCount + 1];
-
-            handlerParameters[0] = request;
-
-            foreach (var (name, strValue) in request.RouteParameters)
+            if (request.QueryParameters.Count >= queryParametersCount)
             {
-                var value = routeParamConverters[name].ConvertFromInvariantString(strValue);
-                handlerParameters[handlerParameterIndexes[name] + 1] = value;
+                var unexpectedParameterName = request.QueryParameters.Keys
+                    .Except(queryParameterNames)
+                    .FirstOrDefault();
+
+                if (unexpectedParameterName is not null)
+                {
+                    return ResponseFabric.BadRequest($"unexpected query parameter '{unexpectedParameterName}'");
+                }
             }
 
-            foreach (var (name, strValue) in request.QueryParameters)
+            var handlerArguments = new object[handlerParameters.Count + 1];
+
+            handlerArguments[0] = request;
+
+            foreach (var (name, strValue) in request.RouteParameters.Concat(request.QueryParameters))
             {
-                var value = queryParamConverters[name].ConvertFromInvariantString(strValue);
-                handlerParameters[handlerParameterIndexes[name] + 1] = value;
+                var handlerParameter = handlerParameters[name];
+
+                try
+                {
+                    handlerArguments[1 + handlerParameter.Index] = handlerParameter.TypeConverter.ConvertFromInvariantString(strValue);
+                }
+                catch (NotSupportedException)
+                {
+                    return ResponseFabric.BadRequest($"{handlerParameter.TypeName} expected in '{name}' parameter");
+                }
             }
 
-            return (Response)handlerFunc.Method.Invoke(handlerFunc.Target, handlerParameters);
+            return (Response)handlerFunc.Method.Invoke(handlerFunc.Target, handlerArguments);
         };
     }
 }
