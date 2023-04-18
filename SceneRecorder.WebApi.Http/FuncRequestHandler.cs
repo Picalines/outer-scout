@@ -17,6 +17,9 @@ internal sealed class FuncRequestHandler : RequestHandler
         return _HandlerFunc.Invoke(request);
     }
 
+    public static FuncRequestHandler CreateUnchecked(Route route, Func<Request, Response> handlerFunc)
+        => new(route, handlerFunc);
+
     public static FuncRequestHandler Create(Route route, Func<Request, Response> handlerFunc)
         => new(route, CreateHandler(route, handlerFunc));
 
@@ -97,7 +100,10 @@ internal sealed class FuncRequestHandler : RequestHandler
 
             foreach (var (name, strValue) in request.RouteParameters.Concat(request.QueryParameters))
             {
-                var handlerParameter = handlerParameters[name];
+                if (handlerParameters.TryGetValue(name, out var handlerParameter) is false)
+                {
+                    return ResponseFabric.BadRequest($"unexpected route parameter '{name}'");
+                }
 
                 try
                 {

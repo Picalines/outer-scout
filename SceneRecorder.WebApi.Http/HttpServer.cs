@@ -148,7 +148,7 @@ public class HttpServer : MonoBehaviour
 
         response.Send(context.Response);
 
-        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: sent response {response.StatusCode} to {request.HttpMethod} request at '{request.Uri}'",
+        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: sent response {response.StatusCode} to {request.HttpMethod} request at '{handler.Route}'",
             isInternalError ? MessageType.Error : MessageType.Info);
     }
 

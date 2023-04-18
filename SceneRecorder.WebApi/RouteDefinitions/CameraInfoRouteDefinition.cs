@@ -15,29 +15,37 @@ internal sealed class CameraInfoRouteDefinition : IApiRouteDefinition
     {
         using var precondition = serverBuilder.UseInGameScenePrecondition();
 
-        var routeDefinitions = new Dictionary<string, (bool Mutable, Func<OWCamera> GetOWCamera)>()
+        var entities = new Dictionary<string, (bool Mutable, Func<OWCamera> GetOWCamera)>()
         {
             ["free_camera"] = (true, () => LocatorExtensions.GetFreeCamera()!.GetAddComponent<OWCamera>()),
-            ["player/camera"] = (false, Locator.GetPlayerCamera),
+            ["player_camera"] = (false, Locator.GetPlayerCamera),
         };
 
-        foreach (var (routePrefix, (mutable, getOWCamera)) in routeDefinitions)
+        serverBuilder.Map(HttpMethod.Get, ":entity_name/camera_info", (Request request, string entity_name) =>
         {
-            serverBuilder.Map(HttpMethod.Get, $"{routePrefix}/camera_info", request =>
+            if (entities.TryGetValue(entity_name, out var entity) is false)
             {
-                return ResponseFabric.Ok(CameraInfo.FromOWCamera(getOWCamera()));
-            });
-
-            if (mutable)
-            {
-                serverBuilder.Map(HttpMethod.Put, $"{routePrefix}/camera_info", request =>
-                {
-                    request.ParseContentJson<CameraInfo>()
-                        .ApplyToOWCamera(getOWCamera());
-
-                    return ResponseFabric.Ok();
-                });
+                return ResponseFabric.NotFound();
             }
-        }
+
+            return ResponseFabric.Ok(CameraInfo.FromOWCamera(entity.GetOWCamera()));
+        });
+
+        serverBuilder.Map(HttpMethod.Put, ":entity_name/camera_info", (Request request, string entity_name) =>
+        {
+            if (entities.TryGetValue(entity_name, out var entity) is false)
+            {
+                return ResponseFabric.NotFound();
+            }
+
+            if (entity.Mutable is false)
+            {
+                return ResponseFabric.NotAcceptable($"{entity_name} camera info is immutable");
+            }
+
+            request.ParseContentJson<CameraInfo>().ApplyToOWCamera(entity.GetOWCamera());
+
+            return ResponseFabric.Ok();
+        });
     }
 }

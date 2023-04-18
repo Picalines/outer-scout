@@ -16,40 +16,49 @@ internal sealed class TransformRouteDefinition : IApiRouteDefinition
     {
         using var precondition = serverBuilder.UseInGameScenePrecondition();
 
-        var routeDefinitions = new Dictionary<string, (bool Mutable, Func<Transform> GetTransform)>
+        var entities = new Dictionary<string, (bool Mutable, Func<Transform> GetTransform)>
         {
             ["free_camera"] = (true, () => LocatorExtensions.GetFreeCamera()!.transform),
-            ["player/body"] = (true, () => Locator.GetPlayerBody().transform),
-            ["player/camera"] = (false, () => Locator.GetPlayerCamera().transform),
+            ["player_body"] = (true, () => Locator.GetPlayerBody().transform),
+            ["player_camera"] = (false, () => Locator.GetPlayerCamera().transform),
         };
 
-        foreach (var (routePrefix, (mutable, getTransform)) in routeDefinitions)
+        serverBuilder.Map(HttpMethod.Get, ":entity_name/transform/local_to/ground_body", (Request request, string entity_name) =>
         {
-            serverBuilder.Map(HttpMethod.Get, $"{routePrefix}/transform/local_to/ground_body", request =>
+            if (entities.TryGetValue(entity_name, out var entity) is false)
             {
-                var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()!.transform;
-                var itemTransform = getTransform();
-
-                return ResponseFabric.Ok(TransformModel.FromInverse(groundBodyTransform, itemTransform));
-            });
-
-            if (mutable)
-            {
-                serverBuilder.Map(HttpMethod.Put, $"{routePrefix}/transform/local_to/ground_body", request =>
-                {
-                    var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()!.transform;
-                    var itemTransform = getTransform();
-
-                    var transformModel = request.ParseContentJson<TransformModel>();
-
-                    var oldItemParent = itemTransform.parent;
-                    itemTransform.parent = groundBodyTransform;
-                    transformModel.ApplyToLocalTransform(itemTransform);
-                    itemTransform.parent = oldItemParent;
-
-                    return ResponseFabric.Ok();
-                });
+                return ResponseFabric.NotFound();
             }
-        }
+
+            var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()!.transform;
+            var entityTransform = entity.GetTransform();
+
+            return ResponseFabric.Ok(TransformModel.FromInverse(groundBodyTransform, entityTransform));
+        });
+
+        serverBuilder.Map(HttpMethod.Put, ":entity_name/transform/local_to/ground_body", (Request request, string entity_name) =>
+        {
+            if (entities.TryGetValue(entity_name, out var entity) is false)
+            {
+                return ResponseFabric.NotFound();
+            }
+
+            if (entity.Mutable is false)
+            {
+                return ResponseFabric.NotAcceptable($"{entity_name} transform is immutable");
+            }
+
+            var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()!.transform;
+            var entityTransform = entity.GetTransform();
+
+            var transformModel = request.ParseContentJson<TransformModel>();
+
+            var oldItemParent = entityTransform.parent;
+            entityTransform.parent = groundBodyTransform;
+            transformModel.ApplyToLocalTransform(entityTransform);
+            entityTransform.parent = oldItemParent;
+
+            return ResponseFabric.Ok();
+        });
     }
 }

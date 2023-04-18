@@ -87,7 +87,7 @@ public sealed class HttpServerBuilder
     {
         var preconditionHandlers = _PreconditionHandlerStack.Reverse().ToArray();
 
-        _RequestHandlers.Add(FuncRequestHandler.Create(handler.Route, request =>
+        _RequestHandlers.Add(FuncRequestHandler.CreateUnchecked(handler.Route, request =>
         {
             foreach (var preconditionHandler in preconditionHandlers)
             {

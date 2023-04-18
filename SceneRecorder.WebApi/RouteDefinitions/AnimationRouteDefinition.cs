@@ -28,21 +28,6 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
 
     private void MapAnimatorRoutes<T>(HttpServerBuilder serverBuilder, string routeName, Func<IAnimator<T>> getAnimator)
     {
-        serverBuilder.Map(HttpMethod.Put, $"animation/{routeName}/value", (Request request, int at_frame) =>
-        {
-            var animator = getAnimator();
-
-            if (animator.GetFrameNumbers().Contains(at_frame) is false)
-            {
-                return ResponseFabric.BadRequest();
-            }
-
-            var newValue = request.ParseContentJson<T>();
-            animator.SetValueAtFrame(at_frame, newValue);
-
-            return ResponseFabric.Ok();
-        });
-
         serverBuilder.Map(HttpMethod.Put, $"animation/{routeName}/value", (Request request, int from_frame, int to_frame) =>
         {
             var animator = getAnimator();

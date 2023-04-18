@@ -24,31 +24,29 @@ internal sealed class Router
 
         request.MutableRouteParameters.Clear();
 
-        var urlRouteSegments = request.Uri.LocalPath.Split('/');
-
-        if (urlRouteSegments.Length is 0)
-        {
-            return _RouteTreeRoot.Handlers.TryGetValue(httpMethod, out var requestHandler)
-                ? requestHandler
-                : null;
-        }
+        var urlRouteSegments = request.Uri.LocalPath.Trim('/').Split('/');
 
         var currentNode = _RouteTreeRoot;
 
-        foreach (var (urlRouteSegment, _, isLast) in EnumerateWithEndpointFlags(urlRouteSegments))
+        foreach (var (urlRouteSegment, _, isLast) in EnumerateWithIndexFlags(urlRouteSegments))
         {
             if (currentNode.PlainChildren.ContainsKey(urlRouteSegment))
             {
                 currentNode = currentNode.PlainChildren[urlRouteSegment];
             }
-            else if (currentNode.ParameterChild is { ChildNode: var parameterChild, ParameterName: var parameterName })
+            else if (urlRouteSegment.Length > 0 && currentNode.ParameterChild is { ChildNode: var parameterChild, ParameterName: var parameterName })
             {
                 currentNode = parameterChild;
                 request.MutableRouteParameters[parameterName] = urlRouteSegment;
             }
 
-            if (isLast && currentNode.Handlers.TryGetValue(httpMethod, out var requestHandler))
+            if (isLast)
             {
+                if (currentNode.Handlers.TryGetValue(httpMethod, out var requestHandler) is false)
+                {
+                    return null;
+                }
+
                 return requestHandler;
             }
         }
@@ -65,7 +63,7 @@ internal sealed class Router
             var route = requestHandler.Route;
             var currentNode = root;
 
-            foreach (var (routeSegment, _, isLast) in EnumerateWithEndpointFlags(route.Segments))
+            foreach (var (routeSegment, _, isLast) in EnumerateWithIndexFlags(route.Segments))
             {
                 switch (routeSegment.Type)
                 {
@@ -78,13 +76,12 @@ internal sealed class Router
                         break;
 
                     case Route.SegmentType.Parameter:
-                        if (currentNode.ParameterChild is not null)
+                        if (currentNode.ParameterChild is not (_, { } childNode))
                         {
-                            throw new InvalidOperationException($"route {route} is ambiguous at parameter segment {routeSegment}");
+                            childNode = new RouteNode();
+                            currentNode.ParameterChild = (routeSegment.Value, childNode);
                         }
 
-                        var childNode = new RouteNode();
-                        currentNode.ParameterChild = (routeSegment.Value, childNode);
                         currentNode = childNode;
                         break;
 
@@ -94,6 +91,11 @@ internal sealed class Router
 
                 if (isLast)
                 {
+                    if (currentNode.Handlers.ContainsKey(route.HttpMethod))
+                    {
+                        throw new InvalidOperationException($"{route.HttpMethod.Method} {route} route is ambiguous");
+                    }
+
                     currentNode.Handlers[route.HttpMethod] = requestHandler;
                 }
             }
@@ -102,7 +104,7 @@ internal sealed class Router
             {
                 if (root.Handlers.ContainsKey(route.HttpMethod))
                 {
-                    throw new InvalidOperationException("index route is ambiguous");
+                    throw new InvalidOperationException($"index {route.HttpMethod.Method} route is ambiguous");
                 }
 
                 root.Handlers[route.HttpMethod] = requestHandler;
@@ -112,7 +114,7 @@ internal sealed class Router
         return root;
     }
 
-    private IEnumerable<(T Element, bool IsFirst, bool IsLast)> EnumerateWithEndpointFlags<T>(IReadOnlyList<T> list)
+    private IEnumerable<(T Element, bool IsFirst, bool IsLast)> EnumerateWithIndexFlags<T>(IReadOnlyList<T> list)
     {
         int index = 0;
         var lastIndex = list.Count - 1;
