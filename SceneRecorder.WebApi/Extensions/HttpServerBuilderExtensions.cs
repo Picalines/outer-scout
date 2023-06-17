@@ -9,7 +9,7 @@ internal static class HttpServerBuilderExtensions
     {
         return serverBuilder.UsePrecondition(request =>
         {
-            return LocatorExtensions.IsInSolarSystemScene() is false
+            return LocatorExtensions.IsInPlayableScene() is false
                 ? ResponseFabric.ServiceUnavailable("not in game scene")
                 : null;
         });

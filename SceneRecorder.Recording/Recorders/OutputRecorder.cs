@@ -128,7 +128,7 @@ public sealed class OutputRecorder : RecorderComponent
                 || (Settings is not null
                 && ModConsole is not null
                 && CommonCameraAPI is not null
-                && LocatorExtensions.IsInSolarSystemScene()
+                && LocatorExtensions.IsInPlayableScene()
                 && GameObject.Find("FREECAM") != null);
         }
     }
@@ -140,11 +140,11 @@ public sealed class OutputRecorder : RecorderComponent
             throw new ArgumentNullException();
         }
 
-        var player = Locator.GetPlayerBody().NullIfDestroyed();
-        var playerResources = Locator.GetPlayerTransform().NullIfDestroyed()?.GetComponent<PlayerResources>();
-        var freeCamera = GameObject.Find("FREECAM").NullIfDestroyed()?.GetComponent<OWCamera>();
+        var player = Locator.GetPlayerBody().OrNull();
+        var playerResources = Locator.GetPlayerTransform().OrNull()?.GetComponent<PlayerResources>();
+        var freeCamera = GameObject.Find("FREECAM").OrNull()?.GetComponent<OWCamera>();
         var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()?.transform;
-        var deathManager = Locator.GetDeathManager().NullIfDestroyed();
+        var deathManager = Locator.GetDeathManager().OrNull();
 
         if ((player, playerResources, freeCamera, groundBodyTransform, deathManager) is not ({ }, { }, { }, { }, { }))
         {
@@ -165,7 +165,7 @@ public sealed class OutputRecorder : RecorderComponent
         depthRecorder.FrameRate = Settings.FrameRate;
 
         // hdri recorder
-        _HdriPivot = _HdriPivot.NullIfDestroyed();
+        _HdriPivot = _HdriPivot.OrNull();
         _HdriPivot ??= new GameObject($"{nameof(SceneRecorder)} HDRI Pivot");
         _HdriPivot.transform.parent = groundBodyTransform;
 

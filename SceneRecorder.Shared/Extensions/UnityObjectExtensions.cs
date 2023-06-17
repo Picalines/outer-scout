@@ -2,7 +2,7 @@
 
 public static class UnityObjectExtensions
 {
-    public static T? NullIfDestroyed<T>(this T? unityObject)
+    public static T? OrNull<T>(this T? unityObject)
         where T : UnityEngine.Object
     {
 #pragma warning disable IDE0029

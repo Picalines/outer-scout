@@ -5,19 +5,19 @@ namespace Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
 
 public static class LocatorExtensions
 {
-    public static bool IsInSolarSystemScene()
+    public static bool IsInPlayableScene()
     {
-        return SceneManager.GetActiveScene().name.Contains("SolarSystem");
+        return SceneManager.GetActiveScene().name is "SolarSystem" or "EyeOfTheUniverse";
     }
 
     public static GameObject? GetFreeCamera()
     {
-        return GameObject.Find("FREECAM").NullIfDestroyed();
+        return GameObject.Find("FREECAM").OrNull();
     }
 
     public static GameObject? GetCurrentGroundBody()
     {
-        return Locator.GetPlayerController().NullIfDestroyed()?.GetLastGroundBody().NullIfDestroyed()?.gameObject
-            ?? Locator.GetAstroObject(AstroObject.Name.TimberHearth).NullIfDestroyed()?.gameObject;
+        return Locator.GetPlayerController().OrNull()?.GetLastGroundBody().OrNull()?.gameObject
+            ?? Locator.GetAstroObject(AstroObject.Name.TimberHearth).OrNull()?.gameObject;
     }
 }
