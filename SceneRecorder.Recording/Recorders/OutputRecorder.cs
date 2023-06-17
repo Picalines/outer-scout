@@ -1,4 +1,4 @@
-﻿using OWML.Common;
+using OWML.Common;
 using Picalines.OuterWilds.SceneRecorder.Recording.Animators;
 using Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
 using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
@@ -140,11 +140,11 @@ public sealed class OutputRecorder : RecorderComponent
             throw new ArgumentNullException();
         }
 
-        var player = Locator.GetPlayerBody().Nullable();
-        var playerResources = Locator.GetPlayerTransform().Nullable()?.GetComponent<PlayerResources>().Nullable();
-        var freeCamera = GameObject.Find("FREECAM").Nullable()?.GetComponent<OWCamera>();
+        var player = Locator.GetPlayerBody().NullIfDestroyed();
+        var playerResources = Locator.GetPlayerTransform().NullIfDestroyed()?.GetComponent<PlayerResources>();
+        var freeCamera = GameObject.Find("FREECAM").NullIfDestroyed()?.GetComponent<OWCamera>();
         var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()?.transform;
-        var deathManager = Locator.GetDeathManager().Nullable();
+        var deathManager = Locator.GetDeathManager().NullIfDestroyed();
 
         if ((player, playerResources, freeCamera, groundBodyTransform, deathManager) is not ({ }, { }, { }, { }, { }))
         {
@@ -165,7 +165,7 @@ public sealed class OutputRecorder : RecorderComponent
         depthRecorder.FrameRate = Settings.FrameRate;
 
         // hdri recorder
-        _HdriPivot = _HdriPivot.Nullable();
+        _HdriPivot = _HdriPivot.NullIfDestroyed();
         _HdriPivot ??= new GameObject($"{nameof(SceneRecorder)} HDRI Pivot");
         _HdriPivot.transform.parent = groundBodyTransform;
 

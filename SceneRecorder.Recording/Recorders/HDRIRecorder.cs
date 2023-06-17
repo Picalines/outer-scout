@@ -49,10 +49,12 @@ internal sealed class HdriRecorder : RenderTextureRecorder
 
             var owCamera = playerCamera.CopyTo(cameraParent);
 
-            owCamera.mainCamera.eventMask = 0;
             owCamera.useGUILayout = false;
             owCamera.useViewmodels = false;
             owCamera.mainCamera.depthTextureMode = DepthTextureMode.None;
+
+            owCamera.mainCamera.eventMask = 0;
+            owCamera.mainCamera.forceIntoRenderTexture = true;
 
             owCamera.aspect = 1;
             owCamera.fieldOfView = 90;
@@ -88,6 +90,7 @@ internal sealed class HdriRecorder : RenderTextureRecorder
 
                 var commandBuffer = new CommandBuffer();
                 commandBuffer.CopyTexture(owCamera.targetTexture, 0, _CubemapFrameTexture, i);
+
                 owCamera.mainCamera.AddCommandBuffer(CameraEvent.AfterEverything, commandBuffer);
             }
 

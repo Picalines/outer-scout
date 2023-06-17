@@ -42,6 +42,7 @@ internal sealed class DepthRecorder : RenderTextureRecorder
         DepthCamera.targetTexture = null;
 
         DepthCamera.mainCamera.eventMask = 0;
+        DepthCamera.mainCamera.forceIntoRenderTexture = true;
 
         DepthCamera.enabled = false;
 

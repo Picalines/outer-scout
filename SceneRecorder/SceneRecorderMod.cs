@@ -10,6 +10,8 @@ namespace Picalines.OuterWilds.SceneRecorder;
 
 internal sealed class SceneRecorderMod : ModBehaviour
 {
+    private const string CommonCameraAPIModId = "xen.CommonCameraUtility";
+
     private OutputRecorder _OutputRecorder = null!;
 
     private WebApiServer? _WebApiServer = null;
@@ -22,7 +24,15 @@ internal sealed class SceneRecorderMod : ModBehaviour
                 ? ModHelper.Console
                 : ModHelper.Console.WithFiltering((line, _) => !line.StartsWith("FFmpeg: "));
 
-            _OutputRecorder.CommonCameraAPI = ModHelper.Interaction.TryGetModApi<ICommonCameraAPI>("xen.CommonCameraUtility");
+            var commonCameraAPI = ModHelper.Interaction.TryGetModApi<ICommonCameraAPI>(CommonCameraAPIModId);
+
+            if (commonCameraAPI is null)
+            {
+                ModHelper.Console.WriteLine($"{CommonCameraAPIModId} is required for {nameof(SceneRecorder)}", MessageType.Error);
+                return;
+            }
+
+            _OutputRecorder.CommonCameraAPI = commonCameraAPI;
         }
 
         _WebApiServer?.Configure(ModHelper.Config, ModHelper.Console);

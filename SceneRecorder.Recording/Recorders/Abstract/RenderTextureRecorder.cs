@@ -40,7 +40,6 @@ internal abstract class RenderTextureRecorder : RecorderComponent
             throw new ArgumentException(nameof(TargetFile));
 
         _FFmpegRecorder = new FFmpegTextureRecorder(ModConsole, _SourceRenderTexture, FrameRate, TargetFile);
-        Time.captureFramerate = FrameRate;
 
         if (_InitializedFrameEnded is false)
         {
@@ -56,8 +55,6 @@ internal abstract class RenderTextureRecorder : RecorderComponent
 
     private void OnRecordingFinished()
     {
-        Time.captureFramerate = 0;
-
         _FFmpegRecorder!.Dispose();
         _FFmpegRecorder = null;
     }

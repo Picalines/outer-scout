@@ -12,12 +12,12 @@ public static class LocatorExtensions
 
     public static GameObject? GetFreeCamera()
     {
-        return GameObject.Find("FREECAM").Nullable();
+        return GameObject.Find("FREECAM").NullIfDestroyed();
     }
 
     public static GameObject? GetCurrentGroundBody()
     {
-        return Locator.GetPlayerController().Nullable()?.GetLastGroundBody().Nullable()?.gameObject
-            ?? Locator.GetAstroObject(AstroObject.Name.TimberHearth).Nullable()?.gameObject;
+        return Locator.GetPlayerController().NullIfDestroyed()?.GetLastGroundBody().NullIfDestroyed()?.gameObject
+            ?? Locator.GetAstroObject(AstroObject.Name.TimberHearth).NullIfDestroyed()?.gameObject;
     }
 }

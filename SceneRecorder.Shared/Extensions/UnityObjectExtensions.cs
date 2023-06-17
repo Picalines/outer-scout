@@ -2,11 +2,13 @@
 
 public static class UnityObjectExtensions
 {
-    public static T? Nullable<T>(this T? @object)
+    public static T? NullIfDestroyed<T>(this T? unityObject)
         where T : UnityEngine.Object
     {
-        return @object != null // Unity objects have an equality overload!
-            ? @object
-            : null;
+#pragma warning disable IDE0029
+        return unityObject == null // Unity objects have an equality overload!
+            ? null
+            : unityObject;
+#pragma warning restore IDE0029
     }
 }
