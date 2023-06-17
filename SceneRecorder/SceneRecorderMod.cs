@@ -36,6 +36,15 @@ internal sealed class SceneRecorderMod : ModBehaviour
         }
 
         _WebApiServer?.Configure(ModHelper.Config, ModHelper.Console);
+
+        OWTime.OnPause -= OnPause;
+        OWTime.OnUnpause -= OnUnpause;
+
+        if (config.GetSettingsValue<bool>("Disable rendering in pause"))
+        {
+            OWTime.OnPause += OnPause;
+            OWTime.OnUnpause += OnUnpause;
+        }
     }
 
     private void Start()
@@ -54,7 +63,38 @@ internal sealed class SceneRecorderMod : ModBehaviour
 
     private void OnDestroy()
     {
+        OWTime.OnPause -= OnPause;
+        OWTime.OnUnpause -= OnUnpause;
+
         Destroy(_WebApiServer);
         Destroy(_OutputRecorder);
+    }
+
+    private void OnPause(OWTime.PauseType pauseType)
+    {
+        if (pauseType is not OWTime.PauseType.Menu)
+        {
+            return;
+        }
+
+        var playerCamera = Locator.GetPlayerCamera().OrNull();
+        if (playerCamera is not null)
+        {
+            playerCamera.enabled = false;
+        }
+    }
+
+    private void OnUnpause(OWTime.PauseType pauseType)
+    {
+        if (pauseType is not OWTime.PauseType.Menu)
+        {
+            return;
+        }
+
+        var playerCamera = Locator.GetPlayerCamera().OrNull();
+        if (playerCamera is not null)
+        {
+            playerCamera.enabled = true;
+        }
     }
 }

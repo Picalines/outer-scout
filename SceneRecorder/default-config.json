@@ -1,6 +1,7 @@
 {
   "enabled": true,
   "settings": {
+    "Disable rendering in pause": true,
     "Web API port": 5000,
     "Web API log only errors": true,
     "FFmpeg logs":  false
