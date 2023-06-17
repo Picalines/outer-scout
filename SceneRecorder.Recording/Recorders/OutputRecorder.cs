@@ -221,6 +221,7 @@ public sealed class OutputRecorder : RecorderComponent
             : Array.Empty<Renderer>();
 
         float initialTimeScale = 0;
+        var initialInputMode = InputMode.None;
 
         _OnRecordingStarted = () =>
         {
@@ -239,11 +240,14 @@ public sealed class OutputRecorder : RecorderComponent
             }
 
             initialTimeScale = Time.timeScale;
+            initialInputMode = OWInput.GetInputMode();
 
             Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = false);
             Locator.GetQuantumMoon().SetActivation(false);
 
             freeCamera.transform.parent = groundBodyTransform;
+
+            OWInput.ChangeInputMode(InputMode.Menu);
         };
 
         _OnRecordingFinished = () =>
@@ -258,6 +262,8 @@ public sealed class OutputRecorder : RecorderComponent
 
             Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = true);
             Locator.GetQuantumMoon().SetActivation(true);
+
+            OWInput.ChangeInputMode(initialInputMode);
         };
     }
 }
