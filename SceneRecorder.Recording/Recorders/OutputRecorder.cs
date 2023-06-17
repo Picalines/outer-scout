@@ -1,4 +1,4 @@
-using OWML.Common;
+﻿using OWML.Common;
 using Picalines.OuterWilds.SceneRecorder.Recording.Animators;
 using Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
 using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
@@ -224,6 +224,8 @@ public sealed class OutputRecorder : RecorderComponent
 
         _OnRecordingStarted = () =>
         {
+            Time.captureFramerate = Settings.FrameRate;
+
             CommonCameraAPI.EnterCamera(freeCamera);
 
             if (playerResources.IsInvincible() is false)
@@ -252,6 +254,7 @@ public sealed class OutputRecorder : RecorderComponent
             deathManager.ToggleInvincibility();
 
             Time.timeScale = initialTimeScale;
+            Time.captureFramerate = 0;
 
             Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = true);
             Locator.GetQuantumMoon().SetActivation(true);
