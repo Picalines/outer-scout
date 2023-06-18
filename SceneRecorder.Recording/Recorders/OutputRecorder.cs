@@ -157,7 +157,8 @@ public sealed class OutputRecorder : RecorderComponent
         backgroundRecorder.FrameRate = Settings.FrameRate;
 
         // render background to GUI
-        freeCamera.gameObject.GetOrAddComponent<RenderTextureRecorderGUI>();
+        var progressGUI = freeCamera.gameObject.GetOrAddComponent<RenderTextureRecorderGUI>();
+        progressGUI.enabled = Settings.ShowProgressGUI;
 
         // depth recorder
         var depthRecorder = freeCamera.gameObject.GetOrAddComponent<DepthRecorder>();

@@ -28,6 +28,9 @@ public sealed class RecorderSettings
     [JsonProperty("hide_player_model")]
     public required bool HidePlayerModel { get; init; }
 
+    [JsonProperty("show_progress_gui")]
+    public required bool ShowProgressGUI { get; init; }
+
     public (int, int) Resolution
     {
         get => (ResolutionX, ResolutionY);
