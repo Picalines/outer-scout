@@ -37,6 +37,8 @@ internal sealed class SceneRecorderMod : ModBehaviour
 
         _WebApiServer?.Configure(ModHelper.Config, ModHelper.Console);
 
+        OnUnpause(OWTime.PauseType.Menu);
+
         OWTime.OnPause -= OnPause;
         OWTime.OnUnpause -= OnUnpause;
 
