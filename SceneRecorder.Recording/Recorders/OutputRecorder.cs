@@ -39,6 +39,8 @@ public sealed class OutputRecorder : RecorderComponent
 
     private IEnumerator<int>? _CurrentFrame = null;
 
+    private OWCamera? _LastFreeCamera = null;
+
     private bool _QueueEnd = false;
 
     public OutputRecorder()
@@ -151,6 +153,8 @@ public sealed class OutputRecorder : RecorderComponent
             throw new InvalidOperationException();
         }
 
+        var didSceneReload = freeCamera != _LastFreeCamera;
+
         // background recorder
         var backgroundRecorder = freeCamera.gameObject.GetOrAddComponent<BackgroundRecorder>();
         (backgroundRecorder.Width, backgroundRecorder.Height) = Settings.Resolution;
@@ -176,7 +180,7 @@ public sealed class OutputRecorder : RecorderComponent
         hdriRecorder.FrameRate = Settings.FrameRate;
 
         // combine recorders
-        if (_ComposedRecorder.Recorders.Count == 0)
+        if (didSceneReload)
         {
             _ComposedRecorder.Recorders = new IRecorder[] { backgroundRecorder, depthRecorder, hdriRecorder };
         }
@@ -195,6 +199,11 @@ public sealed class OutputRecorder : RecorderComponent
         }
 
         // animators
+        if (didSceneReload)
+        {
+            _ComposedAnimator = null;
+        }
+
         _ComposedAnimator ??= new ComposedAnimator()
         {
             Animators = new IAnimator[]
@@ -267,5 +276,7 @@ public sealed class OutputRecorder : RecorderComponent
 
             OWInput.ChangeInputMode(initialInputMode);
         };
+
+        _LastFreeCamera = freeCamera;
     }
 }
