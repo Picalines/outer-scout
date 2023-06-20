@@ -2,7 +2,7 @@
 
 internal sealed class ComposedAnimator<T> : IAnimator<T>
 {
-    public IReadOnlyList<IAnimator<T>> Animators { get; set; } = Array.Empty<IAnimator<T>>();
+    public required IReadOnlyList<IAnimator<T>> Animators { get; init; }
 
     public IAnimator<T>? MainAnimator
     {

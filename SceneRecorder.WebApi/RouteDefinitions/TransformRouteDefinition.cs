@@ -14,7 +14,7 @@ internal sealed class TransformRouteDefinition : IApiRouteDefinition
 
     public void MapRoutes(HttpServerBuilder serverBuilder, IApiRouteDefinition.IContext context)
     {
-        using var precondition = serverBuilder.UseInGameScenePrecondition();
+        using var precondition = serverBuilder.UseInPlayableScenePrecondition();
 
         var entities = new Dictionary<string, (bool Mutable, Func<Transform> GetTransform)>
         {

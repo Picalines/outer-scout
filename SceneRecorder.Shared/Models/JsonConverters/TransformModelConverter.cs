@@ -16,13 +16,18 @@ internal sealed class TransformModelConverter : JsonConverter<TransformModel>
 
     public override TransformModel ReadJson(JsonReader reader, Type objectType, TransformModel existingValue, bool hasExistingValue, JsonSerializer serializer)
     {
-        var baseArray = JArray.Load(reader).Values<JArray>().ToArray();
+        reader.Read();
 
-        var position = _Vector3Converter.ReadJson(baseArray[0]!.CreateReader(), typeof(Vector3), default, false, serializer);
-        var rotation = _QuaternionConverter.ReadJson(baseArray[1]!.CreateReader(), typeof(Quaternion), default, false, serializer);
-        var scale = _Vector3Converter.ReadJson(baseArray[2]!.CreateReader(), typeof(Vector3), default, false, serializer);
+        var result = new TransformModel
+        {
+            Position = _Vector3Converter.ReadJson(reader, typeof(Vector3), default, false, serializer),
+            Rotation = _QuaternionConverter.ReadJson(reader, typeof(Quaternion), default, false, serializer),
+            Scale = _Vector3Converter.ReadJson(reader, typeof(Vector3), default, false, serializer),
+        };
 
-        return new TransformModel(position, rotation, scale);
+        reader.Read();
+
+        return result;
     }
 
     public override void WriteJson(JsonWriter writer, TransformModel value, JsonSerializer serializer)

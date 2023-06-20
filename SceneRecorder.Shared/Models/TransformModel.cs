@@ -5,19 +5,32 @@ using UnityEngine;
 namespace Picalines.OuterWilds.SceneRecorder.Shared.Models;
 
 [JsonConverter(typeof(TransformModelConverter))]
-public record struct TransformModel(
-    Vector3 Position,
-    Quaternion Rotation,
-    Vector3 Scale)
+public readonly record struct TransformModel
 {
+    public required Vector3 Position { get; init; }
+
+    public required Quaternion Rotation { get; init; }
+
+    public required Vector3 Scale { get; init; }
+
     public static TransformModel FromGlobalTransform(Transform transform)
     {
-        return new TransformModel(transform.position, transform.rotation, transform.lossyScale);
+        return new TransformModel
+        {
+            Position = transform.position,
+            Rotation = transform.rotation,
+            Scale = transform.lossyScale,
+        };
     }
 
     public static TransformModel FromLocalTransform(Transform transform)
     {
-        return new TransformModel(transform.localPosition, transform.localRotation, transform.localScale);
+        return new TransformModel
+        {
+            Position = transform.localPosition,
+            Rotation = transform.localRotation,
+            Scale = transform.localScale,
+        };
     }
 
     public static TransformModel FromInverse(Transform parentTransform, Transform childTransform)

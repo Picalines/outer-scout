@@ -14,7 +14,7 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
 
     public void MapRoutes(HttpServerBuilder serverBuilder, IApiRouteDefinition.IContext context)
     {
-        using var precondition = serverBuilder.UseInGameScenePrecondition();
+        using var precondition = serverBuilder.UseInPlayableScenePrecondition();
 
         serverBuilder.Map(HttpMethod.Get, "ground_body/name", request =>
         {

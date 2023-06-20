@@ -35,10 +35,12 @@ public abstract class VectorJsonConverter<TVector> : JsonConverter<TVector>
     public sealed override void WriteJson(JsonWriter writer, TVector value, JsonSerializer serializer)
     {
         writer.WriteStartArray();
+
         for (int axisIndex = 0; axisIndex < NumberOfAxes; axisIndex++)
         {
             writer.WriteValue(GetAxis(value, axisIndex));
         }
+
         writer.WriteEndArray();
     }
 }

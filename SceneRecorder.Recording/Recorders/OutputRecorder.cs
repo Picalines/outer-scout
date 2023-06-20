@@ -29,7 +29,7 @@ public sealed class OutputRecorder : RecorderComponent
 
     private ComposedRecorder _ComposedRecorder = null!;
 
-    private ComposedAnimator _ComposedAnimator = null!;
+    private ComposedAnimator? _ComposedAnimator = null;
 
     private Action? _OnRecordingStarted = null;
 
@@ -63,7 +63,7 @@ public sealed class OutputRecorder : RecorderComponent
             throw new InvalidOperationException($"{nameof(IsAbleToRecord)} is false");
         }
 
-        _CurrentFrame = _ComposedAnimator.GetFrameNumbers().GetEnumerator();
+        _CurrentFrame = _ComposedAnimator!.GetFrameNumbers().GetEnumerator();
         _CurrentFrame.MoveNext();
 
         _OnRecordingStarted?.Invoke();
@@ -87,7 +87,7 @@ public sealed class OutputRecorder : RecorderComponent
 
     private void OnFrameStarted()
     {
-        _ComposedAnimator.SetFrame(_CurrentFrame!.Current);
+        _ComposedAnimator!.SetFrame(_CurrentFrame!.Current);
     }
 
     private void OnFrameEnded()
@@ -129,7 +129,7 @@ public sealed class OutputRecorder : RecorderComponent
                 && ModConsole is not null
                 && CommonCameraAPI is not null
                 && LocatorExtensions.IsInPlayableScene()
-                && GameObject.Find("FREECAM") != null);
+                && LocatorExtensions.GetFreeCamera() is not null);
         }
     }
 
@@ -142,7 +142,7 @@ public sealed class OutputRecorder : RecorderComponent
 
         var player = Locator.GetPlayerBody().OrNull();
         var playerResources = Locator.GetPlayerTransform().OrNull()?.GetComponent<PlayerResources>();
-        var freeCamera = GameObject.Find("FREECAM").OrNull()?.GetComponent<OWCamera>();
+        var freeCamera = LocatorExtensions.GetFreeCamera();
         var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()?.transform;
         var deathManager = Locator.GetDeathManager().OrNull();
 
@@ -166,8 +166,9 @@ public sealed class OutputRecorder : RecorderComponent
         depthRecorder.FrameRate = Settings.FrameRate;
 
         // hdri recorder
-        _HdriPivot = _HdriPivot.OrNull();
-        _HdriPivot ??= new GameObject($"{nameof(SceneRecorder)} HDRI Pivot");
+        _HdriPivot = _HdriPivot.OrNull()
+            ?? new GameObject($"{nameof(SceneRecorder)} HDRI Pivot");
+
         _HdriPivot.transform.parent = groundBodyTransform;
 
         var hdriRecorder = _HdriPivot.GetOrAddComponent<HdriRecorder>();
@@ -194,7 +195,7 @@ public sealed class OutputRecorder : RecorderComponent
         }
 
         // animators
-        _ComposedAnimator = new ComposedAnimator()
+        _ComposedAnimator ??= new ComposedAnimator()
         {
             Animators = new IAnimator[]
             {

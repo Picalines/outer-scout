@@ -2,7 +2,7 @@ namespace Picalines.OuterWilds.SceneRecorder.Recording.Animators;
 
 internal sealed class ComposedAnimator : IAnimator
 {
-    public IReadOnlyList<IAnimator> Animators { get; set; } = Array.Empty<IAnimator>();
+    public required IReadOnlyList<IAnimator> Animators { get; init; }
 
     public IAnimator? MainAnimator
     {

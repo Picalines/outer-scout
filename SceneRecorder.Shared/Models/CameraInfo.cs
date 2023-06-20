@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Picalines.OuterWilds.SceneRecorder.Shared.Models;
 
-public sealed class CameraInfo
+public readonly record struct CameraInfo
 {
     [JsonProperty("sensor_size")]
     [JsonConverter(typeof(Vector2Converter))]

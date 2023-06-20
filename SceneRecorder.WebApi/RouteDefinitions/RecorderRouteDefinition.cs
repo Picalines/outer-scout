@@ -12,7 +12,7 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
 
     public void MapRoutes(HttpServerBuilder serverBuilder, IApiRouteDefinition.IContext context)
     {
-        using var precondition = serverBuilder.UseInGameScenePrecondition();
+        using var precondition = serverBuilder.UseInPlayableScenePrecondition();
 
         var outputRecorder = context.OutputRecorder;
 

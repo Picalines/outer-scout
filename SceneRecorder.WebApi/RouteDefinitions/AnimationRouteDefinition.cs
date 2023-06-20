@@ -12,7 +12,7 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
 
     public void MapRoutes(HttpServerBuilder serverBuilder, IApiRouteDefinition.IContext context)
     {
-        using var gameScenePrecondition = serverBuilder.UseInGameScenePrecondition();
+        using var gameScenePrecondition = serverBuilder.UseInPlayableScenePrecondition();
         using var ableToRecordPrecondition = serverBuilder.UsePrecondition(request =>
         {
             return context.OutputRecorder.IsAbleToRecord is false

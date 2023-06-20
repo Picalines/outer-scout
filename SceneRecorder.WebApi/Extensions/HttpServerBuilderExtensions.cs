@@ -5,7 +5,7 @@ namespace Picalines.OuterWilds.SceneRecorder.WebApi.Extensions;
 
 internal static class HttpServerBuilderExtensions
 {
-    public static IDisposable UseInGameScenePrecondition(this HttpServerBuilder serverBuilder)
+    public static IDisposable UseInPlayableScenePrecondition(this HttpServerBuilder serverBuilder)
     {
         return serverBuilder.UsePrecondition(request =>
         {

@@ -10,9 +10,9 @@ public static class LocatorExtensions
         return SceneManager.GetActiveScene().name is "SolarSystem" or "EyeOfTheUniverse";
     }
 
-    public static GameObject? GetFreeCamera()
+    public static OWCamera? GetFreeCamera()
     {
-        return GameObject.Find("FREECAM").OrNull();
+        return GameObject.Find("FREECAM").OrNull()?.GetComponent<OWCamera>();
     }
 
     public static GameObject? GetCurrentGroundBody()
