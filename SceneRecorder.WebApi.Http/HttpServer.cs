@@ -1,5 +1,6 @@
 ﻿using OWML.Common;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Http.Extensions;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Net;
 using UnityEngine;
@@ -128,6 +129,7 @@ public class HttpServer : MonoBehaviour
         }
 
         _UnityThreadActionQueue.Clear();
+        StopAllCoroutines();
 
         _HttpListener.Stop();
         _StoppedListening.SetResult(null);
@@ -143,13 +145,77 @@ public class HttpServer : MonoBehaviour
 
         if (isInternalError)
         {
-            ModConsole?.WriteLine($"{nameof(SceneRecorder)} API internal error: {response.Content}", MessageType.Error);
+            var content = response is SyncResponse { Content: var syncContent } ? syncContent : "<cannot read async content>";
+
+            ModConsole?.WriteLine($"{nameof(SceneRecorder)} API internal error: {content}", MessageType.Error);
         }
 
-        response.Send(context.Response);
+        switch (response)
+        {
+            case SyncResponse syncResponse:
+                syncResponse.Send(context.Response);
 
-        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: sent response {response.StatusCode} to {request.HttpMethod} request at '{handler.Route}'",
-            isInternalError ? MessageType.Error : MessageType.Info);
+                ModConsole?.WriteLine(
+                    $"{nameof(SceneRecorder)} API: sent response {response.StatusCode} to {request.HttpMethod} request at '{handler.Route}'",
+                    isInternalError ? MessageType.Error : MessageType.Info
+                );
+                break;
+
+            case CoroutineResponse coroutineResponse:
+                StartCoroutine(CoroutineRequestHandler(request.HttpMethod, handler.Route, context.Response, coroutineResponse));
+                break;
+
+            default:
+                throw new NotSupportedException($"{response.GetType().FullName} response type is not supported");
+        }
+    }
+
+    private IEnumerator CoroutineRequestHandler(HttpMethod httpMethod, Route route, HttpListenerResponse listenerResponse, CoroutineResponse coroutineResponse)
+    {
+        var coroutine = coroutineResponse.Coroutine;
+
+        using (var contentWriter = new StreamWriter(listenerResponse.OutputStream))
+        {
+            while (true)
+            {
+                try
+                {
+                    if (coroutine.MoveNext() is false)
+                    {
+                        break;
+                    }
+                }
+                catch (Exception exception)
+                {
+                    ModConsole?.WriteLine(
+                        $"{nameof(SceneRecorder)} API: unhandled exception in {httpMethod} request {nameof(CoroutineResponse)} at '{route}'",
+                        MessageType.Error
+                    );
+
+                    ModConsole?.WriteLine($"{exception.GetType().Name}: {exception.Message}\n{exception.StackTrace}");
+                    break;
+                }
+
+                switch (coroutine.Current)
+                {
+                    case string contentChunk:
+                        contentWriter.Write(contentChunk);
+                        contentWriter.Flush();
+                        break;
+
+                    case var coroutineControl:
+                        yield return coroutineControl;
+                        break;
+                }
+            }
+        }
+
+        listenerResponse.Close();
+
+        ModConsole?.WriteLine(
+            $"{nameof(SceneRecorder)} API: sent response {coroutineResponse.StatusCode} to {httpMethod} request at '{route}'",
+            coroutineResponse.StatusCode is HttpStatusCode.InternalServerError ? MessageType.Error : MessageType.Info
+        );
     }
 
     private void Update()

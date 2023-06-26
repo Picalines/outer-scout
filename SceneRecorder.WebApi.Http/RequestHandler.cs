@@ -9,9 +9,9 @@ internal abstract class RequestHandler
         Route = route;
     }
 
-    protected abstract Response HandleInternal(Request request);
+    protected abstract IResponse HandleInternal(Request request);
 
-    public Response Handle(Request request)
+    public IResponse Handle(Request request)
     {
         try
         {

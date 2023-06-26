@@ -28,7 +28,7 @@ internal sealed class Router
 
         var currentNode = _RouteTreeRoot;
 
-        foreach (var (urlRouteSegment, _, isLast) in EnumerateWithIndexFlags(urlRouteSegments))
+        foreach (var (urlRouteSegment, isLast) in EnumerateWithLastFlag(urlRouteSegments))
         {
             if (currentNode.PlainChildren.ContainsKey(urlRouteSegment))
             {
@@ -63,7 +63,7 @@ internal sealed class Router
             var route = requestHandler.Route;
             var currentNode = root;
 
-            foreach (var (routeSegment, _, isLast) in EnumerateWithIndexFlags(route.Segments))
+            foreach (var (routeSegment, isLast) in EnumerateWithLastFlag(route.Segments))
             {
                 switch (routeSegment.Type)
                 {
@@ -114,14 +114,14 @@ internal sealed class Router
         return root;
     }
 
-    private IEnumerable<(T Element, bool IsFirst, bool IsLast)> EnumerateWithIndexFlags<T>(IReadOnlyList<T> list)
+    private IEnumerable<(T Element, bool IsLast)> EnumerateWithLastFlag<T>(IReadOnlyList<T> list)
     {
         int index = 0;
         var lastIndex = list.Count - 1;
+
         foreach (var element in list)
         {
-            yield return (element, index == 0, index == lastIndex);
-            index++;
+            yield return (element, index++ == lastIndex);
         }
     }
 }
