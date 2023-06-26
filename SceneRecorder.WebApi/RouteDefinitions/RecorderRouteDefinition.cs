@@ -1,4 +1,6 @@
-﻿using Picalines.OuterWilds.SceneRecorder.Shared.Models;
+﻿using System.Collections;
+using Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
+using Picalines.OuterWilds.SceneRecorder.Shared.Models;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Extensions;
 using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 
@@ -48,6 +50,13 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
                 : ResponseFabric.ServiceUnavailable();
         });
 
+        serverBuilder.Map(HttpMethod.Get, "recorder/frames_recorded_async", request =>
+        {
+            return outputRecorder.IsAbleToRecord
+                ? ResponseFabric.Ok(FramesRecordedCoroutine(outputRecorder))
+                : ResponseFabric.ServiceUnavailable();
+        });
+
         serverBuilder.Map(HttpMethod.Get, "recorder/enabled", request =>
         {
             return ResponseFabric.Ok(outputRecorder.enabled);
@@ -69,5 +78,20 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
 
             return ResponseFabric.Ok();
         });
+    }
+
+    private IEnumerator FramesRecordedCoroutine(OutputRecorder outputRecorder)
+    {
+        while (true)
+        {
+            yield return $"{outputRecorder.FramesRecorded}\n";
+
+            if (outputRecorder.IsRecording is false)
+            {
+                break;
+            }
+
+            yield return null;
+        }
     }
 }
