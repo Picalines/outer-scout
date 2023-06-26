@@ -10,7 +10,7 @@ internal static class HttpServerBuilderExtensions
         return serverBuilder.UsePrecondition(request =>
         {
             return LocatorExtensions.IsInPlayableScene() is false
-                ? ResponseFabric.ServiceUnavailable("not in game scene")
+                ? ResponseFabric.ServiceUnavailable("not in playable scene")
                 : null;
         });
     }
