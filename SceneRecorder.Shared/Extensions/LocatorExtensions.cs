@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
 
@@ -7,7 +6,7 @@ public static class LocatorExtensions
 {
     public static bool IsInPlayableScene()
     {
-        return SceneManager.GetActiveScene().name is "SolarSystem" or "EyeOfTheUniverse";
+        return LoadManager.GetCurrentScene() is OWScene.SolarSystem or OWScene.EyeOfTheUniverse;
     }
 
     public static OWCamera? GetFreeCamera()
