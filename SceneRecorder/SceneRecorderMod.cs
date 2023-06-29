@@ -16,6 +16,8 @@ internal sealed class SceneRecorderMod : ModBehaviour
 
     private WebApiServer? _WebApiServer = null;
 
+    private PlayerCameraEnabler? _PlayerCameraEnabler = null;
+
     public override void Configure(IModConfig config)
     {
         if (_OutputRecorder is not null)
@@ -35,18 +37,9 @@ internal sealed class SceneRecorderMod : ModBehaviour
             _OutputRecorder.CommonCameraAPI = commonCameraAPI;
         }
 
-        _WebApiServer?.Configure(ModHelper.Config, ModHelper.Console);
+        _WebApiServer?.Configure(config, ModHelper.Console);
 
-        OnUnpause(OWTime.PauseType.Menu);
-
-        OWTime.OnPause -= OnPause;
-        OWTime.OnUnpause -= OnUnpause;
-
-        if (config.GetSettingsValue<bool>("Disable rendering in pause"))
-        {
-            OWTime.OnPause += OnPause;
-            OWTime.OnUnpause += OnUnpause;
-        }
+        _PlayerCameraEnabler?.Configure(config);
     }
 
     private void Start()
@@ -60,43 +53,8 @@ internal sealed class SceneRecorderMod : ModBehaviour
 
         _WebApiServer = gameObject.AddComponent<WebApiServer>();
 
+        _PlayerCameraEnabler = gameObject.AddComponent<PlayerCameraEnabler>();
+
         Configure(ModHelper.Config);
-    }
-
-    private void OnDestroy()
-    {
-        OWTime.OnPause -= OnPause;
-        OWTime.OnUnpause -= OnUnpause;
-
-        Destroy(_WebApiServer);
-        Destroy(_OutputRecorder);
-    }
-
-    private void OnPause(OWTime.PauseType pauseType)
-    {
-        if (pauseType is not OWTime.PauseType.Menu)
-        {
-            return;
-        }
-
-        var playerCamera = Locator.GetPlayerCamera().OrNull();
-        if (playerCamera is not null)
-        {
-            playerCamera.enabled = false;
-        }
-    }
-
-    private void OnUnpause(OWTime.PauseType pauseType)
-    {
-        if (pauseType is not OWTime.PauseType.Menu)
-        {
-            return;
-        }
-
-        var playerCamera = Locator.GetPlayerCamera().OrNull();
-        if (playerCamera is not null)
-        {
-            playerCamera.enabled = true;
-        }
     }
 }
