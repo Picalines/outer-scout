@@ -6,6 +6,7 @@ using Picalines.OuterWilds.SceneRecorder.Shared.Interfaces;
 using Picalines.OuterWilds.SceneRecorder.Shared.Models;
 using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
 
@@ -232,7 +233,11 @@ public sealed class OutputRecorder : RecorderComponent
             : Array.Empty<Renderer>();
 
         float initialTimeScale = 0;
-        var initialInputMode = InputMode.None;
+
+        var pauseMenuManager = Locator.GetPauseCommandListener()._pauseMenu;
+        var pauseMenu = pauseMenuManager._pauseMenu;
+
+        var enabledInputDevices = Array.Empty<InputDevice>();
 
         _OnRecordingStarted = () =>
         {
@@ -251,14 +256,16 @@ public sealed class OutputRecorder : RecorderComponent
             }
 
             initialTimeScale = Time.timeScale;
-            initialInputMode = OWInput.GetInputMode();
 
             Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = false);
             Locator.GetQuantumMoon().SetActivation(false);
 
             freeCamera.transform.parent = groundBodyTransform;
 
-            OWInput.ChangeInputMode(InputMode.Menu);
+            enabledInputDevices = InputSystem.devices.Where(device => device.enabled).ToArray();
+            Array.ForEach(enabledInputDevices, device => InputSystem.DisableDevice(device));
+
+            pauseMenu.EnableMenu(false);
         };
 
         _OnRecordingFinished = () =>
@@ -272,9 +279,11 @@ public sealed class OutputRecorder : RecorderComponent
             Time.captureFramerate = 0;
 
             Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = true);
-            Locator.GetQuantumMoon().SetActivation(true);
+            Locator.GetQuantumMoon().OrNull()?.SetActivation(true);
 
-            OWInput.ChangeInputMode(initialInputMode);
+            Array.ForEach(enabledInputDevices, InputSystem.EnableDevice);
+            pauseMenuManager.TryOpenPauseMenu();
+            OWInput.ChangeInputMode(InputMode.All);
         };
 
         _LastFreeCamera = freeCamera;
