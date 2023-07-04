@@ -19,6 +19,7 @@ public sealed class WebApiServer : HttpServer
         RecorderRouteDefinition.Instance,
         AnimationRouteDefinition.Instance,
         GroundBodyRouteDefinition.Instance,
+        WarpRouteDefinition.Instance,
     };
 
     public void Configure(IModConfig modConfig, IModConsole modConsole)
