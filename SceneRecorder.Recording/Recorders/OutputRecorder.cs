@@ -151,79 +151,97 @@ public sealed class OutputRecorder : RecorderComponent
 
         if ((player, playerResources, freeCamera, groundBodyTransform, deathManager) is not ({ }, { }, { }, { }, { }))
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("invalid scene state");
         }
 
         var didSceneReload = freeCamera != _LastFreeCamera;
 
-        // background recorder
-        var backgroundRecorder = freeCamera.gameObject.GetOrAddComponent<BackgroundRecorder>();
-        (backgroundRecorder.Width, backgroundRecorder.Height) = Settings.Resolution;
-        backgroundRecorder.FrameRate = Settings.FrameRate;
+        var addedRecorders = new List<IRecorder>();
 
-        // render background to GUI
-        var progressGUI = freeCamera.gameObject.GetOrAddComponent<RenderTextureRecorderGUI>();
-        progressGUI.enabled = Settings.ShowProgressGUI;
+        var cameraInfoAnimators = new List<IAnimator<CameraInfo>>()
+        {
+            new CameraInfoAnimator(freeCamera),
+        };
+
+        // background recorder
+        {
+            var backgroundRecorder = freeCamera.gameObject.GetOrAddComponent<BackgroundRecorder>();
+            backgroundRecorder.TargetFile = Path.Combine(Settings.OutputDirectory, "background.mp4");
+            (backgroundRecorder.Width, backgroundRecorder.Height) = Settings.Resolution;
+            backgroundRecorder.FrameRate = Settings.FrameRate;
+            backgroundRecorder.ModConsole = ModConsole!;
+
+            // render background to GUI
+            var progressGUI = freeCamera.gameObject.GetOrAddComponent<RenderTextureRecorderGUI>();
+            progressGUI.enabled = Settings.ShowProgressGUI;
+
+            addedRecorders.Add(backgroundRecorder);
+        }
 
         // depth recorder
-        var depthRecorder = freeCamera.gameObject.GetOrAddComponent<DepthRecorder>();
-        (depthRecorder.Width, depthRecorder.Height) = Settings.Resolution;
-        depthRecorder.FrameRate = Settings.FrameRate;
+        if (Settings.RecordDepth)
+        {
+            var depthRecorder = freeCamera.gameObject.GetOrAddComponent<DepthRecorder>();
+            depthRecorder.TargetFile = Path.Combine(Settings.OutputDirectory, "depth.mp4");
+            (depthRecorder.Width, depthRecorder.Height) = Settings.Resolution;
+            depthRecorder.FrameRate = Settings.FrameRate;
+            depthRecorder.ModConsole = ModConsole!;
+
+            cameraInfoAnimators.Add(new CameraInfoAnimator(depthRecorder.DepthCamera));
+
+            addedRecorders.Add(depthRecorder);
+        }
 
         // hdri recorder
-        _HdriPivot = _HdriPivot.OrNull()
-            ?? new GameObject($"{nameof(SceneRecorder)} HDRI Pivot");
+        if (Settings.RecordHdri)
+        {
+            _HdriPivot = _HdriPivot.OrNull()
+                ?? new GameObject($"{nameof(SceneRecorder)} HDRI Pivot");
 
-        _HdriPivot.transform.parent = groundBodyTransform;
+            _HdriPivot.transform.parent = groundBodyTransform;
 
-        var hdriRecorder = _HdriPivot.GetOrAddComponent<HdriRecorder>();
-        hdriRecorder.CubemapFaceSize = Settings.HdriFaceSize;
-        hdriRecorder.FrameRate = Settings.FrameRate;
+            var hdriRecorder = _HdriPivot.GetOrAddComponent<HdriRecorder>();
+            hdriRecorder.TargetFile = Path.Combine(Settings.OutputDirectory, "hdri.mp4");
+            hdriRecorder.CubemapFaceSize = Settings.HdriFaceSize;
+            hdriRecorder.FrameRate = Settings.FrameRate;
+            hdriRecorder.ModConsole = ModConsole!;
+
+            addedRecorders.Add(hdriRecorder);
+        }
 
         // combine recorders
         if (didSceneReload)
         {
-            _ComposedRecorder.Recorders = new IRecorder[] { backgroundRecorder, depthRecorder, hdriRecorder };
-        }
-
-        foreach (var recorder in _ComposedRecorder.Recorders.OfType<RenderTextureRecorder>())
-        {
-            recorder.ModConsole = ModConsole!;
-
-            recorder.TargetFile = Path.Combine(Settings.OutputDirectory, recorder switch
-            {
-                BackgroundRecorder => "background.mp4",
-                DepthRecorder => "depth.mp4",
-                HdriRecorder => "hdri.mp4",
-                _ => throw new NotImplementedException(),
-            });
+            _ComposedRecorder.Recorders = addedRecorders.ToArray();
         }
 
         // animators
-        if (didSceneReload)
         {
-            _ComposedAnimator = null;
-        }
-
-        _ComposedAnimator ??= new ComposedAnimator()
-        {
-            Animators = new IAnimator[]
+            var animators = new List<IAnimator>
             {
-                FreeCameraTransformAnimator = new TransformAnimator(freeCamera.transform),
-                FreeCameraInfoAnimator = new ComposedAnimator<CameraInfo>()
+                (FreeCameraTransformAnimator = new TransformAnimator(freeCamera.transform)),
+                (FreeCameraInfoAnimator = new ComposedAnimator<CameraInfo>()
                 {
-                    Animators = new IAnimator<CameraInfo>[]
-                    {
-                        new CameraInfoAnimator(freeCamera),
-                        new CameraInfoAnimator(depthRecorder.DepthCamera),
-                    },
-                },
-                HdriTransformAnimator = new TransformAnimator(_HdriPivot.transform),
-                TimeScaleAnimator = Animators.TimeScaleAnimator.Instance,
-            },
-        };
+                    Animators = cameraInfoAnimators.ToArray(),
+                }),
+                (TimeScaleAnimator = Animators.TimeScaleAnimator.Instance),
+            };
 
-        _ComposedAnimator.SetFrameRange(Settings.StartFrame, Settings.EndFrame);
+            HdriTransformAnimator = null;
+            if (_HdriPivot is not null)
+            {
+                animators.Add(HdriTransformAnimator = new TransformAnimator(_HdriPivot.transform));
+            }
+
+            if (didSceneReload)
+            {
+                _ComposedAnimator = null;
+            }
+
+            _ComposedAnimator ??= new ComposedAnimator() { Animators = animators.ToArray() };
+
+            _ComposedAnimator.SetFrameRange(Settings.StartFrame, Settings.EndFrame);
+        }
 
         // start & end handlers
         var playerRenderersToToggle = Settings.HidePlayerModel

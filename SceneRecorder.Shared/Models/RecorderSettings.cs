@@ -22,6 +22,12 @@ public sealed class RecorderSettings
     [JsonProperty("resolution_y")]
     public required int ResolutionY { get; init; }
 
+    [JsonProperty("record_hdri")]
+    public required bool RecordHdri { get; init; }
+
+    [JsonProperty("record_depth")]
+    public required bool RecordDepth { get; init; }
+
     [JsonProperty("hdri_face_size")]
     public required int HdriFaceSize { get; init; }
 

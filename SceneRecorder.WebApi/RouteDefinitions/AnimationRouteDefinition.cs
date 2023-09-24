@@ -20,21 +20,26 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
                 : null;
         });
 
-        MapAnimatorRoutes(serverBuilder, "free_camera/transform", () => context.OutputRecorder.FreeCameraTransformAnimator!);
-        MapAnimatorRoutes(serverBuilder, "free_camera/camera_info", () => context.OutputRecorder.FreeCameraInfoAnimator!);
-        MapAnimatorRoutes(serverBuilder, "hdri_pivot/transform", () => context.OutputRecorder.HdriTransformAnimator!);
-        MapAnimatorRoutes(serverBuilder, "time/scale", () => context.OutputRecorder.TimeScaleAnimator!);
+        MapAnimatorRoutes(serverBuilder, "free_camera/transform", () => context.OutputRecorder.FreeCameraTransformAnimator);
+        MapAnimatorRoutes(serverBuilder, "free_camera/camera_info", () => context.OutputRecorder.FreeCameraInfoAnimator);
+        MapAnimatorRoutes(serverBuilder, "hdri_pivot/transform", () => context.OutputRecorder.HdriTransformAnimator);
+        MapAnimatorRoutes(serverBuilder, "time/scale", () => context.OutputRecorder.TimeScaleAnimator);
     }
 
-    private void MapAnimatorRoutes<T>(HttpServerBuilder serverBuilder, string routeName, Func<IAnimator<T>> getAnimator)
+    private void MapAnimatorRoutes<T>(HttpServerBuilder serverBuilder, string routeName, Func<IAnimator<T>?> getAnimator)
     {
         serverBuilder.Map(HttpMethod.Put, $"animation/{routeName}/value", (Request request, int from_frame, int to_frame) =>
         {
             var animator = getAnimator();
-            var allFameNumbers = animator.GetFrameNumbers();
+            if (animator is null)
+            {
+                return ResponseFabric.NotFound("animator not found");
+            }
+
+            var allFrameNumbers = animator.GetFrameNumbers();
 
             if (from_frame > to_frame
-                || (allFameNumbers.Contains(from_frame), allFameNumbers.Contains(to_frame)) is not (true, true))
+                || !(allFrameNumbers.Contains(from_frame) && allFrameNumbers.Contains(to_frame)))
             {
                 return ResponseFabric.BadRequest("invalid frame range");
             }
@@ -52,6 +57,11 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
         serverBuilder.Map(HttpMethod.Put, $"animation/{routeName}/values", (Request request, int from_frame) =>
         {
             var animator = getAnimator();
+            if (animator is null)
+            {
+                return ResponseFabric.NotFound("animator not found");
+            }
+
             var allFrameNumbers = animator.GetFrameNumbers();
 
             if (allFrameNumbers.Contains(from_frame) is false)
