@@ -29,7 +29,7 @@ jobs:
                 tag: "v${{fromJson(steps.read-manifest.outputs.manifest).version}}"
               env:
                 GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-            
+
             - name: Output Version Info
               id: out
               run: | 
