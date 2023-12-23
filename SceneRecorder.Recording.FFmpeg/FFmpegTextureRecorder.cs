@@ -17,7 +17,12 @@ public sealed class FFmpegTextureRecorder : IDisposable
 
     private bool _IsDisposed = false;
 
-    public FFmpegTextureRecorder(IModConsole modConsole, Texture sourceTexture, int framerate, string outputFilePath)
+    public FFmpegTextureRecorder(
+        IModConsole modConsole,
+        Texture sourceTexture,
+        int framerate,
+        string outputFilePath
+    )
     {
         SourceTexture = sourceTexture;
         Framerate = framerate;
@@ -39,9 +44,18 @@ public sealed class FFmpegTextureRecorder : IDisposable
             .Add("-pix_fmt yuv420p")
             .Add($"\"{OutputFilePath}\"");
 
-        if (FFmpegAsyncGPUReadback.TryCreate(modConsole, ffmpegArguments.ToString(), out _FFmpegReadback!) is false)
+        if (
+            FFmpegAsyncGPUReadback.TryCreate(
+                modConsole,
+                ffmpegArguments.ToString(),
+                out _FFmpegReadback!
+            )
+            is false
+        )
         {
-            throw new InvalidOperationException($"failed to create {nameof(FFmpegAsyncGPUReadback)}");
+            throw new InvalidOperationException(
+                $"failed to create {nameof(FFmpegAsyncGPUReadback)}"
+            );
         }
     }
 

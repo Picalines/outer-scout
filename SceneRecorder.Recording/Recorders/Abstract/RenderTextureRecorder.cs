@@ -39,7 +39,12 @@ internal abstract class RenderTextureRecorder : RecorderComponent
         if (TargetFile is null)
             throw new ArgumentException(nameof(TargetFile));
 
-        _FFmpegRecorder = new FFmpegTextureRecorder(ModConsole, _SourceRenderTexture, FrameRate, TargetFile);
+        _FFmpegRecorder = new FFmpegTextureRecorder(
+            ModConsole,
+            _SourceRenderTexture,
+            FrameRate,
+            TargetFile
+        );
 
         if (_InitializedFrameEnded is false)
         {

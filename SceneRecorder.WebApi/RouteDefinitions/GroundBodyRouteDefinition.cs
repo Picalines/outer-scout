@@ -16,32 +16,46 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
     {
         using var precondition = serverBuilder.UseInPlayableScenePrecondition();
 
-        serverBuilder.Map(HttpMethod.Get, "ground_body/name", request =>
-        {
-            return LocatorExtensions.GetCurrentGroundBody() is { } groundBody
-                ? ResponseFabric.Ok(groundBody.name)
-                : ResponseFabric.NotFound();
-        });
-
-        serverBuilder.Map(HttpMethod.Get, "ground_body/sectors/current/path", request =>
-        {
-            var playerSectorDetector = Locator.GetPlayerDetector().GetComponent<SectorDetector>();
-            var lastEnteredSector = playerSectorDetector.GetLastEnteredSector();
-
-            return ResponseFabric.Ok(lastEnteredSector.transform.GetPath());
-        });
-
-        serverBuilder.Map(HttpMethod.Post, "ground_body/mesh_list", (Request request, string output_file_path) =>
-        {
-            if (LocatorExtensions.GetCurrentGroundBody() is not { } groundBody)
+        serverBuilder.Map(
+            HttpMethod.Get,
+            "ground_body/name",
+            request =>
             {
-                return ResponseFabric.NotFound();
+                return LocatorExtensions.GetCurrentGroundBody() is { } groundBody
+                    ? ResponseFabric.Ok(groundBody.name)
+                    : ResponseFabric.NotFound();
             }
+        );
 
-            var meshInfo = GroundBodyMeshExport.CaptureMeshInfo(groundBody.gameObject);
+        serverBuilder.Map(
+            HttpMethod.Get,
+            "ground_body/sectors/current/path",
+            request =>
+            {
+                var playerSectorDetector = Locator
+                    .GetPlayerDetector()
+                    .GetComponent<SectorDetector>();
+                var lastEnteredSector = playerSectorDetector.GetLastEnteredSector();
 
-            File.WriteAllText(output_file_path, JsonConvert.SerializeObject(meshInfo));
-            return ResponseFabric.Created();
-        });
+                return ResponseFabric.Ok(lastEnteredSector.transform.GetPath());
+            }
+        );
+
+        serverBuilder.Map(
+            HttpMethod.Post,
+            "ground_body/mesh_list",
+            (Request request, string output_file_path) =>
+            {
+                if (LocatorExtensions.GetCurrentGroundBody() is not { } groundBody)
+                {
+                    return ResponseFabric.NotFound();
+                }
+
+                var meshInfo = GroundBodyMeshExport.CaptureMeshInfo(groundBody.gameObject);
+
+                File.WriteAllText(output_file_path, JsonConvert.SerializeObject(meshInfo));
+                return ResponseFabric.Created();
+            }
+        );
     }
 }

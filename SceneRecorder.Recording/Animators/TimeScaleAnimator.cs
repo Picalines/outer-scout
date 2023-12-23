@@ -6,9 +6,8 @@ internal sealed class TimeScaleAnimator : Animator<float>
 {
     public static TimeScaleAnimator Instance { get; } = new();
 
-    private TimeScaleAnimator() : base(1)
-    {
-    }
+    private TimeScaleAnimator()
+        : base(1) { }
 
     protected override void ApplyValue(float value)
     {

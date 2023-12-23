@@ -1,8 +1,8 @@
-﻿using OWML.Common;
-using Picalines.OuterWilds.SceneRecorder.WebApi.Http.Extensions;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Concurrent;
 using System.Net;
+using OWML.Common;
+using Picalines.OuterWilds.SceneRecorder.WebApi.Http.Extensions;
 using UnityEngine;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
@@ -29,7 +29,9 @@ public class HttpServer : MonoBehaviour
     {
         if (Listening)
         {
-            throw new InvalidOperationException($"{nameof(Configure)} method called before {nameof(StopListening)}");
+            throw new InvalidOperationException(
+                $"{nameof(Configure)} method called before {nameof(StopListening)}"
+            );
         }
 
         if (baseUrl.EndsWith("/") is false)
@@ -50,12 +52,17 @@ public class HttpServer : MonoBehaviour
     {
         if (Listening)
         {
-            throw new InvalidOperationException($"{nameof(StartListening)} method called before {nameof(StopListening)}");
+            throw new InvalidOperationException(
+                $"{nameof(StartListening)} method called before {nameof(StopListening)}"
+            );
         }
 
         Listening = true;
 
-        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: started listening at {_HttpListener.Prefixes.Single()}", MessageType.Info);
+        ModConsole?.WriteLine(
+            $"{nameof(SceneRecorder)} API: started listening at {_HttpListener.Prefixes.Single()}",
+            MessageType.Info
+        );
 
         Task.Run(Listen);
     }
@@ -64,7 +71,9 @@ public class HttpServer : MonoBehaviour
     {
         if (Listening is false)
         {
-            throw new InvalidOperationException($"{nameof(StopListening)} method called before {nameof(StartListening)}");
+            throw new InvalidOperationException(
+                $"{nameof(StopListening)} method called before {nameof(StartListening)}"
+            );
         }
 
         Listening = false;
@@ -108,7 +117,12 @@ public class HttpServer : MonoBehaviour
             }
 
             string requestContent;
-            using (var requestContentReader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding))
+            using (
+                var requestContentReader = new StreamReader(
+                    context.Request.InputStream,
+                    context.Request.ContentEncoding
+                )
+            )
             {
                 requestContent = requestContentReader.ReadToEnd();
             }
@@ -120,7 +134,9 @@ public class HttpServer : MonoBehaviour
 
             if (requestHandler is not null)
             {
-                _UnityThreadActionQueue.Enqueue(() => HandleRequest(context, request, requestHandler));
+                _UnityThreadActionQueue.Enqueue(
+                    () => HandleRequest(context, request, requestHandler)
+                );
             }
             else
             {
@@ -137,7 +153,10 @@ public class HttpServer : MonoBehaviour
 
     private void HandleRequest(HttpListenerContext context, Request request, RequestHandler handler)
     {
-        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: handling {request.HttpMethod} request at '{request.Uri}'", MessageType.Info);
+        ModConsole?.WriteLine(
+            $"{nameof(SceneRecorder)} API: handling {request.HttpMethod} request at '{request.Uri}'",
+            MessageType.Info
+        );
 
         var response = handler.Handle(request);
 
@@ -145,9 +164,14 @@ public class HttpServer : MonoBehaviour
 
         if (isInternalError)
         {
-            var content = response is SyncResponse { Content: var syncContent } ? syncContent : "<cannot read async content>";
+            var content = response is SyncResponse { Content: var syncContent }
+                ? syncContent
+                : "<cannot read async content>";
 
-            ModConsole?.WriteLine($"{nameof(SceneRecorder)} API internal error: {content}", MessageType.Error);
+            ModConsole?.WriteLine(
+                $"{nameof(SceneRecorder)} API internal error: {content}",
+                MessageType.Error
+            );
         }
 
         switch (response)
@@ -162,15 +186,29 @@ public class HttpServer : MonoBehaviour
                 break;
 
             case CoroutineResponse coroutineResponse:
-                StartCoroutine(CoroutineRequestHandler(request.HttpMethod, handler.Route, context.Response, coroutineResponse));
+                StartCoroutine(
+                    CoroutineRequestHandler(
+                        request.HttpMethod,
+                        handler.Route,
+                        context.Response,
+                        coroutineResponse
+                    )
+                );
                 break;
 
             default:
-                throw new NotSupportedException($"{response.GetType().FullName} response type is not supported");
+                throw new NotSupportedException(
+                    $"{response.GetType().FullName} response type is not supported"
+                );
         }
     }
 
-    private IEnumerator CoroutineRequestHandler(HttpMethod httpMethod, Route route, HttpListenerResponse listenerResponse, CoroutineResponse coroutineResponse)
+    private IEnumerator CoroutineRequestHandler(
+        HttpMethod httpMethod,
+        Route route,
+        HttpListenerResponse listenerResponse,
+        CoroutineResponse coroutineResponse
+    )
     {
         var coroutine = coroutineResponse.Coroutine;
 
@@ -192,7 +230,9 @@ public class HttpServer : MonoBehaviour
                         MessageType.Error
                     );
 
-                    ModConsole?.WriteLine($"{exception.GetType().Name}: {exception.Message}\n{exception.StackTrace}");
+                    ModConsole?.WriteLine(
+                        $"{exception.GetType().Name}: {exception.Message}\n{exception.StackTrace}"
+                    );
                     break;
                 }
 
@@ -214,7 +254,9 @@ public class HttpServer : MonoBehaviour
 
         ModConsole?.WriteLine(
             $"{nameof(SceneRecorder)} API: sent response {coroutineResponse.StatusCode} to {httpMethod} request at '{route}'",
-            coroutineResponse.StatusCode is HttpStatusCode.InternalServerError ? MessageType.Error : MessageType.Info
+            coroutineResponse.StatusCode is HttpStatusCode.InternalServerError
+                ? MessageType.Error
+                : MessageType.Info
         );
     }
 

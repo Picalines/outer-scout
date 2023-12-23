@@ -1,5 +1,5 @@
-﻿using OWML.Common;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
+using OWML.Common;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -15,7 +15,11 @@ internal sealed class FFmpegAsyncGPUReadback : IDisposable
 
     private readonly List<AsyncGPUReadbackRequest> _ReadbackQueue = new(4);
 
-    public static bool TryCreate(IModConsole modConsole, string arguments, [NotNullWhen(true)] out FFmpegAsyncGPUReadback? session)
+    public static bool TryCreate(
+        IModConsole modConsole,
+        string arguments,
+        [NotNullWhen(true)] out FFmpegAsyncGPUReadback? session
+    )
     {
         if (SystemInfo.supportsAsyncGPUReadback is false)
         {
@@ -85,7 +89,13 @@ internal sealed class FFmpegAsyncGPUReadback : IDisposable
             return;
         }
 
-        var tempRenderTexture = RenderTexture.GetTemporary(source.width, source.height, 0, RenderTextureFormat.ARGB32);
+        var tempRenderTexture = RenderTexture.GetTemporary(
+            source.width,
+            source.height,
+            0,
+            RenderTextureFormat.ARGB32
+        );
+
         Graphics.Blit(source, tempRenderTexture, new Vector2(1, -1), new Vector2(0, 1));
 
         _ReadbackQueue.Add(AsyncGPUReadback.Request(tempRenderTexture));

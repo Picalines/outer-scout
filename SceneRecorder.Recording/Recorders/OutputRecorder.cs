@@ -1,10 +1,10 @@
-﻿using OWML.Common;
+﻿using System.Diagnostics.CodeAnalysis;
+using OWML.Common;
 using Picalines.OuterWilds.SceneRecorder.Recording.Animators;
 using Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
 using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
 using Picalines.OuterWilds.SceneRecorder.Shared.Interfaces;
 using Picalines.OuterWilds.SceneRecorder.Shared.Models;
-using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -85,7 +85,10 @@ public sealed class OutputRecorder : RecorderComponent
 
         _OnRecordingFinished?.Invoke();
 
-        ModConsole?.WriteLine($"Recording finished ({Settings!.OutputDirectory})", MessageType.Success);
+        ModConsole?.WriteLine(
+            $"Recording finished ({Settings!.OutputDirectory})",
+            MessageType.Success
+        );
     }
 
     private void OnFrameStarted()
@@ -114,7 +117,9 @@ public sealed class OutputRecorder : RecorderComponent
         {
             if (IsRecording)
             {
-                throw new InvalidOperationException($"cannot modify {nameof(Settings)} while recording");
+                throw new InvalidOperationException(
+                    $"cannot modify {nameof(Settings)} while recording"
+                );
             }
 
             _Settings = value;
@@ -128,11 +133,13 @@ public sealed class OutputRecorder : RecorderComponent
         get
         {
             return IsRecording
-                || (Settings is not null
-                && ModConsole is not null
-                && CommonCameraAPI is not null
-                && LocatorExtensions.IsInPlayableScene()
-                && LocatorExtensions.GetFreeCamera() is not null);
+                || (
+                    Settings is not null
+                    && ModConsole is not null
+                    && CommonCameraAPI is not null
+                    && LocatorExtensions.IsInPlayableScene()
+                    && LocatorExtensions.GetFreeCamera() is not null
+                );
         }
     }
 
@@ -144,12 +151,19 @@ public sealed class OutputRecorder : RecorderComponent
         }
 
         var player = Locator.GetPlayerBody().OrNull();
-        var playerResources = Locator.GetPlayerTransform().OrNull()?.GetComponent<PlayerResources>();
+        var playerResources = Locator
+            .GetPlayerTransform()
+            .OrNull()
+            ?.GetComponent<PlayerResources>();
         var freeCamera = LocatorExtensions.GetFreeCamera();
         var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()?.transform;
         var deathManager = Locator.GetDeathManager().OrNull();
 
-        if ((player, playerResources, freeCamera, groundBodyTransform, deathManager) is not ({ }, { }, { }, { }, { }))
+        if (
+            (player, playerResources, freeCamera, groundBodyTransform, deathManager)
+            is not
+            ({ }, { }, { }, { }, { })
+        )
         {
             throw new InvalidOperationException("invalid scene state");
         }
@@ -166,7 +180,10 @@ public sealed class OutputRecorder : RecorderComponent
         // background recorder
         {
             var backgroundRecorder = freeCamera.gameObject.GetOrAddComponent<BackgroundRecorder>();
-            backgroundRecorder.TargetFile = Path.Combine(Settings.OutputDirectory, "background.mp4");
+            backgroundRecorder.TargetFile = Path.Combine(
+                Settings.OutputDirectory,
+                "background.mp4"
+            );
             (backgroundRecorder.Width, backgroundRecorder.Height) = Settings.Resolution;
             backgroundRecorder.FrameRate = Settings.FrameRate;
             backgroundRecorder.ModConsole = ModConsole!;
@@ -195,8 +212,8 @@ public sealed class OutputRecorder : RecorderComponent
         // hdri recorder
         if (Settings.RecordHdri)
         {
-            _HdriPivot = _HdriPivot.OrNull()
-                ?? new GameObject($"{nameof(SceneRecorder)} HDRI Pivot");
+            _HdriPivot =
+                _HdriPivot.OrNull() ?? new GameObject($"{nameof(SceneRecorder)} HDRI Pivot");
 
             _HdriPivot.transform.parent = groundBodyTransform;
 
@@ -220,10 +237,12 @@ public sealed class OutputRecorder : RecorderComponent
             var animators = new List<IAnimator>
             {
                 (FreeCameraTransformAnimator = new TransformAnimator(freeCamera.transform)),
-                (FreeCameraInfoAnimator = new ComposedAnimator<CameraInfo>()
-                {
-                    Animators = cameraInfoAnimators.ToArray(),
-                }),
+                (
+                    FreeCameraInfoAnimator = new ComposedAnimator<CameraInfo>()
+                    {
+                        Animators = cameraInfoAnimators.ToArray(),
+                    }
+                ),
                 (TimeScaleAnimator = Animators.TimeScaleAnimator.Instance),
             };
 
@@ -245,7 +264,8 @@ public sealed class OutputRecorder : RecorderComponent
 
         // start & end handlers
         var playerRenderersToToggle = Settings.HidePlayerModel
-            ? player.gameObject.GetComponentsInChildren<Renderer>()
+            ? player
+                .gameObject.GetComponentsInChildren<Renderer>()
                 .Where(renderer => renderer.enabled)
                 .ToArray()
             : Array.Empty<Renderer>();

@@ -1,5 +1,5 @@
-﻿using OWML.Common;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using OWML.Common;
 using Unity.Collections;
 
 // Modified from: https://github.com/keijiro/FFmpegOut
@@ -31,16 +31,18 @@ internal sealed class FFmpegPipe : IDisposable
     {
         _ModConsole = modConsole;
 
-        _FFmpegProcess = Process.Start(new ProcessStartInfo()
-        {
-            FileName = "ffmpeg",
-            Arguments = arguments,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            RedirectStandardInput = true,
-            RedirectStandardOutput = false,
-            RedirectStandardError = true,
-        });
+        _FFmpegProcess = Process.Start(
+            new ProcessStartInfo()
+            {
+                FileName = "ffmpeg",
+                Arguments = arguments,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = false,
+                RedirectStandardError = true,
+            }
+        );
 
         _FFmpegProcess.ErrorDataReceived += (sender, args) => OutputReceived?.Invoke(args.Data);
         _FFmpegProcess.BeginErrorReadLine();
@@ -60,7 +62,10 @@ internal sealed class FFmpegPipe : IDisposable
 
     public void PushFrameData(NativeArray<byte> data)
     {
-        lock (_CopyQueue) _CopyQueue.Enqueue(data);
+        lock (_CopyQueue)
+        {
+            _CopyQueue.Enqueue(data);
+        }
 
         _CopyEvent.Set();
     }
@@ -122,11 +127,19 @@ internal sealed class FFmpegPipe : IDisposable
             while (_CopyQueue.Count > 0)
             {
                 NativeArray<byte> source;
-                lock (_CopyQueue) source = _CopyQueue.Peek();
+                lock (_CopyQueue)
+                {
+                    source = _CopyQueue.Peek();
+                }
 
                 byte[]? buffer = null;
                 if (_FreeBuffer.Count > 0)
-                    lock (_FreeBuffer) buffer = _FreeBuffer.Dequeue();
+                {
+                    lock (_FreeBuffer)
+                    {
+                        buffer = _FreeBuffer.Dequeue();
+                    }
+                }
 
                 if ((buffer?.Length ?? -1) == source.Length)
                 {
@@ -137,10 +150,18 @@ internal sealed class FFmpegPipe : IDisposable
                     buffer = source.ToArray();
                 }
 
-                lock (_PipeQueue) _PipeQueue.Enqueue(buffer!);
+                lock (_PipeQueue)
+                {
+                    _PipeQueue.Enqueue(buffer!);
+                }
+
                 _PipeEvent.Set();
 
-                lock (_CopyQueue) _CopyQueue.Dequeue();
+                lock (_CopyQueue)
+                {
+                    _CopyQueue.Dequeue();
+                }
+
                 _CopiedEvent.Set();
             }
         }
@@ -157,12 +178,18 @@ internal sealed class FFmpegPipe : IDisposable
             while (_PipeQueue.Count > 0)
             {
                 byte[] buffer;
-                lock (_PipeQueue) buffer = _PipeQueue.Dequeue();
+                lock (_PipeQueue)
+                {
+                    buffer = _PipeQueue.Dequeue();
+                }
 
                 ffmpegPipe.Write(buffer, 0, buffer.Length);
                 ffmpegPipe.Flush();
 
-                lock (_FreeBuffer) _FreeBuffer.Enqueue(buffer);
+                lock (_FreeBuffer)
+                {
+                    _FreeBuffer.Enqueue(buffer);
+                }
 
                 _PipedEvent.Set();
             }

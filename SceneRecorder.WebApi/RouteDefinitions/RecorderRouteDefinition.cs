@@ -18,66 +18,94 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
 
         var outputRecorder = context.OutputRecorder;
 
-        serverBuilder.Map(HttpMethod.Get, "recorder/settings", request =>
-        {
-            return outputRecorder.Settings is { } sceneSettings
-                ? ResponseFabric.Ok(sceneSettings)
-                : ResponseFabric.NotFound();
-        });
-
-        serverBuilder.Map(HttpMethod.Put, "recorder/settings", request =>
-        {
-            if (outputRecorder.IsRecording)
+        serverBuilder.Map(
+            HttpMethod.Get,
+            "recorder/settings",
+            request =>
             {
-                return ResponseFabric.ServiceUnavailable();
+                return outputRecorder.Settings is { } sceneSettings
+                    ? ResponseFabric.Ok(sceneSettings)
+                    : ResponseFabric.NotFound();
             }
+        );
 
-            var newSceneSettings = request.ParseContentJson<RecorderSettings>();
-            outputRecorder.Settings = newSceneSettings;
-
-            return ResponseFabric.Ok();
-        });
-
-        serverBuilder.Map(HttpMethod.Get, "recorder/is_able_to_record", request =>
-        {
-            return ResponseFabric.Ok(outputRecorder.IsAbleToRecord);
-        });
-
-        serverBuilder.Map(HttpMethod.Get, "recorder/frames_recorded", request =>
-        {
-            return outputRecorder.IsAbleToRecord
-                ? ResponseFabric.Ok(outputRecorder.FramesRecorded)
-                : ResponseFabric.ServiceUnavailable();
-        });
-
-        serverBuilder.Map(HttpMethod.Get, "recorder/frames_recorded_async", request =>
-        {
-            return outputRecorder.IsAbleToRecord
-                ? ResponseFabric.Ok(FramesRecordedCoroutine(outputRecorder))
-                : ResponseFabric.ServiceUnavailable();
-        });
-
-        serverBuilder.Map(HttpMethod.Get, "recorder/enabled", request =>
-        {
-            return ResponseFabric.Ok(outputRecorder.enabled);
-        });
-
-        serverBuilder.Map(HttpMethod.Put, "recorder/enabled", request =>
-        {
-            var shouldRecord = request.ParseContentJson<bool>();
-
-            if ((shouldRecord, outputRecorder.IsAbleToRecord) is (true, false))
+        serverBuilder.Map(
+            HttpMethod.Put,
+            "recorder/settings",
+            request =>
             {
-                return ResponseFabric.ServiceUnavailable();
-            }
+                if (outputRecorder.IsRecording)
+                {
+                    return ResponseFabric.ServiceUnavailable();
+                }
 
-            if (shouldRecord != outputRecorder.IsRecording)
+                var newSceneSettings = request.ParseContentJson<RecorderSettings>();
+                outputRecorder.Settings = newSceneSettings;
+
+                return ResponseFabric.Ok();
+            }
+        );
+
+        serverBuilder.Map(
+            HttpMethod.Get,
+            "recorder/is_able_to_record",
+            request =>
             {
-                outputRecorder.enabled = shouldRecord;
+                return ResponseFabric.Ok(outputRecorder.IsAbleToRecord);
             }
+        );
 
-            return ResponseFabric.Ok();
-        });
+        serverBuilder.Map(
+            HttpMethod.Get,
+            "recorder/frames_recorded",
+            request =>
+            {
+                return outputRecorder.IsAbleToRecord
+                    ? ResponseFabric.Ok(outputRecorder.FramesRecorded)
+                    : ResponseFabric.ServiceUnavailable();
+            }
+        );
+
+        serverBuilder.Map(
+            HttpMethod.Get,
+            "recorder/frames_recorded_async",
+            request =>
+            {
+                return outputRecorder.IsAbleToRecord
+                    ? ResponseFabric.Ok(FramesRecordedCoroutine(outputRecorder))
+                    : ResponseFabric.ServiceUnavailable();
+            }
+        );
+
+        serverBuilder.Map(
+            HttpMethod.Get,
+            "recorder/enabled",
+            request =>
+            {
+                return ResponseFabric.Ok(outputRecorder.enabled);
+            }
+        );
+
+        serverBuilder.Map(
+            HttpMethod.Put,
+            "recorder/enabled",
+            request =>
+            {
+                var shouldRecord = request.ParseContentJson<bool>();
+
+                if ((shouldRecord, outputRecorder.IsAbleToRecord) is (true, false))
+                {
+                    return ResponseFabric.ServiceUnavailable();
+                }
+
+                if (shouldRecord != outputRecorder.IsRecording)
+                {
+                    outputRecorder.enabled = shouldRecord;
+                }
+
+                return ResponseFabric.Ok();
+            }
+        );
     }
 
     private IEnumerator FramesRecordedCoroutine(OutputRecorder outputRecorder)

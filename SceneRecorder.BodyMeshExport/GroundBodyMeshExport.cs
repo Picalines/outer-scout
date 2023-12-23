@@ -16,32 +16,43 @@ public static class GroundBodyMeshExport
 
         foreach (var (sector, meshFilter) in renderedMeshFilters)
         {
-            var sectorMeshInfo = sector is null ? noSectorMeshInfo : GetOrCreate(sectorMeshInfos, sector, CreateEmptySectorMeshInfoFromSector);
+            var sectorMeshInfo = sector is null
+                ? noSectorMeshInfo
+                : GetOrCreate(sectorMeshInfos, sector, CreateEmptySectorMeshInfoFromSector);
 
             var (meshGameObject, meshTransform) = (meshFilter.gameObject, meshFilter.transform);
 
             var transformData = TransformModel.FromGlobalTransform(meshTransform);
 
-            if (StreamingManager.s_tableLoaded
+            if (
+                StreamingManager.s_tableLoaded
                 && meshFilter.TryGetComponent<StreamingMeshHandle>(out var streamingHandle)
-                && StreamingManager.s_streamingAssetBundleMap.TryGetValue(streamingHandle.assetBundle, out var assetBundle)
-                && assetBundle is StreamingMeshAssetBundle { isLoaded: true } meshAssetBundle)
+                && StreamingManager.s_streamingAssetBundleMap.TryGetValue(
+                    streamingHandle.assetBundle,
+                    out var assetBundle
+                )
+                && assetBundle is StreamingMeshAssetBundle { isLoaded: true } meshAssetBundle
+            )
             {
                 var streamedMeshes = (sectorMeshInfo.StreamedMeshes as List<MeshInfo>)!;
-                streamedMeshes.Add(new MeshInfo()
-                {
-                    Path = meshAssetBundle._meshNamesByID[streamingHandle.meshIndex],
-                    Transform = transformData,
-                });
+                streamedMeshes.Add(
+                    new MeshInfo()
+                    {
+                        Path = meshAssetBundle._meshNamesByID[streamingHandle.meshIndex],
+                        Transform = transformData,
+                    }
+                );
             }
             else
             {
                 var plainMeshes = (sectorMeshInfo.PlainMeshes as List<MeshInfo>)!;
-                plainMeshes.Add(new MeshInfo()
-                {
-                    Path = meshGameObject.transform.GetPath(),
-                    Transform = transformData,
-                });
+                plainMeshes.Add(
+                    new MeshInfo()
+                    {
+                        Path = meshGameObject.transform.GetPath(),
+                        Transform = transformData,
+                    }
+                );
             }
         }
 
@@ -75,7 +86,10 @@ public static class GroundBodyMeshExport
         }
     }
 
-    private static IEnumerable<(Sector? Sector, T Component)> GetComponentsInChildrenWithSector<T>(GameObject gameObject, Sector? parentSector = null)
+    private static IEnumerable<(Sector? Sector, T Component)> GetComponentsInChildrenWithSector<T>(
+        GameObject gameObject,
+        Sector? parentSector = null
+    )
         where T : Component
     {
         Sector? sector = gameObject.GetComponent<Sector>() ?? parentSector;
@@ -87,7 +101,9 @@ public static class GroundBodyMeshExport
 
         foreach (Transform child in gameObject.transform)
         {
-            foreach (var recursivePair in GetComponentsInChildrenWithSector<T>(child.gameObject, sector))
+            foreach (
+                var recursivePair in GetComponentsInChildrenWithSector<T>(child.gameObject, sector)
+            )
             {
                 yield return recursivePair;
             }

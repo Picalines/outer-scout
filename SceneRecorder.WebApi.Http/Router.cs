@@ -34,7 +34,11 @@ internal sealed class Router
             {
                 currentNode = currentNode.PlainChildren[urlRouteSegment];
             }
-            else if (urlRouteSegment.Length > 0 && currentNode.ParameterChild is { ChildNode: var parameterChild, ParameterName: var parameterName })
+            else if (
+                urlRouteSegment.Length > 0
+                && currentNode.ParameterChild
+                    is { ChildNode: var parameterChild, ParameterName: var parameterName }
+            )
             {
                 currentNode = parameterChild;
                 request.MutableRouteParameters[parameterName] = urlRouteSegment;
@@ -93,7 +97,9 @@ internal sealed class Router
                 {
                     if (currentNode.Handlers.ContainsKey(route.HttpMethod))
                     {
-                        throw new InvalidOperationException($"{route.HttpMethod.Method} {route} route is ambiguous");
+                        throw new InvalidOperationException(
+                            $"{route.HttpMethod.Method} {route} route is ambiguous"
+                        );
                     }
 
                     currentNode.Handlers[route.HttpMethod] = requestHandler;
@@ -104,7 +110,9 @@ internal sealed class Router
             {
                 if (root.Handlers.ContainsKey(route.HttpMethod))
                 {
-                    throw new InvalidOperationException($"index {route.HttpMethod.Method} route is ambiguous");
+                    throw new InvalidOperationException(
+                        $"index {route.HttpMethod.Method} route is ambiguous"
+                    );
                 }
 
                 root.Handlers[route.HttpMethod] = requestHandler;

@@ -17,57 +17,80 @@ internal sealed class FuncRequestHandler : RequestHandler
         return _HandlerFunc.Invoke(request);
     }
 
-    public static FuncRequestHandler CreateUnchecked(Route route, Func<Request, IResponse> handlerFunc)
-        => new(route, handlerFunc);
+    public static FuncRequestHandler CreateUnchecked(
+        Route route,
+        Func<Request, IResponse> handlerFunc
+    ) => new(route, handlerFunc);
 
-    public static FuncRequestHandler Create(Route route, Func<Request, IResponse> handlerFunc)
-        => new(route, CreateHandler(route, handlerFunc));
+    public static FuncRequestHandler Create(Route route, Func<Request, IResponse> handlerFunc) =>
+        new(route, CreateHandler(route, handlerFunc));
 
-    public static FuncRequestHandler Create<T1>(Route route, Func<Request, T1, IResponse> handlerFunc)
-        => new(route, CreateHandler(route, handlerFunc));
+    public static FuncRequestHandler Create<T1>(
+        Route route,
+        Func<Request, T1, IResponse> handlerFunc
+    ) => new(route, CreateHandler(route, handlerFunc));
 
-    public static FuncRequestHandler Create<T1, T2>(Route route, Func<Request, T1, T2, IResponse> handlerFunc)
-        => new(route, CreateHandler(route, handlerFunc));
+    public static FuncRequestHandler Create<T1, T2>(
+        Route route,
+        Func<Request, T1, T2, IResponse> handlerFunc
+    ) => new(route, CreateHandler(route, handlerFunc));
 
-    public static FuncRequestHandler Create<T1, T2, T3>(Route route, Func<Request, T1, T2, T3, IResponse> handlerFunc)
-        => new(route, CreateHandler(route, handlerFunc));
+    public static FuncRequestHandler Create<T1, T2, T3>(
+        Route route,
+        Func<Request, T1, T2, T3, IResponse> handlerFunc
+    ) => new(route, CreateHandler(route, handlerFunc));
 
-    public static FuncRequestHandler Create<T1, T2, T3, T4>(Route route, Func<Request, T1, T2, T3, T4, IResponse> handlerFunc)
-        => new(route, CreateHandler(route, handlerFunc));
+    public static FuncRequestHandler Create<T1, T2, T3, T4>(
+        Route route,
+        Func<Request, T1, T2, T3, T4, IResponse> handlerFunc
+    ) => new(route, CreateHandler(route, handlerFunc));
 
-    public static FuncRequestHandler Create<T1, T2, T3, T4, T5>(Route route, Func<Request, T1, T2, T3, T4, T5, IResponse> handlerFunc)
-        => new(route, CreateHandler(route, handlerFunc));
+    public static FuncRequestHandler Create<T1, T2, T3, T4, T5>(
+        Route route,
+        Func<Request, T1, T2, T3, T4, T5, IResponse> handlerFunc
+    ) => new(route, CreateHandler(route, handlerFunc));
 
-    public static FuncRequestHandler Create<T1, T2, T3, T4, T5, T6>(Route route, Func<Request, T1, T2, T3, T4, T5, T6, IResponse> handlerFunc)
-        => new(route, CreateHandler(route, handlerFunc));
+    public static FuncRequestHandler Create<T1, T2, T3, T4, T5, T6>(
+        Route route,
+        Func<Request, T1, T2, T3, T4, T5, T6, IResponse> handlerFunc
+    ) => new(route, CreateHandler(route, handlerFunc));
 
-    public static FuncRequestHandler Create<T1, T2, T3, T4, T5, T6, T7>(Route route, Func<Request, T1, T2, T3, T4, T5, T6, T7, IResponse> handlerFunc)
-        => new(route, CreateHandler(route, handlerFunc));
+    public static FuncRequestHandler Create<T1, T2, T3, T4, T5, T6, T7>(
+        Route route,
+        Func<Request, T1, T2, T3, T4, T5, T6, T7, IResponse> handlerFunc
+    ) => new(route, CreateHandler(route, handlerFunc));
 
-    public static FuncRequestHandler Create<T1, T2, T3, T4, T5, T6, T7, T8>(Route route, Func<Request, T1, T2, T3, T4, T5, T6, T7, T8, IResponse> handlerFunc)
-        => new(route, CreateHandler(route, handlerFunc));
+    public static FuncRequestHandler Create<T1, T2, T3, T4, T5, T6, T7, T8>(
+        Route route,
+        Func<Request, T1, T2, T3, T4, T5, T6, T7, T8, IResponse> handlerFunc
+    ) => new(route, CreateHandler(route, handlerFunc));
 
     private static Func<Request, IResponse> CreateHandler(Route route, Delegate handlerFunc)
     {
-        var handlerParameters = handlerFunc.Method
-            .GetParameters()
+        var handlerParameters = handlerFunc
+            .Method.GetParameters()
             .Skip(1)
-            .Select((param, index) => new
-            {
-                Index = index,
-                param.Name,
-                TypeName = param.ParameterType.Name,
-                TypeConverter = TypeDescriptor.GetConverter(param.ParameterType),
-            })
+            .Select(
+                (param, index) =>
+                    new
+                    {
+                        Index = index,
+                        param.Name,
+                        TypeName = param.ParameterType.Name,
+                        TypeConverter = TypeDescriptor.GetConverter(param.ParameterType),
+                    }
+            )
             .ToDictionary(param => param.Name, param => param);
 
-        var queryParameterNames = new HashSet<string>(handlerParameters.Values
-            .Select(param => param.Name)
-            .Except(
-                route.Segments
-                .Where(segment => segment.Type is Route.SegmentType.Parameter)
-                .Select(segment => segment.Value)
-            ));
+        var queryParameterNames = new HashSet<string>(
+            handlerParameters
+                .Values.Select(param => param.Name)
+                .Except(
+                    route
+                        .Segments.Where(segment => segment.Type is Route.SegmentType.Parameter)
+                        .Select(segment => segment.Value)
+                )
+        );
 
         var queryParametersCount = queryParameterNames.Count;
 
@@ -79,18 +102,22 @@ internal sealed class FuncRequestHandler : RequestHandler
                     .Except(request.QueryParameters.Keys)
                     .First();
 
-                return ResponseFabric.BadRequest($"missing query parameter '{missingParameterName}'");
+                return ResponseFabric.BadRequest(
+                    $"missing query parameter '{missingParameterName}'"
+                );
             }
 
             if (request.QueryParameters.Count >= queryParametersCount)
             {
-                var unexpectedParameterName = request.QueryParameters.Keys
-                    .Except(queryParameterNames)
+                var unexpectedParameterName = request
+                    .QueryParameters.Keys.Except(queryParameterNames)
                     .FirstOrDefault();
 
                 if (unexpectedParameterName is not null)
                 {
-                    return ResponseFabric.BadRequest($"unexpected query parameter '{unexpectedParameterName}'");
+                    return ResponseFabric.BadRequest(
+                        $"unexpected query parameter '{unexpectedParameterName}'"
+                    );
                 }
             }
 
@@ -98,7 +125,9 @@ internal sealed class FuncRequestHandler : RequestHandler
 
             handlerArguments[0] = request;
 
-            foreach (var (name, strValue) in request.RouteParameters.Concat(request.QueryParameters))
+            foreach (
+                var (name, strValue) in request.RouteParameters.Concat(request.QueryParameters)
+            )
             {
                 if (handlerParameters.TryGetValue(name, out var handlerParameter) is false)
                 {
@@ -107,11 +136,14 @@ internal sealed class FuncRequestHandler : RequestHandler
 
                 try
                 {
-                    handlerArguments[1 + handlerParameter.Index] = handlerParameter.TypeConverter.ConvertFromInvariantString(strValue);
+                    handlerArguments[1 + handlerParameter.Index] =
+                        handlerParameter.TypeConverter.ConvertFromInvariantString(strValue);
                 }
                 catch (NotSupportedException)
                 {
-                    return ResponseFabric.BadRequest($"{handlerParameter.TypeName} expected in '{name}' parameter");
+                    return ResponseFabric.BadRequest(
+                        $"{handlerParameter.TypeName} expected in '{name}' parameter"
+                    );
                 }
             }
 

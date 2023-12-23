@@ -5,7 +5,11 @@ namespace Picalines.OuterWilds.SceneRecorder.Recording.Extensions;
 
 internal static class OWCameraExtensions
 {
-    public static OWCamera CopyTo(this OWCamera sourceOWCamera, GameObject cameraParent, bool copyPostProcessing = true)
+    public static OWCamera CopyTo(
+        this OWCamera sourceOWCamera,
+        GameObject cameraParent,
+        bool copyPostProcessing = true
+    )
     {
         cameraParent.SetActive(false);
 
@@ -20,7 +24,9 @@ internal static class OWCameraExtensions
 
         if (copyPostProcessing && sourceOWCamera.postProcessing != null)
         {
-            cameraParent.AddComponent<PostProcessingBehaviour>().profile = sourceOWCamera.postProcessing.profile;
+            cameraParent.AddComponent<PostProcessingBehaviour>().profile = sourceOWCamera
+                .postProcessing
+                .profile;
         }
 
         cameraParent.SetActive(true); // OWCamera.Awake

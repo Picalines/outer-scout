@@ -26,11 +26,16 @@ internal sealed class SceneRecorderMod : ModBehaviour
                 ? ModHelper.Console
                 : ModHelper.Console.WithFiltering((line, _) => !line.StartsWith("FFmpeg: "));
 
-            var commonCameraAPI = ModHelper.Interaction.TryGetModApi<ICommonCameraAPI>(CommonCameraAPIModId);
+            var commonCameraAPI = ModHelper.Interaction.TryGetModApi<ICommonCameraAPI>(
+                CommonCameraAPIModId
+            );
 
             if (commonCameraAPI is null)
             {
-                ModHelper.Console.WriteLine($"{CommonCameraAPIModId} is required for {nameof(SceneRecorder)}", MessageType.Error);
+                ModHelper.Console.WriteLine(
+                    $"{CommonCameraAPIModId} is required for {nameof(SceneRecorder)}",
+                    MessageType.Error
+                );
                 return;
             }
 

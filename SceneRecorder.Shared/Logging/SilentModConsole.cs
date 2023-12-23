@@ -8,19 +8,11 @@ public sealed class SilentModConsole : IModConsole
 
     private SilentModConsole() { }
 
-    public void WriteLine(params object[] objects)
-    {
-    }
+    public void WriteLine(params object[] objects) { }
 
-    public void WriteLine(string line)
-    {
-    }
+    public void WriteLine(string line) { }
 
-    public void WriteLine(string line, MessageType type)
-    {
-    }
+    public void WriteLine(string line, MessageType type) { }
 
-    public void WriteLine(string line, MessageType type, string senderType)
-    {
-    }
+    public void WriteLine(string line, MessageType type, string senderType) { }
 }

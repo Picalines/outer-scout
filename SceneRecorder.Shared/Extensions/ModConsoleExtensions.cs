@@ -5,12 +5,18 @@ namespace Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
 
 public static class ModConsoleExtensions
 {
-    public static IModConsole WithFiltering(this IModConsole modConsole, Func<string, MessageType, bool> keepLog)
+    public static IModConsole WithFiltering(
+        this IModConsole modConsole,
+        Func<string, MessageType, bool> keepLog
+    )
     {
         return new FilteredModConsole(modConsole, keepLog);
     }
 
-    public static IModConsole WithOnlyMessagesOfType(this IModConsole modConsole, params MessageType[] allowedMessageTypes)
+    public static IModConsole WithOnlyMessagesOfType(
+        this IModConsole modConsole,
+        params MessageType[] allowedMessageTypes
+    )
     {
         if (allowedMessageTypes.Length is 0)
         {
@@ -22,7 +28,10 @@ public static class ModConsoleExtensions
         return WithFiltering(modConsole, (_, type) => allowedMessageTypesHashSet.Contains(type));
     }
 
-    public static IModConsole WithoutMessagesOfType(this IModConsole modConsole, params MessageType[] notAllowedMessageTypes)
+    public static IModConsole WithoutMessagesOfType(
+        this IModConsole modConsole,
+        params MessageType[] notAllowedMessageTypes
+    )
     {
         if (notAllowedMessageTypes.Length is 0)
         {
@@ -31,6 +40,9 @@ public static class ModConsoleExtensions
 
         var notAllowedMessageTypesHashSet = new HashSet<MessageType>(notAllowedMessageTypes);
 
-        return WithFiltering(modConsole, (_, type) => !notAllowedMessageTypesHashSet.Contains(type));
+        return WithFiltering(
+            modConsole,
+            (_, type) => !notAllowedMessageTypesHashSet.Contains(type)
+        );
     }
 }

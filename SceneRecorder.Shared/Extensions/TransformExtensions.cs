@@ -7,7 +7,10 @@ public static class TransformExtensions
 {
     private static readonly ConditionalWeakTable<Transform, string> _CachedTransformPaths = new();
 
-    public static void CopyGlobalTransformTo(this Transform sourceTransform, Transform destinationTransform)
+    public static void CopyGlobalTransformTo(
+        this Transform sourceTransform,
+        Transform destinationTransform
+    )
     {
         destinationTransform.position = sourceTransform.position;
         destinationTransform.rotation = sourceTransform.rotation;
@@ -21,9 +24,10 @@ public static class TransformExtensions
             return path;
         }
 
-        path = transform.parent == null
-            ? transform.name
-            : $"{GetPath(transform.parent)}/{transform.name}";
+        path =
+            transform.parent == null
+                ? transform.name
+                : $"{GetPath(transform.parent)}/{transform.name}";
 
         _CachedTransformPaths.Add(transform, path);
 

@@ -15,7 +15,9 @@ internal sealed class ComposedRecorder : MonoBehaviour, IRecorder
         {
             if (IsRecording is true)
             {
-                throw new InvalidOperationException($"cannot modify {nameof(Recorders)} while recording");
+                throw new InvalidOperationException(
+                    $"cannot modify {nameof(Recorders)} while recording"
+                );
             }
 
             _Recorders = value;

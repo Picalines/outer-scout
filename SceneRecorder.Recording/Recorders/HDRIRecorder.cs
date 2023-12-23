@@ -100,9 +100,17 @@ internal sealed class HdriRecorder : RenderTextureRecorder
 
     private void OnFrameEnded()
     {
-        _CubemapFrameTexture!.ConvertToEquirect(_FlippedFrameSourceTexture, Camera.MonoOrStereoscopicEye.Mono);
+        _CubemapFrameTexture!.ConvertToEquirect(
+            _FlippedFrameSourceTexture,
+            Camera.MonoOrStereoscopicEye.Mono
+        );
 
-        Graphics.Blit(_FlippedFrameSourceTexture, _SourceRenderTexture, new Vector2(1, -1), new Vector2(0, 1));
+        Graphics.Blit(
+            _FlippedFrameSourceTexture,
+            _SourceRenderTexture,
+            new Vector2(1, -1),
+            new Vector2(0, 1)
+        );
     }
 
     private void OnRecordingFinished()

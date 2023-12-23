@@ -11,7 +11,13 @@ public abstract class VectorJsonConverter<TVector> : JsonConverter<TVector>
 
     protected abstract void SetAxis(ref TVector vector, int axisIndex, double axisValue);
 
-    public override TVector ReadJson(JsonReader reader, Type objectType, TVector existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override TVector ReadJson(
+        JsonReader reader,
+        Type objectType,
+        TVector existingValue,
+        bool hasExistingValue,
+        JsonSerializer serializer
+    )
     {
         TVector vector = default;
 
@@ -32,7 +38,11 @@ public abstract class VectorJsonConverter<TVector> : JsonConverter<TVector>
         return vector;
     }
 
-    public sealed override void WriteJson(JsonWriter writer, TVector value, JsonSerializer serializer)
+    public sealed override void WriteJson(
+        JsonWriter writer,
+        TVector value,
+        JsonSerializer serializer
+    )
     {
         writer.WriteStartArray();
 

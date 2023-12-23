@@ -2,17 +2,24 @@ namespace Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
 
 public static class IEnumerableExtensions
 {
-    public static TSource? MinByOrDefault<TSource, TKey>(this IEnumerable<TSource> source,
-    Func<TSource, TKey> selector)
+    public static TSource? MinByOrDefault<TSource, TKey>(
+        this IEnumerable<TSource> source,
+        Func<TSource, TKey> selector
+    )
     {
         return source.MinByOrDefault(selector, Comparer<TKey>.Default);
     }
 
-    public static TSource? MinByOrDefault<TSource, TKey>(this IEnumerable<TSource> source,
-        Func<TSource, TKey> selector, IComparer<TKey> comparer)
+    public static TSource? MinByOrDefault<TSource, TKey>(
+        this IEnumerable<TSource> source,
+        Func<TSource, TKey> selector,
+        IComparer<TKey> comparer
+    )
     {
-        if (source is null) throw new ArgumentNullException("source");
-        if (selector is null) throw new ArgumentNullException("selector");
+        if (source is null)
+            throw new ArgumentNullException("source");
+        if (selector is null)
+            throw new ArgumentNullException("selector");
 
         using var sourceIterator = source.GetEnumerator();
 

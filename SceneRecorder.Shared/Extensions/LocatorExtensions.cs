@@ -29,7 +29,9 @@ public static class LocatorExtensions
             return _PlayerSpawner;
         }
 
-        return _PlayerSpawner = GameObject.FindGameObjectWithTag("Player").OrNull()
+        return _PlayerSpawner = GameObject
+            .FindGameObjectWithTag("Player")
+            .OrNull()
             ?.GetRequiredComponent<PlayerSpawner>();
     }
 }

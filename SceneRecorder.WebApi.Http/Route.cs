@@ -7,7 +7,8 @@ internal sealed record Route(HttpMethod HttpMethod, IReadOnlyList<Route.Segment>
 {
     public enum SegmentType
     {
-        Plain, Parameter
+        Plain,
+        Parameter
     }
 
     public sealed record Segment(SegmentType Type, string Value)
@@ -30,7 +31,11 @@ internal sealed record Route(HttpMethod HttpMethod, IReadOnlyList<Route.Segment>
 
     private static readonly Regex _StringSegmentRegex = new("^:?\\w+$");
 
-    public static bool TryFromString(HttpMethod method, string str, [NotNullWhen(true)] out Route? route)
+    public static bool TryFromString(
+        HttpMethod method,
+        string str,
+        [NotNullWhen(true)] out Route? route
+    )
     {
         if (str == "")
         {

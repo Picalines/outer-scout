@@ -22,7 +22,10 @@ public sealed class Request
         var queryDictionary = new Dictionary<string, string>();
 
         var query = HttpUtility.ParseQueryString(uri.Query);
-        var queryPairs = query.AllKeys.SelectMany(query.GetValues, (key, value) => new { key, value });
+        var queryPairs = query.AllKeys.SelectMany(
+            query.GetValues,
+            (key, value) => new { key, value }
+        );
         foreach (var pair in queryPairs)
         {
             queryDictionary[pair.key] = pair.value;

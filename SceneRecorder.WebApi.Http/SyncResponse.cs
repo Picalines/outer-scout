@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json;
-using System.Net;
+﻿using System.Net;
+using Newtonsoft.Json;
 
 namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
 
@@ -20,9 +20,10 @@ public sealed class SyncResponse : IResponse
 
     public static SyncResponse FromString(HttpStatusCode httpStatusCode, string content)
     {
-        var contentType = (content.StartsWith("<!DOCTYPE") || content.StartsWith("<html>"))
-            ? "text/html"
-            : "text/plain";
+        var contentType =
+            (content.StartsWith("<!DOCTYPE") || content.StartsWith("<html>"))
+                ? "text/html"
+                : "text/plain";
 
         return new(httpStatusCode, contentType, content);
     }

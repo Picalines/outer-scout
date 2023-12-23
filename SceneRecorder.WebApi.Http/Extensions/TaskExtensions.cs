@@ -10,10 +10,13 @@ internal static class TaskExtensions
         }
 
         var completionSource = new TaskCompletionSource<T>();
-        token.Register(() => completionSource.TrySetCanceled(token),
-            useSynchronizationContext: false);
+        token.Register(
+            () => completionSource.TrySetCanceled(token),
+            useSynchronizationContext: false
+        );
 
-        task.ContinueWith(t =>
+        task.ContinueWith(
+            t =>
             {
                 if (task.IsCanceled)
                 {
@@ -30,7 +33,8 @@ internal static class TaskExtensions
             },
             CancellationToken.None,
             TaskContinuationOptions.ExecuteSynchronously,
-            TaskScheduler.Default);
+            TaskScheduler.Default
+        );
 
         return completionSource.Task;
     }

@@ -8,10 +8,8 @@ public static class IResponseExtensions
     {
         listenerResponse.StatusCode = (int)response.StatusCode;
 
-        listenerResponse.ContentType = response.ContentType + (
-            response.ContentType.Contains("charset") is false
-                ? "; charset=utf-8"
-                : ""
-        );
+        listenerResponse.ContentType =
+            response.ContentType
+            + (response.ContentType.Contains("charset") is false ? "; charset=utf-8" : "");
     }
 }

@@ -10,7 +10,8 @@ namespace Picalines.OuterWilds.SceneRecorder.WebApi;
 [RequireComponent(typeof(OutputRecorder))]
 public sealed class WebApiServer : HttpServer
 {
-    private sealed record RouteDefinitionContext(OutputRecorder OutputRecorder) : IApiRouteDefinition.IContext;
+    private sealed record RouteDefinitionContext(OutputRecorder OutputRecorder)
+        : IApiRouteDefinition.IContext;
 
     private static readonly IApiRouteDefinition[] _ApiRouteDefinitions = new IApiRouteDefinition[]
     {
@@ -52,9 +53,15 @@ public sealed class WebApiServer : HttpServer
             routeDefinition.MapRoutes(serverBuilder, context);
         }
 
-        serverBuilder.Map(HttpMethod.Get, "", request =>
-        {
-            return ResponseFabric.Ok(new { Message = $"Welcome to Outer Wilds {nameof(SceneRecorder)} API!" });
-        });
+        serverBuilder.Map(
+            HttpMethod.Get,
+            "",
+            request =>
+            {
+                return ResponseFabric.Ok(
+                    new { Message = $"Welcome to Outer Wilds {nameof(SceneRecorder)} API!" }
+                );
+            }
+        );
     }
 }

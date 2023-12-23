@@ -14,14 +14,32 @@ internal sealed class TransformModelConverter : JsonConverter<TransformModel>
 
     private static readonly QuaternionConverter _QuaternionConverter = new();
 
-    public override TransformModel ReadJson(JsonReader reader, Type objectType, TransformModel existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override TransformModel ReadJson(
+        JsonReader reader,
+        Type objectType,
+        TransformModel existingValue,
+        bool hasExistingValue,
+        JsonSerializer serializer
+    )
     {
         reader.Read();
 
         var result = new TransformModel
         {
-            Position = _Vector3Converter.ReadJson(reader, typeof(Vector3), default, false, serializer),
-            Rotation = _QuaternionConverter.ReadJson(reader, typeof(Quaternion), default, false, serializer),
+            Position = _Vector3Converter.ReadJson(
+                reader,
+                typeof(Vector3),
+                default,
+                false,
+                serializer
+            ),
+            Rotation = _QuaternionConverter.ReadJson(
+                reader,
+                typeof(Quaternion),
+                default,
+                false,
+                serializer
+            ),
             Scale = _Vector3Converter.ReadJson(reader, typeof(Vector3), default, false, serializer),
         };
 
@@ -30,7 +48,11 @@ internal sealed class TransformModelConverter : JsonConverter<TransformModel>
         return result;
     }
 
-    public override void WriteJson(JsonWriter writer, TransformModel value, JsonSerializer serializer)
+    public override void WriteJson(
+        JsonWriter writer,
+        TransformModel value,
+        JsonSerializer serializer
+    )
     {
         var (position, rotation, scale) = (value.Position, value.Rotation, value.Scale);
 

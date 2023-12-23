@@ -23,9 +23,7 @@ public abstract class RecorderComponent : MonoBehaviour, IRecorder
 
     private static readonly WaitForEndOfFrame _WaitForEndOfFrame = new();
 
-    internal RecorderComponent()
-    {
-    }
+    internal RecorderComponent() { }
 
     private void Awake()
     {
