@@ -2,6 +2,7 @@
 using SceneRecorder.Shared.Models;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
+using SceneRecorder.WebApi.Http.Response;
 using UnityEngine;
 
 namespace SceneRecorder.WebApi.RouteDefinitions;

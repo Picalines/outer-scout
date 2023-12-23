@@ -1,4 +1,4 @@
-namespace SceneRecorder.WebApi.Http;
+namespace SceneRecorder.WebApi.Http.Routing;
 
 internal sealed class Router
 {

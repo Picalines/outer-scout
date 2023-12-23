@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
-namespace SceneRecorder.WebApi.Http;
+namespace SceneRecorder.WebApi.Http.Routing;
 
 internal sealed record Route(HttpMethod HttpMethod, IReadOnlyList<Route.Segment> Segments)
 {

@@ -1,4 +1,7 @@
-﻿namespace SceneRecorder.WebApi.Http;
+﻿using SceneRecorder.WebApi.Http.Response;
+using SceneRecorder.WebApi.Http.Routing;
+
+namespace SceneRecorder.WebApi.Http;
 
 public sealed class HttpServerBuilder
 {

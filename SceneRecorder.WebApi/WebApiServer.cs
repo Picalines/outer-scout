@@ -2,6 +2,7 @@
 using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.Recording.Recorders;
 using SceneRecorder.WebApi.Http;
+using SceneRecorder.WebApi.Http.Response;
 using SceneRecorder.WebApi.RouteDefinitions;
 using UnityEngine;
 

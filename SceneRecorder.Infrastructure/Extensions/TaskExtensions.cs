@@ -1,6 +1,6 @@
-﻿namespace SceneRecorder.WebApi.Http.Extensions;
+namespace SceneRecorder.Infrastructure.Extensions;
 
-internal static class TaskExtensions
+public static class TaskExtensions
 {
     public static Task<T> AsCancellable<T>(this Task<T> task, CancellationToken token)
     {

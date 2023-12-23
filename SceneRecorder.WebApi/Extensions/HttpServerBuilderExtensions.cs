@@ -1,5 +1,6 @@
 ﻿using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.WebApi.Http;
+using SceneRecorder.WebApi.Http.Response;
 
 namespace SceneRecorder.WebApi.Extensions;
 

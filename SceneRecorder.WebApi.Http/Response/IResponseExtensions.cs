@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace SceneRecorder.WebApi.Http;
+namespace SceneRecorder.WebApi.Http.Response;
 
 public static class IResponseExtensions
 {

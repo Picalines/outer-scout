@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Net;
 
-namespace SceneRecorder.WebApi.Http;
+namespace SceneRecorder.WebApi.Http.Response;
 
 public sealed class CoroutineResponse : IResponse
 {

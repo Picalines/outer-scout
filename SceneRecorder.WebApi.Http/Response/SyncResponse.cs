@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using Newtonsoft.Json;
 
-namespace SceneRecorder.WebApi.Http;
+namespace SceneRecorder.WebApi.Http.Response;
 
 public sealed class SyncResponse : IResponse
 {

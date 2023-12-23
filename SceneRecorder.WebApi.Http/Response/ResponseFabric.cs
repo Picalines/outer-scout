@@ -1,276 +1,253 @@
 ﻿using System.Collections;
 using System.Net;
 
-namespace SceneRecorder.WebApi.Http;
+namespace SceneRecorder.WebApi.Http.Response;
+
+using static SyncResponse;
 
 public static class ResponseFabric
 {
-    public static SyncResponse Continue() => SyncResponse.Empty(HttpStatusCode.Continue);
+    public static SyncResponse Continue() => Empty(HttpStatusCode.Continue);
 
-    public static SyncResponse SwitchingProtocols() =>
-        SyncResponse.Empty(HttpStatusCode.SwitchingProtocols);
+    public static SyncResponse SwitchingProtocols() => Empty(HttpStatusCode.SwitchingProtocols);
 
-    public static SyncResponse Ok() => SyncResponse.Empty(HttpStatusCode.OK);
+    public static SyncResponse Ok() => Empty(HttpStatusCode.OK);
 
-    public static SyncResponse Created() => SyncResponse.Empty(HttpStatusCode.Created);
+    public static SyncResponse Created() => Empty(HttpStatusCode.Created);
 
-    public static SyncResponse Accepted() => SyncResponse.Empty(HttpStatusCode.Accepted);
+    public static SyncResponse Accepted() => Empty(HttpStatusCode.Accepted);
 
     public static SyncResponse NonAuthoritativeInformation() =>
-        SyncResponse.Empty(HttpStatusCode.NonAuthoritativeInformation);
+        Empty(HttpStatusCode.NonAuthoritativeInformation);
 
-    public static SyncResponse NoContent() => SyncResponse.Empty(HttpStatusCode.NoContent);
+    public static SyncResponse NoContent() => Empty(HttpStatusCode.NoContent);
 
-    public static SyncResponse ResetContent() => SyncResponse.Empty(HttpStatusCode.ResetContent);
+    public static SyncResponse ResetContent() => Empty(HttpStatusCode.ResetContent);
 
-    public static SyncResponse PartialContent() =>
-        SyncResponse.Empty(HttpStatusCode.PartialContent);
+    public static SyncResponse PartialContent() => Empty(HttpStatusCode.PartialContent);
 
-    public static SyncResponse MultipleChoices() =>
-        SyncResponse.Empty(HttpStatusCode.MultipleChoices);
+    public static SyncResponse MultipleChoices() => Empty(HttpStatusCode.MultipleChoices);
 
-    public static SyncResponse Ambiguous() => SyncResponse.Empty(HttpStatusCode.Ambiguous);
+    public static SyncResponse Ambiguous() => Empty(HttpStatusCode.Ambiguous);
 
-    public static SyncResponse MovedPermanently() =>
-        SyncResponse.Empty(HttpStatusCode.MovedPermanently);
+    public static SyncResponse MovedPermanently() => Empty(HttpStatusCode.MovedPermanently);
 
-    public static SyncResponse Moved() => SyncResponse.Empty(HttpStatusCode.Moved);
+    public static SyncResponse Moved() => Empty(HttpStatusCode.Moved);
 
-    public static SyncResponse Found() => SyncResponse.Empty(HttpStatusCode.Found);
+    public static SyncResponse Found() => Empty(HttpStatusCode.Found);
 
-    public static SyncResponse Redirect() => SyncResponse.Empty(HttpStatusCode.Redirect);
+    public static SyncResponse Redirect() => Empty(HttpStatusCode.Redirect);
 
-    public static SyncResponse SeeOther() => SyncResponse.Empty(HttpStatusCode.SeeOther);
+    public static SyncResponse SeeOther() => Empty(HttpStatusCode.SeeOther);
 
-    public static SyncResponse RedirectMethod() =>
-        SyncResponse.Empty(HttpStatusCode.RedirectMethod);
+    public static SyncResponse RedirectMethod() => Empty(HttpStatusCode.RedirectMethod);
 
-    public static SyncResponse NotModified() => SyncResponse.Empty(HttpStatusCode.NotModified);
+    public static SyncResponse NotModified() => Empty(HttpStatusCode.NotModified);
 
-    public static SyncResponse UseProxy() => SyncResponse.Empty(HttpStatusCode.UseProxy);
+    public static SyncResponse UseProxy() => Empty(HttpStatusCode.UseProxy);
 
-    public static SyncResponse Unused() => SyncResponse.Empty(HttpStatusCode.Unused);
+    public static SyncResponse Unused() => Empty(HttpStatusCode.Unused);
 
-    public static SyncResponse TemporaryRedirect() =>
-        SyncResponse.Empty(HttpStatusCode.TemporaryRedirect);
+    public static SyncResponse TemporaryRedirect() => Empty(HttpStatusCode.TemporaryRedirect);
 
-    public static SyncResponse RedirectKeepVerb() =>
-        SyncResponse.Empty(HttpStatusCode.RedirectKeepVerb);
+    public static SyncResponse RedirectKeepVerb() => Empty(HttpStatusCode.RedirectKeepVerb);
 
-    public static SyncResponse BadRequest() => SyncResponse.Empty(HttpStatusCode.BadRequest);
+    public static SyncResponse BadRequest() => Empty(HttpStatusCode.BadRequest);
 
-    public static SyncResponse Unauthorized() => SyncResponse.Empty(HttpStatusCode.Unauthorized);
+    public static SyncResponse Unauthorized() => Empty(HttpStatusCode.Unauthorized);
 
-    public static SyncResponse PaymentRequired() =>
-        SyncResponse.Empty(HttpStatusCode.PaymentRequired);
+    public static SyncResponse PaymentRequired() => Empty(HttpStatusCode.PaymentRequired);
 
-    public static SyncResponse Forbidden() => SyncResponse.Empty(HttpStatusCode.Forbidden);
+    public static SyncResponse Forbidden() => Empty(HttpStatusCode.Forbidden);
 
-    public static SyncResponse NotFound() => SyncResponse.Empty(HttpStatusCode.NotFound);
+    public static SyncResponse NotFound() => Empty(HttpStatusCode.NotFound);
 
-    public static SyncResponse MethodNotAllowed() =>
-        SyncResponse.Empty(HttpStatusCode.MethodNotAllowed);
+    public static SyncResponse MethodNotAllowed() => Empty(HttpStatusCode.MethodNotAllowed);
 
-    public static SyncResponse NotAcceptable() => SyncResponse.Empty(HttpStatusCode.NotAcceptable);
+    public static SyncResponse NotAcceptable() => Empty(HttpStatusCode.NotAcceptable);
 
     public static SyncResponse ProxyAuthenticationRequired() =>
-        SyncResponse.Empty(HttpStatusCode.ProxyAuthenticationRequired);
+        Empty(HttpStatusCode.ProxyAuthenticationRequired);
 
-    public static SyncResponse RequestTimeout() =>
-        SyncResponse.Empty(HttpStatusCode.RequestTimeout);
+    public static SyncResponse RequestTimeout() => Empty(HttpStatusCode.RequestTimeout);
 
-    public static SyncResponse Conflict() => SyncResponse.Empty(HttpStatusCode.Conflict);
+    public static SyncResponse Conflict() => Empty(HttpStatusCode.Conflict);
 
-    public static SyncResponse Gone() => SyncResponse.Empty(HttpStatusCode.Gone);
+    public static SyncResponse Gone() => Empty(HttpStatusCode.Gone);
 
-    public static SyncResponse LengthRequired() =>
-        SyncResponse.Empty(HttpStatusCode.LengthRequired);
+    public static SyncResponse LengthRequired() => Empty(HttpStatusCode.LengthRequired);
 
-    public static SyncResponse PreconditionFailed() =>
-        SyncResponse.Empty(HttpStatusCode.PreconditionFailed);
+    public static SyncResponse PreconditionFailed() => Empty(HttpStatusCode.PreconditionFailed);
 
     public static SyncResponse RequestEntityTooLarge() =>
-        SyncResponse.Empty(HttpStatusCode.RequestEntityTooLarge);
+        Empty(HttpStatusCode.RequestEntityTooLarge);
 
-    public static SyncResponse RequestUriTooLong() =>
-        SyncResponse.Empty(HttpStatusCode.RequestUriTooLong);
+    public static SyncResponse RequestUriTooLong() => Empty(HttpStatusCode.RequestUriTooLong);
 
-    public static SyncResponse UnsupportedMediaType() =>
-        SyncResponse.Empty(HttpStatusCode.UnsupportedMediaType);
+    public static SyncResponse UnsupportedMediaType() => Empty(HttpStatusCode.UnsupportedMediaType);
 
     public static SyncResponse RequestedRangeNotSatisfiable() =>
-        SyncResponse.Empty(HttpStatusCode.RequestedRangeNotSatisfiable);
+        Empty(HttpStatusCode.RequestedRangeNotSatisfiable);
 
-    public static SyncResponse ExpectationFailed() =>
-        SyncResponse.Empty(HttpStatusCode.ExpectationFailed);
+    public static SyncResponse ExpectationFailed() => Empty(HttpStatusCode.ExpectationFailed);
 
-    public static SyncResponse UpgradeRequired() =>
-        SyncResponse.Empty(HttpStatusCode.UpgradeRequired);
+    public static SyncResponse UpgradeRequired() => Empty(HttpStatusCode.UpgradeRequired);
 
-    public static SyncResponse InternalServerError() =>
-        SyncResponse.Empty(HttpStatusCode.InternalServerError);
+    public static SyncResponse InternalServerError() => Empty(HttpStatusCode.InternalServerError);
 
-    public static SyncResponse NotImplemented() =>
-        SyncResponse.Empty(HttpStatusCode.NotImplemented);
+    public static SyncResponse NotImplemented() => Empty(HttpStatusCode.NotImplemented);
 
-    public static SyncResponse BadGateway() => SyncResponse.Empty(HttpStatusCode.BadGateway);
+    public static SyncResponse BadGateway() => Empty(HttpStatusCode.BadGateway);
 
-    public static SyncResponse ServiceUnavailable() =>
-        SyncResponse.Empty(HttpStatusCode.ServiceUnavailable);
+    public static SyncResponse ServiceUnavailable() => Empty(HttpStatusCode.ServiceUnavailable);
 
-    public static SyncResponse GatewayTimeout() =>
-        SyncResponse.Empty(HttpStatusCode.GatewayTimeout);
+    public static SyncResponse GatewayTimeout() => Empty(HttpStatusCode.GatewayTimeout);
 
     public static SyncResponse HttpVersionNotSupported() =>
-        SyncResponse.Empty(HttpStatusCode.HttpVersionNotSupported);
+        Empty(HttpStatusCode.HttpVersionNotSupported);
 
     public static SyncResponse Continue(string message) =>
-        SyncResponse.FromString(HttpStatusCode.Continue, message);
+        FromString(HttpStatusCode.Continue, message);
 
     public static SyncResponse SwitchingProtocols(string message) =>
-        SyncResponse.FromString(HttpStatusCode.SwitchingProtocols, message);
+        FromString(HttpStatusCode.SwitchingProtocols, message);
 
-    public static SyncResponse Ok(string message) =>
-        SyncResponse.FromString(HttpStatusCode.OK, message);
+    public static SyncResponse Ok(string message) => FromString(HttpStatusCode.OK, message);
 
     public static SyncResponse Created(string message) =>
-        SyncResponse.FromString(HttpStatusCode.Created, message);
+        FromString(HttpStatusCode.Created, message);
 
     public static SyncResponse Accepted(string message) =>
-        SyncResponse.FromString(HttpStatusCode.Accepted, message);
+        FromString(HttpStatusCode.Accepted, message);
 
     public static SyncResponse NonAuthoritativeInformation(string message) =>
-        SyncResponse.FromString(HttpStatusCode.NonAuthoritativeInformation, message);
+        FromString(HttpStatusCode.NonAuthoritativeInformation, message);
 
     public static SyncResponse NoContent(string message) =>
-        SyncResponse.FromString(HttpStatusCode.NoContent, message);
+        FromString(HttpStatusCode.NoContent, message);
 
     public static SyncResponse ResetContent(string message) =>
-        SyncResponse.FromString(HttpStatusCode.ResetContent, message);
+        FromString(HttpStatusCode.ResetContent, message);
 
     public static SyncResponse PartialContent(string message) =>
-        SyncResponse.FromString(HttpStatusCode.PartialContent, message);
+        FromString(HttpStatusCode.PartialContent, message);
 
     public static SyncResponse MultipleChoices(string message) =>
-        SyncResponse.FromString(HttpStatusCode.MultipleChoices, message);
+        FromString(HttpStatusCode.MultipleChoices, message);
 
     public static SyncResponse Ambiguous(string message) =>
-        SyncResponse.FromString(HttpStatusCode.Ambiguous, message);
+        FromString(HttpStatusCode.Ambiguous, message);
 
     public static SyncResponse MovedPermanently(string message) =>
-        SyncResponse.FromString(HttpStatusCode.MovedPermanently, message);
+        FromString(HttpStatusCode.MovedPermanently, message);
 
-    public static SyncResponse Moved(string message) =>
-        SyncResponse.FromString(HttpStatusCode.Moved, message);
+    public static SyncResponse Moved(string message) => FromString(HttpStatusCode.Moved, message);
 
-    public static SyncResponse Found(string message) =>
-        SyncResponse.FromString(HttpStatusCode.Found, message);
+    public static SyncResponse Found(string message) => FromString(HttpStatusCode.Found, message);
 
     public static SyncResponse Redirect(string message) =>
-        SyncResponse.FromString(HttpStatusCode.Redirect, message);
+        FromString(HttpStatusCode.Redirect, message);
 
     public static SyncResponse SeeOther(string message) =>
-        SyncResponse.FromString(HttpStatusCode.SeeOther, message);
+        FromString(HttpStatusCode.SeeOther, message);
 
     public static SyncResponse RedirectMethod(string message) =>
-        SyncResponse.FromString(HttpStatusCode.RedirectMethod, message);
+        FromString(HttpStatusCode.RedirectMethod, message);
 
     public static SyncResponse NotModified(string message) =>
-        SyncResponse.FromString(HttpStatusCode.NotModified, message);
+        FromString(HttpStatusCode.NotModified, message);
 
     public static SyncResponse UseProxy(string message) =>
-        SyncResponse.FromString(HttpStatusCode.UseProxy, message);
+        FromString(HttpStatusCode.UseProxy, message);
 
-    public static SyncResponse Unused(string message) =>
-        SyncResponse.FromString(HttpStatusCode.Unused, message);
+    public static SyncResponse Unused(string message) => FromString(HttpStatusCode.Unused, message);
 
     public static SyncResponse TemporaryRedirect(string message) =>
-        SyncResponse.FromString(HttpStatusCode.TemporaryRedirect, message);
+        FromString(HttpStatusCode.TemporaryRedirect, message);
 
     public static SyncResponse RedirectKeepVerb(string message) =>
-        SyncResponse.FromString(HttpStatusCode.RedirectKeepVerb, message);
+        FromString(HttpStatusCode.RedirectKeepVerb, message);
 
     public static SyncResponse BadRequest(string message) =>
-        SyncResponse.FromString(HttpStatusCode.BadRequest, message);
+        FromString(HttpStatusCode.BadRequest, message);
 
     public static SyncResponse Unauthorized(string message) =>
-        SyncResponse.FromString(HttpStatusCode.Unauthorized, message);
+        FromString(HttpStatusCode.Unauthorized, message);
 
     public static SyncResponse PaymentRequired(string message) =>
-        SyncResponse.FromString(HttpStatusCode.PaymentRequired, message);
+        FromString(HttpStatusCode.PaymentRequired, message);
 
     public static SyncResponse Forbidden(string message) =>
-        SyncResponse.FromString(HttpStatusCode.Forbidden, message);
+        FromString(HttpStatusCode.Forbidden, message);
 
     public static SyncResponse NotFound(string message) =>
-        SyncResponse.FromString(HttpStatusCode.NotFound, message);
+        FromString(HttpStatusCode.NotFound, message);
 
     public static SyncResponse MethodNotAllowed(string message) =>
-        SyncResponse.FromString(HttpStatusCode.MethodNotAllowed, message);
+        FromString(HttpStatusCode.MethodNotAllowed, message);
 
     public static SyncResponse NotAcceptable(string message) =>
-        SyncResponse.FromString(HttpStatusCode.NotAcceptable, message);
+        FromString(HttpStatusCode.NotAcceptable, message);
 
     public static SyncResponse ProxyAuthenticationRequired(string message) =>
-        SyncResponse.FromString(HttpStatusCode.ProxyAuthenticationRequired, message);
+        FromString(HttpStatusCode.ProxyAuthenticationRequired, message);
 
     public static SyncResponse RequestTimeout(string message) =>
-        SyncResponse.FromString(HttpStatusCode.RequestTimeout, message);
+        FromString(HttpStatusCode.RequestTimeout, message);
 
     public static SyncResponse Conflict(string message) =>
-        SyncResponse.FromString(HttpStatusCode.Conflict, message);
+        FromString(HttpStatusCode.Conflict, message);
 
-    public static SyncResponse Gone(string message) =>
-        SyncResponse.FromString(HttpStatusCode.Gone, message);
+    public static SyncResponse Gone(string message) => FromString(HttpStatusCode.Gone, message);
 
     public static SyncResponse LengthRequired(string message) =>
-        SyncResponse.FromString(HttpStatusCode.LengthRequired, message);
+        FromString(HttpStatusCode.LengthRequired, message);
 
     public static SyncResponse PreconditionFailed(string message) =>
-        SyncResponse.FromString(HttpStatusCode.PreconditionFailed, message);
+        FromString(HttpStatusCode.PreconditionFailed, message);
 
     public static SyncResponse RequestEntityTooLarge(string message) =>
-        SyncResponse.FromString(HttpStatusCode.RequestEntityTooLarge, message);
+        FromString(HttpStatusCode.RequestEntityTooLarge, message);
 
     public static SyncResponse RequestUriTooLong(string message) =>
-        SyncResponse.FromString(HttpStatusCode.RequestUriTooLong, message);
+        FromString(HttpStatusCode.RequestUriTooLong, message);
 
     public static SyncResponse UnsupportedMediaType(string message) =>
-        SyncResponse.FromString(HttpStatusCode.UnsupportedMediaType, message);
+        FromString(HttpStatusCode.UnsupportedMediaType, message);
 
     public static SyncResponse RequestedRangeNotSatisfiable(string message) =>
-        SyncResponse.FromString(HttpStatusCode.RequestedRangeNotSatisfiable, message);
+        FromString(HttpStatusCode.RequestedRangeNotSatisfiable, message);
 
     public static SyncResponse ExpectationFailed(string message) =>
-        SyncResponse.FromString(HttpStatusCode.ExpectationFailed, message);
+        FromString(HttpStatusCode.ExpectationFailed, message);
 
     public static SyncResponse UpgradeRequired(string message) =>
-        SyncResponse.FromString(HttpStatusCode.UpgradeRequired, message);
+        FromString(HttpStatusCode.UpgradeRequired, message);
 
     public static SyncResponse InternalServerError(string message) =>
-        SyncResponse.FromString(HttpStatusCode.InternalServerError, message);
+        FromString(HttpStatusCode.InternalServerError, message);
 
     public static SyncResponse NotImplemented(string message) =>
-        SyncResponse.FromString(HttpStatusCode.NotImplemented, message);
+        FromString(HttpStatusCode.NotImplemented, message);
 
     public static SyncResponse BadGateway(string message) =>
-        SyncResponse.FromString(HttpStatusCode.BadGateway, message);
+        FromString(HttpStatusCode.BadGateway, message);
 
     public static SyncResponse ServiceUnavailable(string message) =>
-        SyncResponse.FromString(HttpStatusCode.ServiceUnavailable, message);
+        FromString(HttpStatusCode.ServiceUnavailable, message);
 
     public static SyncResponse GatewayTimeout(string message) =>
-        SyncResponse.FromString(HttpStatusCode.GatewayTimeout, message);
+        FromString(HttpStatusCode.GatewayTimeout, message);
 
     public static SyncResponse HttpVersionNotSupported(string message) =>
-        SyncResponse.FromString(HttpStatusCode.HttpVersionNotSupported, message);
+        FromString(HttpStatusCode.HttpVersionNotSupported, message);
 
     private static SyncResponse FromValue<T>(HttpStatusCode httpStatusCode, T value)
     {
         return value switch
         {
-            string stringValue => SyncResponse.FromString(httpStatusCode, stringValue),
-            _ => SyncResponse.FromJson(httpStatusCode, value),
+            string stringValue => FromString(httpStatusCode, stringValue),
+            _ => FromJson(httpStatusCode, value),
         };
     }
 

@@ -2,7 +2,9 @@
 using System.Collections.Concurrent;
 using System.Net;
 using OWML.Common;
-using SceneRecorder.WebApi.Http.Extensions;
+using SceneRecorder.Infrastructure.Extensions;
+using SceneRecorder.WebApi.Http.Response;
+using SceneRecorder.WebApi.Http.Routing;
 using UnityEngine;
 
 namespace SceneRecorder.WebApi.Http;

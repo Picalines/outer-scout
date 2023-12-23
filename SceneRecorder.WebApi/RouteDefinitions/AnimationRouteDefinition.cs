@@ -1,6 +1,7 @@
 ﻿using SceneRecorder.Recording;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
+using SceneRecorder.WebApi.Http.Response;
 
 namespace SceneRecorder.WebApi.RouteDefinitions;
 

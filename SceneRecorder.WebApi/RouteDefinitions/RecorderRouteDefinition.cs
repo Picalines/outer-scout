@@ -3,6 +3,7 @@ using SceneRecorder.Recording.Recorders;
 using SceneRecorder.Shared.Models;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
+using SceneRecorder.WebApi.Http.Response;
 
 namespace SceneRecorder.WebApi.RouteDefinitions;
 
