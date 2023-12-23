@@ -1,7 +1,7 @@
-﻿using Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
-using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
+﻿using SceneRecorder.Recording.Recorders;
+using SceneRecorder.WebApi.Http;
 
-namespace Picalines.OuterWilds.SceneRecorder.WebApi;
+namespace SceneRecorder.WebApi;
 
 internal interface IApiRouteDefinition
 {

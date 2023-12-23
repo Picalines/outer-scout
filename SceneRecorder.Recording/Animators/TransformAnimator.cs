@@ -1,7 +1,7 @@
-using Picalines.OuterWilds.SceneRecorder.Shared.Models;
+using SceneRecorder.Shared.Models;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording.Animators;
+namespace SceneRecorder.Recording.Animators;
 
 internal sealed class TransformAnimator : Animator<TransformModel>
 {

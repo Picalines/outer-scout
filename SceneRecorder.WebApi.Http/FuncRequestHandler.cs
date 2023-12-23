@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
+namespace SceneRecorder.WebApi.Http;
 
 internal sealed class FuncRequestHandler : RequestHandler
 {

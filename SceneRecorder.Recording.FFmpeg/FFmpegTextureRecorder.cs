@@ -1,7 +1,7 @@
 ﻿using OWML.Common;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording.FFmpeg;
+namespace SceneRecorder.Recording.FFmpeg;
 
 public sealed class FFmpegTextureRecorder : IDisposable
 {

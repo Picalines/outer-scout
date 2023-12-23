@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 
 // Modified from: https://github.com/keijiro/FFmpegOut
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording.FFmpeg;
+namespace SceneRecorder.Recording.FFmpeg;
 
 internal sealed class FFmpegAsyncGPUReadback : IDisposable
 {

@@ -1,12 +1,12 @@
 ﻿using OWML.Common;
 using OWML.ModHelper;
-using Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
-using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
-using Picalines.OuterWilds.SceneRecorder.Shared.Interfaces;
-using Picalines.OuterWilds.SceneRecorder.WebApi;
+using SceneRecorder.Recording.Recorders;
+using SceneRecorder.Shared.Extensions;
+using SceneRecorder.Shared.Interfaces;
+using SceneRecorder.WebApi;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder;
+namespace SceneRecorder;
 
 internal sealed class SceneRecorderMod : ModBehaviour
 {

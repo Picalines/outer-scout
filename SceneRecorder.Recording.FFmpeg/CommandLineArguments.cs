@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording.FFmpeg;
+namespace SceneRecorder.Recording.FFmpeg;
 
 internal readonly ref struct CommandLineArguments
 {

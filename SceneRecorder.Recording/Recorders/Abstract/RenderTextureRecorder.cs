@@ -1,8 +1,8 @@
 ﻿using OWML.Common;
-using Picalines.OuterWilds.SceneRecorder.Recording.FFmpeg;
+using SceneRecorder.Recording.FFmpeg;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
+namespace SceneRecorder.Recording.Recorders.Abstract;
 
 internal abstract class RenderTextureRecorder : RecorderComponent
 {

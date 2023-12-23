@@ -1,6 +1,6 @@
 ﻿using OWML.Common;
 
-namespace Picalines.OuterWilds.SceneRecorder.Shared.Logging;
+namespace SceneRecorder.Shared.Logging;
 
 internal sealed class FilteredModConsole : IModConsole
 {

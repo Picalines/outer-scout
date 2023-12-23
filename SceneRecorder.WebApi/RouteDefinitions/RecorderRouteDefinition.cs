@@ -1,10 +1,10 @@
 ﻿using System.Collections;
-using Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
-using Picalines.OuterWilds.SceneRecorder.Shared.Models;
-using Picalines.OuterWilds.SceneRecorder.WebApi.Extensions;
-using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
+using SceneRecorder.Recording.Recorders;
+using SceneRecorder.Shared.Models;
+using SceneRecorder.WebApi.Extensions;
+using SceneRecorder.WebApi.Http;
 
-namespace Picalines.OuterWilds.SceneRecorder.WebApi.RouteDefinitions;
+namespace SceneRecorder.WebApi.RouteDefinitions;
 
 internal sealed class RecorderRouteDefinition : IApiRouteDefinition
 {

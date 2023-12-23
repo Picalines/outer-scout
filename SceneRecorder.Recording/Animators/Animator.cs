@@ -1,4 +1,4 @@
-namespace Picalines.OuterWilds.SceneRecorder.Recording.Animators;
+namespace SceneRecorder.Recording.Animators;
 
 internal abstract class Animator<T> : IAnimator<T>
 {

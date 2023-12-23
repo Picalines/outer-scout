@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
+namespace SceneRecorder.Recording.Recorders;
 
 internal sealed class ComposedRecorder : MonoBehaviour, IRecorder
 {

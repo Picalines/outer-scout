@@ -1,7 +1,7 @@
-﻿using Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
+﻿using SceneRecorder.Recording.Recorders.Abstract;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording;
+namespace SceneRecorder.Recording;
 
 [RequireComponent(typeof(RenderTextureRecorder))]
 internal sealed class RenderTextureRecorderGUI : MonoBehaviour

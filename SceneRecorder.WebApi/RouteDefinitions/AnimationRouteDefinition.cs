@@ -1,8 +1,8 @@
-﻿using Picalines.OuterWilds.SceneRecorder.Recording;
-using Picalines.OuterWilds.SceneRecorder.WebApi.Extensions;
-using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
+﻿using SceneRecorder.Recording;
+using SceneRecorder.WebApi.Extensions;
+using SceneRecorder.WebApi.Http;
 
-namespace Picalines.OuterWilds.SceneRecorder.WebApi.RouteDefinitions;
+namespace SceneRecorder.WebApi.RouteDefinitions;
 
 internal sealed class AnimationRouteDefinition : IApiRouteDefinition
 {

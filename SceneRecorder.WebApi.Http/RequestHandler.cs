@@ -1,4 +1,4 @@
-﻿namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
+﻿namespace SceneRecorder.WebApi.Http;
 
 internal abstract class RequestHandler
 {

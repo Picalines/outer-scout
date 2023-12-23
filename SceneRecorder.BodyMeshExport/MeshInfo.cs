@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
-using Picalines.OuterWilds.SceneRecorder.Shared.Models;
+using SceneRecorder.Shared.Models;
 
-namespace Picalines.OuterWilds.SceneRecorder.BodyMeshExport;
+namespace SceneRecorder.BodyMeshExport;
 
 public sealed class MeshInfo
 {

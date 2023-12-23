@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
+namespace SceneRecorder.WebApi.Http;
 
 public static class IResponseExtensions
 {

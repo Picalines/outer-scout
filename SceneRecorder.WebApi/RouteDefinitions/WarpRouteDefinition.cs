@@ -1,10 +1,10 @@
-using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
-using Picalines.OuterWilds.SceneRecorder.Shared.Models;
-using Picalines.OuterWilds.SceneRecorder.WebApi.Extensions;
-using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
+using SceneRecorder.Shared.Extensions;
+using SceneRecorder.Shared.Models;
+using SceneRecorder.WebApi.Extensions;
+using SceneRecorder.WebApi.Http;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.WebApi.RouteDefinitions;
+namespace SceneRecorder.WebApi.RouteDefinitions;
 
 internal sealed class WarpRouteDefinition : IApiRouteDefinition
 {

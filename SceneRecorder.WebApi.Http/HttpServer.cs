@@ -2,10 +2,10 @@
 using System.Collections.Concurrent;
 using System.Net;
 using OWML.Common;
-using Picalines.OuterWilds.SceneRecorder.WebApi.Http.Extensions;
+using SceneRecorder.WebApi.Http.Extensions;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
+namespace SceneRecorder.WebApi.Http;
 
 public class HttpServer : MonoBehaviour
 {

@@ -1,10 +1,10 @@
 ﻿using Newtonsoft.Json;
-using Picalines.OuterWilds.SceneRecorder.BodyMeshExport;
-using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
-using Picalines.OuterWilds.SceneRecorder.WebApi.Extensions;
-using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
+using SceneRecorder.BodyMeshExport;
+using SceneRecorder.Shared.Extensions;
+using SceneRecorder.WebApi.Extensions;
+using SceneRecorder.WebApi.Http;
 
-namespace Picalines.OuterWilds.SceneRecorder.WebApi.RouteDefinitions;
+namespace SceneRecorder.WebApi.RouteDefinitions;
 
 internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
 {

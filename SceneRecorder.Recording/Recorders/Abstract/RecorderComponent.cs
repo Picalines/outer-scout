@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
+namespace SceneRecorder.Recording.Recorders.Abstract;
 
 public abstract class RecorderComponent : MonoBehaviour, IRecorder
 {

@@ -1,6 +1,6 @@
-using Picalines.OuterWilds.SceneRecorder.Shared.Models;
+using SceneRecorder.Shared.Models;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording.Animators;
+namespace SceneRecorder.Recording.Animators;
 
 internal sealed class CameraInfoAnimator : Animator<CameraInfo>
 {

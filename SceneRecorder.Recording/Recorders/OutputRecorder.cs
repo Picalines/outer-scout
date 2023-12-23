@@ -1,14 +1,14 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using OWML.Common;
-using Picalines.OuterWilds.SceneRecorder.Recording.Animators;
-using Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
-using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
-using Picalines.OuterWilds.SceneRecorder.Shared.Interfaces;
-using Picalines.OuterWilds.SceneRecorder.Shared.Models;
+using SceneRecorder.Recording.Animators;
+using SceneRecorder.Recording.Recorders.Abstract;
+using SceneRecorder.Shared.Extensions;
+using SceneRecorder.Shared.Interfaces;
+using SceneRecorder.Shared.Models;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
+namespace SceneRecorder.Recording.Recorders;
 
 using TransformAnimator = Animators.TransformAnimator;
 

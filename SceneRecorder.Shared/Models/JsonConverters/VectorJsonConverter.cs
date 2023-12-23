@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace Picalines.OuterWilds.SceneRecorder.Shared.Models.JsonConverters;
+namespace SceneRecorder.Shared.Models.JsonConverters;
 
 public abstract class VectorJsonConverter<TVector> : JsonConverter<TVector>
     where TVector : struct

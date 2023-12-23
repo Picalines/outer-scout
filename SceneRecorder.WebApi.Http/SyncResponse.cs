@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using Newtonsoft.Json;
 
-namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http;
+namespace SceneRecorder.WebApi.Http;
 
 public sealed class SyncResponse : IResponse
 {

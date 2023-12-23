@@ -1,11 +1,11 @@
 ﻿using OWML.Common;
-using Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
-using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
-using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
-using Picalines.OuterWilds.SceneRecorder.WebApi.RouteDefinitions;
+using SceneRecorder.Recording.Recorders;
+using SceneRecorder.Shared.Extensions;
+using SceneRecorder.WebApi.Http;
+using SceneRecorder.WebApi.RouteDefinitions;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.WebApi;
+namespace SceneRecorder.WebApi;
 
 [RequireComponent(typeof(OutputRecorder))]
 public sealed class WebApiServer : HttpServer

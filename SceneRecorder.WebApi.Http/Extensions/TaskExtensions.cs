@@ -1,4 +1,4 @@
-﻿namespace Picalines.OuterWilds.SceneRecorder.WebApi.Http.Extensions;
+﻿namespace SceneRecorder.WebApi.Http.Extensions;
 
 internal static class TaskExtensions
 {

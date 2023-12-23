@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Picalines.OuterWilds.SceneRecorder.BodyMeshExport;
+namespace SceneRecorder.BodyMeshExport;
 
 public sealed class SectorMeshInfo
 {

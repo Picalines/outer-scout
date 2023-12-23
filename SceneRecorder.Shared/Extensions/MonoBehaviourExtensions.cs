@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
+namespace SceneRecorder.Shared.Extensions;
 
 public static class MonoBehaviourExtensions
 {

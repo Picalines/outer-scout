@@ -1,8 +1,8 @@
 using OWML.Common;
-using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
+using SceneRecorder.Shared.Extensions;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder;
+namespace SceneRecorder;
 
 internal sealed class PlayerCameraEnabler : MonoBehaviour
 {

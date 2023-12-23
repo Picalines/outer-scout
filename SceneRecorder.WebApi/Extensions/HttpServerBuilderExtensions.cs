@@ -1,7 +1,7 @@
-﻿using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
-using Picalines.OuterWilds.SceneRecorder.WebApi.Http;
+﻿using SceneRecorder.Shared.Extensions;
+using SceneRecorder.WebApi.Http;
 
-namespace Picalines.OuterWilds.SceneRecorder.WebApi.Extensions;
+namespace SceneRecorder.WebApi.Extensions;
 
 internal static class HttpServerBuilderExtensions
 {

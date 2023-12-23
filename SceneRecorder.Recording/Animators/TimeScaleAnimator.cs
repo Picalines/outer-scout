@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording.Animators;
+namespace SceneRecorder.Recording.Animators;
 
 internal sealed class TimeScaleAnimator : Animator<float>
 {

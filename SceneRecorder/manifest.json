@@ -2,7 +2,7 @@
   "filename": "SceneRecorder.dll",
   "author": "Picalines",
   "name": "SceneRecorder",
-  "uniqueName": "Picalines.OuterWilds.SceneRecorder",
+  "uniqueName": "Picalines.SceneRecorder",
   "version": "0.1.0",
   "owmlVersion": "2.7.0",
   "dependencies": ["xen.CommonCameraUtility", "misternebula.FreeCam"]

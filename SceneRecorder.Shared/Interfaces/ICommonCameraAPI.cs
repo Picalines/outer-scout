@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
 
-namespace Picalines.OuterWilds.SceneRecorder.Shared.Interfaces;
+namespace SceneRecorder.Shared.Interfaces;
 
 public interface ICommonCameraAPI
 {

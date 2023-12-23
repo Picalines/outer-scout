@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Shared.Models.JsonConverters;
+namespace SceneRecorder.Shared.Models.JsonConverters;
 
 public sealed class QuaternionConverter : VectorJsonConverter<Quaternion>
 {

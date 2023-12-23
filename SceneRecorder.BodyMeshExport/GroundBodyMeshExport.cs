@@ -1,8 +1,8 @@
-﻿using Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
-using Picalines.OuterWilds.SceneRecorder.Shared.Models;
+﻿using SceneRecorder.Shared.Extensions;
+using SceneRecorder.Shared.Models;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.BodyMeshExport;
+namespace SceneRecorder.BodyMeshExport;
 
 public static class GroundBodyMeshExport
 {

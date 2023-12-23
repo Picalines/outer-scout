@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.PostProcessing;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording.Extensions;
+namespace SceneRecorder.Recording.Extensions;
 
 internal static class OWCameraExtensions
 {

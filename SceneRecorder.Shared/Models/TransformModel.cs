@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
-using Picalines.OuterWilds.SceneRecorder.Shared.Models.JsonConverters;
+using SceneRecorder.Shared.Models.JsonConverters;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Shared.Models;
+namespace SceneRecorder.Shared.Models;
 
 [JsonConverter(typeof(TransformModelConverter))]
 public readonly record struct TransformModel

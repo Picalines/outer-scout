@@ -1,8 +1,8 @@
-﻿using Picalines.OuterWilds.SceneRecorder.Recording.Extensions;
-using Picalines.OuterWilds.SceneRecorder.Recording.Recorders.Abstract;
+﻿using SceneRecorder.Recording.Extensions;
+using SceneRecorder.Recording.Recorders.Abstract;
 using UnityEngine;
 
-namespace Picalines.OuterWilds.SceneRecorder.Recording.Recorders;
+namespace SceneRecorder.Recording.Recorders;
 
 internal sealed class DepthRecorder : RenderTextureRecorder
 {

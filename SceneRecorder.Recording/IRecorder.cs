@@ -1,4 +1,4 @@
-﻿namespace Picalines.OuterWilds.SceneRecorder.Recording;
+﻿namespace SceneRecorder.Recording;
 
 public interface IRecorder
 {

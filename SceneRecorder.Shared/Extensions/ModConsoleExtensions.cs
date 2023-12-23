@@ -1,7 +1,7 @@
 ﻿using OWML.Common;
-using Picalines.OuterWilds.SceneRecorder.Shared.Logging;
+using SceneRecorder.Shared.Logging;
 
-namespace Picalines.OuterWilds.SceneRecorder.Shared.Extensions;
+namespace SceneRecorder.Shared.Extensions;
 
 public static class ModConsoleExtensions
 {
