@@ -1,8 +1,8 @@
 ﻿using OWML.Common;
 
-namespace SceneRecorder.Shared.Logging;
+namespace SceneRecorder.Infrastructure.Logging;
 
-public sealed class SilentModConsole : IModConsole
+internal sealed class SilentModConsole : IModConsole
 {
     public static IModConsole Instance { get; private set; } = new SilentModConsole();
 

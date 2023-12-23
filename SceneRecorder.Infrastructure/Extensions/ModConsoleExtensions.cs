@@ -1,7 +1,7 @@
 ﻿using OWML.Common;
-using SceneRecorder.Shared.Logging;
+using SceneRecorder.Infrastructure.Logging;
 
-namespace SceneRecorder.Shared.Extensions;
+namespace SceneRecorder.Infrastructure.Extensions;
 
 public static class ModConsoleExtensions
 {

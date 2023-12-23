@@ -1,8 +1,8 @@
 ﻿using OWML.Common;
 using OWML.ModHelper;
+using SceneRecorder.Infrastructure.API;
+using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.Recording.Recorders;
-using SceneRecorder.Shared.Extensions;
-using SceneRecorder.Shared.Interfaces;
 using SceneRecorder.WebApi;
 using UnityEngine;
 

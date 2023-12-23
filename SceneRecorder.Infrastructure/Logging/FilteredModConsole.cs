@@ -1,6 +1,6 @@
 ﻿using OWML.Common;
 
-namespace SceneRecorder.Shared.Logging;
+namespace SceneRecorder.Infrastructure.Logging;
 
 internal sealed class FilteredModConsole : IModConsole
 {

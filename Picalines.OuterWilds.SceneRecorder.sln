@@ -5,7 +5,7 @@ VisualStudioVersion = 17.3.32901.215
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SceneRecorder", "SceneRecorder\SceneRecorder.csproj", "{35DEC046-59DB-4E69-B244-E34A6039FA4F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SceneRecorder.CompilerServices", "SceneRecorder.CompilerServices\SceneRecorder.CompilerServices.csproj", "{40BF7CA9-092E-403A-9FE4-771FCEEE3C32}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SceneRecorder.Infrastructure", "SceneRecorder.Infrastructure\SceneRecorder.Infrastructure.csproj", "{40BF7CA9-092E-403A-9FE4-771FCEEE3C32}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SceneRecorder.Recording", "SceneRecorder.Recording\SceneRecorder.Recording.csproj", "{4B647BE3-0DA9-4823-86EB-049C1D49C64D}"
 EndProject

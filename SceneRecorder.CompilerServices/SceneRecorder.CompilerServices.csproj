@@ -1,7 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<TargetFramework>net48</TargetFramework>
-		<Copyright>Copyright © 2023 Picalines</Copyright>
-		<LangVersion>11.0</LangVersion>
-	</PropertyGroup>
-</Project>

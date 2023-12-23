@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using UnityEngine;
 
-namespace SceneRecorder.Shared.Extensions;
+namespace SceneRecorder.Infrastructure.Extensions;
 
 public static class TransformExtensions
 {

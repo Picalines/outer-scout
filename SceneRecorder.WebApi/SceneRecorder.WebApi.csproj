@@ -20,13 +20,7 @@
 		<DebugType>none</DebugType>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Hafner.Compatibility.NullableReferenceTypeAttributes" Version="1.0.0" />
-		<PackageReference Include="OWML" Version="2.9.0" />
-		<PackageReference Include="OuterWildsGameLibs" Version="1.1.13.393" />
-		<PackageReference Include="HarmonyX" Version="2.10.1" />
-	</ItemGroup>
-	<ItemGroup>
-	  <ProjectReference Include="..\SceneRecorder.CompilerServices\SceneRecorder.CompilerServices.csproj" />
+	  <ProjectReference Include="..\SceneRecorder.Infrastructure\SceneRecorder.Infrastructure.csproj" />
 	  <ProjectReference Include="..\SceneRecorder.Recording\SceneRecorder.Recording.csproj" />
 	  <ProjectReference Include="..\SceneRecorder.BodyMeshExport\SceneRecorder.BodyMeshExport.csproj" />
 	  <ProjectReference Include="..\SceneRecorder.WebApi.Http\SceneRecorder.WebApi.Http.csproj" />

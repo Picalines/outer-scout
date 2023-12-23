@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
 
-namespace SceneRecorder.Shared.Interfaces;
+namespace SceneRecorder.Infrastructure.API;
 
 public interface ICommonCameraAPI
 {
