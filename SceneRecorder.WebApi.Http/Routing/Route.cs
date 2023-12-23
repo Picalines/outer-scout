@@ -24,7 +24,7 @@ internal sealed record Route(HttpMethod HttpMethod, IReadOnlyList<Route.Segment>
         }
     }
 
-    private static readonly Regex _StringSegmentRegex = new("^:?\\w+$");
+    private static readonly Regex _StringSegmentRegex = new(@"^:?[a-zA-Z_\-]+$");
 
     public static bool TryFromString(
         HttpMethod method,

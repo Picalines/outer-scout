@@ -22,7 +22,7 @@ internal sealed class WarpRouteDefinition : IApiRouteDefinition
         using var precondition = serverBuilder.UseInPlayableScenePrecondition();
 
         serverBuilder.MapPost(
-            "warp_to/:groundBodyName",
+            ":groundBodyName/warp",
             (string groundBodyName, TransformModel localTransformModel) =>
             {
                 var playerSpawner = LocatorExtensions.GetPlayerSpawner();

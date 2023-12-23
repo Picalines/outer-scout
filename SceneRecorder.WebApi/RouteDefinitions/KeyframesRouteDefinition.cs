@@ -7,11 +7,11 @@ namespace SceneRecorder.WebApi.RouteDefinitions;
 
 using static ResponseFabric;
 
-internal sealed class AnimationRouteDefinition : IApiRouteDefinition
+internal sealed class KeyframesRouteDefinition : IApiRouteDefinition
 {
-    public static AnimationRouteDefinition Instance { get; } = new();
+    public static KeyframesRouteDefinition Instance { get; } = new();
 
-    private AnimationRouteDefinition() { }
+    private KeyframesRouteDefinition() { }
 
     public void MapRoutes(HttpServerBuilder serverBuilder, IApiRouteDefinition.IContext context)
     {
@@ -23,19 +23,19 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
 
         MapAnimatorRoutes(
             serverBuilder,
-            "free_camera/transform",
+            "free-camera/transform",
             () => context.OutputRecorder.FreeCameraTransformAnimator
         );
 
         MapAnimatorRoutes(
             serverBuilder,
-            "free_camera/camera_info",
+            "free-camera/camera-info",
             () => context.OutputRecorder.FreeCameraInfoAnimator
         );
 
         MapAnimatorRoutes(
             serverBuilder,
-            "hdri_pivot/transform",
+            "hdri-pivot/transform",
             () => context.OutputRecorder.HdriTransformAnimator
         );
 
@@ -48,45 +48,15 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
 
     private void MapAnimatorRoutes<T>(
         HttpServerBuilder serverBuilder,
-        string routeName,
+        string routePrefix,
         Func<IAnimator<T>?> getAnimator
     )
     {
         serverBuilder.MapPut(
-            $"animation/{routeName}/value",
-            (int fromFrame, int toFrame, T newValue) =>
-            {
-                var animator = getAnimator();
-                if (animator is null)
-                {
-                    return NotFound("animator not found");
-                }
-
-                var allFrameNumbers = animator.GetFrameNumbers();
-
-                if (
-                    fromFrame > toFrame
-                    || !(allFrameNumbers.Contains(fromFrame) && allFrameNumbers.Contains(toFrame))
-                )
-                {
-                    return BadRequest("invalid frame range");
-                }
-
-                for (int frame = fromFrame; frame <= toFrame; frame++)
-                {
-                    animator.SetValueAtFrame(frame, newValue);
-                }
-
-                return ResponseFabric.Ok();
-            }
-        );
-
-        serverBuilder.MapPut(
-            $"animation/{routeName}/values",
+            $"{routePrefix}/keyframes",
             (int fromFrame, T[] newValues) =>
             {
-                var animator = getAnimator();
-                if (animator is null)
+                if (getAnimator() is not { } animator)
                 {
                     return NotFound("animator not found");
                 }

@@ -41,21 +41,17 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
             }
         );
 
-        serverBuilder.MapGet("recorder/is_able_to_record", () => outputRecorder.IsAbleToRecord);
+        serverBuilder.MapGet("recorder/is-able-to-record", () => outputRecorder.IsAbleToRecord);
 
         serverBuilder.MapGet(
-            "recorder/frames_recorded",
-            () =>
+            "recorder/frames-recorded",
+            (bool async) =>
                 outputRecorder.IsAbleToRecord
-                    ? Ok(outputRecorder.FramesRecorded)
-                    : ServiceUnavailable()
-        );
-
-        serverBuilder.MapGet(
-            "recorder/frames_recorded_async",
-            () =>
-                outputRecorder.IsAbleToRecord
-                    ? Ok(FramesRecordedCoroutine(outputRecorder))
+                    ? (
+                        async
+                            ? Ok(FramesRecordedCoroutine(outputRecorder))
+                            : Ok(outputRecorder.FramesRecorded)
+                    )
                     : ServiceUnavailable()
         );
 
@@ -63,16 +59,16 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
 
         serverBuilder.MapPut(
             "recorder/enabled",
-            (bool shouldRecord) =>
+            (bool value) =>
             {
-                if ((shouldRecord, outputRecorder.IsAbleToRecord) is (true, false))
+                if ((value, outputRecorder.IsAbleToRecord) is (true, false))
                 {
                     return ServiceUnavailable();
                 }
 
-                if (shouldRecord != outputRecorder.IsRecording)
+                if (value != outputRecorder.IsRecording)
                 {
-                    outputRecorder.enabled = shouldRecord;
+                    outputRecorder.enabled = value;
                 }
 
                 return Ok();

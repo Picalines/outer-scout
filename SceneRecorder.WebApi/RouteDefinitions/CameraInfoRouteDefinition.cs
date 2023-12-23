@@ -18,43 +18,39 @@ internal sealed class CameraInfoRouteDefinition : IApiRouteDefinition
     {
         using var precondition = serverBuilder.UseInPlayableScenePrecondition();
 
-        var entities = new Dictionary<string, (bool Mutable, Func<OWCamera> GetOWCamera)>()
-        {
-            ["free_camera"] = (true, () => LocatorExtensions.GetFreeCamera()!),
-            ["player_camera"] = (false, Locator.GetPlayerCamera),
-        };
+        MapCameraRoutes(serverBuilder, "free-camera", true, LocatorExtensions.GetFreeCamera);
 
+        MapCameraRoutes(serverBuilder, "player/camera", false, Locator.GetPlayerCamera);
+    }
+
+    private void MapCameraRoutes(
+        HttpServerBuilder serverBuilder,
+        string routePrefix,
+        bool mutable,
+        Func<OWCamera?> getOwCamera
+    )
+    {
         serverBuilder.MapGet(
-            ":entityName/camera_info",
-            (string entityName) =>
-            {
-                if (entities.TryGetValue(entityName, out var entity) is false)
-                {
-                    return NotFound();
-                }
-
-                return Ok(CameraInfo.FromOWCamera(entity.GetOWCamera()));
-            }
+            $"{routePrefix}/camera-info",
+            () => getOwCamera() is { } camera ? Ok(CameraInfo.FromOWCamera(camera)) : NotFound()
         );
 
-        serverBuilder.MapPut(
-            ":entityName/camera_info",
-            (string entityName, CameraInfo cameraInfo) =>
-            {
-                if (entities.TryGetValue(entityName, out var entity) is false)
+        if (mutable)
+        {
+            serverBuilder.MapPut(
+                $"{routePrefix}/camera-info",
+                (CameraInfo cameraInfo) =>
                 {
-                    return NotFound();
+                    if (getOwCamera() is not { } camera)
+                    {
+                        return NotFound();
+                    }
+
+                    cameraInfo.ApplyToOWCamera(camera);
+
+                    return Ok();
                 }
-
-                if (entity.Mutable is false)
-                {
-                    return NotAcceptable($"{entityName} camera info is immutable");
-                }
-
-                cameraInfo.ApplyToOWCamera(entity.GetOWCamera());
-
-                return Ok();
-            }
-        );
+            );
+        }
     }
 }

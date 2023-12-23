@@ -19,7 +19,7 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
         using var precondition = serverBuilder.UseInPlayableScenePrecondition();
 
         serverBuilder.MapGet(
-            "ground_body/name",
+            "player/ground-body/name",
             () =>
                 LocatorExtensions.GetCurrentGroundBody() is { } groundBody
                     ? Ok(groundBody.name)
@@ -27,7 +27,7 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
         );
 
         serverBuilder.MapGet(
-            "ground_body/sectors/current/path",
+            "player/ground-body/sectors/current/path",
             () =>
                 Locator
                     .GetPlayerDetector()
@@ -36,8 +36,8 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
                     .transform.GetPath()
         );
 
-        serverBuilder.MapPost(
-            "ground_body/mesh_list",
+        serverBuilder.MapGet(
+            "player/ground-body/meshes",
             () =>
                 LocatorExtensions.GetCurrentGroundBody() switch
                 {

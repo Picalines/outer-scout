@@ -19,53 +19,77 @@ internal sealed class TransformRouteDefinition : IApiRouteDefinition
     {
         using var precondition = serverBuilder.UseInPlayableScenePrecondition();
 
-        var entities = new Dictionary<string, (bool Mutable, Func<Transform> GetTransform)>
-        {
-            ["free_camera"] = (true, () => LocatorExtensions.GetFreeCamera()!.transform),
-            ["player_body"] = (true, () => Locator.GetPlayerBody().transform),
-            ["player_camera"] = (false, () => Locator.GetPlayerCamera().transform),
-        };
+        MapTransformRoutes(
+            serverBuilder,
+            "free-camera",
+            true,
+            () => LocatorExtensions.GetFreeCamera()?.transform
+        );
 
+        MapTransformRoutes(
+            serverBuilder,
+            "player/body",
+            true,
+            () => Locator.GetPlayerBody().OrNull()?.transform
+        );
+
+        MapTransformRoutes(
+            serverBuilder,
+            "player/camera",
+            false,
+            () => Locator.GetPlayerCamera().OrNull()?.transform
+        );
+    }
+
+    private void MapTransformRoutes(
+        HttpServerBuilder serverBuilder,
+        string routePrefix,
+        bool mutable,
+        Func<Transform?> getTransform
+    )
+    {
         serverBuilder.MapGet(
-            ":entityName/transform/local_to/ground_body",
-            (string entityName) =>
+            $"{routePrefix}/transform",
+            (string localTo) =>
             {
-                if (entities.TryGetValue(entityName, out var entity) is false)
+                if (getTransform() is not { } entityTransform)
                 {
                     return NotFound();
                 }
 
-                var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()!.transform;
-                var entityTransform = entity.GetTransform();
-
-                return Ok(TransformModel.FromInverse(groundBodyTransform, entityTransform));
-            }
-        );
-
-        serverBuilder.MapPut(
-            ":entityName/transform/local_to/ground_body",
-            (string entityName, TransformModel newTransform) =>
-            {
-                if (entities.TryGetValue(entityName, out var entity) is false)
+                if (GameObject.Find(localTo).OrNull() is not { } origin)
                 {
                     return NotFound();
                 }
 
-                if (entity.Mutable is false)
-                {
-                    return NotAcceptable($"{entityName} transform is immutable");
-                }
-
-                var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()!.transform;
-                var entityTransform = entity.GetTransform();
-
-                var oldItemParent = entityTransform.parent;
-                entityTransform.parent = groundBodyTransform;
-                newTransform.ApplyToLocalTransform(entityTransform);
-                entityTransform.parent = oldItemParent;
-
-                return Ok();
+                return Ok(TransformModel.FromInverse(origin.transform, entityTransform));
             }
         );
+
+        if (mutable)
+        {
+            serverBuilder.MapPut(
+                $"{routePrefix}/transform",
+                (TransformModel newTransform, string localTo) =>
+                {
+                    if (getTransform() is not { } entityTransform)
+                    {
+                        return NotFound();
+                    }
+
+                    if (GameObject.Find(localTo).OrNull() is not { } origin)
+                    {
+                        return NotFound();
+                    }
+
+                    var oldEntityParent = entityTransform.parent;
+                    entityTransform.parent = origin.transform;
+                    newTransform.ApplyToLocalTransform(entityTransform);
+                    entityTransform.parent = oldEntityParent;
+
+                    return Ok();
+                }
+            );
+        }
     }
 }
