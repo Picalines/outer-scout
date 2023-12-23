@@ -6,28 +6,34 @@ namespace SceneRecorder;
 
 internal sealed class PlayerCameraEnabler : MonoBehaviour
 {
+    private const int InvalidDisplay = -1;
+
+    private int _TargetDisplay = 0;
     private bool _IsInPauseMenu = false;
 
     public void Configure(IModConfig config)
     {
-        OnUnpause(OWTime.PauseType.Menu);
-        OnDestroy();
+        SetInitialState();
 
         if (config.GetSettingsValue<bool>("Disable rendering in pause"))
         {
-            GlobalMessenger<OWCamera>.AddListener("SwitchActiveCamera", OnSwitchActiveCamera);
-
             OWTime.OnPause += OnPause;
             OWTime.OnUnpause += OnUnpause;
         }
     }
 
-    private void OnDestroy()
+    private void SetInitialState()
     {
-        GlobalMessenger<OWCamera>.RemoveListener("SwitchActiveCamera", OnSwitchActiveCamera);
+        _IsInPauseMenu = false;
+        ConfigurePlayerCamera();
 
         OWTime.OnPause -= OnPause;
         OWTime.OnUnpause -= OnUnpause;
+    }
+
+    private void OnDestroy()
+    {
+        SetInitialState();
     }
 
     private void OnPause(OWTime.PauseType pauseType)
@@ -48,18 +54,18 @@ internal sealed class PlayerCameraEnabler : MonoBehaviour
         }
     }
 
-    private void OnSwitchActiveCamera(OWCamera camera)
-    {
-        this.InvokeAfterFrame(ConfigurePlayerCamera);
-    }
-
     private void ConfigurePlayerCamera()
     {
-        var playerCamera = Locator.GetPlayerCamera().OrNull();
-
-        if (playerCamera is not null)
+        if (Locator.GetPlayerCamera().OrNull() is { } playerCamera)
         {
-            playerCamera.enabled = !_IsInPauseMenu;
+            var mainCamera = playerCamera.mainCamera;
+
+            if (mainCamera.targetDisplay != InvalidDisplay)
+            {
+                _TargetDisplay = mainCamera.targetDisplay;
+            }
+
+            mainCamera.targetDisplay = !_IsInPauseMenu ? _TargetDisplay : InvalidDisplay;
         }
     }
 }
