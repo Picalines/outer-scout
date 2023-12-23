@@ -7,6 +7,8 @@ using UnityEngine;
 
 namespace SceneRecorder.WebApi.RouteDefinitions;
 
+using static ResponseFabric;
+
 internal sealed class WarpRouteDefinition : IApiRouteDefinition
 {
     private const string ModSpawnPointName = $"__{nameof(SceneRecorder)}_SpawnPoint";
@@ -19,27 +21,23 @@ internal sealed class WarpRouteDefinition : IApiRouteDefinition
     {
         using var precondition = serverBuilder.UseInPlayableScenePrecondition();
 
-        serverBuilder.Map(
-            HttpMethod.Post,
-            "warp_to/:ground_body_name",
-            (Request request, string ground_body_name) =>
+        serverBuilder.MapPost(
+            "warp_to/:groundBodyName",
+            (string groundBodyName, TransformModel localTransformModel) =>
             {
                 var playerSpawner = LocatorExtensions.GetPlayerSpawner();
                 if (playerSpawner is null)
                 {
-                    return ResponseFabric.ServiceUnavailable();
+                    return ServiceUnavailable();
                 }
 
-                var groundBodyTransform = GameObject.Find(ground_body_name).OrNull()?.transform;
+                var groundBodyTransform = GameObject.Find(groundBodyName).OrNull()?.transform;
                 var groundBody = groundBodyTransform?.GetComponent<OWRigidbody>();
                 if ((groundBodyTransform, groundBody) is not ({ }, { }))
                 {
-                    return ResponseFabric.BadRequest(
-                        $"ground body \"{ground_body_name}\" not found"
-                    );
+                    return BadRequest($"ground body \"{groundBodyName}\" not found");
                 }
 
-                var localTransformModel = request.ParseContentJson<TransformModel>();
                 var playerTransform = Locator.GetPlayerBody().transform;
 
                 var localTransform = new GameObject().transform;
@@ -97,7 +95,7 @@ internal sealed class WarpRouteDefinition : IApiRouteDefinition
 
                 UnityEngine.Object.Destroy(localTransform.gameObject);
 
-                return ResponseFabric.Ok();
+                return Ok();
             }
         );
     }

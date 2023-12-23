@@ -53,53 +53,13 @@ public sealed class HttpServerBuilder
         _BaseUrl = baseUrl;
     }
 
-    public void Map(HttpMethod httpMethod, string path, Func<Request, IResponse> handler) =>
-        Map(FuncRequestHandler.Create(RouteFromString(httpMethod, path), handler));
+    public void MapGet(string path, Delegate handler) => Map(HttpMethod.Get, path, handler);
 
-    public void Map<T1>(HttpMethod httpMethod, string path, Func<Request, T1, IResponse> handler) =>
-        Map(FuncRequestHandler.Create(RouteFromString(httpMethod, path), handler));
+    public void MapPost(string path, Delegate handler) => Map(HttpMethod.Post, path, handler);
 
-    public void Map<T1, T2>(
-        HttpMethod httpMethod,
-        string path,
-        Func<Request, T1, T2, IResponse> handler
-    ) => Map(FuncRequestHandler.Create(RouteFromString(httpMethod, path), handler));
+    public void MapPut(string path, Delegate handler) => Map(HttpMethod.Put, path, handler);
 
-    public void Map<T1, T2, T3>(
-        HttpMethod httpMethod,
-        string path,
-        Func<Request, T1, T2, T3, IResponse> handler
-    ) => Map(FuncRequestHandler.Create(RouteFromString(httpMethod, path), handler));
-
-    public void Map<T1, T2, T3, T4>(
-        HttpMethod httpMethod,
-        string path,
-        Func<Request, T1, T2, T3, T4, IResponse> handler
-    ) => Map(FuncRequestHandler.Create(RouteFromString(httpMethod, path), handler));
-
-    public void Map<T1, T2, T3, T4, T5>(
-        HttpMethod httpMethod,
-        string path,
-        Func<Request, T1, T2, T3, T4, T5, IResponse> handler
-    ) => Map(FuncRequestHandler.Create(RouteFromString(httpMethod, path), handler));
-
-    public void Map<T1, T2, T3, T4, T5, T6>(
-        HttpMethod httpMethod,
-        string path,
-        Func<Request, T1, T2, T3, T4, T5, T6, IResponse> handler
-    ) => Map(FuncRequestHandler.Create(RouteFromString(httpMethod, path), handler));
-
-    public void Map<T1, T2, T3, T4, T5, T6, T7>(
-        HttpMethod httpMethod,
-        string path,
-        Func<Request, T1, T2, T3, T4, T5, T6, T7, IResponse> handler
-    ) => Map(FuncRequestHandler.Create(RouteFromString(httpMethod, path), handler));
-
-    public void Map<T1, T2, T3, T4, T5, T6, T7, T8>(
-        HttpMethod httpMethod,
-        string path,
-        Func<Request, T1, T2, T3, T4, T5, T6, T7, T8, IResponse> handler
-    ) => Map(FuncRequestHandler.Create(RouteFromString(httpMethod, path), handler));
+    public void MapDelete(string path, Delegate handler) => Map(HttpMethod.Delete, path, handler);
 
     public IDisposable UsePrecondition(Func<Request, IResponse?> optionalRequestHandler)
     {
@@ -111,30 +71,33 @@ public sealed class HttpServerBuilder
         httpServer.Configure(_BaseUrl, _RequestHandlers.ToArray());
     }
 
-    private void Map(RequestHandler handler)
+    private void Map(HttpMethod method, string path, Delegate handlerFunc)
     {
+        var route = RouteFromString(method, path);
+        var handler = FuncRequestHandler.Create(route, handlerFunc);
+
         var preconditionHandlers = _PreconditionHandlerStack.Reverse().ToArray();
 
-        _RequestHandlers.Add(
-            FuncRequestHandler.CreateUnchecked(
-                handler.Route,
-                request =>
+        var wrappedHandler = FuncRequestHandler.Create(
+            route,
+            (Request request) =>
+            {
+                foreach (var preconditionHandler in preconditionHandlers)
                 {
-                    foreach (var preconditionHandler in preconditionHandlers)
+                    var optionalResponse = preconditionHandler.OptionalRequestHandler.Invoke(
+                        request
+                    );
+                    if (optionalResponse is not null)
                     {
-                        var optionalResponse = preconditionHandler.OptionalRequestHandler.Invoke(
-                            request
-                        );
-                        if (optionalResponse is not null)
-                        {
-                            return optionalResponse;
-                        }
+                        return optionalResponse;
                     }
-
-                    return handler.Handle(request);
                 }
-            )
+
+                return handler.Handle(request);
+            }
         );
+
+        _RequestHandlers.Add(wrappedHandler);
     }
 
     private static Route RouteFromString(HttpMethod httpMethod, string path)

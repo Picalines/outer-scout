@@ -2,7 +2,6 @@
 using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.Recording.Recorders;
 using SceneRecorder.WebApi.Http;
-using SceneRecorder.WebApi.Http.Response;
 using SceneRecorder.WebApi.RouteDefinitions;
 using UnityEngine;
 
@@ -54,15 +53,9 @@ public sealed class WebApiServer : HttpServer
             routeDefinition.MapRoutes(serverBuilder, context);
         }
 
-        serverBuilder.Map(
-            HttpMethod.Get,
+        serverBuilder.MapGet(
             "",
-            request =>
-            {
-                return ResponseFabric.Ok(
-                    new { Message = $"Welcome to Outer Wilds {nameof(SceneRecorder)} API!" }
-                );
-            }
+            () => new { message = $"Welcome to Outer Wilds {nameof(SceneRecorder)} API!" }
         );
     }
 }

@@ -71,7 +71,7 @@ internal sealed class Router
             {
                 switch (routeSegment.Type)
                 {
-                    case Route.SegmentType.Plain:
+                    case Route.SegmentType.Constant:
                         var plainSegment = routeSegment.Value;
 
                         currentNode = currentNode.PlainChildren.ContainsKey(plainSegment)

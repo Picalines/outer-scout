@@ -1,11 +1,12 @@
-﻿using Newtonsoft.Json;
-using SceneRecorder.BodyMeshExport;
+﻿using SceneRecorder.BodyMeshExport;
 using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
 
 namespace SceneRecorder.WebApi.RouteDefinitions;
+
+using static ResponseFabric;
 
 internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
 {
@@ -17,46 +18,33 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
     {
         using var precondition = serverBuilder.UseInPlayableScenePrecondition();
 
-        serverBuilder.Map(
-            HttpMethod.Get,
+        serverBuilder.MapGet(
             "ground_body/name",
-            request =>
-            {
-                return LocatorExtensions.GetCurrentGroundBody() is { } groundBody
-                    ? ResponseFabric.Ok(groundBody.name)
-                    : ResponseFabric.NotFound();
-            }
+            () =>
+                LocatorExtensions.GetCurrentGroundBody() is { } groundBody
+                    ? Ok(groundBody.name)
+                    : NotFound()
         );
 
-        serverBuilder.Map(
-            HttpMethod.Get,
+        serverBuilder.MapGet(
             "ground_body/sectors/current/path",
-            request =>
-            {
-                var playerSectorDetector = Locator
+            () =>
+                Locator
                     .GetPlayerDetector()
-                    .GetComponent<SectorDetector>();
-                var lastEnteredSector = playerSectorDetector.GetLastEnteredSector();
-
-                return ResponseFabric.Ok(lastEnteredSector.transform.GetPath());
-            }
+                    .GetComponent<SectorDetector>()
+                    .GetLastEnteredSector()
+                    .transform.GetPath()
         );
 
-        serverBuilder.Map(
-            HttpMethod.Post,
+        serverBuilder.MapPost(
             "ground_body/mesh_list",
-            (Request request, string output_file_path) =>
-            {
-                if (LocatorExtensions.GetCurrentGroundBody() is not { } groundBody)
+            () =>
+                LocatorExtensions.GetCurrentGroundBody() switch
                 {
-                    return ResponseFabric.NotFound();
+                    { } groundBody
+                        => Ok(GroundBodyMeshExport.CaptureMeshInfo(groundBody.gameObject)),
+                    _ => NotFound(),
                 }
-
-                var meshInfo = GroundBodyMeshExport.CaptureMeshInfo(groundBody.gameObject);
-
-                File.WriteAllText(output_file_path, JsonConvert.SerializeObject(meshInfo));
-                return ResponseFabric.Created();
-            }
         );
     }
 }

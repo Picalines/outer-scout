@@ -7,6 +7,8 @@ using SceneRecorder.WebApi.Http.Response;
 
 namespace SceneRecorder.WebApi.RouteDefinitions;
 
+using static ResponseFabric;
+
 internal sealed class RecorderRouteDefinition : IApiRouteDefinition
 {
     public static RecorderRouteDefinition Instance { get; } = new();
@@ -19,84 +21,53 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
 
         var outputRecorder = context.OutputRecorder;
 
-        serverBuilder.Map(
-            HttpMethod.Get,
+        serverBuilder.MapGet(
             "recorder/settings",
-            request =>
-            {
-                return outputRecorder.Settings is { } sceneSettings
-                    ? ResponseFabric.Ok(sceneSettings)
-                    : ResponseFabric.NotFound();
-            }
+            () => outputRecorder.Settings is { } sceneSettings ? Ok(sceneSettings) : NotFound()
         );
 
-        serverBuilder.Map(
-            HttpMethod.Put,
+        serverBuilder.MapPut(
             "recorder/settings",
-            request =>
+            (RecorderSettings newSettings) =>
             {
                 if (outputRecorder.IsRecording)
                 {
-                    return ResponseFabric.ServiceUnavailable();
+                    return ServiceUnavailable();
                 }
 
-                var newSceneSettings = request.ParseContentJson<RecorderSettings>();
-                outputRecorder.Settings = newSceneSettings;
+                outputRecorder.Settings = newSettings;
 
-                return ResponseFabric.Ok();
+                return Ok();
             }
         );
 
-        serverBuilder.Map(
-            HttpMethod.Get,
-            "recorder/is_able_to_record",
-            request =>
-            {
-                return ResponseFabric.Ok(outputRecorder.IsAbleToRecord);
-            }
-        );
+        serverBuilder.MapGet("recorder/is_able_to_record", () => outputRecorder.IsAbleToRecord);
 
-        serverBuilder.Map(
-            HttpMethod.Get,
+        serverBuilder.MapGet(
             "recorder/frames_recorded",
-            request =>
-            {
-                return outputRecorder.IsAbleToRecord
-                    ? ResponseFabric.Ok(outputRecorder.FramesRecorded)
-                    : ResponseFabric.ServiceUnavailable();
-            }
+            () =>
+                outputRecorder.IsAbleToRecord
+                    ? Ok(outputRecorder.FramesRecorded)
+                    : ServiceUnavailable()
         );
 
-        serverBuilder.Map(
-            HttpMethod.Get,
+        serverBuilder.MapGet(
             "recorder/frames_recorded_async",
-            request =>
-            {
-                return outputRecorder.IsAbleToRecord
-                    ? ResponseFabric.Ok(FramesRecordedCoroutine(outputRecorder))
-                    : ResponseFabric.ServiceUnavailable();
-            }
+            () =>
+                outputRecorder.IsAbleToRecord
+                    ? Ok(FramesRecordedCoroutine(outputRecorder))
+                    : ServiceUnavailable()
         );
 
-        serverBuilder.Map(
-            HttpMethod.Get,
-            "recorder/enabled",
-            request =>
-            {
-                return ResponseFabric.Ok(outputRecorder.enabled);
-            }
-        );
+        serverBuilder.MapGet("recorder/enabled", () => outputRecorder.enabled);
 
-        serverBuilder.Map(
-            HttpMethod.Put,
+        serverBuilder.MapPut(
             "recorder/enabled",
-            request =>
+            (bool shouldRecord) =>
             {
-                var shouldRecord = request.ParseContentJson<bool>();
-
                 if ((shouldRecord, outputRecorder.IsAbleToRecord) is (true, false))
                 {
-                    return ResponseFabric.ServiceUnavailable();
+                    return ServiceUnavailable();
                 }
 
                 if (shouldRecord != outputRecorder.IsRecording)
@@ -104,7 +75,7 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
                     outputRecorder.enabled = shouldRecord;
                 }
 
-                return ResponseFabric.Ok();
+                return Ok();
             }
         );
     }

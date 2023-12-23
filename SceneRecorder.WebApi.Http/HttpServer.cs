@@ -142,7 +142,7 @@ public class HttpServer : MonoBehaviour
             }
             else
             {
-                ResponseFabric.NotFound().Send(context.Response);
+                ((SyncResponse)ResponseFabric.NotFound()).Send(context.Response);
             }
         }
 

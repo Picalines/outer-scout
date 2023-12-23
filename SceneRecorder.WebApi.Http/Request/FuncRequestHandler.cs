@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel;
+using System.Reflection;
+using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.WebApi.Http.Response;
 using SceneRecorder.WebApi.Http.Routing;
 
@@ -19,137 +21,95 @@ internal sealed class FuncRequestHandler : RequestHandler
         return _HandlerFunc.Invoke(request);
     }
 
-    public static FuncRequestHandler CreateUnchecked(
-        Route route,
-        Func<Request, IResponse> handlerFunc
-    ) => new(route, handlerFunc);
+    public static FuncRequestHandler Create(Route route, Delegate handler) =>
+        new(route, BindHandler(route, handler));
 
-    public static FuncRequestHandler Create(Route route, Func<Request, IResponse> handlerFunc) =>
-        new(route, CreateHandler(route, handlerFunc));
-
-    public static FuncRequestHandler Create<T1>(
-        Route route,
-        Func<Request, T1, IResponse> handlerFunc
-    ) => new(route, CreateHandler(route, handlerFunc));
-
-    public static FuncRequestHandler Create<T1, T2>(
-        Route route,
-        Func<Request, T1, T2, IResponse> handlerFunc
-    ) => new(route, CreateHandler(route, handlerFunc));
-
-    public static FuncRequestHandler Create<T1, T2, T3>(
-        Route route,
-        Func<Request, T1, T2, T3, IResponse> handlerFunc
-    ) => new(route, CreateHandler(route, handlerFunc));
-
-    public static FuncRequestHandler Create<T1, T2, T3, T4>(
-        Route route,
-        Func<Request, T1, T2, T3, T4, IResponse> handlerFunc
-    ) => new(route, CreateHandler(route, handlerFunc));
-
-    public static FuncRequestHandler Create<T1, T2, T3, T4, T5>(
-        Route route,
-        Func<Request, T1, T2, T3, T4, T5, IResponse> handlerFunc
-    ) => new(route, CreateHandler(route, handlerFunc));
-
-    public static FuncRequestHandler Create<T1, T2, T3, T4, T5, T6>(
-        Route route,
-        Func<Request, T1, T2, T3, T4, T5, T6, IResponse> handlerFunc
-    ) => new(route, CreateHandler(route, handlerFunc));
-
-    public static FuncRequestHandler Create<T1, T2, T3, T4, T5, T6, T7>(
-        Route route,
-        Func<Request, T1, T2, T3, T4, T5, T6, T7, IResponse> handlerFunc
-    ) => new(route, CreateHandler(route, handlerFunc));
-
-    public static FuncRequestHandler Create<T1, T2, T3, T4, T5, T6, T7, T8>(
-        Route route,
-        Func<Request, T1, T2, T3, T4, T5, T6, T7, T8, IResponse> handlerFunc
-    ) => new(route, CreateHandler(route, handlerFunc));
-
-    private static Func<Request, IResponse> CreateHandler(Route route, Delegate handlerFunc)
+    private static Func<Request, IResponse> BindHandler(Route route, Delegate handler)
     {
-        var handlerParameters = handlerFunc
-            .Method.GetParameters()
-            .Skip(1)
-            .Select(
-                (param, index) =>
-                    new
-                    {
-                        Index = index,
-                        param.Name,
-                        TypeName = param.ParameterType.Name,
-                        TypeConverter = TypeDescriptor.GetConverter(param.ParameterType),
-                    }
-            )
-            .ToDictionary(param => param.Name, param => param);
+        var handlerMethod = handler.Method;
+        var handlerTarget = handler.Target;
+        var handlerParameters = handlerMethod.GetParameters();
+        var handlerParametersCount = handlerParameters.Length;
 
-        var queryParameterNames = new HashSet<string>(
-            handlerParameters
-                .Values.Select(param => param.Name)
-                .Except(
-                    route
-                        .Segments.Where(segment => segment.Type is Route.SegmentType.Parameter)
-                        .Select(segment => segment.Value)
-                )
-        );
+        var returnsVoid = handlerMethod.ReturnType == typeof(void);
 
-        var queryParametersCount = queryParameterNames.Count;
+        var routeParameters = new HashSet<string>(route.Parameters);
+
+        var handlerArgumentBinders = handlerParameters
+            .Select<ParameterInfo, Func<Request, object>>(parameter =>
+            {
+                var parameterType = parameter.ParameterType;
+
+                if (parameterType == typeof(Request))
+                {
+                    return request => request;
+                }
+
+                var parameterName = parameter.Name;
+
+                if (parameterType.IsPrimitive || parameterType == typeof(string))
+                {
+                    var typeConverter = TypeDescriptor.GetConverter(parameterType);
+
+                    return routeParameters.Contains(parameterName)
+                        ? (
+                            request =>
+                                request.RouteParameters.TryGetValue(
+                                    parameterName,
+                                    out var routeValue
+                                )
+                                    ? typeConverter.ConvertFromString(routeValue)
+                                    : ResponseFabric.BadRequest(
+                                        $"missing route {parameterType.Name} parameter '${parameterName}'"
+                                    )
+                        )
+                        : (
+                            request =>
+                                request.QueryParameters.TryGetValue(
+                                    parameterName,
+                                    out var queryValue
+                                )
+                                    ? typeConverter.ConvertFromString(queryValue)
+                                    : ResponseFabric.BadRequest(
+                                        $"missing query {parameterType.Name} parameter '${parameterName}'"
+                                    )
+                        );
+                }
+
+                var jsonBodyMethod =
+                    typeof(Request)
+                        .GetMethod(nameof(Request.JsonBody))
+                        .MakeGenericMethod(parameterType)
+                    ?? throw new InvalidOperationException(
+                        $"{nameof(Request)}.{nameof(Request.JsonBody)}<{parameterType.FullName}> not found"
+                    );
+
+                return request => jsonBodyMethod.Invoke(request, Array.Empty<object>());
+            })
+            .ToArray();
 
         return request =>
         {
-            if (request.QueryParameters.Count < queryParametersCount)
-            {
-                var missingParameterName = queryParameterNames
-                    .Except(request.QueryParameters.Keys)
-                    .First();
+            var handlerArguments = new object[handlerParametersCount];
 
-                return ResponseFabric.BadRequest(
-                    $"missing query parameter '{missingParameterName}'"
-                );
+            foreach (var (index, binder) in handlerArgumentBinders.Indexed())
+            {
+                var argument = binder(request);
+
+                if (argument is IResponse errorResponse)
+                {
+                    return errorResponse;
+                }
+
+                handlerArguments[index] = argument;
             }
 
-            if (request.QueryParameters.Count >= queryParametersCount)
+            return handlerMethod.Invoke(handlerTarget, handlerArguments) switch
             {
-                var unexpectedParameterName = request
-                    .QueryParameters.Keys.Except(queryParameterNames)
-                    .FirstOrDefault();
-
-                if (unexpectedParameterName is not null)
-                {
-                    return ResponseFabric.BadRequest(
-                        $"unexpected query parameter '{unexpectedParameterName}'"
-                    );
-                }
-            }
-
-            var handlerArguments = new object[handlerParameters.Count + 1];
-
-            handlerArguments[0] = request;
-
-            foreach (
-                var (name, strValue) in request.RouteParameters.Concat(request.QueryParameters)
-            )
-            {
-                if (handlerParameters.TryGetValue(name, out var handlerParameter) is false)
-                {
-                    return ResponseFabric.BadRequest($"unexpected route parameter '{name}'");
-                }
-
-                try
-                {
-                    handlerArguments[1 + handlerParameter.Index] =
-                        handlerParameter.TypeConverter.ConvertFromInvariantString(strValue);
-                }
-                catch (NotSupportedException)
-                {
-                    return ResponseFabric.BadRequest(
-                        $"{handlerParameter.TypeName} expected in '{name}' parameter"
-                    );
-                }
-            }
-
-            return (IResponse)handlerFunc.Method.Invoke(handlerFunc.Target, handlerArguments);
+                _ when returnsVoid => ResponseFabric.Ok(),
+                IResponse response => response,
+                var value => ResponseFabric.Ok(value),
+            };
         };
     }
 }

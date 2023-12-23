@@ -5,6 +5,8 @@ using SceneRecorder.WebApi.Http.Response;
 
 namespace SceneRecorder.WebApi.RouteDefinitions;
 
+using static ResponseFabric;
+
 internal sealed class AnimationRouteDefinition : IApiRouteDefinition
 {
     public static AnimationRouteDefinition Instance { get; } = new();
@@ -16,9 +18,7 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
         using var gameScenePrecondition = serverBuilder.UseInPlayableScenePrecondition();
         using var ableToRecordPrecondition = serverBuilder.UsePrecondition(request =>
         {
-            return context.OutputRecorder.IsAbleToRecord is false
-                ? ResponseFabric.ServiceUnavailable()
-                : null;
+            return context.OutputRecorder.IsAbleToRecord ? null : ServiceUnavailable();
         });
 
         MapAnimatorRoutes(
@@ -26,16 +26,19 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
             "free_camera/transform",
             () => context.OutputRecorder.FreeCameraTransformAnimator
         );
+
         MapAnimatorRoutes(
             serverBuilder,
             "free_camera/camera_info",
             () => context.OutputRecorder.FreeCameraInfoAnimator
         );
+
         MapAnimatorRoutes(
             serverBuilder,
             "hdri_pivot/transform",
             () => context.OutputRecorder.HdriTransformAnimator
         );
+
         MapAnimatorRoutes(
             serverBuilder,
             "time/scale",
@@ -49,30 +52,27 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
         Func<IAnimator<T>?> getAnimator
     )
     {
-        serverBuilder.Map(
-            HttpMethod.Put,
+        serverBuilder.MapPut(
             $"animation/{routeName}/value",
-            (Request request, int from_frame, int to_frame) =>
+            (int fromFrame, int toFrame, T newValue) =>
             {
                 var animator = getAnimator();
                 if (animator is null)
                 {
-                    return ResponseFabric.NotFound("animator not found");
+                    return NotFound("animator not found");
                 }
 
                 var allFrameNumbers = animator.GetFrameNumbers();
 
                 if (
-                    from_frame > to_frame
-                    || !(allFrameNumbers.Contains(from_frame) && allFrameNumbers.Contains(to_frame))
+                    fromFrame > toFrame
+                    || !(allFrameNumbers.Contains(fromFrame) && allFrameNumbers.Contains(toFrame))
                 )
                 {
-                    return ResponseFabric.BadRequest("invalid frame range");
+                    return BadRequest("invalid frame range");
                 }
 
-                var newValue = request.ParseContentJson<T>();
-
-                for (int frame = from_frame; frame <= to_frame; frame++)
+                for (int frame = fromFrame; frame <= toFrame; frame++)
                 {
                     animator.SetValueAtFrame(frame, newValue);
                 }
@@ -81,38 +81,36 @@ internal sealed class AnimationRouteDefinition : IApiRouteDefinition
             }
         );
 
-        serverBuilder.Map(
-            HttpMethod.Put,
+        serverBuilder.MapPut(
             $"animation/{routeName}/values",
-            (Request request, int from_frame) =>
+            (int fromFrame, T[] newValues) =>
             {
                 var animator = getAnimator();
                 if (animator is null)
                 {
-                    return ResponseFabric.NotFound("animator not found");
+                    return NotFound("animator not found");
                 }
 
                 var allFrameNumbers = animator.GetFrameNumbers();
 
-                if (allFrameNumbers.Contains(from_frame) is false)
+                if (allFrameNumbers.Contains(fromFrame) is false)
                 {
-                    return ResponseFabric.BadRequest("invalid 'from_frame'");
+                    return BadRequest("invalid 'from_frame'");
                 }
 
-                var newValues = request.ParseContentJson<T[]>();
-                var toFrame = from_frame + newValues.Length - 1;
+                var toFrame = fromFrame + newValues.Length - 1;
 
                 if (allFrameNumbers.Contains(toFrame) is false)
                 {
-                    return ResponseFabric.BadRequest("frame range out of bounds");
+                    return BadRequest("frame range out of bounds");
                 }
 
-                for (int frame = from_frame; frame <= toFrame; frame++)
+                for (int frame = fromFrame; frame <= toFrame; frame++)
                 {
-                    animator.SetValueAtFrame(frame, newValues[frame - from_frame]);
+                    animator.SetValueAtFrame(frame, newValues[frame - fromFrame]);
                 }
 
-                return ResponseFabric.Ok();
+                return Ok();
             }
         );
     }

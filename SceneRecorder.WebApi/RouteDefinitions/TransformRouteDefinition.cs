@@ -7,6 +7,8 @@ using UnityEngine;
 
 namespace SceneRecorder.WebApi.RouteDefinitions;
 
+using static ResponseFabric;
+
 internal sealed class TransformRouteDefinition : IApiRouteDefinition
 {
     public static TransformRouteDefinition Instance { get; } = new();
@@ -24,51 +26,45 @@ internal sealed class TransformRouteDefinition : IApiRouteDefinition
             ["player_camera"] = (false, () => Locator.GetPlayerCamera().transform),
         };
 
-        serverBuilder.Map(
-            HttpMethod.Get,
-            ":entity_name/transform/local_to/ground_body",
-            (Request request, string entity_name) =>
+        serverBuilder.MapGet(
+            ":entityName/transform/local_to/ground_body",
+            (string entityName) =>
             {
-                if (entities.TryGetValue(entity_name, out var entity) is false)
+                if (entities.TryGetValue(entityName, out var entity) is false)
                 {
-                    return ResponseFabric.NotFound();
+                    return NotFound();
                 }
 
                 var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()!.transform;
                 var entityTransform = entity.GetTransform();
 
-                return ResponseFabric.Ok(
-                    TransformModel.FromInverse(groundBodyTransform, entityTransform)
-                );
+                return Ok(TransformModel.FromInverse(groundBodyTransform, entityTransform));
             }
         );
 
-        serverBuilder.Map(
-            HttpMethod.Put,
-            ":entity_name/transform/local_to/ground_body",
-            (Request request, string entity_name) =>
+        serverBuilder.MapPut(
+            ":entityName/transform/local_to/ground_body",
+            (string entityName, TransformModel newTransform) =>
             {
-                if (entities.TryGetValue(entity_name, out var entity) is false)
+                if (entities.TryGetValue(entityName, out var entity) is false)
                 {
-                    return ResponseFabric.NotFound();
+                    return NotFound();
                 }
 
                 if (entity.Mutable is false)
                 {
-                    return ResponseFabric.NotAcceptable($"{entity_name} transform is immutable");
+                    return NotAcceptable($"{entityName} transform is immutable");
                 }
 
                 var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()!.transform;
                 var entityTransform = entity.GetTransform();
 
-                var transformModel = request.ParseContentJson<TransformModel>();
-
                 var oldItemParent = entityTransform.parent;
                 entityTransform.parent = groundBodyTransform;
-                transformModel.ApplyToLocalTransform(entityTransform);
+                newTransform.ApplyToLocalTransform(entityTransform);
                 entityTransform.parent = oldItemParent;
 
-                return ResponseFabric.Ok();
+                return Ok();
             }
         );
     }

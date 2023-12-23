@@ -2,6 +2,15 @@ namespace SceneRecorder.Infrastructure.Extensions;
 
 public static class IEnumerableExtensions
 {
+    public static IEnumerable<(int Index, T Value)> Indexed<T>(this IEnumerable<T> enumerable)
+    {
+        int index = 0;
+        foreach (var value in enumerable)
+        {
+            yield return (index++, value);
+        }
+    }
+
     public static TSource? MinByOrDefault<TSource, TKey>(
         this IEnumerable<TSource> source,
         Func<TSource, TKey> selector

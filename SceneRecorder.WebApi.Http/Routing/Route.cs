@@ -7,7 +7,7 @@ internal sealed record Route(HttpMethod HttpMethod, IReadOnlyList<Route.Segment>
 {
     public enum SegmentType
     {
-        Plain,
+        Constant,
         Parameter
     }
 
@@ -17,16 +17,11 @@ internal sealed record Route(HttpMethod HttpMethod, IReadOnlyList<Route.Segment>
         {
             return Type switch
             {
-                SegmentType.Plain => Value,
+                SegmentType.Constant => Value,
                 SegmentType.Parameter => ":" + Value,
                 _ => throw new NotImplementedException(),
             };
         }
-    }
-
-    public override string ToString()
-    {
-        return string.Join("/", Segments);
     }
 
     private static readonly Regex _StringSegmentRegex = new("^:?\\w+$");
@@ -71,7 +66,7 @@ internal sealed record Route(HttpMethod HttpMethod, IReadOnlyList<Route.Segment>
             }
             else
             {
-                segment = new(SegmentType.Plain, strSegment);
+                segment = new(SegmentType.Constant, strSegment);
             }
 
             segments.Add(segment);
@@ -79,5 +74,15 @@ internal sealed record Route(HttpMethod HttpMethod, IReadOnlyList<Route.Segment>
 
         route = new Route(method, segments.ToArray());
         return true;
+    }
+
+    public IEnumerable<string> Parameters =>
+        Segments
+            .Where(segment => segment is { Type: SegmentType.Parameter })
+            .Select(segment => segment.Value);
+
+    public override string ToString()
+    {
+        return $"{HttpMethod.Method} {string.Join("/", Segments)}";
     }
 }

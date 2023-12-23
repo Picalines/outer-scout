@@ -9,15 +9,15 @@ public sealed class Request
 
     public Uri Uri { get; }
 
-    public string Content { get; }
+    public string Body { get; }
 
     internal Dictionary<string, string> MutableRouteParameters { get; } = new();
 
-    internal Request(HttpMethod httpMethod, Uri uri, string content)
+    internal Request(HttpMethod httpMethod, Uri uri, string body)
     {
         HttpMethod = httpMethod;
         Uri = uri;
-        Content = content;
+        Body = body;
 
         var queryDictionary = new Dictionary<string, string>();
 
@@ -26,6 +26,7 @@ public sealed class Request
             query.GetValues,
             (key, value) => new { key, value }
         );
+
         foreach (var pair in queryPairs)
         {
             queryDictionary[pair.key] = pair.value;
@@ -38,8 +39,8 @@ public sealed class Request
 
     public IReadOnlyDictionary<string, string> QueryParameters { get; }
 
-    public T ParseContentJson<T>()
+    public T JsonBody<T>()
     {
-        return JsonConvert.DeserializeObject<T>(Content)!;
+        return JsonConvert.DeserializeObject<T>(Body)!;
     }
 }
