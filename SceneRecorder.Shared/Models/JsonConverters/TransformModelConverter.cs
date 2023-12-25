@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 namespace SceneRecorder.Shared.Models.JsonConverters;
@@ -48,11 +47,7 @@ internal sealed class TransformDTOConverter : JsonConverter<TransformDTO>
         return result;
     }
 
-    public override void WriteJson(
-        JsonWriter writer,
-        TransformDTO value,
-        JsonSerializer serializer
-    )
+    public override void WriteJson(JsonWriter writer, TransformDTO value, JsonSerializer serializer)
     {
         var (position, rotation, scale) = (value.Position, value.Rotation, value.Scale);
 
