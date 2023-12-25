@@ -4,15 +4,15 @@ using UnityEngine;
 
 namespace SceneRecorder.BodyMeshExport;
 
-public static class GroundBodyMeshExport
+public static class GroundBodyMesh
 {
-    public static GroundBodyMeshInfo CaptureMeshInfo(GameObject groundBodyObject)
+    public static GroundBodyMeshDTO GetDTO(GameObject groundBodyObject)
     {
         var renderedMeshFilters = GetComponentsInChildrenWithSector<MeshFilter>(groundBodyObject)
             .Where(pair => pair.Component.TryGetComponent<Renderer>(out _) is true);
 
         var noSectorMeshInfo = CreateEmptySectorMeshInfo(groundBodyObject.transform.GetPath());
-        var sectorMeshInfos = new Dictionary<Sector, SectorMeshInfo>();
+        var sectorMeshInfos = new Dictionary<Sector, SectorMeshDTO>();
 
         foreach (var (sector, meshFilter) in renderedMeshFilters)
         {
@@ -22,7 +22,7 @@ public static class GroundBodyMeshExport
 
             var (meshGameObject, meshTransform) = (meshFilter.gameObject, meshFilter.transform);
 
-            var transformData = TransformModel.FromGlobalTransform(meshTransform);
+            var transformData = TransformDTO.FromGlobal(meshTransform);
 
             if (
                 StreamingManager.s_tableLoaded
@@ -34,9 +34,9 @@ public static class GroundBodyMeshExport
                 && assetBundle is StreamingMeshAssetBundle { isLoaded: true } meshAssetBundle
             )
             {
-                var streamedMeshes = (sectorMeshInfo.StreamedMeshes as List<MeshInfo>)!;
+                var streamedMeshes = (sectorMeshInfo.StreamedMeshes as List<MeshDTO>)!;
                 streamedMeshes.Add(
-                    new MeshInfo()
+                    new MeshDTO()
                     {
                         Path = meshAssetBundle._meshNamesByID[streamingHandle.meshIndex],
                         Transform = transformData,
@@ -45,9 +45,9 @@ public static class GroundBodyMeshExport
             }
             else
             {
-                var plainMeshes = (sectorMeshInfo.PlainMeshes as List<MeshInfo>)!;
+                var plainMeshes = (sectorMeshInfo.PlainMeshes as List<MeshDTO>)!;
                 plainMeshes.Add(
-                    new MeshInfo()
+                    new MeshDTO()
                     {
                         Path = meshGameObject.transform.GetPath(),
                         Transform = transformData,
@@ -56,31 +56,31 @@ public static class GroundBodyMeshExport
             }
         }
 
-        var sectorMeshInfosList = new List<SectorMeshInfo>();
+        var sectorMeshInfosList = new List<SectorMeshDTO>();
         if (noSectorMeshInfo is not { PlainMeshes.Count: 0, StreamedMeshes.Count: 0 })
         {
             sectorMeshInfosList.Add(noSectorMeshInfo);
         }
         sectorMeshInfosList.AddRange(sectorMeshInfos.Values);
 
-        return new GroundBodyMeshInfo()
+        return new GroundBodyMeshDTO()
         {
             BodyName = groundBodyObject.name,
-            BodyTransform = TransformModel.FromGlobalTransform(groundBodyObject.transform),
+            BodyTransform = TransformDTO.FromGlobal(groundBodyObject.transform),
             Sectors = sectorMeshInfosList,
         };
 
-        static SectorMeshInfo CreateEmptySectorMeshInfo(string path)
+        static SectorMeshDTO CreateEmptySectorMeshInfo(string path)
         {
-            return new SectorMeshInfo()
+            return new SectorMeshDTO()
             {
                 Path = path,
-                PlainMeshes = new List<MeshInfo>(),
-                StreamedMeshes = new List<MeshInfo>(),
+                PlainMeshes = new List<MeshDTO>(),
+                StreamedMeshes = new List<MeshDTO>(),
             };
         }
 
-        static SectorMeshInfo CreateEmptySectorMeshInfoFromSector(Sector sector)
+        static SectorMeshDTO CreateEmptySectorMeshInfoFromSector(Sector sector)
         {
             return CreateEmptySectorMeshInfo(sector.transform.GetPath());
         }

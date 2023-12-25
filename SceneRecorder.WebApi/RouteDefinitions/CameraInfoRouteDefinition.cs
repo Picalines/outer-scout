@@ -32,21 +32,21 @@ internal sealed class CameraInfoRouteDefinition : IApiRouteDefinition
     {
         serverBuilder.MapGet(
             $"{routePrefix}/camera-info",
-            () => getOwCamera() is { } camera ? Ok(CameraInfo.FromOWCamera(camera)) : NotFound()
+            () => getOwCamera() is { } camera ? Ok(CameraDTO.FromOWCamera(camera)) : NotFound()
         );
 
         if (mutable)
         {
             serverBuilder.MapPut(
                 $"{routePrefix}/camera-info",
-                (CameraInfo cameraInfo) =>
+                (CameraDTO cameraInfo) =>
                 {
                     if (getOwCamera() is not { } camera)
                     {
                         return NotFound();
                     }
 
-                    cameraInfo.ApplyToOWCamera(camera);
+                    cameraInfo.Apply(camera);
 
                     return Ok();
                 }

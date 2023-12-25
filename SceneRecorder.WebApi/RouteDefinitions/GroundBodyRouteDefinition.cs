@@ -1,5 +1,6 @@
 ﻿using SceneRecorder.BodyMeshExport;
 using SceneRecorder.Infrastructure.Extensions;
+using SceneRecorder.Shared.Models;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
@@ -19,21 +20,20 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
         using var precondition = serverBuilder.UseInPlayableScenePrecondition();
 
         serverBuilder.MapGet(
-            "player/ground-body/name",
+            "player/ground-body",
             () =>
-                LocatorExtensions.GetCurrentGroundBody() is { } groundBody
-                    ? Ok(groundBody.name)
-                    : NotFound()
-        );
-
-        serverBuilder.MapGet(
-            "player/ground-body/sectors/current/path",
-            () =>
-                Locator
-                    .GetPlayerDetector()
-                    .GetComponent<SectorDetector>()
-                    .GetLastEnteredSector()
-                    .transform.GetPath()
+                LocatorExtensions.GetCurrentGroundBody() switch
+                {
+                    { name: var name, transform: var transform }
+                        => Ok(
+                            new
+                            {
+                                Name = name,
+                                Transform = TransformDTO.FromGlobal(transform)
+                            }
+                        ),
+                    _ => NotFound(),
+                }
         );
 
         serverBuilder.MapGet(
@@ -41,8 +41,7 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
             () =>
                 LocatorExtensions.GetCurrentGroundBody() switch
                 {
-                    { } groundBody
-                        => Ok(GroundBodyMeshExport.CaptureMeshInfo(groundBody.gameObject)),
+                    { } groundBody => Ok(GroundBodyMesh.GetDTO(groundBody)),
                     _ => NotFound(),
                 }
         );

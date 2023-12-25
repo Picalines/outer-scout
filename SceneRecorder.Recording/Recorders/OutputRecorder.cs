@@ -18,11 +18,11 @@ public sealed class OutputRecorder : RecorderComponent
 
     public ICommonCameraAPI? CommonCameraAPI { get; set; } = null;
 
-    public IAnimator<TransformModel>? FreeCameraTransformAnimator { get; private set; } = null;
+    public IAnimator<TransformDTO>? FreeCameraTransformAnimator { get; private set; } = null;
 
-    public IAnimator<CameraInfo>? FreeCameraInfoAnimator { get; private set; } = null;
+    public IAnimator<CameraDTO>? FreeCameraInfoAnimator { get; private set; } = null;
 
-    public IAnimator<TransformModel>? HdriTransformAnimator { get; private set; } = null;
+    public IAnimator<TransformDTO>? HdriTransformAnimator { get; private set; } = null;
 
     public IAnimator<float>? TimeScaleAnimator { get; private set; } = null;
 
@@ -172,7 +172,7 @@ public sealed class OutputRecorder : RecorderComponent
 
         var addedRecorders = new List<IRecorder>();
 
-        var cameraInfoAnimators = new List<IAnimator<CameraInfo>>()
+        var cameraInfoAnimators = new List<IAnimator<CameraDTO>>()
         {
             new CameraInfoAnimator(freeCamera),
         };
@@ -238,7 +238,7 @@ public sealed class OutputRecorder : RecorderComponent
             {
                 (FreeCameraTransformAnimator = new TransformAnimator(freeCamera.transform)),
                 (
-                    FreeCameraInfoAnimator = new ComposedAnimator<CameraInfo>()
+                    FreeCameraInfoAnimator = new ComposedAnimator<CameraDTO>()
                     {
                         Animators = cameraInfoAnimators.ToArray(),
                     }

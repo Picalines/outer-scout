@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace SceneRecorder.Recording.Animators;
 
-internal sealed class TransformAnimator : Animator<TransformModel>
+internal sealed class TransformAnimator : Animator<TransformDTO>
 {
     public enum TransformApplyMode
     {
@@ -24,16 +24,16 @@ internal sealed class TransformAnimator : Animator<TransformModel>
         TargetTransform = targetTransform;
     }
 
-    protected override void ApplyValue(TransformModel currentTransform)
+    protected override void ApplyValue(TransformDTO currentTransform)
     {
         switch (ApplyMode)
         {
             case TransformApplyMode.Local:
-                currentTransform.ApplyToLocalTransform(TargetTransform);
+                currentTransform.ApplyLocal(TargetTransform);
                 break;
 
             case TransformApplyMode.GlobalPositionAndRotation:
-                currentTransform.ApplyToGlobalPositionAndRotation(TargetTransform);
+                currentTransform.ApplyGlobal(TargetTransform);
                 break;
 
             default:
@@ -41,16 +41,16 @@ internal sealed class TransformAnimator : Animator<TransformModel>
         }
     }
 
-    private static TransformModel GetDefaultFrameValue(
+    private static TransformDTO GetDefaultFrameValue(
         Transform targetTransform,
         TransformApplyMode applyMode
     )
     {
         return applyMode switch
         {
-            TransformApplyMode.Local => TransformModel.FromLocalTransform(targetTransform),
+            TransformApplyMode.Local => TransformDTO.FromLocal(targetTransform),
             TransformApplyMode.GlobalPositionAndRotation
-                => TransformModel.FromGlobalTransform(targetTransform),
+                => TransformDTO.FromGlobal(targetTransform),
             _ => throw new NotImplementedException(),
         };
     }

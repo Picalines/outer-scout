@@ -9,6 +9,8 @@ namespace SceneRecorder.WebApi.RouteDefinitions;
 
 using static ResponseFabric;
 
+internal sealed record WarpRequest(TransformDTO LocalTransform);
+
 internal sealed class WarpRouteDefinition : IApiRouteDefinition
 {
     private const string ModSpawnPointName = $"__{nameof(SceneRecorder)}_SpawnPoint";
@@ -23,7 +25,7 @@ internal sealed class WarpRouteDefinition : IApiRouteDefinition
 
         serverBuilder.MapPost(
             ":groundBodyName/warp",
-            (string groundBodyName, TransformModel localTransformModel) =>
+            (string groundBodyName, WarpRequest request) =>
             {
                 var playerSpawner = LocatorExtensions.GetPlayerSpawner();
                 if (playerSpawner is null)
@@ -42,7 +44,7 @@ internal sealed class WarpRouteDefinition : IApiRouteDefinition
 
                 var localTransform = new GameObject().transform;
                 localTransform.SetParent(groundBodyTransform, false);
-                localTransformModel.ApplyToLocalTransform(localTransform);
+                request.LocalTransform.ApplyLocal(localTransform);
 
                 var spawnPoint = groundBodyTransform
                     .Find(ModSpawnPointName)

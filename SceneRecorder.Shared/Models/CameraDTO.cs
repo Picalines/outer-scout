@@ -4,26 +4,21 @@ using UnityEngine;
 
 namespace SceneRecorder.Shared.Models;
 
-public readonly record struct CameraInfo
+public readonly record struct CameraDTO
 {
-    [JsonProperty("sensor_size")]
     [JsonConverter(typeof(Vector2Converter))]
     public required Vector2 SensorSize { get; init; }
 
-    [JsonProperty("focal_length")]
     public required float FocalLength { get; init; }
 
-    [JsonProperty("lens_shift")]
     [JsonConverter(typeof(Vector2Converter))]
     public required Vector2 LensShift { get; init; }
 
-    [JsonProperty("near_clip_plane")]
     public required float NearClipPlane { get; init; }
 
-    [JsonProperty("far_clip_plane")]
     public required float FarClipPlane { get; init; }
 
-    public static CameraInfo FromOWCamera(OWCamera owCamera)
+    public static CameraDTO FromOWCamera(OWCamera owCamera)
     {
         var camera = owCamera.mainCamera;
 
@@ -37,7 +32,7 @@ public readonly record struct CameraInfo
         };
     }
 
-    public void ApplyToOWCamera(OWCamera owCamera)
+    public void Apply(OWCamera owCamera)
     {
         var camera = owCamera.mainCamera;
 

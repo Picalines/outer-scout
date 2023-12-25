@@ -4,8 +4,8 @@ using UnityEngine;
 
 namespace SceneRecorder.Shared.Models;
 
-[JsonConverter(typeof(TransformModelConverter))]
-public readonly record struct TransformModel
+[JsonConverter(typeof(TransformDTOConverter))]
+public readonly record struct TransformDTO
 {
     public required Vector3 Position { get; init; }
 
@@ -13,44 +13,38 @@ public readonly record struct TransformModel
 
     public required Vector3 Scale { get; init; }
 
-    public static TransformModel FromGlobalTransform(Transform transform)
-    {
-        return new TransformModel
+    public static TransformDTO FromGlobal(Transform transform) =>
+        new()
         {
             Position = transform.position,
             Rotation = transform.rotation,
             Scale = transform.lossyScale,
         };
-    }
 
-    public static TransformModel FromLocalTransform(Transform transform)
-    {
-        return new TransformModel
+    public static TransformDTO FromLocal(Transform transform) =>
+        new()
         {
             Position = transform.localPosition,
             Rotation = transform.localRotation,
             Scale = transform.localScale,
         };
-    }
 
-    public static TransformModel FromInverse(Transform parentTransform, Transform childTransform)
-    {
-        return new()
+    public static TransformDTO FromInverse(Transform parentTransform, Transform childTransform) =>
+        new()
         {
             Position = parentTransform.InverseTransformPoint(childTransform.position),
             Rotation = parentTransform.InverseTransformRotation(childTransform.rotation),
             Scale = childTransform.lossyScale,
         };
-    }
 
-    public void ApplyToLocalTransform(Transform transform)
+    public void ApplyLocal(Transform transform)
     {
         transform.localPosition = Position;
         transform.localRotation = Rotation;
         transform.localScale = Scale;
     }
 
-    public void ApplyToGlobalPositionAndRotation(Transform transform)
+    public void ApplyGlobal(Transform transform)
     {
         transform.position = Position;
         transform.rotation = Rotation;

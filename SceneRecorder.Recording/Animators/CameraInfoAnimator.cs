@@ -2,18 +2,18 @@ using SceneRecorder.Shared.Models;
 
 namespace SceneRecorder.Recording.Animators;
 
-internal sealed class CameraInfoAnimator : Animator<CameraInfo>
+internal sealed class CameraInfoAnimator : Animator<CameraDTO>
 {
     private readonly OWCamera _TargetCamera;
 
     public CameraInfoAnimator(OWCamera targetCamera)
-        : base(CameraInfo.FromOWCamera(targetCamera))
+        : base(CameraDTO.FromOWCamera(targetCamera))
     {
         _TargetCamera = targetCamera;
     }
 
-    protected override void ApplyValue(CameraInfo value)
+    protected override void ApplyValue(CameraDTO value)
     {
-        value.ApplyToOWCamera(_TargetCamera);
+        value.Apply(_TargetCamera);
     }
 }

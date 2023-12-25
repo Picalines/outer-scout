@@ -52,17 +52,20 @@ internal sealed class TransformRouteDefinition : IApiRouteDefinition
             $"{routePrefix}/transform",
             (string localTo) =>
             {
-                if (getTransform() is not { } entityTransform)
+                if (
+                    getTransform() is not { } entityTransform
+                    || GameObject.Find(localTo).OrNull() is not { } origin
+                )
                 {
                     return NotFound();
                 }
 
-                if (GameObject.Find(localTo).OrNull() is not { } origin)
-                {
-                    return NotFound();
-                }
-
-                return Ok(TransformModel.FromInverse(origin.transform, entityTransform));
+                return Ok(
+                    new
+                    {
+                        Transform = TransformDTO.FromInverse(origin.transform, entityTransform)
+                    }
+                );
             }
         );
 
@@ -70,7 +73,7 @@ internal sealed class TransformRouteDefinition : IApiRouteDefinition
         {
             serverBuilder.MapPut(
                 $"{routePrefix}/transform",
-                (TransformModel newTransform, string localTo) =>
+                (TransformDTO newTransform, string localTo) =>
                 {
                     if (getTransform() is not { } entityTransform)
                     {
@@ -84,7 +87,7 @@ internal sealed class TransformRouteDefinition : IApiRouteDefinition
 
                     var oldEntityParent = entityTransform.parent;
                     entityTransform.parent = origin.transform;
-                    newTransform.ApplyToLocalTransform(entityTransform);
+                    newTransform.ApplyLocal(entityTransform);
                     entityTransform.parent = oldEntityParent;
 
                     return Ok();

@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace SceneRecorder.Shared.Models.JsonConverters;
 
-internal sealed class TransformModelConverter : JsonConverter<TransformModel>
+internal sealed class TransformDTOConverter : JsonConverter<TransformDTO>
 {
     public override bool CanRead => true;
 
@@ -14,17 +14,17 @@ internal sealed class TransformModelConverter : JsonConverter<TransformModel>
 
     private static readonly QuaternionConverter _QuaternionConverter = new();
 
-    public override TransformModel ReadJson(
+    public override TransformDTO ReadJson(
         JsonReader reader,
         Type objectType,
-        TransformModel existingValue,
+        TransformDTO existingValue,
         bool hasExistingValue,
         JsonSerializer serializer
     )
     {
         reader.Read();
 
-        var result = new TransformModel
+        var result = new TransformDTO
         {
             Position = _Vector3Converter.ReadJson(
                 reader,
@@ -50,7 +50,7 @@ internal sealed class TransformModelConverter : JsonConverter<TransformModel>
 
     public override void WriteJson(
         JsonWriter writer,
-        TransformModel value,
+        TransformDTO value,
         JsonSerializer serializer
     )
     {

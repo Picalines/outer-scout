@@ -19,6 +19,7 @@ public sealed class WebApiServer : HttpServer
         GroundBodyRouteDefinition.Instance,
         KeyframesRouteDefinition.Instance,
         RecorderRouteDefinition.Instance,
+        SectorsRouteDefinition.Instance,
         TransformRouteDefinition.Instance,
         WarpRouteDefinition.Instance,
     };
