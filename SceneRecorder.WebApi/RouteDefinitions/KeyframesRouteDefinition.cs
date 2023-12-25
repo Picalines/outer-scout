@@ -7,6 +7,8 @@ namespace SceneRecorder.WebApi.RouteDefinitions;
 
 using static ResponseFabric;
 
+internal sealed record SetKeyframesRequest<T>(IReadOnlyList<T> Values, int FromFrame);
+
 internal sealed class KeyframesRouteDefinition : IApiRouteDefinition
 {
     public static KeyframesRouteDefinition Instance { get; } = new();
@@ -54,13 +56,14 @@ internal sealed class KeyframesRouteDefinition : IApiRouteDefinition
     {
         serverBuilder.MapPut(
             $"{routePrefix}/keyframes",
-            (int fromFrame, T[] newValues) =>
+            (SetKeyframesRequest<T> request) =>
             {
                 if (getAnimator() is not { } animator)
                 {
                     return NotFound("animator not found");
                 }
 
+                var (newValues, fromFrame) = request;
                 var allFrameNumbers = animator.GetFrameNumbers();
 
                 if (allFrameNumbers.Contains(fromFrame) is false)
@@ -68,7 +71,7 @@ internal sealed class KeyframesRouteDefinition : IApiRouteDefinition
                     return BadRequest("invalid 'from_frame'");
                 }
 
-                var toFrame = fromFrame + newValues.Length - 1;
+                var toFrame = fromFrame + newValues.Count - 1;
 
                 if (allFrameNumbers.Contains(toFrame) is false)
                 {
