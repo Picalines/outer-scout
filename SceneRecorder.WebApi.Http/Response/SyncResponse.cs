@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace SceneRecorder.WebApi.Http.Response;
 
@@ -10,6 +11,9 @@ public sealed class SyncResponse : IResponse
     public string ContentType { get; }
 
     public string Content { get; }
+
+    private static JsonSerializerSettings _JsonSettings =
+        new() { ContractResolver = new CamelCasePropertyNamesContractResolver() };
 
     private SyncResponse(HttpStatusCode statusCode, string contentType, string content)
     {
@@ -35,7 +39,11 @@ public sealed class SyncResponse : IResponse
 
     public static SyncResponse FromJson<T>(HttpStatusCode httpStatusCode, T value)
     {
-        return new(httpStatusCode, "application/json", JsonConvert.SerializeObject(value));
+        return new(
+            httpStatusCode,
+            "application/json",
+            JsonConvert.SerializeObject(value, _JsonSettings)
+        );
     }
 
     internal void Send(HttpListenerResponse listenerResponse)
