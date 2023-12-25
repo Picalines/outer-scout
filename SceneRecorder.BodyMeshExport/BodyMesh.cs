@@ -4,25 +4,28 @@ using UnityEngine;
 
 namespace SceneRecorder.BodyMeshExport;
 
-public static class GroundBodyMesh
+public static class BodyMesh
 {
-    public static GroundBodyMeshDTO GetDTO(GameObject groundBodyObject)
+    public static BodyMeshDTO GetDTO(GameObject body)
     {
-        var renderedMeshFilters = GetComponentsInChildrenWithSector<MeshFilter>(groundBodyObject)
+        var bodyTransform = body.transform;
+
+        var renderedMeshFilters = GetComponentsInChildrenWithSector<MeshFilter>(body)
             .Where(pair => pair.Component.TryGetComponent<Renderer>(out _) is true);
 
-        var noSectorMeshInfo = CreateEmptySectorMeshInfo(groundBodyObject.transform.GetPath());
+        var noSectorMeshInfo = CreateEmptySectorDTO(bodyTransform.GetPath());
         var sectorMeshInfos = new Dictionary<Sector, SectorMeshDTO>();
 
         foreach (var (sector, meshFilter) in renderedMeshFilters)
         {
             var sectorMeshInfo = sector is null
                 ? noSectorMeshInfo
-                : GetOrCreate(sectorMeshInfos, sector, CreateEmptySectorMeshInfoFromSector);
+                : GetOrCreate(sectorMeshInfos, sector, CreateEmptySectorDTO);
 
             var (meshGameObject, meshTransform) = (meshFilter.gameObject, meshFilter.transform);
 
-            var transformData = TransformDTO.FromGlobal(meshTransform);
+            var globalMeshTransform = TransformDTO.FromGlobal(meshTransform);
+            var localMeshTrasnform = TransformDTO.FromInverse(bodyTransform, meshTransform);
 
             if (
                 StreamingManager.s_tableLoaded
@@ -36,10 +39,11 @@ public static class GroundBodyMesh
             {
                 var streamedMeshes = (sectorMeshInfo.StreamedMeshes as List<MeshDTO>)!;
                 streamedMeshes.Add(
-                    new MeshDTO()
+                    new()
                     {
                         Path = meshAssetBundle._meshNamesByID[streamingHandle.meshIndex],
-                        Transform = transformData,
+                        GlobalTransform = globalMeshTransform,
+                        LocalTransform = localMeshTrasnform,
                     }
                 );
             }
@@ -47,10 +51,11 @@ public static class GroundBodyMesh
             {
                 var plainMeshes = (sectorMeshInfo.PlainMeshes as List<MeshDTO>)!;
                 plainMeshes.Add(
-                    new MeshDTO()
+                    new()
                     {
                         Path = meshGameObject.transform.GetPath(),
-                        Transform = transformData,
+                        GlobalTransform = globalMeshTransform,
+                        LocalTransform = localMeshTrasnform,
                     }
                 );
             }
@@ -63,27 +68,31 @@ public static class GroundBodyMesh
         }
         sectorMeshInfosList.AddRange(sectorMeshInfos.Values);
 
-        return new GroundBodyMeshDTO()
+        return new BodyMeshDTO()
         {
-            BodyName = groundBodyObject.name,
-            BodyTransform = TransformDTO.FromGlobal(groundBodyObject.transform),
+            Body = new()
+            {
+                Name = body.name,
+                Path = bodyTransform.GetPath(),
+                Transform = TransformDTO.FromGlobal(bodyTransform),
+            },
             Sectors = sectorMeshInfosList,
         };
+    }
 
-        static SectorMeshDTO CreateEmptySectorMeshInfo(string path)
+    private static SectorMeshDTO CreateEmptySectorDTO(string path)
+    {
+        return new()
         {
-            return new SectorMeshDTO()
-            {
-                Path = path,
-                PlainMeshes = new List<MeshDTO>(),
-                StreamedMeshes = new List<MeshDTO>(),
-            };
-        }
+            Path = path,
+            PlainMeshes = new List<MeshDTO>(),
+            StreamedMeshes = new List<MeshDTO>(),
+        };
+    }
 
-        static SectorMeshDTO CreateEmptySectorMeshInfoFromSector(Sector sector)
-        {
-            return CreateEmptySectorMeshInfo(sector.transform.GetPath());
-        }
+    private static SectorMeshDTO CreateEmptySectorDTO(Sector sector)
+    {
+        return CreateEmptySectorDTO(sector.transform.GetPath());
     }
 
     private static IEnumerable<(Sector? Sector, T Component)> GetComponentsInChildrenWithSector<T>(

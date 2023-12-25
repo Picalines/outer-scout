@@ -25,7 +25,14 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
                 LocatorExtensions.GetCurrentGroundBody() switch
                 {
                     { name: var name, transform: var transform }
-                        => Ok(new { Name = name, Transform = TransformDTO.FromGlobal(transform) }),
+                        => Ok(
+                            new GameObjectDTO
+                            {
+                                Name = name,
+                                Path = transform.GetPath(),
+                                Transform = TransformDTO.FromGlobal(transform)
+                            }
+                        ),
                     _ => NotFound(),
                 }
         );
@@ -35,7 +42,7 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
             () =>
                 LocatorExtensions.GetCurrentGroundBody() switch
                 {
-                    { } groundBody => Ok(GroundBodyMesh.GetDTO(groundBody)),
+                    { } groundBody => Ok(BodyMesh.GetDTO(groundBody)),
                     _ => NotFound(),
                 }
         );
