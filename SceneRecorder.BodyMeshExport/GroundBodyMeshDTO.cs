@@ -8,5 +8,5 @@ public sealed class GroundBodyMeshDTO
 
     public required TransformDTO BodyTransform { get; init; }
 
-    public required IReadOnlyList<SectorMeshInfo> Sectors { get; init; }
+    public required IReadOnlyList<SectorMeshDTO> Sectors { get; init; }
 }

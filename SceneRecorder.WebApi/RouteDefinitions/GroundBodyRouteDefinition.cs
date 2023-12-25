@@ -1,5 +1,5 @@
 ﻿using SceneRecorder.BodyMeshExport;
-using SceneRecorder.Infrastructure.Extensions;
+using SceneRecorder.Shared.Extensions;
 using SceneRecorder.Shared.Models;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
@@ -25,13 +25,7 @@ internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
                 LocatorExtensions.GetCurrentGroundBody() switch
                 {
                     { name: var name, transform: var transform }
-                        => Ok(
-                            new
-                            {
-                                Name = name,
-                                Transform = TransformDTO.FromGlobal(transform)
-                            }
-                        ),
+                        => Ok(new { Name = name, Transform = TransformDTO.FromGlobal(transform) }),
                     _ => NotFound(),
                 }
         );

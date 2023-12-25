@@ -1,4 +1,4 @@
-﻿using SceneRecorder.Infrastructure.Extensions;
+﻿using SceneRecorder.Shared.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
 
@@ -11,7 +11,7 @@ internal static class HttpServerBuilderExtensions
         return serverBuilder.UsePrecondition(request =>
         {
             return LocatorExtensions.IsInPlayableScene() is false
-                ? ResponseFabric.ServiceUnavailable("not in playable scene")
+                ? ResponseFabric.ServiceUnavailable(new { Error = "not in playable scene" })
                 : null;
         });
     }

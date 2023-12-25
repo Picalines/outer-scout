@@ -1,5 +1,5 @@
 using OWML.Common;
-using SceneRecorder.Infrastructure.Extensions;
+using SceneRecorder.Shared.Extensions;
 using UnityEngine;
 
 namespace SceneRecorder;

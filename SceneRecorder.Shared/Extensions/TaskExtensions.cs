@@ -1,4 +1,4 @@
-namespace SceneRecorder.Infrastructure.Extensions;
+namespace SceneRecorder.Shared.Extensions;
 
 public static class TaskExtensions
 {

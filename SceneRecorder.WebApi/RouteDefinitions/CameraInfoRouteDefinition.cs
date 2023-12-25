@@ -1,4 +1,4 @@
-﻿using SceneRecorder.Infrastructure.Extensions;
+﻿using SceneRecorder.Shared.Extensions;
 using SceneRecorder.Shared.Models;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Reflection;
-using SceneRecorder.Infrastructure.Extensions;
+using SceneRecorder.Shared.Extensions;
 using SceneRecorder.WebApi.Http.Response;
 using SceneRecorder.WebApi.Http.Routing;
 

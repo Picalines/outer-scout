@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using OWML.Common;
 using SceneRecorder.Infrastructure.API;
-using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.Recording.Animators;
 using SceneRecorder.Recording.Recorders.Abstract;
+using SceneRecorder.Shared.Extensions;
 using SceneRecorder.Shared.Models;
 using UnityEngine;
 using UnityEngine.InputSystem;

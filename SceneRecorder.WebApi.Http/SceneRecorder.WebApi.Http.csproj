@@ -21,5 +21,6 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\SceneRecorder.Infrastructure\SceneRecorder.Infrastructure.csproj" />
+		<ProjectReference Include="..\SceneRecorder.Shared\SceneRecorder.Shared.csproj" />
 	</ItemGroup>
 </Project>

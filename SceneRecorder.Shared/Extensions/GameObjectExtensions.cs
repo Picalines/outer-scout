@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SceneRecorder.Infrastructure.Extensions;
+namespace SceneRecorder.Shared.Extensions;
 
 public static class GameObjectExtensions
 {

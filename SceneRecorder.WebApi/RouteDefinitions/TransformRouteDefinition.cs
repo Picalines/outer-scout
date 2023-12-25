@@ -1,4 +1,4 @@
-﻿using SceneRecorder.Infrastructure.Extensions;
+﻿using SceneRecorder.Shared.Extensions;
 using SceneRecorder.Shared.Models;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
@@ -61,10 +61,7 @@ internal sealed class TransformRouteDefinition : IApiRouteDefinition
                 }
 
                 return Ok(
-                    new
-                    {
-                        Transform = TransformDTO.FromInverse(origin.transform, entityTransform)
-                    }
+                    new { Transform = TransformDTO.FromInverse(origin.transform, entityTransform) }
                 );
             }
         );
@@ -75,19 +72,19 @@ internal sealed class TransformRouteDefinition : IApiRouteDefinition
                 $"{routePrefix}/transform",
                 (TransformDTO newTransform, string localTo) =>
                 {
-                    if (getTransform() is not { } entityTransform)
-                    {
-                        return NotFound();
-                    }
-
-                    if (GameObject.Find(localTo).OrNull() is not { } origin)
+                    if (
+                        getTransform() is not { } entityTransform
+                        || GameObject.Find(localTo).OrNull() is not { } origin
+                    )
                     {
                         return NotFound();
                     }
 
                     var oldEntityParent = entityTransform.parent;
                     entityTransform.parent = origin.transform;
+
                     newTransform.ApplyLocal(entityTransform);
+
                     entityTransform.parent = oldEntityParent;
 
                     return Ok();
