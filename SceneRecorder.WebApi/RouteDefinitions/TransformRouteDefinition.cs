@@ -9,6 +9,8 @@ namespace SceneRecorder.WebApi.RouteDefinitions;
 
 using static ResponseFabric;
 
+internal sealed record SetTransformRequest(TransformDTO Transform, string? LocalTo);
+
 internal sealed class TransformRouteDefinition : IApiRouteDefinition
 {
     public static TransformRouteDefinition Instance { get; } = new();
@@ -54,14 +56,18 @@ internal sealed class TransformRouteDefinition : IApiRouteDefinition
             {
                 if (
                     getTransform() is not { } entityTransform
-                    || GameObject.Find(localTo).OrNull() is not { } origin
+                    || GameObject.Find(localTo).OrNull() is not { transform: var origin }
                 )
                 {
                     return NotFound();
                 }
 
                 return Ok(
-                    new { Transform = TransformDTO.FromInverse(origin.transform, entityTransform) }
+                    new
+                    {
+                        Origin = TransformDTO.FromGlobal(origin),
+                        Transform = TransformDTO.FromInverse(origin, entityTransform)
+                    }
                 );
             }
         );
@@ -70,22 +76,33 @@ internal sealed class TransformRouteDefinition : IApiRouteDefinition
         {
             serverBuilder.MapPut(
                 $"{routePrefix}/transform",
-                (TransformDTO newTransform, string localTo) =>
+                (SetTransformRequest request) =>
                 {
-                    if (
-                        getTransform() is not { } entityTransform
-                        || GameObject.Find(localTo).OrNull() is not { } origin
-                    )
+                    if (getTransform() is not { } entityTransform)
                     {
                         return NotFound();
                     }
 
-                    var oldEntityParent = entityTransform.parent;
-                    entityTransform.parent = origin.transform;
+                    var (newTransform, localTo) = request;
 
-                    newTransform.ApplyLocal(entityTransform);
+                    if (localTo is not null)
+                    {
+                        if (GameObject.Find(localTo).OrNull() is not { } origin)
+                        {
+                            return NotFound();
+                        }
 
-                    entityTransform.parent = oldEntityParent;
+                        var oldEntityParent = entityTransform.parent;
+                        entityTransform.parent = origin.transform;
+
+                        newTransform.ApplyLocal(entityTransform);
+
+                        entityTransform.parent = oldEntityParent;
+                    }
+                    else
+                    {
+                        newTransform.ApplyGlobal(entityTransform);
+                    }
 
                     return Ok();
                 }
