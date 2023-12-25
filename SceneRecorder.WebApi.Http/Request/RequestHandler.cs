@@ -1,4 +1,5 @@
-﻿using SceneRecorder.WebApi.Http.Response;
+﻿using System.Reflection;
+using SceneRecorder.WebApi.Http.Response;
 using SceneRecorder.WebApi.Http.Routing;
 
 namespace SceneRecorder.WebApi.Http;
@@ -22,6 +23,15 @@ internal abstract class RequestHandler
         }
         catch (Exception exception)
         {
+            int depth = 0;
+            while (
+                exception is TargetInvocationException { InnerException: var innerException }
+                && depth++ < 100
+            )
+            {
+                exception = innerException;
+            }
+
             return ResponseFabric.InternalServerError(
                 $"{exception.GetType().Name}: {exception.Message}\n{exception.StackTrace}"
             );
