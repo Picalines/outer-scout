@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using OWML.Common;
 using SceneRecorder.Infrastructure.API;
-using SceneRecorder.Recording.Animators;
 using SceneRecorder.Recording.Recorders.Abstract;
 using SceneRecorder.Shared.Extensions;
 using SceneRecorder.Shared.Models;
@@ -10,7 +9,8 @@ using UnityEngine.InputSystem;
 
 namespace SceneRecorder.Recording.Recorders;
 
-using TransformAnimator = Animators.TransformAnimator;
+using SceneRecorder.Recording.Animators;
+using SceneRecorder.Recording.FFmpeg;
 
 public sealed class OutputRecorder : RecorderComponent
 {
@@ -130,17 +130,16 @@ public sealed class OutputRecorder : RecorderComponent
     [MemberNotNullWhen(true, nameof(Settings), nameof(ModConsole))]
     public bool IsAbleToRecord
     {
-        get
-        {
-            return IsRecording
-                || (
-                    Settings is not null
-                    && ModConsole is not null
-                    && CommonCameraAPI is not null
-                    && LocatorExtensions.IsInPlayableScene()
-                    && LocatorExtensions.GetFreeCamera() is not null
-                );
-        }
+        get =>
+            IsRecording
+            || (
+                Settings is not null
+                && ModConsole is not null
+                && CommonCameraAPI is not null
+                && LocatorExtensions.IsInPlayableScene()
+                && LocatorExtensions.GetFreeCamera() is not null
+                && FFmpeg.IsInstalled
+            );
     }
 
     private void Configure()
