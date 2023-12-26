@@ -2,6 +2,7 @@
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
+using UnityEngine;
 
 namespace SceneRecorder.WebApi.RouteDefinitions;
 
@@ -68,7 +69,7 @@ internal sealed class KeyframesRouteDefinition : IApiRouteDefinition
 
                 if (allFrameNumbers.Contains(fromFrame) is false)
                 {
-                    return BadRequest("invalid 'from_frame'");
+                    return BadRequest("invalid start frame");
                 }
 
                 var toFrame = fromFrame + newValues.Length - 1;
