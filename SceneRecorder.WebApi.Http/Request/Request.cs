@@ -13,6 +13,9 @@ public sealed class Request
 
     internal Dictionary<string, string> MutableRouteParameters { get; } = new();
 
+    private static readonly JsonSerializerSettings _JsonSettings =
+        new() { MissingMemberHandling = MissingMemberHandling.Error };
+
     internal Request(HttpMethod httpMethod, Uri uri, string body)
     {
         HttpMethod = httpMethod;
@@ -41,6 +44,6 @@ public sealed class Request
 
     public T JsonBody<T>()
     {
-        return JsonConvert.DeserializeObject<T>(Body)!;
+        return JsonConvert.DeserializeObject<T>(Body, _JsonSettings)!;
     }
 }

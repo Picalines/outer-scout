@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Concurrent;
 using System.Net;
+using System.Runtime.Serialization;
+using Newtonsoft.Json;
 using OWML.Common;
 using SceneRecorder.Shared.Extensions;
 using SceneRecorder.WebApi.Http.Response;
@@ -130,7 +132,19 @@ public class HttpServer : MonoBehaviour
             }
 
             var httpMethod = new HttpMethod(context.Request.HttpMethod);
-            var request = new Request(httpMethod, context.Request.Url, requestContent);
+
+            Request request;
+
+            try
+            {
+                request = new Request(httpMethod, context.Request.Url, requestContent);
+            }
+            catch (JsonSerializationException exception)
+            {
+                var response = ResponseFabric.BadRequest(new { exception.Message });
+                ((SyncResponse)response).Send(context.Response);
+                continue;
+            }
 
             var requestHandler = _Router.Match(request);
 
