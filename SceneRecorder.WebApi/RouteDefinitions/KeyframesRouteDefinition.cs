@@ -7,7 +7,7 @@ namespace SceneRecorder.WebApi.RouteDefinitions;
 
 using static ResponseFabric;
 
-internal sealed record SetKeyframesRequest<T>(IReadOnlyList<T> Values, int FromFrame);
+internal sealed record SetKeyframesRequest<T>(T[] Values, int FromFrame);
 
 internal sealed class KeyframesRouteDefinition : IApiRouteDefinition
 {
@@ -71,7 +71,7 @@ internal sealed class KeyframesRouteDefinition : IApiRouteDefinition
                     return BadRequest("invalid 'from_frame'");
                 }
 
-                var toFrame = fromFrame + newValues.Count - 1;
+                var toFrame = fromFrame + newValues.Length - 1;
 
                 if (allFrameNumbers.Contains(toFrame) is false)
                 {
