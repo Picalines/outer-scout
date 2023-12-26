@@ -32,6 +32,10 @@ public sealed class OutputRecorder : RecorderComponent
 
     private ComposedAnimator? _ComposedAnimator = null;
 
+    private IAnimator<CameraDTO>? _FreeCameraInfoAnimator = null;
+
+    private IAnimator<CameraDTO>? _DepthCameraInfoAnimator = null;
+
     private Action? _OnRecordingStarted = null;
 
     private Action? _OnRecordingFinished = null;
@@ -171,9 +175,18 @@ public sealed class OutputRecorder : RecorderComponent
 
         var addedRecorders = new List<IRecorder>();
 
+        if (didSceneReload)
+        {
+            FreeCameraTransformAnimator = null;
+            FreeCameraInfoAnimator = null;
+            HdriTransformAnimator = null;
+            _FreeCameraInfoAnimator = null;
+            _DepthCameraInfoAnimator = null;
+        }
+
         var cameraInfoAnimators = new List<IAnimator<CameraDTO>>()
         {
-            new CameraInfoAnimator(freeCamera),
+            (_FreeCameraInfoAnimator ??= new CameraInfoAnimator(freeCamera)),
         };
 
         // background recorder
@@ -203,7 +216,9 @@ public sealed class OutputRecorder : RecorderComponent
             depthRecorder.FrameRate = Settings.FrameRate;
             depthRecorder.ModConsole = ModConsole!;
 
-            cameraInfoAnimators.Add(new CameraInfoAnimator(depthRecorder.DepthCamera));
+            cameraInfoAnimators.Add(
+                _DepthCameraInfoAnimator ??= new CameraInfoAnimator(depthRecorder.DepthCamera)
+            );
 
             addedRecorders.Add(depthRecorder);
         }
@@ -235,7 +250,7 @@ public sealed class OutputRecorder : RecorderComponent
         {
             var animators = new List<IAnimator>
             {
-                (FreeCameraTransformAnimator = new TransformAnimator(freeCamera.transform)),
+                (FreeCameraTransformAnimator ??= new TransformAnimator(freeCamera.transform)),
                 (
                     FreeCameraInfoAnimator = new ComposedAnimator<CameraDTO>()
                     {
@@ -245,18 +260,14 @@ public sealed class OutputRecorder : RecorderComponent
                 (TimeScaleAnimator = Animators.TimeScaleAnimator.Instance),
             };
 
-            HdriTransformAnimator = null;
             if (_HdriPivot is not null)
             {
-                animators.Add(HdriTransformAnimator = new TransformAnimator(_HdriPivot.transform));
+                animators.Add(
+                    HdriTransformAnimator ??= new TransformAnimator(_HdriPivot.transform)
+                );
             }
 
-            if (didSceneReload)
-            {
-                _ComposedAnimator = null;
-            }
-
-            _ComposedAnimator ??= new ComposedAnimator() { Animators = animators.ToArray() };
+            _ComposedAnimator = new ComposedAnimator() { Animators = animators.ToArray() };
 
             _ComposedAnimator.SetFrameRange(Settings.StartFrame, Settings.EndFrame);
         }
