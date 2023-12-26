@@ -63,10 +63,7 @@ public class HttpServer : MonoBehaviour
 
         Listening = true;
 
-        ModConsole?.WriteLine(
-            $"{nameof(SceneRecorder)} API: started listening at {_HttpListener.Prefixes.Single()}",
-            MessageType.Info
-        );
+        Log($"started listening at {_HttpListener.Prefixes.Single()}", MessageType.Info);
 
         Task.Run(Listen);
     }
@@ -84,7 +81,7 @@ public class HttpServer : MonoBehaviour
         _CancellationTokenSource!.Cancel();
         _StoppedListening!.Task.Wait();
 
-        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: stopped listening", MessageType.Info);
+        Log($"stopped listening", MessageType.Info);
     }
 
     public async Task StopListeningAsync()
@@ -133,6 +130,8 @@ public class HttpServer : MonoBehaviour
 
             var httpMethod = new HttpMethod(context.Request.HttpMethod);
 
+            Log($"received {httpMethod} request at '{context.Request.Url}'", MessageType.Info);
+
             Request request;
 
             try
@@ -143,6 +142,12 @@ public class HttpServer : MonoBehaviour
             {
                 var response = ResponseFabric.BadRequest(new { exception.Message });
                 ((SyncResponse)response).Send(context.Response);
+
+                Log(
+                    $"bad request at '{context.Request.Url}': {exception.Message}",
+                    MessageType.Warning
+                );
+
                 continue;
             }
 
@@ -157,6 +162,8 @@ public class HttpServer : MonoBehaviour
             else
             {
                 ((SyncResponse)ResponseFabric.NotFound()).Send(context.Response);
+
+                Log($"route '{context.Request.Url}' not found", MessageType.Warning);
             }
         }
 
@@ -169,11 +176,6 @@ public class HttpServer : MonoBehaviour
 
     private void HandleRequest(HttpListenerContext context, Request request, RequestHandler handler)
     {
-        ModConsole?.WriteLine(
-            $"{nameof(SceneRecorder)} API: handling {request.HttpMethod} request at '{request.Uri}'",
-            MessageType.Info
-        );
-
         var response = handler.Handle(request);
 
         var isInternalError = response.StatusCode is HttpStatusCode.InternalServerError;
@@ -184,10 +186,7 @@ public class HttpServer : MonoBehaviour
                 ? syncContent
                 : "<cannot read async content>";
 
-            ModConsole?.WriteLine(
-                $"{nameof(SceneRecorder)} API internal error: {content}",
-                MessageType.Error
-            );
+            Log($"internal error: {content}", MessageType.Error);
         }
 
         switch (response)
@@ -195,8 +194,8 @@ public class HttpServer : MonoBehaviour
             case SyncResponse syncResponse:
                 syncResponse.Send(context.Response);
 
-                ModConsole?.WriteLine(
-                    $"{nameof(SceneRecorder)} API: sent response {response.StatusCode} to {request.HttpMethod} request at '{handler.Route}'",
+                Log(
+                    $"sent response {response.StatusCode} to {request.HttpMethod} request at '{handler.Route}'",
                     isInternalError ? MessageType.Error : MessageType.Info
                 );
                 break;
@@ -241,13 +240,14 @@ public class HttpServer : MonoBehaviour
                 }
                 catch (Exception exception)
                 {
-                    ModConsole?.WriteLine(
-                        $"{nameof(SceneRecorder)} API: unhandled exception in {httpMethod} request {nameof(CoroutineResponse)} at '{route}'",
+                    Log(
+                        $"unhandled exception in async {httpMethod} request at '{route}'",
                         MessageType.Error
                     );
 
-                    ModConsole?.WriteLine(
-                        $"{exception.GetType().Name}: {exception.Message}\n{exception.StackTrace}"
+                    Log(
+                        $"{exception.GetType().Name}: {exception.Message}\n{exception.StackTrace}",
+                        MessageType.Error
                     );
                     break;
                 }
@@ -268,12 +268,17 @@ public class HttpServer : MonoBehaviour
 
         listenerResponse.Close();
 
-        ModConsole?.WriteLine(
-            $"{nameof(SceneRecorder)} API: sent response {coroutineResponse.StatusCode} to {httpMethod} request at '{route}'",
+        Log(
+            $"sent response {coroutineResponse.StatusCode} to {httpMethod} request at '{route}'",
             coroutineResponse.StatusCode is HttpStatusCode.InternalServerError
                 ? MessageType.Error
                 : MessageType.Info
         );
+    }
+
+    private void Log(string message, MessageType messageType)
+    {
+        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: {message}", messageType);
     }
 
     private void Update()
