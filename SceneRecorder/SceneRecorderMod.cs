@@ -2,6 +2,7 @@
 using OWML.ModHelper;
 using SceneRecorder.Infrastructure.API;
 using SceneRecorder.Infrastructure.Extensions;
+using SceneRecorder.Recording.FFmpeg;
 using SceneRecorder.Recording.Recorders;
 using SceneRecorder.WebApi;
 using UnityEngine;
@@ -40,6 +41,19 @@ internal sealed class SceneRecorderMod : ModBehaviour
             }
 
             _OutputRecorder.CommonCameraAPI = commonCameraAPI;
+
+            if (FFmpeg.IsInstalled is false)
+            {
+                ModHelper.Console.WriteLine(
+                    "ffmpeg executable not found. Video recording is not available. Check exception below:",
+                    MessageType.Warning
+                );
+
+                if (FFmpeg.InstallationCheckException is { } exception)
+                {
+                    ModHelper.Console.WriteLine(exception.ToString(), MessageType.Warning);
+                }
+            }
         }
 
         _WebApiServer?.Configure(config, ModHelper.Console);
