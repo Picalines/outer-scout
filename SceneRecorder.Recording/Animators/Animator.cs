@@ -1,8 +1,12 @@
+using System.Collections;
+
 namespace SceneRecorder.Recording.Animators;
 
 internal abstract class Animator<T> : IAnimator<T>
 {
     private readonly List<T> _ValuesAtFrames = new();
+
+    private readonly BitArray _HasFrames = new(0, false);
 
     private readonly T _DefaultFrameValue;
 
@@ -24,20 +28,32 @@ internal abstract class Animator<T> : IAnimator<T>
 
         StartFrame = startFrame;
         EndFrame = endFrame;
+        var frameCount = this.GetFrameCount();
 
-        ResizeList(_ValuesAtFrames, this.GetFrameCount(), _DefaultFrameValue);
+        ResizeList(_ValuesAtFrames, frameCount, _DefaultFrameValue);
+        _HasFrames.Length = frameCount;
     }
 
     public void SetValueAtFrame(int frame, in T value)
     {
         AssertFrameInRange(frame);
-        _ValuesAtFrames[FrameNumberToIndex(frame)] = value;
+
+        var frameIndex = FrameNumberToIndex(frame);
+
+        _ValuesAtFrames[frameIndex] = value;
+        _HasFrames.Set(frameIndex, true);
     }
 
     public void SetFrame(int frame)
     {
         AssertFrameInRange(frame);
-        ApplyValue(_ValuesAtFrames[FrameNumberToIndex(frame)]);
+
+        var frameIndex = FrameNumberToIndex(frame);
+
+        if (_HasFrames[frameIndex])
+        {
+            ApplyValue(_ValuesAtFrames[frameIndex]);
+        }
     }
 
     protected abstract void ApplyValue(T value);
@@ -71,7 +87,9 @@ internal abstract class Animator<T> : IAnimator<T>
         else
         {
             if (newSize > list.Capacity)
+            {
                 list.Capacity = newSize;
+            }
 
             list.AddRange(Enumerable.Repeat(newItemValue, newSize - currentSize));
         }
