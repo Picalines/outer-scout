@@ -15,7 +15,7 @@ internal sealed class PlayerCameraEnabler : MonoBehaviour
     {
         SetInitialState();
 
-        if (config.GetSettingsValue<bool>("Disable rendering in pause"))
+        if (config.GetDisableRenderInPauseSetting())
         {
             OWTime.OnPause += OnPause;
             OWTime.OnUnpause += OnUnpause;

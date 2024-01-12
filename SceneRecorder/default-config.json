@@ -1,9 +1,44 @@
 {
+  "$schema": "https://raw.githubusercontent.com/ow-mods/owml/master/schemas/config_schema.json",
   "enabled": true,
   "settings": {
-    "Disable rendering in pause": true,
-    "Web API port": 5000,
-    "Web API log only errors": true,
-    "FFmpeg logs":  false
+    "disableRenderInPause": {
+      "title": "Disable rendering in pause",
+      "tooltip": "Disables cameras when the game is paused. Use this to save resources in windowed mode",
+      "type": "toggle",
+      "value": true
+    },
+    "enableProgressUI": {
+      "title": "Enable recording progress UI",
+      "tooltip": "Enable this to see last recorded frame in the game window. Can affect performance",
+      "type": "toggle",
+      "value": true
+    },
+    "apiPort": {
+      "title": "Web API port",
+      "tooltip": "Port number that the mod will use to host it's HTTP API",
+      "type": "number",
+      "value": 5000,
+      "min": 1024,
+      "max": 49151
+    },
+    "ffmpegPath": {
+      "title": "FFmpeg executable path",
+      "tooltip": "By default FFmpeg is found in PATH",
+      "type": "text",
+      "value": "ffmpeg"
+    },
+    "enableApiInfoLogs": {
+      "title": "Log Web API info",
+      "tooltip": "Enable this to see Info logs for each HTTP request. Warnings and errors are always logged",
+      "type": "toggle",
+      "value": false
+    },
+    "enableFFmpegLogs": {
+      "title": "Log FFmpeg output",
+      "tooltip": "FFmpeg is required to record mp4 files from cameras. Enable this to see FFmpeg logs",
+      "type": "toggle",
+      "value": false
+    }
   }
 }

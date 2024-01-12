@@ -4,6 +4,7 @@ using SceneRecorder.Infrastructure.API;
 using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.Recording.FFmpeg;
 using SceneRecorder.Recording.Recorders;
+using SceneRecorder.Shared.Extensions;
 using SceneRecorder.WebApi;
 using UnityEngine;
 
@@ -23,7 +24,9 @@ internal sealed class SceneRecorderMod : ModBehaviour
     {
         if (_OutputRecorder is not null)
         {
-            _OutputRecorder.ModConsole = config.GetSettingsValue<bool>("FFmpeg logs")
+            _OutputRecorder.ModConfig = config;
+
+            _OutputRecorder.ModConsole = config.GetEnableFFmpegLogsSetting()
                 ? ModHelper.Console
                 : ModHelper.Console.WithFiltering((line, _) => !line.StartsWith("FFmpeg: "));
 
@@ -41,19 +44,6 @@ internal sealed class SceneRecorderMod : ModBehaviour
             }
 
             _OutputRecorder.CommonCameraAPI = commonCameraAPI;
-
-            if (FFmpeg.IsInstalled is false)
-            {
-                ModHelper.Console.WriteLine(
-                    "ffmpeg executable not found. Video recording is not available. Check exception below:",
-                    MessageType.Warning
-                );
-
-                if (FFmpeg.InstallationCheckException is { } exception)
-                {
-                    ModHelper.Console.WriteLine(exception.ToString(), MessageType.Warning);
-                }
-            }
         }
 
         _WebApiServer?.Configure(config, ModHelper.Console);
@@ -64,6 +54,18 @@ internal sealed class SceneRecorderMod : ModBehaviour
     private void Start()
     {
         ModHelper.Console.WriteLine($"{nameof(SceneRecorder)} is loaded!", MessageType.Success);
+
+        if (FFmpeg.CheckInstallation(ModHelper.Config) is { } checkException)
+        {
+            ModHelper.Console.WriteLine(
+                $"ffmpeg executable not found, {nameof(SceneRecorder)} is not available. See exception below:",
+                MessageType.Warning
+            );
+
+            ModHelper.Console.WriteLine(checkException.ToString(), MessageType.Warning);
+
+            return;
+        }
 
         Application.runInBackground = true;
         ModHelper.Console.WriteLine("Outer Wilds will run in background", MessageType.Warning);

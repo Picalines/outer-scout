@@ -6,7 +6,9 @@ namespace SceneRecorder.Recording.Recorders.Abstract;
 
 internal abstract class RenderTextureRecorder : RecorderComponent
 {
-    public IModConsole ModConsole { get; set; } = null!;
+    public IModConfig? ModConfig { get; set; } = null;
+
+    public IModConsole? ModConsole { get; set; } = null;
 
     public string? TargetFile { get; set; }
 
@@ -40,6 +42,7 @@ internal abstract class RenderTextureRecorder : RecorderComponent
             throw new ArgumentException(nameof(TargetFile));
 
         _FFmpegRecorder = new FFmpegTextureRecorder(
+            ModConfig,
             ModConsole,
             _SourceRenderTexture,
             FrameRate,

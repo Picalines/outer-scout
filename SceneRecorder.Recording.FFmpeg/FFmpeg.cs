@@ -1,32 +1,31 @@
 using System.Diagnostics;
+using OWML.Common;
+using SceneRecorder.Shared.Extensions;
 
 namespace SceneRecorder.Recording.FFmpeg;
 
 public static class FFmpeg
 {
-    public static bool IsInstalled => _IsInstalled.Value;
-
-    public static Exception? InstallationCheckException { get; private set; } = null;
-
-    private static Lazy<bool> _IsInstalled =
-        new(() =>
+    public static Exception? CheckInstallation(IModConfig modConfig)
+    {
+        try
         {
-            try
+            var process = new Process()
             {
-                var process = new Process()
+                StartInfo = new()
                 {
-                    StartInfo = new() { FileName = "ffmpeg", Arguments = "-version" }
-                };
+                    FileName = modConfig.GetFFmpegExecutablePathSetting(),
+                    Arguments = "-version"
+                }
+            };
 
-                process.Start();
-                process.WaitForExit();
-                return true;
-            }
-            catch (Exception exception)
-            {
-                InstallationCheckException = exception;
-            }
-
-            return false;
-        });
+            process.Start();
+            process.WaitForExit();
+            return null;
+        }
+        catch (Exception exception)
+        {
+            return exception;
+        }
+    }
 }

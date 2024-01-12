@@ -10,10 +10,11 @@ using UnityEngine.InputSystem;
 namespace SceneRecorder.Recording.Recorders;
 
 using SceneRecorder.Recording.Animators;
-using SceneRecorder.Recording.FFmpeg;
 
 public sealed class OutputRecorder : RecorderComponent
 {
+    public IModConfig? ModConfig { get; set; } = null;
+
     public IModConsole? ModConsole { get; set; } = null;
 
     public ICommonCameraAPI? CommonCameraAPI { get; set; } = null;
@@ -142,7 +143,6 @@ public sealed class OutputRecorder : RecorderComponent
                 && CommonCameraAPI is not null
                 && LocatorExtensions.IsInPlayableScene()
                 && LocatorExtensions.GetFreeCamera() is not null
-                && FFmpeg.IsInstalled
             );
     }
 
@@ -202,7 +202,7 @@ public sealed class OutputRecorder : RecorderComponent
 
             // render background to GUI
             var progressGUI = freeCamera.gameObject.GetOrAddComponent<RenderTextureRecorderGUI>();
-            progressGUI.enabled = Settings.ShowProgressGUI;
+            progressGUI.enabled = ModConfig?.GetEnableProgressUISetting() ?? false;
 
             addedRecorders.Add(backgroundRecorder);
         }

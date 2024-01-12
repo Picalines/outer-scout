@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using OWML.Common;
+using SceneRecorder.Shared.Extensions;
 using Unity.Collections;
 
 // Modified from: https://github.com/keijiro/FFmpegOut
@@ -10,7 +11,7 @@ internal sealed class FFmpegPipe : IDisposable
 {
     public event Action<string>? OutputReceived;
 
-    private readonly IModConsole _ModConsole;
+    private readonly IModConsole? _ModConsole;
 
     private readonly Process _FFmpegProcess;
 
@@ -27,14 +28,14 @@ internal sealed class FFmpegPipe : IDisposable
     private readonly Queue<byte[]> _PipeQueue = new();
     private readonly Queue<byte[]> _FreeBuffer = new();
 
-    public FFmpegPipe(IModConsole modConsole, string arguments)
+    public FFmpegPipe(IModConfig? modConfig, string arguments, IModConsole? modConsole)
     {
         _ModConsole = modConsole;
 
         _FFmpegProcess = Process.Start(
             new ProcessStartInfo()
             {
-                FileName = "ffmpeg",
+                FileName = modConfig.GetFFmpegExecutablePathSetting(),
                 Arguments = arguments,
                 UseShellExecute = false,
                 CreateNoWindow = true,
@@ -47,7 +48,7 @@ internal sealed class FFmpegPipe : IDisposable
         _FFmpegProcess.ErrorDataReceived += (sender, args) => OutputReceived?.Invoke(args.Data);
         _FFmpegProcess.BeginErrorReadLine();
 
-        OutputReceived += line => _ModConsole.WriteLine($"FFmpeg: {line}", MessageType.Info);
+        OutputReceived += line => _ModConsole?.WriteLine($"FFmpeg: {line}", MessageType.Info);
 
         _CopyThread = new Thread(CopyThread);
         _PipeThread = new Thread(PipeThread);
@@ -114,7 +115,7 @@ internal sealed class FFmpegPipe : IDisposable
     {
         if (_ThreadsAreTerminated is false)
         {
-            _ModConsole.WriteLine("ffmpeg pipe closed before work finished", MessageType.Error);
+            _ModConsole?.WriteLine("ffmpeg pipe closed before work finished", MessageType.Error);
         }
     }
 

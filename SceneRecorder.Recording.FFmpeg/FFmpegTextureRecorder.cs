@@ -18,7 +18,8 @@ public sealed class FFmpegTextureRecorder : IDisposable
     private bool _IsDisposed = false;
 
     public FFmpegTextureRecorder(
-        IModConsole modConsole,
+        IModConfig? modConfig,
+        IModConsole? modConsole,
         Texture sourceTexture,
         int framerate,
         string outputFilePath
@@ -46,8 +47,9 @@ public sealed class FFmpegTextureRecorder : IDisposable
 
         if (
             FFmpegAsyncGPUReadback.TryCreate(
-                modConsole,
+                modConfig,
                 ffmpegArguments.ToString(),
+                modConsole,
                 out _FFmpegReadback!
             )
             is false

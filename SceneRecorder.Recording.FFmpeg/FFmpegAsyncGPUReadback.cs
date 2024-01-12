@@ -9,26 +9,27 @@ namespace SceneRecorder.Recording.FFmpeg;
 
 internal sealed class FFmpegAsyncGPUReadback : IDisposable
 {
-    private readonly IModConsole _ModConsole;
+    private readonly IModConsole? _ModConsole;
 
     private FFmpegPipe? _Pipe;
 
     private readonly List<AsyncGPUReadbackRequest> _ReadbackQueue = new(4);
 
     public static bool TryCreate(
-        IModConsole modConsole,
+        IModConfig? modConfig,
         string arguments,
+        IModConsole? modConsole,
         [NotNullWhen(true)] out FFmpegAsyncGPUReadback? session
     )
     {
         if (SystemInfo.supportsAsyncGPUReadback is false)
         {
-            modConsole.WriteLine("async gpu readback is not supported", MessageType.Error);
+            modConsole?.WriteLine("async gpu readback is not supported", MessageType.Error);
             session = null;
             return false;
         }
 
-        session = new FFmpegAsyncGPUReadback(modConsole, arguments);
+        session = new FFmpegAsyncGPUReadback(modConfig, arguments, modConsole);
         return true;
     }
 
@@ -38,10 +39,10 @@ internal sealed class FFmpegAsyncGPUReadback : IDisposable
         get => _Pipe is null;
     }
 
-    private FFmpegAsyncGPUReadback(IModConsole modConsole, string arguments)
+    private FFmpegAsyncGPUReadback(IModConfig? modConfig, string arguments, IModConsole? modConsole)
     {
         _ModConsole = modConsole;
-        _Pipe = new FFmpegPipe(modConsole, arguments);
+        _Pipe = new FFmpegPipe(modConfig, arguments, modConsole);
     }
 
     public void PushFrame(Texture source)
@@ -85,7 +86,7 @@ internal sealed class FFmpegAsyncGPUReadback : IDisposable
     {
         if (_ReadbackQueue.Count > 6)
         {
-            _ModConsole.WriteLine("too many GPU readback requests", MessageType.Error);
+            _ModConsole?.WriteLine("too many GPU readback requests", MessageType.Error);
             return;
         }
 
@@ -125,7 +126,7 @@ internal sealed class FFmpegAsyncGPUReadback : IDisposable
 
             if (firstRequest.hasError)
             {
-                _ModConsole.WriteLine("GPU readback error was detected", MessageType.Error);
+                _ModConsole?.WriteLine("GPU readback error was detected", MessageType.Error);
                 continue;
             }
 

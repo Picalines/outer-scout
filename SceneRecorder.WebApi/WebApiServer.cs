@@ -1,6 +1,7 @@
 ﻿using OWML.Common;
 using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.Recording.Recorders;
+using SceneRecorder.Shared.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.RouteDefinitions;
 using UnityEngine;
@@ -26,12 +27,12 @@ public sealed class WebApiServer : HttpServer
 
     public void Configure(IModConfig modConfig, IModConsole modConsole)
     {
-        var logOnlyErrors = modConfig.GetSettingsValue<bool>("Web API log only errors");
-        ModConsole = logOnlyErrors
-            ? modConsole.WithOnlyMessagesOfType(MessageType.Error)
-            : modConsole;
+        var enableInfoLogs = modConfig.GetEnableApiInfoLogsSetting();
+        ModConsole = enableInfoLogs
+            ? modConsole
+            : modConsole.WithOnlyMessagesOfType(MessageType.Warning, MessageType.Error);
 
-        var listenUrl = $"http://localhost:{modConfig.GetSettingsValue<int>("Web API port")}/";
+        var listenUrl = $"http://localhost:{modConfig.GetApiPortSetting()}/";
         var httpServerBuilder = new HttpServerBuilder(listenUrl);
 
         MapRoutes(httpServerBuilder);
