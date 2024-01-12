@@ -28,7 +28,7 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
 
         serverBuilder.MapPut(
             "recorder/settings",
-            (RecorderSettings newSettings) =>
+            (RecorderSettingsDTO newSettings) =>
             {
                 if (outputRecorder.IsRecording)
                 {

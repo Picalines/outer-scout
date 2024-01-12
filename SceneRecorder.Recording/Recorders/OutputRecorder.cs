@@ -26,7 +26,7 @@ public sealed class OutputRecorder : RecorderComponent
 
     public IAnimator<float>? TimeScaleAnimator { get; private set; } = null;
 
-    private RecorderSettings? _Settings = null;
+    private RecorderSettingsDTO? _Settings = null;
 
     private ComposedRecorder _ComposedRecorder = null!;
 
@@ -114,7 +114,7 @@ public sealed class OutputRecorder : RecorderComponent
         }
     }
 
-    public RecorderSettings? Settings
+    public RecorderSettingsDTO? Settings
     {
         get => _Settings;
         set

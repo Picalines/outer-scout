@@ -1,6 +1,6 @@
 ﻿namespace SceneRecorder.Shared.Models;
 
-public sealed class RecorderSettings
+public sealed class RecorderSettingsDTO
 {
     public required string OutputDirectory { get; init; }
 
@@ -21,8 +21,6 @@ public sealed class RecorderSettings
     public required int HdriFaceSize { get; init; }
 
     public required bool HidePlayerModel { get; init; }
-
-    public required bool ShowProgressGUI { get; init; }
 
     public (int, int) Resolution
     {
