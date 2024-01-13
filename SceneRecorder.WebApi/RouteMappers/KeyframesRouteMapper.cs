@@ -2,21 +2,19 @@
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
-using UnityEngine;
+using SceneRecorder.WebApi.RouteMappers.DTOs;
 
-namespace SceneRecorder.WebApi.RouteDefinitions;
+namespace SceneRecorder.WebApi.RouteMappers;
 
 using static ResponseFabric;
 
-internal sealed record SetKeyframesRequest<T>(T[] Values, int FromFrame);
-
-internal sealed class KeyframesRouteDefinition : IApiRouteDefinition
+internal sealed class KeyframesRouteMapper : IRouteMapper
 {
-    public static KeyframesRouteDefinition Instance { get; } = new();
+    public static KeyframesRouteMapper Instance { get; } = new();
 
-    private KeyframesRouteDefinition() { }
+    private KeyframesRouteMapper() { }
 
-    public void MapRoutes(HttpServerBuilder serverBuilder, IApiRouteDefinition.IContext context)
+    public void MapRoutes(HttpServerBuilder serverBuilder, IRouteMapper.IContext context)
     {
         using var gameScenePrecondition = serverBuilder.UseInPlayableScenePrecondition();
         using var ableToRecordPrecondition = serverBuilder.UsePrecondition(request =>

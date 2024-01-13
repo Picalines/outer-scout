@@ -4,17 +4,17 @@ using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
 
-namespace SceneRecorder.WebApi.RouteDefinitions;
+namespace SceneRecorder.WebApi.RouteMappers;
 
 using static ResponseFabric;
 
-internal sealed class CameraInfoRouteDefinition : IApiRouteDefinition
+internal sealed class CameraInfoRouteMapper : IRouteMapper
 {
-    public static CameraInfoRouteDefinition Instance { get; } = new();
+    public static CameraInfoRouteMapper Instance { get; } = new();
 
-    private CameraInfoRouteDefinition() { }
+    private CameraInfoRouteMapper() { }
 
-    public void MapRoutes(HttpServerBuilder serverBuilder, IApiRouteDefinition.IContext context)
+    public void MapRoutes(HttpServerBuilder serverBuilder, IRouteMapper.IContext context)
     {
         using var precondition = serverBuilder.UseInPlayableScenePrecondition();
 

@@ -1,25 +1,23 @@
 using SceneRecorder.Shared.Extensions;
-using SceneRecorder.Shared.Models;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
+using SceneRecorder.WebApi.RouteMappers.DTOs;
 using UnityEngine;
 
-namespace SceneRecorder.WebApi.RouteDefinitions;
+namespace SceneRecorder.WebApi.RouteMappers;
 
 using static ResponseFabric;
 
-internal sealed record WarpRequest(TransformDTO LocalTransform);
-
-internal sealed class WarpRouteDefinition : IApiRouteDefinition
+internal sealed class WarpRouteMapper : IRouteMapper
 {
     private const string ModSpawnPointName = $"__{nameof(SceneRecorder)}_SpawnPoint";
 
-    public static WarpRouteDefinition Instance { get; } = new();
+    public static WarpRouteMapper Instance { get; } = new();
 
-    private WarpRouteDefinition() { }
+    private WarpRouteMapper() { }
 
-    public void MapRoutes(HttpServerBuilder serverBuilder, IApiRouteDefinition.IContext context)
+    public void MapRoutes(HttpServerBuilder serverBuilder, IRouteMapper.IContext context)
     {
         using var precondition = serverBuilder.UseInPlayableScenePrecondition();
 
@@ -55,18 +53,9 @@ internal sealed class WarpRouteDefinition : IApiRouteDefinition
                 {
                     var referenceSpawnPoint = groundBodyTransform
                         .GetComponentsInChildren<SpawnPoint>()
-                        .Select(
-                            point =>
-                                new
-                                {
-                                    point,
-                                    distanceToPlayer = (
-                                        point.transform.position - localTransform.position
-                                    ).magnitude
-                                }
-                        )
-                        .MinByOrDefault(pair => pair.distanceToPlayer)
-                        ?.point;
+                        .MinByOrDefault(
+                            point => (point.transform.position - localTransform.position).magnitude
+                        );
 
                     GameObject newSpawnPointGameObject;
 

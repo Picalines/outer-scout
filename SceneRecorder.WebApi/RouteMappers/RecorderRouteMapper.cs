@@ -4,18 +4,19 @@ using SceneRecorder.Shared.Models;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
+using SceneRecorder.WebApi.RouteMappers.DTOs;
 
-namespace SceneRecorder.WebApi.RouteDefinitions;
+namespace SceneRecorder.WebApi.RouteMappers;
 
 using static ResponseFabric;
 
-internal sealed class RecorderRouteDefinition : IApiRouteDefinition
+internal sealed class RecorderRouteMapper : IRouteMapper
 {
-    public static RecorderRouteDefinition Instance { get; } = new();
+    public static RecorderRouteMapper Instance { get; } = new();
 
-    private RecorderRouteDefinition() { }
+    private RecorderRouteMapper() { }
 
-    public void MapRoutes(HttpServerBuilder serverBuilder, IApiRouteDefinition.IContext context)
+    public void MapRoutes(HttpServerBuilder serverBuilder, IRouteMapper.IContext context)
     {
         using var precondition = serverBuilder.UseInPlayableScenePrecondition();
 
@@ -44,11 +45,11 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
         serverBuilder.MapGet(
             "recorder/status",
             () =>
-                new
+                new RecorderStatusResponse
                 {
                     Enabled = outputRecorder.enabled,
-                    outputRecorder.IsAbleToRecord,
-                    outputRecorder.FramesRecorded,
+                    IsAbleToRecord = outputRecorder.IsAbleToRecord,
+                    FramesRecorded = outputRecorder.FramesRecorded,
                 }
         );
 
@@ -79,7 +80,7 @@ internal sealed class RecorderRouteDefinition : IApiRouteDefinition
         );
     }
 
-    private IEnumerator FramesRecordedCoroutine(OutputRecorder outputRecorder)
+    private static IEnumerator FramesRecordedCoroutine(OutputRecorder outputRecorder)
     {
         while (true)
         {

@@ -3,7 +3,7 @@ using SceneRecorder.WebApi.Http;
 
 namespace SceneRecorder.WebApi;
 
-internal interface IApiRouteDefinition
+internal interface IRouteMapper
 {
     public interface IContext
     {

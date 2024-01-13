@@ -3,7 +3,7 @@ using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.Recording.Recorders;
 using SceneRecorder.Shared.Extensions;
 using SceneRecorder.WebApi.Http;
-using SceneRecorder.WebApi.RouteDefinitions;
+using SceneRecorder.WebApi.RouteMappers;
 using UnityEngine;
 
 namespace SceneRecorder.WebApi;
@@ -12,23 +12,22 @@ namespace SceneRecorder.WebApi;
 public sealed class WebApiServer : HttpServer
 {
     private sealed record RouteDefinitionContext(OutputRecorder OutputRecorder)
-        : IApiRouteDefinition.IContext;
+        : IRouteMapper.IContext;
 
-    private static readonly IApiRouteDefinition[] _ApiRouteDefinitions = new IApiRouteDefinition[]
+    private static readonly IRouteMapper[] _RouteMappers = new IRouteMapper[]
     {
-        CameraInfoRouteDefinition.Instance,
-        GroundBodyRouteDefinition.Instance,
-        KeyframesRouteDefinition.Instance,
-        RecorderRouteDefinition.Instance,
-        SectorsRouteDefinition.Instance,
-        TransformRouteDefinition.Instance,
-        WarpRouteDefinition.Instance,
+        CameraInfoRouteMapper.Instance,
+        GroundBodyRouteMapper.Instance,
+        KeyframesRouteMapper.Instance,
+        RecorderRouteMapper.Instance,
+        SectorsRouteMapper.Instance,
+        TransformRouteMapper.Instance,
+        WarpRouteMapper.Instance,
     };
 
     public void Configure(IModConfig modConfig, IModConsole modConsole)
     {
-        var enableInfoLogs = modConfig.GetEnableApiInfoLogsSetting();
-        ModConsole = enableInfoLogs
+        ModConsole = modConfig.GetEnableApiInfoLogsSetting()
             ? modConsole
             : modConsole.WithOnlyMessagesOfType(MessageType.Warning, MessageType.Error);
 
@@ -50,9 +49,9 @@ public sealed class WebApiServer : HttpServer
     {
         var context = new RouteDefinitionContext(GetComponent<OutputRecorder>());
 
-        foreach (var routeDefinition in _ApiRouteDefinitions)
+        foreach (var mapper in _RouteMappers)
         {
-            routeDefinition.MapRoutes(serverBuilder, context);
+            mapper.MapRoutes(serverBuilder, context);
         }
 
         serverBuilder.MapGet(

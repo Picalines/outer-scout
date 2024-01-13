@@ -5,17 +5,17 @@ using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
 
-namespace SceneRecorder.WebApi.RouteDefinitions;
+namespace SceneRecorder.WebApi.RouteMappers;
 
 using static ResponseFabric;
 
-internal sealed class GroundBodyRouteDefinition : IApiRouteDefinition
+internal sealed class GroundBodyRouteMapper : IRouteMapper
 {
-    public static GroundBodyRouteDefinition Instance { get; } = new();
+    public static GroundBodyRouteMapper Instance { get; } = new();
 
-    private GroundBodyRouteDefinition() { }
+    private GroundBodyRouteMapper() { }
 
-    public void MapRoutes(HttpServerBuilder serverBuilder, IApiRouteDefinition.IContext context)
+    public void MapRoutes(HttpServerBuilder serverBuilder, IRouteMapper.IContext context)
     {
         using var precondition = serverBuilder.UseInPlayableScenePrecondition();
 

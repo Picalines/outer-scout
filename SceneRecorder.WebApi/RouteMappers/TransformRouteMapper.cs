@@ -3,21 +3,20 @@ using SceneRecorder.Shared.Models;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
+using SceneRecorder.WebApi.RouteMappers.DTOs;
 using UnityEngine;
 
-namespace SceneRecorder.WebApi.RouteDefinitions;
+namespace SceneRecorder.WebApi.RouteMappers;
 
 using static ResponseFabric;
 
-internal sealed record SetTransformRequest(TransformDTO Transform, string? LocalTo);
-
-internal sealed class TransformRouteDefinition : IApiRouteDefinition
+internal sealed class TransformRouteMapper : IRouteMapper
 {
-    public static TransformRouteDefinition Instance { get; } = new();
+    public static TransformRouteMapper Instance { get; } = new();
 
-    private TransformRouteDefinition() { }
+    private TransformRouteMapper() { }
 
-    public void MapRoutes(HttpServerBuilder serverBuilder, IApiRouteDefinition.IContext context)
+    public void MapRoutes(HttpServerBuilder serverBuilder, IRouteMapper.IContext context)
     {
         using var precondition = serverBuilder.UseInPlayableScenePrecondition();
 
@@ -83,9 +82,7 @@ internal sealed class TransformRouteDefinition : IApiRouteDefinition
                         return NotFound();
                     }
 
-                    var (newTransform, localTo) = request;
-
-                    if (localTo is not null)
+                    if (request.LocalTo is { } localTo)
                     {
                         if (GameObject.Find(localTo).OrNull() is not { } origin)
                         {
@@ -95,13 +92,13 @@ internal sealed class TransformRouteDefinition : IApiRouteDefinition
                         var oldEntityParent = entityTransform.parent;
                         entityTransform.parent = origin.transform;
 
-                        newTransform.ApplyLocal(entityTransform);
+                        request.Transform.ApplyLocal(entityTransform);
 
                         entityTransform.parent = oldEntityParent;
                     }
                     else
                     {
-                        newTransform.ApplyGlobal(entityTransform);
+                        request.Transform.ApplyGlobal(entityTransform);
                     }
 
                     return Ok();
