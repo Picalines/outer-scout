@@ -56,7 +56,9 @@ public sealed class WebApiServer : HttpServer
 
         serverBuilder.MapGet(
             "",
-            () => new { message = $"Welcome to Outer Wilds {nameof(SceneRecorder)} API!" }
+            () => new { Message = $"Welcome to Outer Wilds {nameof(SceneRecorder)} API!" }
         );
+
+        serverBuilder.MapGet("api-status", () => new { Available = true });
     }
 }
