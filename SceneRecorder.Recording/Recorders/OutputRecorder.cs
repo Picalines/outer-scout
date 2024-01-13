@@ -36,6 +36,8 @@ public sealed class OutputRecorder : RecorderComponent
 
     private Action? _OnRecordingStarted = null;
     private Action? _OnRecordingFinished = null;
+    private Action? _OnPauseMenuEnter = null;
+    private Action? _OnPauseMenuExit = null;
     private IEnumerator<int>? _CurrentFrame = null;
     private bool _IsRecordingFinished = false;
 
@@ -52,6 +54,15 @@ public sealed class OutputRecorder : RecorderComponent
         RecordingFinished += OnRecordingFinished;
         FrameStarted += OnFrameStarted;
         FrameEnded += OnFrameEnded;
+
+        OWTime.OnPause += OnOWTimePause;
+        OWTime.OnUnpause += OnOWTimeUnpause;
+    }
+
+    private void OnDestory()
+    {
+        OWTime.OnPause -= OnOWTimePause;
+        OWTime.OnUnpause -= OnOWTimeUnpause;
     }
 
     private void OnRecordingStarted()
@@ -154,6 +165,7 @@ public sealed class OutputRecorder : RecorderComponent
         var enabledRecorders = new List<IRecorder>();
 
         var didSceneReload = freeCamera != _LastFreeCamera;
+        _LastFreeCamera = freeCamera;
 
         if (didSceneReload)
         {
@@ -261,13 +273,11 @@ public sealed class OutputRecorder : RecorderComponent
                 .ToArray()
             : Array.Empty<Renderer>();
 
-        var cameraDisplayEnablers = ModConfig?.GetDisableRenderInPauseSetting() is true
-            ? new[]
-            {
-                playerCamera.GetOrAddComponent<TargetDisplayEnabler>(),
-                freeCamera.GetOrAddComponent<TargetDisplayEnabler>(),
-            }
-            : Array.Empty<TargetDisplayEnabler>();
+        var cameraDisplayEnablers = new[]
+        {
+            playerCamera.GetOrAddComponent<TargetDisplayEnabler>(),
+            freeCamera.GetOrAddComponent<TargetDisplayEnabler>(),
+        };
 
         float timeScaleBeforeRecording = 0;
 
@@ -284,10 +294,12 @@ public sealed class OutputRecorder : RecorderComponent
 
         _OnRecordingStarted = () =>
         {
+            CommonCameraAPI.EnterCamera(freeCamera);
+
+            pauseMenu.EnableMenu(false);
+
             timeScaleBeforeRecording = Time.timeScale;
             Time.captureFramerate = Settings.FrameRate;
-
-            CommonCameraAPI.EnterCamera(freeCamera);
 
             if (playerResources?.IsInvincible() is false)
             {
@@ -299,29 +311,24 @@ public sealed class OutputRecorder : RecorderComponent
                 deathManager.ToggleInvincibility();
             }
 
-            Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = false);
-            Array.ForEach(
-                cameraDisplayEnablers,
-                enabler =>
-                {
-                    enabler.SaveDisplay();
-                    enabler.RenderingEnabled = false;
-                }
-            );
+            playerRenderersToToggle.ForEach(renderer => renderer.enabled = false);
+            DisableRenderingToDisplay();
 
             Locator.GetQuantumMoon().SetActivation(false);
 
             freeCamera.transform.parent = groundBodyTransform;
 
-            enabledInputDevices = InputSystem.devices.Where(device => device.enabled).ToArray();
-            Array.ForEach(enabledInputDevices, device => InputSystem.DisableDevice(device));
-
-            pauseMenu.EnableMenu(false);
+            enabledInputDevices = InputSystem
+                .devices.Where(device => device.enabled)
+                .ForEach(device => InputSystem.DisableDevice(device))
+                .ToArray();
         };
 
         _OnRecordingFinished = () =>
         {
             CommonCameraAPI.ExitCamera(freeCamera);
+
+            pauseMenuManager.TryOpenPauseMenu();
 
             playerResources?.ToggleInvincibility();
             deathManager?.ToggleInvincibility();
@@ -329,16 +336,54 @@ public sealed class OutputRecorder : RecorderComponent
             Time.timeScale = timeScaleBeforeRecording;
             Time.captureFramerate = 0;
 
-            Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = true);
-            Array.ForEach(cameraDisplayEnablers, enabler => enabler.RenderingEnabled = true);
+            playerRenderersToToggle.ForEach(renderer => renderer.enabled = true);
+            EnableRenderingToDisplay();
 
             Locator.GetQuantumMoon().OrNull()?.SetActivation(true);
 
-            Array.ForEach(enabledInputDevices, InputSystem.EnableDevice);
-            pauseMenuManager.TryOpenPauseMenu();
+            enabledInputDevices.ForEach(InputSystem.EnableDevice);
             OWInput.ChangeInputMode(InputMode.All);
         };
 
-        _LastFreeCamera = freeCamera;
+        if (ModConfig?.GetDisableRenderInPauseSetting() is true)
+        {
+            _OnPauseMenuEnter = DisableRenderingToDisplay;
+            _OnPauseMenuExit = EnableRenderingToDisplay;
+        }
+        else
+        {
+            _OnPauseMenuEnter = null;
+            _OnPauseMenuExit = null;
+        }
+
+        void EnableRenderingToDisplay()
+        {
+            cameraDisplayEnablers.ForEach(enabler => enabler.RenderingEnabled = true);
+        }
+
+        void DisableRenderingToDisplay()
+        {
+            cameraDisplayEnablers.ForEach(enabler =>
+            {
+                enabler.SaveDisplay();
+                enabler.RenderingEnabled = false;
+            });
+        }
+    }
+
+    private void OnOWTimePause(OWTime.PauseType pauseType)
+    {
+        if (pauseType is OWTime.PauseType.Menu)
+        {
+            _OnPauseMenuEnter?.Invoke();
+        }
+    }
+
+    private void OnOWTimeUnpause(OWTime.PauseType pauseType)
+    {
+        if (pauseType is OWTime.PauseType.Menu)
+        {
+            _OnPauseMenuExit?.Invoke();
+        }
     }
 }
