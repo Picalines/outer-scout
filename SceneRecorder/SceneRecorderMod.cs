@@ -18,8 +18,6 @@ internal sealed class SceneRecorderMod : ModBehaviour
 
     private WebApiServer? _WebApiServer = null;
 
-    private PlayerCameraEnabler? _PlayerCameraEnabler = null;
-
     public override void Configure(IModConfig config)
     {
         if (_OutputRecorder is not null)
@@ -47,8 +45,6 @@ internal sealed class SceneRecorderMod : ModBehaviour
         }
 
         _WebApiServer?.Configure(config, ModHelper.Console);
-
-        _PlayerCameraEnabler?.Configure(config);
     }
 
     private void Start()
@@ -73,8 +69,6 @@ internal sealed class SceneRecorderMod : ModBehaviour
         _OutputRecorder = gameObject.AddComponent<OutputRecorder>();
 
         _WebApiServer = gameObject.AddComponent<WebApiServer>();
-
-        _PlayerCameraEnabler = gameObject.AddComponent<PlayerCameraEnabler>();
 
         Configure(ModHelper.Config);
     }

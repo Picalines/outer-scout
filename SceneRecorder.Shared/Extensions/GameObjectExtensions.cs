@@ -14,4 +14,10 @@ public static class GameObjectExtensions
 
         return component;
     }
+
+    public static TComponent GetOrAddComponent<TComponent>(this Component component)
+        where TComponent : Component
+    {
+        return component.gameObject.GetOrAddComponent<TComponent>();
+    }
 }

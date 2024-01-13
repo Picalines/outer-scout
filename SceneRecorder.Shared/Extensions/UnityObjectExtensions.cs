@@ -5,10 +5,16 @@ public static class UnityObjectExtensions
     public static T? OrNull<T>(this T? unityObject)
         where T : UnityEngine.Object
     {
-#pragma warning disable IDE0029
         return unityObject == null // Unity objects have an equality overload!
             ? null
             : unityObject;
-#pragma warning restore IDE0029
+    }
+
+    public static T OrThrow<T>(this T? unityObject, string errorMessage)
+        where T : UnityEngine.Object
+    {
+        return unityObject == null
+            ? throw new InvalidOperationException(errorMessage)
+            : unityObject;
     }
 }

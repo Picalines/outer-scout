@@ -20,34 +20,24 @@ public sealed class OutputRecorder : RecorderComponent
     public ICommonCameraAPI? CommonCameraAPI { get; set; } = null;
 
     public IAnimator<TransformDTO>? FreeCameraTransformAnimator { get; private set; } = null;
-
     public IAnimator<CameraDTO>? FreeCameraInfoAnimator { get; private set; } = null;
-
     public IAnimator<TransformDTO>? HdriTransformAnimator { get; private set; } = null;
-
     public IAnimator<float>? TimeScaleAnimator { get; private set; } = null;
 
     private RecorderSettingsDTO? _Settings = null;
 
-    private ComposedRecorder _ComposedRecorder = null!;
-
     private ComposedAnimator? _ComposedAnimator = null;
-
+    private ComposedRecorder _ComposedRecorder = null!;
     private IAnimator<CameraDTO>? _FreeCameraInfoAnimator = null;
-
     private IAnimator<CameraDTO>? _DepthCameraInfoAnimator = null;
 
-    private Action? _OnRecordingStarted = null;
-
-    private Action? _OnRecordingFinished = null;
-
     private GameObject? _HdriPivot = null;
-
-    private IEnumerator<int>? _CurrentFrame = null;
-
     private OWCamera? _LastFreeCamera = null;
 
-    private bool _QueueEnd = false;
+    private Action? _OnRecordingStarted = null;
+    private Action? _OnRecordingFinished = null;
+    private IEnumerator<int>? _CurrentFrame = null;
+    private bool _IsRecordingFinished = false;
 
     public OutputRecorder()
     {
@@ -77,7 +67,7 @@ public sealed class OutputRecorder : RecorderComponent
         _OnRecordingStarted?.Invoke();
 
         _ComposedRecorder.enabled = true;
-        _QueueEnd = false;
+        _IsRecordingFinished = false;
 
         ModConsole?.WriteLine($"Recording started ({Settings.OutputDirectory})", MessageType.Info);
     }
@@ -103,7 +93,7 @@ public sealed class OutputRecorder : RecorderComponent
 
     private void OnFrameEnded()
     {
-        if (_QueueEnd is true)
+        if (_IsRecordingFinished is true)
         {
             enabled = false;
             return;
@@ -111,7 +101,7 @@ public sealed class OutputRecorder : RecorderComponent
 
         if (_CurrentFrame?.MoveNext() is not true)
         {
-            _QueueEnd = true;
+            _IsRecordingFinished = true;
         }
     }
 
@@ -153,27 +143,17 @@ public sealed class OutputRecorder : RecorderComponent
             throw new ArgumentNullException();
         }
 
-        var player = Locator.GetPlayerBody().OrNull();
-        var playerResources = Locator
-            .GetPlayerTransform()
-            .OrNull()
-            ?.GetComponent<PlayerResources>();
-        var freeCamera = LocatorExtensions.GetFreeCamera();
-        var groundBodyTransform = LocatorExtensions.GetCurrentGroundBody()?.transform;
-        var deathManager = Locator.GetDeathManager().OrNull();
+        var playerBody = Locator.GetPlayerBody().OrThrow("player body not found");
+        var playerCamera = Locator.GetPlayerCamera().OrThrow("player camera not found");
+        var freeCamera = LocatorExtensions.GetFreeCamera().OrThrow("free camera not found");
+        var groundBodyTransform = LocatorExtensions
+            .GetCurrentGroundBody()
+            .OrThrow("ground body transform not found")
+            .transform;
 
-        if (
-            (player, playerResources, freeCamera, groundBodyTransform, deathManager)
-            is not
-            ({ }, { }, { }, { }, { })
-        )
-        {
-            throw new InvalidOperationException("invalid scene state");
-        }
+        var enabledRecorders = new List<IRecorder>();
 
         var didSceneReload = freeCamera != _LastFreeCamera;
-
-        var addedRecorders = new List<IRecorder>();
 
         if (didSceneReload)
         {
@@ -184,43 +164,43 @@ public sealed class OutputRecorder : RecorderComponent
             _DepthCameraInfoAnimator = null;
         }
 
-        var cameraInfoAnimators = new List<IAnimator<CameraDTO>>()
+        var cameraAnimators = new List<IAnimator<CameraDTO>>()
         {
             (_FreeCameraInfoAnimator ??= new CameraInfoAnimator(freeCamera)),
         };
 
         // background recorder
         {
-            var backgroundRecorder = freeCamera.gameObject.GetOrAddComponent<BackgroundRecorder>();
+            var backgroundRecorder = freeCamera.GetOrAddComponent<BackgroundRecorder>();
             backgroundRecorder.TargetFile = Path.Combine(
                 Settings.OutputDirectory,
                 "background.mp4"
             );
+
             (backgroundRecorder.Width, backgroundRecorder.Height) = Settings.Resolution;
             backgroundRecorder.FrameRate = Settings.FrameRate;
             backgroundRecorder.ModConsole = ModConsole!;
 
             // render background to GUI
-            var progressGUI = freeCamera.gameObject.GetOrAddComponent<RenderTextureRecorderGUI>();
+            var progressGUI = freeCamera.GetOrAddComponent<RenderTextureRecorderGUI>();
             progressGUI.enabled = ModConfig?.GetEnableProgressUISetting() ?? false;
 
-            addedRecorders.Add(backgroundRecorder);
+            enabledRecorders.Add(backgroundRecorder);
         }
 
         // depth recorder
         if (Settings.RecordDepth)
         {
-            var depthRecorder = freeCamera.gameObject.GetOrAddComponent<DepthRecorder>();
+            var depthRecorder = freeCamera.GetOrAddComponent<DepthRecorder>();
             depthRecorder.TargetFile = Path.Combine(Settings.OutputDirectory, "depth.mp4");
             (depthRecorder.Width, depthRecorder.Height) = Settings.Resolution;
             depthRecorder.FrameRate = Settings.FrameRate;
             depthRecorder.ModConsole = ModConsole!;
 
-            cameraInfoAnimators.Add(
-                _DepthCameraInfoAnimator ??= new CameraInfoAnimator(depthRecorder.DepthCamera)
-            );
+            _DepthCameraInfoAnimator ??= new CameraInfoAnimator(depthRecorder.DepthCamera);
+            cameraAnimators.Add(_DepthCameraInfoAnimator);
 
-            addedRecorders.Add(depthRecorder);
+            enabledRecorders.Add(depthRecorder);
         }
 
         // hdri recorder
@@ -237,13 +217,13 @@ public sealed class OutputRecorder : RecorderComponent
             hdriRecorder.FrameRate = Settings.FrameRate;
             hdriRecorder.ModConsole = ModConsole!;
 
-            addedRecorders.Add(hdriRecorder);
+            enabledRecorders.Add(hdriRecorder);
         }
 
         // combine recorders
         if (didSceneReload)
         {
-            _ComposedRecorder.Recorders = addedRecorders.ToArray();
+            _ComposedRecorder.Recorders = enabledRecorders.ToArray();
         }
 
         // animators
@@ -254,7 +234,7 @@ public sealed class OutputRecorder : RecorderComponent
                 (
                     FreeCameraInfoAnimator = new ComposedAnimator<CameraDTO>()
                     {
-                        Animators = cameraInfoAnimators.ToArray(),
+                        Animators = cameraAnimators.ToArray(),
                     }
                 ),
                 (TimeScaleAnimator = Animators.TimeScaleAnimator.Instance),
@@ -273,39 +253,62 @@ public sealed class OutputRecorder : RecorderComponent
         }
 
         // start & end handlers
+
         var playerRenderersToToggle = Settings.HidePlayerModel
-            ? player
-                .gameObject.GetComponentsInChildren<Renderer>()
+            ? playerBody
+                .GetComponentsInChildren<Renderer>()
                 .Where(renderer => renderer.enabled)
                 .ToArray()
             : Array.Empty<Renderer>();
 
-        float initialTimeScale = 0;
+        var cameraDisplayEnablers = ModConfig?.GetDisableRenderInPauseSetting() is true
+            ? new[]
+            {
+                playerCamera.GetOrAddComponent<TargetDisplayEnabler>(),
+                freeCamera.GetOrAddComponent<TargetDisplayEnabler>(),
+            }
+            : Array.Empty<TargetDisplayEnabler>();
+
+        float timeScaleBeforeRecording = 0;
 
         var pauseMenuManager = Locator.GetPauseCommandListener()._pauseMenu;
         var pauseMenu = pauseMenuManager._pauseMenu;
 
         var enabledInputDevices = Array.Empty<InputDevice>();
 
+        var deathManager = Locator.GetDeathManager().OrNull();
+        var playerResources = Locator
+            .GetPlayerTransform()
+            .OrNull()
+            ?.GetComponent<PlayerResources>();
+
         _OnRecordingStarted = () =>
         {
+            timeScaleBeforeRecording = Time.timeScale;
             Time.captureFramerate = Settings.FrameRate;
 
             CommonCameraAPI.EnterCamera(freeCamera);
 
-            if (playerResources.IsInvincible() is false)
+            if (playerResources?.IsInvincible() is false)
             {
                 playerResources.ToggleInvincibility();
             }
 
-            if (deathManager._invincible is false)
+            if (deathManager?._invincible is false)
             {
                 deathManager.ToggleInvincibility();
             }
 
-            initialTimeScale = Time.timeScale;
-
             Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = false);
+            Array.ForEach(
+                cameraDisplayEnablers,
+                enabler =>
+                {
+                    enabler.SaveDisplay();
+                    enabler.RenderingEnabled = false;
+                }
+            );
+
             Locator.GetQuantumMoon().SetActivation(false);
 
             freeCamera.transform.parent = groundBodyTransform;
@@ -320,13 +323,15 @@ public sealed class OutputRecorder : RecorderComponent
         {
             CommonCameraAPI.ExitCamera(freeCamera);
 
-            playerResources.ToggleInvincibility();
-            deathManager.ToggleInvincibility();
+            playerResources?.ToggleInvincibility();
+            deathManager?.ToggleInvincibility();
 
-            Time.timeScale = initialTimeScale;
+            Time.timeScale = timeScaleBeforeRecording;
             Time.captureFramerate = 0;
 
             Array.ForEach(playerRenderersToToggle, renderer => renderer.enabled = true);
+            Array.ForEach(cameraDisplayEnablers, enabler => enabler.RenderingEnabled = true);
+
             Locator.GetQuantumMoon().OrNull()?.SetActivation(true);
 
             Array.ForEach(enabledInputDevices, InputSystem.EnableDevice);
