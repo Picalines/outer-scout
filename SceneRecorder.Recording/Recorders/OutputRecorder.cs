@@ -173,32 +173,36 @@ public sealed class OutputRecorder : RecorderComponent
             _DepthCameraInfoAnimator = null;
         }
 
-        // background recorder
-        {
-            var backgroundRecorder = freeCamera.GetOrAddComponent<BackgroundRecorder>();
-            backgroundRecorder.TargetFile = Path.Combine(
-                Settings.OutputDirectory,
-                "background.mp4"
-            );
+        var freeCameraFootageDirectory = Path.Combine(Settings.OutputDirectory, "cameras", "0");
+        Directory.CreateDirectory(Settings.OutputDirectory);
+        Directory.CreateDirectory(freeCameraFootageDirectory);
 
-            (backgroundRecorder.Width, backgroundRecorder.Height) = Settings.Resolution;
-            backgroundRecorder.FrameRate = Settings.FrameRate;
-            backgroundRecorder.ModConsole = ModConsole!;
+        // freecam color recorder
+        {
+            var colorRecorder = freeCamera.GetOrAddComponent<CameraColorRecorder>();
+
+            colorRecorder.TargetFile = Path.Combine(freeCameraFootageDirectory, "color.mp4");
+
+            (colorRecorder.Width, colorRecorder.Height) = Settings.Resolution;
+            colorRecorder.FrameRate = Settings.FrameRate;
+            colorRecorder.ModConsole = ModConsole!;
 
             var progressGUI = freeCamera.GetOrAddComponent<RenderTextureRecorderGUI>();
             progressGUI.enabled = ModConfig?.GetEnableProgressUISetting() is true;
 
-            enabledRecorders.Add(backgroundRecorder);
+            enabledRecorders.Add(colorRecorder);
         }
 
         _FreeCameraInfoAnimator ??= new CameraInfoAnimator(freeCamera);
         var cameraAnimators = new List<IAnimator<CameraDTO>>() { _FreeCameraInfoAnimator };
 
-        // depth recorder
+        // freecam depth recorder
         if (Settings.RecordDepth)
         {
-            var depthRecorder = freeCamera.GetOrAddComponent<DepthRecorder>();
-            depthRecorder.TargetFile = Path.Combine(Settings.OutputDirectory, "depth.mp4");
+            var depthRecorder = freeCamera.GetOrAddComponent<CameraDepthRecorder>();
+
+            depthRecorder.TargetFile = Path.Combine(freeCameraFootageDirectory, "depth.mp4");
+
             (depthRecorder.Width, depthRecorder.Height) = Settings.Resolution;
             depthRecorder.FrameRate = Settings.FrameRate;
             depthRecorder.ModConsole = ModConsole!;

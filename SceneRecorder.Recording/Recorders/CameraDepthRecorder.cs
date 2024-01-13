@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace SceneRecorder.Recording.Recorders;
 
-internal sealed class DepthRecorder : RenderTextureRecorder
+internal sealed class CameraDepthRecorder : RenderTextureRecorder
 {
     public int Width { get; set; } = 1920;
 
@@ -16,7 +16,7 @@ internal sealed class DepthRecorder : RenderTextureRecorder
 
     private RenderTexture _ColorRenderTexture = null!;
 
-    public DepthRecorder()
+    public CameraDepthRecorder()
     {
         Awoken += OnAwoken;
         RecordingStarted += OnRecordingStarted;

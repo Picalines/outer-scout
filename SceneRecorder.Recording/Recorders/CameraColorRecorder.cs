@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SceneRecorder.Recording.Recorders;
 
 [RequireComponent(typeof(Camera))]
-internal sealed class BackgroundRecorder : RenderTextureRecorder
+internal sealed class CameraColorRecorder : RenderTextureRecorder
 {
     public int Width { get; set; } = 1920;
 
@@ -14,7 +14,7 @@ internal sealed class BackgroundRecorder : RenderTextureRecorder
 
     private RenderTexture _SourceRenderTexture = null!;
 
-    public BackgroundRecorder()
+    public CameraColorRecorder()
     {
         Awoken += OnAwoken;
         RecordingStarted += OnRecordingStarted;
