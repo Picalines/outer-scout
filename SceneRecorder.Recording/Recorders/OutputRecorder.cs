@@ -149,10 +149,7 @@ public sealed class OutputRecorder : RecorderComponent
 
     private void Configure()
     {
-        if ((Settings, CommonCameraAPI) is not ({ }, { }))
-        {
-            throw new ArgumentNullException();
-        }
+        AssertPublicProperties();
 
         var playerBody = Locator.GetPlayerBody().OrThrow("player body not found");
         var playerCamera = Locator.GetPlayerCamera().OrThrow("player camera not found");
@@ -176,11 +173,6 @@ public sealed class OutputRecorder : RecorderComponent
             _DepthCameraInfoAnimator = null;
         }
 
-        var cameraAnimators = new List<IAnimator<CameraDTO>>()
-        {
-            (_FreeCameraInfoAnimator ??= new CameraInfoAnimator(freeCamera)),
-        };
-
         // background recorder
         {
             var backgroundRecorder = freeCamera.GetOrAddComponent<BackgroundRecorder>();
@@ -193,12 +185,14 @@ public sealed class OutputRecorder : RecorderComponent
             backgroundRecorder.FrameRate = Settings.FrameRate;
             backgroundRecorder.ModConsole = ModConsole!;
 
-            // render background to GUI
             var progressGUI = freeCamera.GetOrAddComponent<RenderTextureRecorderGUI>();
-            progressGUI.enabled = ModConfig?.GetEnableProgressUISetting() ?? false;
+            progressGUI.enabled = ModConfig?.GetEnableProgressUISetting() is true;
 
             enabledRecorders.Add(backgroundRecorder);
         }
+
+        _FreeCameraInfoAnimator ??= new CameraInfoAnimator(freeCamera);
+        var cameraAnimators = new List<IAnimator<CameraDTO>>() { _FreeCameraInfoAnimator };
 
         // depth recorder
         if (Settings.RecordDepth)
@@ -294,12 +288,20 @@ public sealed class OutputRecorder : RecorderComponent
 
         _OnRecordingStarted = () =>
         {
+            freeCamera.transform.parent = groundBodyTransform;
             CommonCameraAPI.EnterCamera(freeCamera);
-
-            pauseMenu.EnableMenu(false);
 
             timeScaleBeforeRecording = Time.timeScale;
             Time.captureFramerate = Settings.FrameRate;
+
+            DisableRenderingToDisplay();
+            pauseMenu.EnableMenu(false);
+            enabledInputDevices = InputSystem
+                .devices.Where(device => device.enabled)
+                .ForEach(device => InputSystem.DisableDevice(device))
+                .ToArray();
+
+            playerRenderersToToggle.ForEach(renderer => renderer.enabled = false);
 
             if (playerResources?.IsInvincible() is false)
             {
@@ -311,38 +313,27 @@ public sealed class OutputRecorder : RecorderComponent
                 deathManager.ToggleInvincibility();
             }
 
-            playerRenderersToToggle.ForEach(renderer => renderer.enabled = false);
-            DisableRenderingToDisplay();
-
             Locator.GetQuantumMoon().SetActivation(false);
-
-            freeCamera.transform.parent = groundBodyTransform;
-
-            enabledInputDevices = InputSystem
-                .devices.Where(device => device.enabled)
-                .ForEach(device => InputSystem.DisableDevice(device))
-                .ToArray();
         };
 
         _OnRecordingFinished = () =>
         {
             CommonCameraAPI.ExitCamera(freeCamera);
 
+            Time.timeScale = timeScaleBeforeRecording;
+            Time.captureFramerate = 0;
+
+            EnableRenderingToDisplay();
             pauseMenuManager.TryOpenPauseMenu();
+            enabledInputDevices.ForEach(InputSystem.EnableDevice);
+            OWInput.ChangeInputMode(InputMode.All);
+
+            playerRenderersToToggle.ForEach(renderer => renderer.enabled = true);
 
             playerResources?.ToggleInvincibility();
             deathManager?.ToggleInvincibility();
 
-            Time.timeScale = timeScaleBeforeRecording;
-            Time.captureFramerate = 0;
-
-            playerRenderersToToggle.ForEach(renderer => renderer.enabled = true);
-            EnableRenderingToDisplay();
-
             Locator.GetQuantumMoon().OrNull()?.SetActivation(true);
-
-            enabledInputDevices.ForEach(InputSystem.EnableDevice);
-            OWInput.ChangeInputMode(InputMode.All);
         };
 
         if (ModConfig?.GetDisableRenderInPauseSetting() is true)
@@ -368,6 +359,23 @@ public sealed class OutputRecorder : RecorderComponent
                 enabler.SaveDisplay();
                 enabler.RenderingEnabled = false;
             });
+        }
+    }
+
+    [MemberNotNull(nameof(Settings))]
+    [MemberNotNull(nameof(CommonCameraAPI))]
+    private void AssertPublicProperties()
+    {
+        if (Settings is null)
+        {
+            throw new ArgumentNullException($"{nameof(OutputRecorder)}.{nameof(Settings)} is null");
+        }
+
+        if (CommonCameraAPI is null)
+        {
+            throw new ArgumentNullException(
+                $"{nameof(OutputRecorder)}.{nameof(CommonCameraAPI)} is null"
+            );
         }
     }
 
