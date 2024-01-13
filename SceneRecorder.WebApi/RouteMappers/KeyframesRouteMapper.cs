@@ -62,7 +62,8 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
                     return NotFound("animator not found");
                 }
 
-                var (newValues, fromFrame) = request;
+                var newValues = request.Values;
+                var fromFrame = request.FromFrame;
                 var allFrameNumbers = animator.GetFrameNumbers();
 
                 if (allFrameNumbers.Contains(fromFrame) is false)

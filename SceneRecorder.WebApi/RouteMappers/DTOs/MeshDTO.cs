@@ -1,6 +1,6 @@
 ﻿using SceneRecorder.Shared.Models;
 
-namespace SceneRecorder.BodyMeshExport;
+namespace SceneRecorder.WebApi.RouteMappers.DTOs;
 
 public sealed class MeshDTO
 {

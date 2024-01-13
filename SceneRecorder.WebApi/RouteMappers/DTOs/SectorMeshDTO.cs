@@ -1,4 +1,4 @@
-﻿namespace SceneRecorder.BodyMeshExport;
+﻿namespace SceneRecorder.WebApi.RouteMappers.DTOs;
 
 public sealed class SectorMeshDTO
 {

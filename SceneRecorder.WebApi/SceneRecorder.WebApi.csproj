@@ -22,7 +22,6 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\SceneRecorder.Shared\SceneRecorder.Shared.csproj" />
 	  <ProjectReference Include="..\SceneRecorder.Recording\SceneRecorder.Recording.csproj" />
-	  <ProjectReference Include="..\SceneRecorder.BodyMeshExport\SceneRecorder.BodyMeshExport.csproj" />
 	  <ProjectReference Include="..\SceneRecorder.WebApi.Http\SceneRecorder.WebApi.Http.csproj" />
 	</ItemGroup>
 </Project>

@@ -1,4 +1,6 @@
-namespace SceneRecorder.Shared.Models;
+using SceneRecorder.Shared.Models;
+
+namespace SceneRecorder.WebApi.RouteMappers.DTOs;
 
 public readonly record struct GameObjectDTO
 {
