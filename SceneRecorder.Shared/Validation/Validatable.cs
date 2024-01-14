@@ -2,13 +2,23 @@ namespace SceneRecorder.Shared.Validation;
 
 public readonly ref struct Validatable<T>
 {
-    public T Value { get; }
+    public delegate Exception ExceptionFactory(string paramName);
 
-    public Func<Exception> ExceptionFactory { get; }
+    internal T Value { get; }
 
-    internal Validatable(T value, Func<Exception> exceptionFactory)
+    private string _valueExpression { get; }
+
+    private ExceptionFactory? _exceptionFactory { get; }
+
+    internal Validatable(T value, string valueExpression, ExceptionFactory? exceptionFactory)
     {
         Value = value;
-        ExceptionFactory = exceptionFactory;
+        _valueExpression = valueExpression;
+        _exceptionFactory = exceptionFactory;
+    }
+
+    internal Exception CreateException(ExceptionFactory fallback)
+    {
+        return _exceptionFactory?.Invoke(_valueExpression) ?? fallback(_valueExpression);
     }
 }
