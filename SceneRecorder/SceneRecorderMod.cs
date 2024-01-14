@@ -51,6 +51,15 @@ internal sealed class SceneRecorderMod : ModBehaviour
     {
         ModHelper.Console.WriteLine($"{nameof(SceneRecorder)} is loaded!", MessageType.Success);
 
+        if (SystemInfo.supportsAsyncGPUReadback is false)
+        {
+            ModHelper.Console.WriteLine(
+                $"async gpu readback is not supported, {nameof(SceneRecorder)} is not available"
+            );
+
+            return;
+        }
+
         if (FFmpeg.CheckInstallation(ModHelper.Config) is { } checkException)
         {
             ModHelper.Console.WriteLine(
