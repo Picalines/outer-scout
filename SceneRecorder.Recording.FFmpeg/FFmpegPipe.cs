@@ -1,6 +1,4 @@
 ﻿using System.Diagnostics;
-using OWML.Common;
-using SceneRecorder.Shared.Extensions;
 using Unity.Collections;
 
 // Modified from: https://github.com/keijiro/FFmpegOut
@@ -11,11 +9,9 @@ internal sealed class FFmpegPipe : IDisposable
 {
     public event Action<string>? OutputReceived;
 
-    private readonly IModConsole? _ModConsole;
-
     private readonly Process _FFmpegProcess;
 
-    private bool _ThreadsAreTerminated;
+    private bool _threadsAreTerminated;
     private readonly Thread _CopyThread;
     private readonly Thread _PipeThread;
 
@@ -28,15 +24,13 @@ internal sealed class FFmpegPipe : IDisposable
     private readonly Queue<byte[]> _PipeQueue = new();
     private readonly Queue<byte[]> _FreeBuffer = new();
 
-    public FFmpegPipe(IModConfig? modConfig, string arguments, IModConsole? modConsole)
+    public FFmpegPipe(string ffmpegPath, string ffmpegArguments)
     {
-        _ModConsole = modConsole;
-
         _FFmpegProcess = Process.Start(
             new ProcessStartInfo()
             {
-                FileName = modConfig.GetFFmpegExecutablePathSetting(),
-                Arguments = arguments,
+                FileName = ffmpegPath,
+                Arguments = ffmpegArguments,
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardInput = true,
@@ -48,8 +42,6 @@ internal sealed class FFmpegPipe : IDisposable
         _FFmpegProcess.ErrorDataReceived += (sender, args) => OutputReceived?.Invoke(args.Data);
         _FFmpegProcess.BeginErrorReadLine();
 
-        OutputReceived += line => _ModConsole?.WriteLine($"FFmpeg: {line}", MessageType.Info);
-
         _CopyThread = new Thread(CopyThread);
         _PipeThread = new Thread(PipeThread);
         _CopyThread.Start();
@@ -58,7 +50,7 @@ internal sealed class FFmpegPipe : IDisposable
 
     public bool IsClosed
     {
-        get => _ThreadsAreTerminated;
+        get => _threadsAreTerminated;
     }
 
     public void PushFrameData(NativeArray<byte> data)
@@ -86,12 +78,12 @@ internal sealed class FFmpegPipe : IDisposable
 
     public void Close()
     {
-        if (_ThreadsAreTerminated)
+        if (_threadsAreTerminated)
         {
             return;
         }
 
-        _ThreadsAreTerminated = true;
+        _threadsAreTerminated = true;
 
         _CopyEvent.Set();
         _PipeEvent.Set();
@@ -113,15 +105,15 @@ internal sealed class FFmpegPipe : IDisposable
 
     ~FFmpegPipe()
     {
-        if (_ThreadsAreTerminated is false)
+        if (_threadsAreTerminated is false)
         {
-            _ModConsole?.WriteLine("ffmpeg pipe closed before work finished", MessageType.Error);
+            throw new InvalidOperationException("ffmpeg pipe closed before work finished");
         }
     }
 
     private void CopyThread()
     {
-        while (_ThreadsAreTerminated is false)
+        while (_threadsAreTerminated is false)
         {
             _CopyEvent.WaitOne();
 
@@ -172,7 +164,7 @@ internal sealed class FFmpegPipe : IDisposable
     {
         var ffmpegPipe = _FFmpegProcess.StandardInput.BaseStream;
 
-        while (_ThreadsAreTerminated is false)
+        while (_threadsAreTerminated is false)
         {
             _PipeEvent.WaitOne();
 

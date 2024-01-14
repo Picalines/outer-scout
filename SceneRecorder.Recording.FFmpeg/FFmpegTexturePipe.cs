@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using OWML.Common;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -7,30 +6,21 @@ using UnityEngine.Rendering;
 
 namespace SceneRecorder.Recording.FFmpeg;
 
-internal sealed class FFmpegAsyncGPUReadback : IDisposable
+internal sealed class FFmpegTexturePipe : IDisposable
 {
-    private readonly IModConsole? _ModConsole;
+    public event Action? RequestError;
+
+    public event Action? TooManyRequests;
+
+    private const int MaxReadbackRequests = 6;
 
     private FFmpegPipe? _Pipe;
 
     private readonly List<AsyncGPUReadbackRequest> _ReadbackQueue = new(4);
 
-    public static bool TryCreate(
-        IModConfig? modConfig,
-        string arguments,
-        IModConsole? modConsole,
-        [NotNullWhen(true)] out FFmpegAsyncGPUReadback? session
-    )
+    public FFmpegTexturePipe(FFmpegPipe ffmpegPipe)
     {
-        if (SystemInfo.supportsAsyncGPUReadback is false)
-        {
-            modConsole?.WriteLine("async gpu readback is not supported", MessageType.Error);
-            session = null;
-            return false;
-        }
-
-        session = new FFmpegAsyncGPUReadback(modConfig, arguments, modConsole);
-        return true;
+        _Pipe = ffmpegPipe;
     }
 
     [MemberNotNullWhen(false, nameof(_Pipe))]
@@ -39,27 +29,24 @@ internal sealed class FFmpegAsyncGPUReadback : IDisposable
         get => _Pipe is null;
     }
 
-    private FFmpegAsyncGPUReadback(IModConfig? modConfig, string arguments, IModConsole? modConsole)
-    {
-        _ModConsole = modConsole;
-        _Pipe = new FFmpegPipe(modConfig, arguments, modConsole);
-    }
-
     public void PushFrame(Texture source)
     {
         if (IsClosed)
         {
-            throw new InvalidOperationException($"{nameof(FFmpegAsyncGPUReadback)} is closed");
+            throw new InvalidOperationException($"{nameof(FFmpegTexturePipe)} is closed");
         }
 
         ProcessReadbackQueue();
+
         if (source != null)
         {
             QueueFrameReadback(source);
         }
+
+        FlushFrames();
     }
 
-    public void CompletePushFrames()
+    private void FlushFrames()
     {
         _Pipe?.SyncFrameData();
     }
@@ -72,7 +59,7 @@ internal sealed class FFmpegAsyncGPUReadback : IDisposable
         }
 
         ProcessReadbackQueue();
-        CompletePushFrames();
+        FlushFrames();
         _Pipe.Dispose();
         _Pipe = null;
     }
@@ -84,9 +71,9 @@ internal sealed class FFmpegAsyncGPUReadback : IDisposable
 
     private void QueueFrameReadback(Texture source)
     {
-        if (_ReadbackQueue.Count > 6)
+        if (_ReadbackQueue.Count > MaxReadbackRequests)
         {
-            _ModConsole?.WriteLine("too many GPU readback requests", MessageType.Error);
+            TooManyRequests?.Invoke();
             return;
         }
 
@@ -126,7 +113,7 @@ internal sealed class FFmpegAsyncGPUReadback : IDisposable
 
             if (firstRequest.hasError)
             {
-                _ModConsole?.WriteLine("GPU readback error was detected", MessageType.Error);
+                RequestError?.Invoke();
                 continue;
             }
 

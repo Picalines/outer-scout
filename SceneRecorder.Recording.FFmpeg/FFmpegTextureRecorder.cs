@@ -5,83 +5,85 @@ namespace SceneRecorder.Recording.FFmpeg;
 
 public sealed class FFmpegTextureRecorder : IDisposable
 {
-    public int Framerate { get; }
+    private readonly Texture _texture;
 
-    public string OutputFilePath { get; }
+    private readonly FFmpegPipe _bytePipe;
 
-    public Texture SourceTexture { get; }
+    private readonly FFmpegTexturePipe _texturePipe;
 
-    public int FramesRecorded { get; private set; } = 0;
-
-    private readonly FFmpegAsyncGPUReadback _FFmpegReadback;
-
-    private bool _IsDisposed = false;
+    private bool _disposed = false;
 
     public FFmpegTextureRecorder(
-        IModConfig? modConfig,
-        IModConsole? modConsole,
-        Texture sourceTexture,
-        int framerate,
-        string outputFilePath
+        Texture texture,
+        string ffmpegPath,
+        string outputFilePath,
+        int frameRate
     )
     {
-        SourceTexture = sourceTexture;
-        Framerate = framerate;
-        OutputFilePath = outputFilePath;
+        _texture = texture;
 
-        var ffmpegArguments = new CommandLineArguments()
-            .Add("-y")
-            .Add("-f rawvideo")
-            .Add("-pix_fmt rgba")
-            .Add("-colorspace bt709")
-            .Add($"-video_size {sourceTexture.width}x{sourceTexture.height}")
-            .Add($"-r {Framerate}")
-            .Add("-i -")
-            .Add("-an")
-            .Add("-c:v libx265")
-            .Add("-movflags +faststart")
-            .Add("-crf 18")
-            .Add("-q:v 0")
-            .Add("-pix_fmt yuv420p")
-            .Add($"\"{OutputFilePath}\"");
+        _bytePipe = new FFmpegPipe(
+            ffmpegPath,
+            new CommandLineArguments()
+                .Add("-y")
+                .Add("-f rawvideo")
+                .Add("-pix_fmt rgba")
+                .Add("-colorspace bt709")
+                .Add($"-video_size {texture.width}x{texture.height}")
+                .Add($"-r {frameRate}")
+                .Add("-i -")
+                .Add("-an")
+                .Add("-c:v libx265")
+                .Add("-movflags +faststart")
+                .Add("-crf 18")
+                .Add("-q:v 0")
+                .Add("-pix_fmt yuv420p")
+                .Add($"\"{outputFilePath}\"")
+                .ToString()
+        );
 
-        if (
-            FFmpegAsyncGPUReadback.TryCreate(
-                modConfig,
-                ffmpegArguments.ToString(),
-                modConsole,
-                out _FFmpegReadback!
-            )
-            is false
-        )
+        _texturePipe = new FFmpegTexturePipe(_bytePipe);
+    }
+
+    public required IModConsole? ModConsole
+    {
+        init
         {
-            throw new InvalidOperationException(
-                $"failed to create {nameof(FFmpegAsyncGPUReadback)}"
-            );
+            if (_disposed || value is null)
+            {
+                return;
+            }
+
+            _bytePipe.OutputReceived += line =>
+                value.WriteLine($"FFmpeg: {line}", MessageType.Info);
+
+            _texturePipe.RequestError += () =>
+                value.WriteLine("Async GPU readback error detected", MessageType.Error);
+
+            _texturePipe.TooManyRequests += () =>
+                value.WriteLine("Too many async GPU readback requests", MessageType.Error);
         }
     }
 
     public void RecordFrame()
     {
-        if (_IsDisposed)
+        if (_disposed)
         {
             throw new InvalidOperationException($"{nameof(FFmpegPipe)} is disposed");
         }
 
-        _FFmpegReadback.PushFrame(SourceTexture);
-        _FFmpegReadback.CompletePushFrames();
-        FramesRecorded++;
+        _texturePipe.PushFrame(_texture);
     }
 
     public void Dispose()
     {
-        if (_IsDisposed)
+        if (_disposed)
         {
             return;
         }
 
-        _FFmpegReadback.Dispose();
+        _texturePipe.Dispose();
 
-        _IsDisposed = true;
+        _disposed = true;
     }
 }
