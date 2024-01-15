@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
-using SceneRecorder.Shared.Models.JsonConverters;
+using SceneRecorder.Shared.DTOs.JsonConverters;
 using UnityEngine;
 
-namespace SceneRecorder.Shared.Models;
+namespace SceneRecorder.Shared.DTOs;
 
 [JsonConverter(typeof(TransformDTOConverter))]
 public readonly record struct TransformDTO

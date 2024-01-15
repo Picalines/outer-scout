@@ -1,28 +1,25 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using SceneRecorder.Shared.Models.JsonConverters;
+using SceneRecorder.Shared.DTOs.JsonConverters;
 using UnityEngine;
 
-namespace SceneRecorder.Shared.Models;
+namespace SceneRecorder.Shared.DTOs;
 
-public readonly record struct CameraDTO
+[JsonConverter(typeof(CameraInfoDTOConverter))]
+public record struct CameraInfoDTO
 {
-    [JsonConverter(typeof(Vector2Converter))]
-    public required Vector2 SensorSize { get; init; }
+    public float FocalLength { get; set; }
 
-    public required float FocalLength { get; init; }
+    public Vector2 SensorSize { get; set; }
 
-    [JsonConverter(typeof(Vector2Converter))]
-    public required Vector2 LensShift { get; init; }
+    public Vector2 LensShift { get; set; }
 
-    public required float NearClipPlane { get; init; }
+    public float NearClipPlane { get; set; }
 
-    public required float FarClipPlane { get; init; }
+    public float FarClipPlane { get; set; }
 
-    [JsonConverter(typeof(StringEnumConverter))]
-    public required Camera.GateFitMode GateFit { get; init; }
+    public Camera.GateFitMode GateFit { get; set; }
 
-    public static CameraDTO FromOWCamera(OWCamera owCamera)
+    public static CameraInfoDTO FromOWCamera(OWCamera owCamera)
     {
         var camera = owCamera.mainCamera;
 
