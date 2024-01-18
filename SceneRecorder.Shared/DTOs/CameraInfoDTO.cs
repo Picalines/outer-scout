@@ -7,17 +7,17 @@ namespace SceneRecorder.Shared.DTOs;
 [JsonConverter(typeof(CameraInfoDTOConverter))]
 public record struct CameraInfoDTO
 {
-    public float FocalLength { get; set; }
+    public required float FocalLength { get; init; }
 
-    public Vector2 SensorSize { get; set; }
+    public required Vector2 SensorSize { get; init; }
 
-    public Vector2 LensShift { get; set; }
+    public required Vector2 LensShift { get; init; }
 
-    public float NearClipPlane { get; set; }
+    public required float NearClipPlane { get; init; }
 
-    public float FarClipPlane { get; set; }
+    public required float FarClipPlane { get; init; }
 
-    public Camera.GateFitMode GateFit { get; set; }
+    public required Camera.GateFitMode GateFit { get; init; }
 
     public static CameraInfoDTO FromOWCamera(OWCamera owCamera)
     {
