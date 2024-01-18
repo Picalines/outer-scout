@@ -3,6 +3,7 @@ using OWML.ModHelper;
 using SceneRecorder.Infrastructure.API;
 using SceneRecorder.Recording.FFmpeg;
 using SceneRecorder.Recording.Recorders;
+using SceneRecorder.Shared.Extensions;
 using SceneRecorder.WebApi;
 using UnityEngine;
 
@@ -59,7 +60,7 @@ internal sealed class SceneRecorderMod : ModBehaviour
         if (SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.Depth) is false)
         {
             ModHelper.Console.WriteLine(
-                $"{nameof(RenderTextureFormat)}.{nameof(RenderTextureFormat.Depth)} is not supported, {nameof(SceneRecorder)} is not available",
+                $"{RenderTextureFormat.Depth.ToStringWithType()} is not supported, {nameof(SceneRecorder)} is not available",
                 MessageType.Error
             );
 
