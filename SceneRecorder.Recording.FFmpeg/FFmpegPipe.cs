@@ -15,10 +15,10 @@ internal sealed class FFmpegPipe : IDisposable
     private readonly Thread _CopyThread;
     private readonly Thread _PipeThread;
 
-    private readonly AutoResetEvent _CopyEvent = new(initialState: false);
-    private readonly AutoResetEvent _CopiedEvent = new(initialState: false);
-    private readonly AutoResetEvent _PipeEvent = new(initialState: false);
-    private readonly AutoResetEvent _PipedEvent = new(initialState: false);
+    private readonly AutoResetEvent _CopyStartEvent = new(initialState: false);
+    private readonly AutoResetEvent _CopyEndEvent = new(initialState: false);
+    private readonly AutoResetEvent _PipeStartEvent = new(initialState: false);
+    private readonly AutoResetEvent _PipeEndEvent = new(initialState: false);
 
     private readonly Queue<NativeArray<byte>> _CopyQueue = new();
     private readonly Queue<byte[]> _PipeQueue = new();
@@ -60,19 +60,19 @@ internal sealed class FFmpegPipe : IDisposable
             _CopyQueue.Enqueue(data);
         }
 
-        _CopyEvent.Set();
+        _CopyStartEvent.Set();
     }
 
     public void SyncFrameData()
     {
         while (_CopyQueue.Count > 0)
         {
-            _CopiedEvent.WaitOne();
+            _CopyEndEvent.WaitOne();
         }
 
         while (_PipeQueue.Count > 4)
         {
-            _PipedEvent.WaitOne();
+            _PipeEndEvent.WaitOne();
         }
     }
 
@@ -85,8 +85,8 @@ internal sealed class FFmpegPipe : IDisposable
 
         _threadsAreTerminated = true;
 
-        _CopyEvent.Set();
-        _PipeEvent.Set();
+        _CopyStartEvent.Set();
+        _PipeStartEvent.Set();
 
         _CopyThread.Join();
         _PipeThread.Join();
@@ -115,7 +115,7 @@ internal sealed class FFmpegPipe : IDisposable
     {
         while (_threadsAreTerminated is false)
         {
-            _CopyEvent.WaitOne();
+            _CopyStartEvent.WaitOne();
 
             while (_CopyQueue.Count > 0)
             {
@@ -148,25 +148,25 @@ internal sealed class FFmpegPipe : IDisposable
                     _PipeQueue.Enqueue(buffer!);
                 }
 
-                _PipeEvent.Set();
+                _PipeStartEvent.Set();
 
                 lock (_CopyQueue)
                 {
                     _CopyQueue.Dequeue();
                 }
 
-                _CopiedEvent.Set();
+                _CopyEndEvent.Set();
             }
         }
     }
 
     private void PipeThread()
     {
-        var ffmpegPipe = _FFmpegProcess.StandardInput.BaseStream;
+        var ffmpegInputStream = _FFmpegProcess.StandardInput.BaseStream;
 
         while (_threadsAreTerminated is false)
         {
-            _PipeEvent.WaitOne();
+            _PipeStartEvent.WaitOne();
 
             while (_PipeQueue.Count > 0)
             {
@@ -176,15 +176,15 @@ internal sealed class FFmpegPipe : IDisposable
                     buffer = _PipeQueue.Dequeue();
                 }
 
-                ffmpegPipe.Write(buffer, 0, buffer.Length);
-                ffmpegPipe.Flush();
+                ffmpegInputStream.Write(buffer, 0, buffer.Length);
+                ffmpegInputStream.Flush();
 
                 lock (_FreeBuffer)
                 {
                     _FreeBuffer.Enqueue(buffer);
                 }
 
-                _PipedEvent.Set();
+                _PipeEndEvent.Set();
             }
         }
     }
