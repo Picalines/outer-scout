@@ -1,13 +1,31 @@
-﻿using OWML.Common;
+﻿using SceneRecorder.Shared.Validation;
 using UnityEngine;
 
 namespace SceneRecorder.Recording.FFmpeg;
 
 public sealed class FFmpegTextureRecorder : IDisposable
 {
-    private readonly Texture _texture;
+    public record struct InputOptions
+    {
+        public required FFmpegPixelFormat PixelFormat { get; init; }
+    }
 
-    private readonly FFmpegPipe _bytePipe;
+    public record struct OutputOptions
+    {
+        public required string FilePath { get; init; }
+
+        public required int FrameRate { get; init; }
+
+        public required FFmpegPixelFormat PixelFormat { get; init; }
+    }
+
+    public event Action<string>? FFmpegOutputReceived;
+
+    public event Action? GpuReadbackError;
+
+    public event Action? TooManyGpuReadbackRequests;
+
+    private readonly Texture _texture;
 
     private readonly FFmpegTexturePipe _texturePipe;
 
@@ -16,53 +34,44 @@ public sealed class FFmpegTextureRecorder : IDisposable
     public FFmpegTextureRecorder(
         Texture texture,
         string ffmpegPath,
-        string outputFilePath,
-        int frameRate
+        InputOptions inputOptions,
+        OutputOptions outputOptions
     )
     {
+        texture.Throw().IfNull();
+        ffmpegPath.Throw().IfNullOrWhiteSpace();
+        outputOptions.FrameRate.Throw().IfLessThan(1);
+        outputOptions.FilePath.Throw().IfNullOrWhiteSpace();
+
         _texture = texture;
 
-        _bytePipe = new FFmpegPipe(
+        var bytePipe = new FFmpegPipe(
             ffmpegPath,
             new CommandLineArguments()
                 .Add("-y")
                 .Add("-f rawvideo")
-                .Add("-pix_fmt rgba")
+                .Add($"-pix_fmt {inputOptions.PixelFormat.ToCLIOption()}")
                 .Add("-colorspace bt709")
                 .Add($"-video_size {texture.width}x{texture.height}")
-                .Add($"-r {frameRate}")
+                .Add($"-r {outputOptions.FrameRate}")
                 .Add("-i -")
                 .Add("-an")
                 .Add("-c:v libx265")
                 .Add("-movflags +faststart")
                 .Add("-crf 18")
                 .Add("-q:v 0")
-                .Add("-pix_fmt yuv420p")
-                .Add($"\"{outputFilePath}\"")
+                .Add($"-pix_fmt {outputOptions.PixelFormat.ToCLIOption()}")
+                .Add($"\"{outputOptions.FilePath}\"")
                 .ToString()
         );
 
-        _texturePipe = new FFmpegTexturePipe(_bytePipe);
-    }
+        _texturePipe = new FFmpegTexturePipe(bytePipe);
 
-    public required IModConsole? ModConsole
-    {
-        init
-        {
-            if (_disposed || value is null)
-            {
-                return;
-            }
+        bytePipe.OutputReceived += line => FFmpegOutputReceived?.Invoke(line);
 
-            _bytePipe.OutputReceived += line =>
-                value.WriteLine($"FFmpeg: {line}", MessageType.Info);
+        _texturePipe.RequestError += () => GpuReadbackError?.Invoke();
 
-            _texturePipe.RequestError += () =>
-                value.WriteLine("Async GPU readback error detected", MessageType.Error);
-
-            _texturePipe.TooManyRequests += () =>
-                value.WriteLine("Too many async GPU readback requests", MessageType.Error);
-        }
+        _texturePipe.TooManyRequests += () => TooManyGpuReadbackRequests?.Invoke();
     }
 
     public void RecordFrame()
