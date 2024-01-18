@@ -1,10 +1,8 @@
 ﻿using OWML.Common;
 using OWML.ModHelper;
 using SceneRecorder.Infrastructure.API;
-using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.Recording.FFmpeg;
 using SceneRecorder.Recording.Recorders;
-using SceneRecorder.Shared.Extensions;
 using SceneRecorder.WebApi;
 using UnityEngine;
 
@@ -23,10 +21,7 @@ internal sealed class SceneRecorderMod : ModBehaviour
         if (_OutputRecorder is not null)
         {
             _OutputRecorder.ModConfig = config;
-
-            _OutputRecorder.ModConsole = config.GetEnableFFmpegLogsSetting()
-                ? ModHelper.Console
-                : ModHelper.Console.WithFiltering((line, _) => !line.StartsWith("FFmpeg: "));
+            _OutputRecorder.ModConsole = ModHelper.Console;
 
             var commonCameraAPI = ModHelper.Interaction.TryGetModApi<ICommonCameraAPI>(
                 CommonCameraAPIModId
@@ -54,7 +49,18 @@ internal sealed class SceneRecorderMod : ModBehaviour
         if (SystemInfo.supportsAsyncGPUReadback is false)
         {
             ModHelper.Console.WriteLine(
-                $"async gpu readback is not supported, {nameof(SceneRecorder)} is not available"
+                $"async gpu readback is not supported, {nameof(SceneRecorder)} is not available",
+                MessageType.Error
+            );
+
+            return;
+        }
+
+        if (SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.Depth) is false)
+        {
+            ModHelper.Console.WriteLine(
+                $"{nameof(RenderTextureFormat)}.{nameof(RenderTextureFormat.Depth)} is not supported, {nameof(SceneRecorder)} is not available",
+                MessageType.Error
             );
 
             return;
@@ -64,7 +70,7 @@ internal sealed class SceneRecorderMod : ModBehaviour
         {
             ModHelper.Console.WriteLine(
                 $"ffmpeg executable not found, {nameof(SceneRecorder)} is not available. See exception below:",
-                MessageType.Warning
+                MessageType.Error
             );
 
             ModHelper.Console.WriteLine(checkException.ToString(), MessageType.Warning);
