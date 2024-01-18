@@ -26,7 +26,7 @@ public static class ThrowExtensions
     }
 
     public static Validatable<T> ThrowIfNull<T>(
-        [NotNullIfNotNull(nameof(value))] this T? value,
+        [NotNull] this T? value,
         Validatable<T>.ExceptionFactory? exceptionFactory = null,
         [CallerArgumentExpression(nameof(value))] string valueExpression = ""
     )
@@ -41,7 +41,7 @@ public static class ThrowExtensions
     }
 
     public static Validatable<T> ThrowIfNull<T>(
-        [NotNullIfNotNull(nameof(value))] this T? value,
+        [NotNull] this T? value,
         string argumentMessage,
         [CallerArgumentExpression(nameof(value))] string valueExpression = ""
     )

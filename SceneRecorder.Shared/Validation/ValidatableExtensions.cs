@@ -44,7 +44,7 @@ public static class ValidatableExtensions
 
     public static Validatable<T> IfNull<T>(this Validatable<T?> validatable)
     {
-        if (validatable.Value is not { } value)
+        if (validatable.Value == null)
         {
             throw validatable.CreateException(
                 paramName => throw new ArgumentNullException(paramName)
@@ -72,6 +72,34 @@ public static class ValidatableExtensions
         {
             throw validatable.CreateException(
                 paramName => throw new ArgumentException($"{paramName} is false", paramName)
+            );
+        }
+
+        return validatable;
+    }
+
+    public static Validatable<string> IsEmpty(this Validatable<string> validatable)
+    {
+        if (validatable.Value is "")
+        {
+            throw validatable.CreateException(
+                paramName => throw new ArgumentException($"string {paramName} is empty", paramName)
+            );
+        }
+
+        return validatable;
+    }
+
+    public static Validatable<string> IfNullOrWhiteSpace(this Validatable<string> validatable)
+    {
+        if (string.IsNullOrWhiteSpace(validatable.Value))
+        {
+            throw validatable.CreateException(
+                paramName =>
+                    throw new ArgumentException(
+                        $"string {paramName} is null or whitespace",
+                        paramName
+                    )
             );
         }
 
