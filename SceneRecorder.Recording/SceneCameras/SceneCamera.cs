@@ -49,6 +49,9 @@ internal sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>
     private RenderTexture _depthTexture = null!;
     private RenderTexture _depthColorTexture = null!;
 
+    private IRecorder? _colorRecorder = null;
+    private IRecorder? _depthRecorder = null;
+
     private SceneCamera()
         : base(out var parameters)
     {
@@ -83,7 +86,7 @@ internal sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>
 
     public IRecorder CreateColorRecorder()
     {
-        return new RenderTextureRecorder()
+        return _colorRecorder ??= new RenderTextureRecorder()
         {
             ModConfig = _modConfig,
             ModConsole = _modConsole,
@@ -95,7 +98,7 @@ internal sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>
 
     public IRecorder CreateDepthRecorder()
     {
-        return new RenderTextureRecorder()
+        return _depthRecorder ??= new RenderTextureRecorder()
         {
             ModConfig = _modConfig,
             ModConsole = _modConsole,
