@@ -1,5 +1,6 @@
 ﻿using OWML.Common;
 using SceneRecorder.Recording.FFmpeg;
+using SceneRecorder.Shared.DependencyInjection;
 using SceneRecorder.Shared.Extensions;
 using SceneRecorder.Shared.Validation;
 using UnityEngine;
@@ -8,17 +9,13 @@ namespace SceneRecorder.Recording.Recorders;
 
 internal sealed class RenderTextureRecorder : IRecorder
 {
-    public required IModConfig ModConfig { get; init; }
-
-    public required IModConsole ModConsole { get; init; }
-
     public required RenderTexture Texture { get; init; }
 
     public required string TargetFile { get; init; }
 
     public required int FrameRate { get; init; }
 
-    private FFmpegTextureRecorder? _ffmpegTextureRecorder = null;
+    private FFmpegTextureEncoder? _ffmpegTextureEncoder = null;
 
     public void StartRecording()
     {
@@ -26,7 +23,10 @@ internal sealed class RenderTextureRecorder : IRecorder
         TargetFile.ThrowIfNull();
         FrameRate.ThrowIfNull().IfLessThan(1);
 
-        var inputOptions = new FFmpegTextureRecorder.InputOptions()
+        var modConfig = Singleton<IModConfig>.Instance;
+        var modConsole = Singleton<IModConsole>.Instance;
+
+        var inputOptions = new FFmpegTextureEncoder.InputOptions()
         {
             PixelFormat = Texture.format switch
             {
@@ -39,43 +39,43 @@ internal sealed class RenderTextureRecorder : IRecorder
             },
         };
 
-        var outputOptions = new FFmpegTextureRecorder.OutputOptions()
+        var outputOptions = new FFmpegTextureEncoder.OutputOptions()
         {
             FilePath = TargetFile,
             FrameRate = FrameRate,
             PixelFormat = FFmpegPixelFormat.YUV420P
         };
 
-        _ffmpegTextureRecorder = new FFmpegTextureRecorder(
+        _ffmpegTextureEncoder = new FFmpegTextureEncoder(
             Texture,
-            ModConfig.GetFFmpegExecutablePathSetting(),
+            modConfig.GetFFmpegExecutablePathSetting(),
             inputOptions,
             outputOptions
         );
 
-        _ffmpegTextureRecorder.FFmpegOutputReceived += line =>
+        _ffmpegTextureEncoder.FFmpegOutputReceived += line =>
         {
-            if (ModConfig.GetEnableFFmpegLogsSetting())
+            if (modConfig.GetEnableFFmpegLogsSetting())
             {
-                ModConsole.WriteLine($"ffmpeg: {line}", MessageType.Info);
+                modConsole.WriteLine($"ffmpeg: {line}", MessageType.Info);
             }
         };
 
-        _ffmpegTextureRecorder.GpuReadbackError += () =>
-            ModConsole.WriteLine("Async GPU Readback error detected", MessageType.Error);
+        _ffmpegTextureEncoder.GpuReadbackError += () =>
+            modConsole.WriteLine("Async GPU Readback error detected", MessageType.Error);
 
-        _ffmpegTextureRecorder.TooManyGpuReadbackRequests += () =>
-            ModConsole.WriteLine("Too many Async GPU Readback requests", MessageType.Error);
+        _ffmpegTextureEncoder.TooManyGpuReadbackRequests += () =>
+            modConsole.WriteLine("Too many Async GPU Readback requests", MessageType.Error);
     }
 
     public void RecordData()
     {
-        _ffmpegTextureRecorder?.RecordFrame();
+        _ffmpegTextureEncoder?.AddFrame(Texture);
     }
 
     public void StopRecording()
     {
-        _ffmpegTextureRecorder!.Dispose();
-        _ffmpegTextureRecorder = null;
+        _ffmpegTextureEncoder!.Dispose();
+        _ffmpegTextureEncoder = null;
     }
 }
