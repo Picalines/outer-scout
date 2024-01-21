@@ -1,3 +1,4 @@
+using SceneRecorder.Recording.Domain;
 using SceneRecorder.Recording.Extensions;
 using SceneRecorder.Recording.Recorders;
 using SceneRecorder.Shared.DependencyInjection;
@@ -12,7 +13,7 @@ internal sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>
 {
     public record struct Parameters
     {
-        public required SceneSettingsDTO SceneSettings { get; init; }
+        public required SceneSettings SceneSettings { get; init; }
 
         public required string Id { get; init; }
 
@@ -33,7 +34,7 @@ internal sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>
     //
     // That's why there're two OWCameras and three RenderTextures for *one* video. You're welcome!
 
-    private SceneSettingsDTO _sceneSettings;
+    private SceneSettings _sceneSettings;
 
     private OWCamera _colorCamera = null!;
     private OWCamera _depthCamera = null!;
@@ -80,7 +81,7 @@ internal sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>
         return _colorRecorder ??= new RenderTextureRecorder()
         {
             Texture = _colorTexture,
-            FrameRate = _sceneSettings.Frames.Rate,
+            FrameRate = _sceneSettings.FrameRate,
             TargetFile = Path.Combine(_sceneSettings.OutputDirectory, "cameras", Id, "color.mp4"),
         };
     }
@@ -90,7 +91,7 @@ internal sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>
         return _depthRecorder ??= new RenderTextureRecorder()
         {
             Texture = _depthColorTexture,
-            FrameRate = _sceneSettings.Frames.Rate,
+            FrameRate = _sceneSettings.FrameRate,
             TargetFile = Path.Combine(_sceneSettings.OutputDirectory, "cameras", Id, "depth.mp4"),
         };
     }

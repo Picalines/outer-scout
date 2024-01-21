@@ -1,4 +1,4 @@
-namespace SceneRecorder.Shared.DTOs;
+namespace SceneRecorder.WebApi.RouteMappers.DTOs;
 
 public sealed class SceneFramesDTO
 {
