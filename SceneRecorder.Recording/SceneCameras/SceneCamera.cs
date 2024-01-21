@@ -1,4 +1,3 @@
-using OWML.Common;
 using SceneRecorder.Recording.Extensions;
 using SceneRecorder.Recording.Recorders;
 using SceneRecorder.Shared.DependencyInjection;
@@ -13,10 +12,6 @@ internal sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>
 {
     public record struct Parameters
     {
-        public required IModConfig ModConfig { get; init; }
-
-        public required IModConsole ModConsole { get; init; }
-
         public required SceneSettingsDTO SceneSettings { get; init; }
 
         public required string Id { get; init; }
@@ -38,8 +33,6 @@ internal sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>
     //
     // That's why there're two OWCameras and three RenderTextures for *one* video. You're welcome!
 
-    private IModConfig _modConfig;
-    private IModConsole _modConsole;
     private SceneSettingsDTO _sceneSettings;
 
     private OWCamera _colorCamera = null!;
@@ -57,8 +50,6 @@ internal sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>
     {
         Id = parameters.Id;
         Resolution = parameters.Resolution;
-        _modConfig = parameters.ModConfig;
-        _modConsole = parameters.ModConsole;
         _sceneSettings = parameters.SceneSettings;
 
         Id.Throw().IfNullOrWhiteSpace();
@@ -88,8 +79,6 @@ internal sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>
     {
         return _colorRecorder ??= new RenderTextureRecorder()
         {
-            ModConfig = _modConfig,
-            ModConsole = _modConsole,
             Texture = _colorTexture,
             FrameRate = _sceneSettings.Frames.Rate,
             TargetFile = Path.Combine(_sceneSettings.OutputDirectory, "cameras", Id, "color.mp4"),
@@ -100,8 +89,6 @@ internal sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>
     {
         return _depthRecorder ??= new RenderTextureRecorder()
         {
-            ModConfig = _modConfig,
-            ModConsole = _modConsole,
             Texture = _depthColorTexture,
             FrameRate = _sceneSettings.Frames.Rate,
             TargetFile = Path.Combine(_sceneSettings.OutputDirectory, "cameras", Id, "depth.mp4"),

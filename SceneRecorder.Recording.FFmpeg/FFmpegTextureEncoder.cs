@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace SceneRecorder.Recording.FFmpeg;
 
-public sealed class FFmpegTextureRecorder : IDisposable
+public sealed class FFmpegTextureEncoder : IDisposable
 {
     public record struct InputOptions
     {
@@ -25,13 +25,11 @@ public sealed class FFmpegTextureRecorder : IDisposable
 
     public event Action? TooManyGpuReadbackRequests;
 
-    private readonly Texture _texture;
-
     private readonly FFmpegTexturePipe _texturePipe;
 
     private bool _disposed = false;
 
-    public FFmpegTextureRecorder(
+    public FFmpegTextureEncoder(
         Texture texture,
         string ffmpegPath,
         InputOptions inputOptions,
@@ -42,8 +40,6 @@ public sealed class FFmpegTextureRecorder : IDisposable
         ffmpegPath.Throw().IfNullOrWhiteSpace();
         outputOptions.FrameRate.Throw().IfLessThan(1);
         outputOptions.FilePath.Throw().IfNullOrWhiteSpace();
-
-        _texture = texture;
 
         var bytePipe = new FFmpegPipe(
             ffmpegPath,
@@ -74,14 +70,14 @@ public sealed class FFmpegTextureRecorder : IDisposable
         _texturePipe.TooManyRequests += () => TooManyGpuReadbackRequests?.Invoke();
     }
 
-    public void RecordFrame()
+    public void AddFrame(Texture texture)
     {
         if (_disposed)
         {
             throw new InvalidOperationException($"{nameof(FFmpegPipe)} is disposed");
         }
 
-        _texturePipe.PushFrame(_texture);
+        _texturePipe.PushFrame(texture);
     }
 
     public void Dispose()
