@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SceneRecorder.Recording.Domain;
 
 [StructLayout(LayoutKind.Auto)]
-public record struct TransformRecord
+public record struct LocalTransform
 {
     public Vector3 Position { get; init; }
 
@@ -14,7 +14,7 @@ public record struct TransformRecord
 
     public Transform? Parent { get; init; }
 
-    public TransformRecord()
+    public LocalTransform()
     {
         Position = Vector3.zero;
         Rotation = Quaternion.identity;
