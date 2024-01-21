@@ -1,23 +1,39 @@
 ﻿using SceneRecorder.Shared.Extensions;
+using SceneRecorder.Shared.Validation;
 
 namespace SceneRecorder.Recording.Recorders;
 
 internal sealed class ComposedRecorder : IRecorder
 {
-    public required IRecorder[] Recorders { get; init; }
+    private readonly HashSet<IRecorder> _recorders = [];
+
+    private bool _isRecording = false;
+
+    public IEnumerable<IRecorder> Recorders => _recorders;
+
+    public void AddRecorder(IRecorder recorder)
+    {
+        _isRecording.Throw().IfTrue();
+
+        _recorders.Add(recorder);
+    }
 
     public void StartRecording()
     {
-        Recorders.ForEach(r => r.StartRecording());
+        _isRecording = true;
+
+        _recorders.ForEach(r => r.StartRecording());
     }
 
     public void RecordData()
     {
-        Recorders.ForEach(r => r.RecordData());
+        _recorders.ForEach(r => r.RecordData());
     }
 
     public void StopRecording()
     {
-        Recorders.ForEach(r => r.StopRecording());
+        _recorders.ForEach(r => r.StopRecording());
+
+        _isRecording = false;
     }
 }
