@@ -3,6 +3,7 @@ using OWML.ModHelper;
 using SceneRecorder.Infrastructure.API;
 using SceneRecorder.Recording.FFmpeg;
 using SceneRecorder.Recording.Recorders;
+using SceneRecorder.Shared.DependencyInjection;
 using SceneRecorder.Shared.Extensions;
 using SceneRecorder.WebApi;
 using UnityEngine;
@@ -16,6 +17,12 @@ internal sealed class SceneRecorderMod : ModBehaviour
     private OutputRecorder _OutputRecorder = null!;
 
     private WebApiServer? _WebApiServer = null;
+
+    private SceneRecorderMod()
+    {
+        Singleton<IModConfig>.ProvideInstance(() => ModHelper.Config);
+        Singleton<IModConsole>.ProvideInstance(() => ModHelper.Console);
+    }
 
     public override void Configure(IModConfig config)
     {
