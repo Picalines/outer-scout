@@ -42,6 +42,46 @@ public static class ValidatableExtensions
         return validatable.If(condition(validatable.Value), conditionExpression);
     }
 
+    public static Validatable<T> IfEquals<T>(
+        this Validatable<T> validatable,
+        T value,
+        EqualityComparer<T>? equalityComparer = null,
+        [CallerArgumentExpression(nameof(value))] string valueExpression = ""
+    )
+    {
+        equalityComparer ??= EqualityComparer<T>.Default;
+
+        if (equalityComparer.Equals(validatable.Value, value) is true)
+        {
+            throw validatable.CreateException(
+                paramName =>
+                    throw new ArgumentException($"{paramName} equals {valueExpression}", paramName)
+            );
+        }
+
+        return validatable;
+    }
+
+    public static Validatable<T> IfNotEquals<T>(
+        this Validatable<T> validatable,
+        T value,
+        EqualityComparer<T>? equalityComparer = null,
+        [CallerArgumentExpression(nameof(value))] string valueExpression = ""
+    )
+    {
+        equalityComparer ??= EqualityComparer<T>.Default;
+
+        if (equalityComparer.Equals(validatable.Value, value) is false)
+        {
+            throw validatable.CreateException(
+                paramName =>
+                    throw new ArgumentException($"{paramName} equals {valueExpression}", paramName)
+            );
+        }
+
+        return validatable;
+    }
+
     public static Validatable<T> IfNull<T>(this Validatable<T?> validatable)
     {
         if (validatable.Value == null)
