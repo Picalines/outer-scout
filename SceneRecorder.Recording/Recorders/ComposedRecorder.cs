@@ -1,127 +1,23 @@
-﻿using UnityEngine;
+﻿using SceneRecorder.Shared.Extensions;
 
 namespace SceneRecorder.Recording.Recorders;
 
-internal sealed class ComposedRecorder : MonoBehaviour, IRecorder
+internal sealed class ComposedRecorder : IRecorder
 {
-    private IReadOnlyList<IRecorder> _Recorders = Array.Empty<IRecorder>();
+    public required IRecorder[] Recorders { get; init; }
 
-    private bool _Awoken = false;
-
-    public IReadOnlyList<IRecorder> Recorders
+    public void StartRecording()
     {
-        get => _Recorders;
-        set
-        {
-            if (IsRecording is true)
-            {
-                throw new InvalidOperationException(
-                    $"cannot modify {nameof(Recorders)} while recording"
-                );
-            }
-
-            _Recorders = value;
-        }
+        Recorders.ForEach(r => r.StartRecording());
     }
 
-    public IRecorder? MainRecorder
+    public void RecordData()
     {
-        get => Recorders.FirstOrDefault();
+        Recorders.ForEach(r => r.RecordData());
     }
 
-    public bool IsRecording
+    public void StopRecording()
     {
-        get => MainRecorder?.IsRecording ?? false;
-    }
-
-    public int FramesRecorded
-    {
-        get => MainRecorder?.FramesRecorded ?? 0;
-    }
-
-    public event Action RecordingStarted
-    {
-        add
-        {
-            if (MainRecorder is not null)
-                MainRecorder.RecordingStarted += value;
-        }
-        remove
-        {
-            if (MainRecorder is not null)
-                MainRecorder.RecordingStarted -= value;
-        }
-    }
-
-    public event Action FrameStarted
-    {
-        add
-        {
-            if (MainRecorder is not null)
-                MainRecorder.FrameStarted += value;
-        }
-        remove
-        {
-            if (MainRecorder is not null)
-                MainRecorder.FrameStarted -= value;
-        }
-    }
-
-    public event Action RecordingFinished
-    {
-        add
-        {
-            if (MainRecorder is not null)
-                MainRecorder.RecordingFinished += value;
-        }
-        remove
-        {
-            if (MainRecorder is not null)
-                MainRecorder.RecordingFinished -= value;
-        }
-    }
-
-    private void Awake()
-    {
-        enabled = false;
-        _Awoken = true;
-    }
-
-    private void OnEnable()
-    {
-        foreach (var recorder in Recorders)
-        {
-            if (recorder is MonoBehaviour monoBehaviour)
-            {
-                monoBehaviour.enabled = true;
-            }
-        }
-    }
-
-    private void OnDisable()
-    {
-        if (_Awoken is false)
-        {
-            return;
-        }
-
-        foreach (var recorder in Recorders)
-        {
-            if (recorder is MonoBehaviour monoBehaviour)
-            {
-                monoBehaviour.enabled = false;
-            }
-        }
-    }
-
-    private void OnDestory()
-    {
-        foreach (var recorder in Recorders)
-        {
-            if (recorder is MonoBehaviour monoBehaviour && monoBehaviour != null)
-            {
-                Destroy(monoBehaviour);
-            }
-        }
+        Recorders.ForEach(r => r.StopRecording());
     }
 }
