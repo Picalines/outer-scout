@@ -7,6 +7,10 @@ public sealed class FFmpegTextureEncoder : IDisposable
 {
     public record struct InputOptions
     {
+        public required int Width { get; init; }
+
+        public required int Height { get; init; }
+
         public required FFmpegPixelFormat PixelFormat { get; init; }
     }
 
@@ -27,19 +31,25 @@ public sealed class FFmpegTextureEncoder : IDisposable
 
     private readonly FFmpegTexturePipe _texturePipe;
 
+    private readonly int _inputWidth;
+
+    private readonly int _inputHeight;
+
     private bool _disposed = false;
 
     public FFmpegTextureEncoder(
-        Texture texture,
         string ffmpegPath,
         InputOptions inputOptions,
         OutputOptions outputOptions
     )
     {
-        texture.Throw().IfNull();
         ffmpegPath.Throw().IfNullOrWhiteSpace();
+        inputOptions.Width.Throw().IfLessThan(1);
+        inputOptions.Height.Throw().IfLessThan(1);
         outputOptions.FrameRate.Throw().IfLessThan(1);
         outputOptions.FilePath.Throw().IfNullOrWhiteSpace();
+
+        (_inputWidth, _inputHeight) = (inputOptions.Width, inputOptions.Height);
 
         var bytePipe = new FFmpegPipe(
             ffmpegPath,
@@ -48,7 +58,7 @@ public sealed class FFmpegTextureEncoder : IDisposable
                 .Add("-f rawvideo")
                 .Add($"-pix_fmt {inputOptions.PixelFormat.ToCLIOption()}")
                 .Add("-colorspace bt709")
-                .Add($"-video_size {texture.width}x{texture.height}")
+                .Add($"-video_size {inputOptions.Width}x{inputOptions.Height}")
                 .Add($"-r {outputOptions.FrameRate}")
                 .Add("-i -")
                 .Add("-an")
@@ -76,6 +86,9 @@ public sealed class FFmpegTextureEncoder : IDisposable
         {
             throw new InvalidOperationException($"{nameof(FFmpegPipe)} is disposed");
         }
+
+        texture.width.Throw().IfNotEquals(_inputWidth);
+        texture.height.Throw().IfNotEquals(_inputHeight);
 
         _texturePipe.PushFrame(texture);
     }
