@@ -1,4 +1,3 @@
-using SceneRecorder.Recording.Recorders;
 using SceneRecorder.Shared.DTOs;
 using UnityEngine;
 
@@ -12,7 +11,7 @@ public interface ISceneCamera
 
     public CameraInfoDTO CameraInfo { get; set; }
 
-    public IRecorder CreateColorRecorder();
+    public RenderTexture? ColorTexture { get; }
 
-    public IRecorder CreateDepthRecorder();
+    public RenderTexture? DepthTexture { get; }
 }

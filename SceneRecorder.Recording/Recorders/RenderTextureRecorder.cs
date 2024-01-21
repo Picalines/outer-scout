@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace SceneRecorder.Recording.Recorders;
 
-internal sealed class RenderTextureRecorder : IRecorder
+public sealed class RenderTextureRecorder : IRecorder
 {
     public required RenderTexture Texture { get; init; }
 
@@ -17,6 +17,8 @@ internal sealed class RenderTextureRecorder : IRecorder
 
     private FFmpegTextureEncoder? _ffmpegTextureEncoder = null;
 
+    private RenderTexture? _coloredDepthTexture = null;
+
     public void StartRecording()
     {
         Texture.ThrowIfNull();
@@ -24,14 +26,15 @@ internal sealed class RenderTextureRecorder : IRecorder
         FrameRate.ThrowIfNull().IfLessThan(1);
 
         var modConfig = Singleton<IModConfig>.Instance;
-        var modConsole = Singleton<IModConsole>.Instance;
 
         var inputOptions = new FFmpegTextureEncoder.InputOptions()
         {
+            Width = Texture.width,
+            Height = Texture.height,
             PixelFormat = Texture.format switch
             {
                 RenderTextureFormat.ARGB32 => FFmpegPixelFormat.RGBA,
-                RenderTextureFormat.RFloat => FFmpegPixelFormat.GrayF32LE,
+                RenderTextureFormat.Depth => FFmpegPixelFormat.GrayF32LE,
                 _
                     => throw new NotImplementedException(
                         $"{Texture.format.ToStringWithType()} input is not supported"
@@ -47,13 +50,55 @@ internal sealed class RenderTextureRecorder : IRecorder
         };
 
         _ffmpegTextureEncoder = new FFmpegTextureEncoder(
-            Texture,
             modConfig.GetFFmpegExecutablePathSetting(),
             inputOptions,
             outputOptions
         );
 
-        _ffmpegTextureEncoder.FFmpegOutputReceived += line =>
+        SetupEncoderLogs(_ffmpegTextureEncoder);
+
+        if (Texture.format is RenderTextureFormat.Depth)
+        {
+            _coloredDepthTexture = new RenderTexture(
+                Texture.width,
+                Texture.height,
+                0,
+                RenderTextureFormat.RFloat
+            );
+        }
+    }
+
+    public void RecordData()
+    {
+        var textureToEncode = Texture;
+
+        if (_coloredDepthTexture is not null)
+        {
+            Graphics.Blit(Texture, _coloredDepthTexture);
+            textureToEncode = _coloredDepthTexture;
+        }
+
+        _ffmpegTextureEncoder?.AddFrame(textureToEncode);
+    }
+
+    public void StopRecording()
+    {
+        _ffmpegTextureEncoder!.Dispose();
+        _ffmpegTextureEncoder = null;
+
+        if (_coloredDepthTexture is not null)
+        {
+            UnityEngine.Object.Destroy(_coloredDepthTexture);
+            _coloredDepthTexture = null;
+        }
+    }
+
+    private static void SetupEncoderLogs(FFmpegTextureEncoder encoder)
+    {
+        var modConfig = Singleton<IModConfig>.Instance;
+        var modConsole = Singleton<IModConsole>.Instance;
+
+        encoder.FFmpegOutputReceived += line =>
         {
             if (modConfig.GetEnableFFmpegLogsSetting())
             {
@@ -61,21 +106,10 @@ internal sealed class RenderTextureRecorder : IRecorder
             }
         };
 
-        _ffmpegTextureEncoder.GpuReadbackError += () =>
+        encoder.GpuReadbackError += () =>
             modConsole.WriteLine("Async GPU Readback error detected", MessageType.Error);
 
-        _ffmpegTextureEncoder.TooManyGpuReadbackRequests += () =>
+        encoder.TooManyGpuReadbackRequests += () =>
             modConsole.WriteLine("Too many Async GPU Readback requests", MessageType.Error);
-    }
-
-    public void RecordData()
-    {
-        _ffmpegTextureEncoder?.AddFrame(Texture);
-    }
-
-    public void StopRecording()
-    {
-        _ffmpegTextureEncoder!.Dispose();
-        _ffmpegTextureEncoder = null;
     }
 }
