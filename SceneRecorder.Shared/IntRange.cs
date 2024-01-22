@@ -23,16 +23,14 @@ public record struct IntRange : IEnumerable<int>
         End = end;
     }
 
-    public int Length => End - Start;
+    public int Length
+    {
+        get => End - Start;
+    }
 
     public IEnumerator<int> GetEnumerator()
     {
-        int current = Start;
-
-        while (current <= End)
-        {
-            yield return current++;
-        }
+        return Enumerable.Range(Start, Length + 1).GetEnumerator();
     }
 
     IEnumerator IEnumerable.GetEnumerator()
