@@ -1,3 +1,4 @@
+using System.Web;
 using SceneRecorder.Shared.Extensions;
 using UnityEngine;
 
@@ -5,8 +6,6 @@ namespace SceneRecorder.Recording.Recorders;
 
 public sealed class TransformRecorder : IRecorder
 {
-    private const char CsvColumnSeparator = ';';
-
     public required Transform Transform { get; init; }
 
     public required Transform Parent { get; init; }
@@ -15,14 +14,23 @@ public sealed class TransformRecorder : IRecorder
 
     private StreamWriter _streamWriter = null!;
 
+    private bool _prependComma = false;
+
     public void StartRecording()
     {
         _streamWriter = new StreamWriter(TargetFile);
 
-        _streamWriter.WriteLine($"# parent={Parent.name}");
+        var jsonParentName = HttpUtility.JavaScriptStringEncode(Parent.name, true);
 
-        // header
-        WriteCsvRow<string>(["px", "py", "pz", "rx", "ry", "rz", "rw", "sx", "sy", "sz"]);
+        _streamWriter.Write(
+            $$"""
+            {
+                "parent": {{jsonParentName}},
+                "transforms": [
+            """
+        );
+
+        _prependComma = false;
     }
 
     public void RecordData()
@@ -31,29 +39,32 @@ public sealed class TransformRecorder : IRecorder
         var (rx, ry, rz, rw) = Parent.InverseTransformRotation(Transform.rotation);
         var (sx, sy, sz) = Transform.localScale;
 
-        _streamWriter.WriteLine();
-        WriteCsvRow<float>([px, py, pz, rx, ry, rz, rw, sx, sy, sz]);
+        ReadOnlySpan<float> array = [px, py, pz, rx, ry, rz, rw, sx, sy, sz];
+
+        if (_prependComma)
+        {
+            _streamWriter.Write(',');
+        }
+
+        _streamWriter.Write('[');
+        _streamWriter.Write(array[0]);
+
+        for (int i = 1; i < array.Length; i++)
+        {
+            _streamWriter.Write(',');
+            _streamWriter.Write(array[i]);
+        }
+
+        _streamWriter.Write(']');
+        _prependComma = true;
     }
 
     public void StopRecording()
     {
+        _streamWriter.WriteLine(']');
+        _streamWriter.Write('}');
+
         _streamWriter.Dispose();
         _streamWriter = null!;
-    }
-
-    private void WriteCsvRow<T>(ReadOnlySpan<T> row)
-    {
-        if (row.Length is 0)
-        {
-            return;
-        }
-
-        _streamWriter.Write(row[0]);
-
-        for (int i = 1; i < row.Length; i++)
-        {
-            _streamWriter.Write(CsvColumnSeparator);
-            _streamWriter.Write(row[i]);
-        }
     }
 }
