@@ -1,9 +1,9 @@
 using SceneRecorder.Shared.Extensions;
 using UnityEngine;
 
-namespace SceneRecorder.Shared.DTOs.JsonConverters;
+namespace SceneRecorder.WebApi.RouteMappers.DTOs.JsonConverters;
 
-public sealed class QuaternionConverter : NumberArrayConverter<Quaternion>
+internal sealed class QuaternionConverter : NumberArrayConverter<Quaternion>
 {
     public QuaternionConverter()
         : base(4) { }

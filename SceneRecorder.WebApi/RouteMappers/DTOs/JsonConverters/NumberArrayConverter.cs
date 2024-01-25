@@ -1,9 +1,9 @@
 using Newtonsoft.Json;
 using SceneRecorder.Shared.Validation;
 
-namespace SceneRecorder.Shared.DTOs.JsonConverters;
+namespace SceneRecorder.WebApi.RouteMappers.DTOs.JsonConverters;
 
-public abstract class NumberArrayConverter<T> : JsonConverter<T>
+internal abstract class NumberArrayConverter<T> : JsonConverter<T>
 {
     private readonly int _arrayLength;
 

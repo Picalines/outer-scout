@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-using SceneRecorder.Shared.DTOs.JsonConverters;
+using SceneRecorder.WebApi.RouteMappers.DTOs.JsonConverters;
 using UnityEngine;
 
 namespace SceneRecorder.Shared.DTOs;

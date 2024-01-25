@@ -1,7 +1,8 @@
+using SceneRecorder.Shared.DTOs;
 using SceneRecorder.Shared.Extensions;
 using UnityEngine;
 
-namespace SceneRecorder.Shared.DTOs.JsonConverters;
+namespace SceneRecorder.WebApi.RouteMappers.DTOs.JsonConverters;
 
 internal sealed class CameraInfoDTOConverter : NumberArrayConverter<CameraInfoDTO>
 {
