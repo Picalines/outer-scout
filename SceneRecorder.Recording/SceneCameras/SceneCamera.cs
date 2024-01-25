@@ -1,14 +1,13 @@
 using SceneRecorder.Recording.Domain;
 using SceneRecorder.Recording.Extensions;
 using SceneRecorder.Shared.DependencyInjection;
-using SceneRecorder.Shared.DTOs;
 using SceneRecorder.Shared.Validation;
 using UnityEngine;
 
 namespace SceneRecorder.Recording.SceneCameras;
 
 [RequireComponent(typeof(OWCamera))]
-internal sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>, ISceneCamera
+public sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>, ISceneCamera
 {
     public record struct Parameters
     {
@@ -24,6 +23,8 @@ internal sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>
     public Transform Transform { get; private set; } = null!;
 
     private SceneSettings _sceneSettings;
+
+    private CameraInfo _cameraInfo;
 
     private OWCamera _colorCamera = null!;
     private OWCamera _depthCamera = null!;
@@ -56,10 +57,10 @@ internal sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>
             RenderTextureFormat.Depth
         );
 
+        _colorCamera.mainCamera.usePhysicalProperties = true;
         _colorCamera.targetTexture = _colorTexture;
 
-        _depthCamera = CreateDepthCamera();
-        _depthCamera.targetTexture = _depthTexture;
+        _cameraInfo = GetCameraInfo(_colorCamera);
     }
 
     private void Awake()
@@ -68,21 +69,54 @@ internal sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>
 
         _colorCamera = GetComponent<OWCamera>();
         Transform = transform;
-    }
 
-    public CameraInfoDTO CameraInfo
-    {
-        get => CameraInfoDTO.FromOWCamera(_colorCamera);
-        set
-        {
-            value.Apply(_colorCamera);
-            value.Apply(_depthCamera);
-        }
+        _depthCamera = CreateDepthCamera();
+        _depthCamera.targetTexture = _depthTexture;
     }
 
     public RenderTexture? ColorTexture => _colorTexture;
 
     public RenderTexture? DepthTexture => _depthTexture;
+
+    public CameraInfo CameraInfo
+    {
+        get => _cameraInfo;
+        set
+        {
+            _cameraInfo = value;
+            ApplyCameraInfo(_colorCamera, value);
+            ApplyCameraInfo(_depthCamera, value);
+        }
+    }
+
+    private static CameraInfo GetCameraInfo(OWCamera owCamera)
+    {
+        var camera = owCamera.mainCamera;
+
+        return new()
+        {
+            SensorSize = camera.sensorSize,
+            FocalLength = camera.focalLength,
+            LensShift = camera.lensShift,
+            NearClipPlane = camera.nearClipPlane,
+            FarClipPlane = camera.farClipPlane,
+            GateFit = camera.gateFit,
+        };
+    }
+
+    private static void ApplyCameraInfo(OWCamera owCamera, CameraInfo cameraInfo)
+    {
+        var camera = owCamera.mainCamera;
+        camera.usePhysicalProperties = true;
+
+        camera.focalLength = cameraInfo.FocalLength;
+        camera.sensorSize = cameraInfo.SensorSize;
+        camera.lensShift = cameraInfo.LensShift;
+        camera.gateFit = cameraInfo.GateFit;
+
+        owCamera.nearClipPlane = cameraInfo.NearClipPlane;
+        owCamera.farClipPlane = cameraInfo.FarClipPlane;
+    }
 
     private OWCamera CreateDepthCamera()
     {
@@ -105,6 +139,7 @@ internal sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>
         depthCamera.useViewmodels = false;
         depthCamera.targetTexture = null;
 
+        depthCamera.mainCamera.usePhysicalProperties = true;
         depthCamera.mainCamera.eventMask = 0;
         depthCamera.mainCamera.forceIntoRenderTexture = true;
 
