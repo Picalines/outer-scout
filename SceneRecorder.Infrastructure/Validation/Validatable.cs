@@ -1,4 +1,4 @@
-namespace SceneRecorder.Shared.Validation;
+namespace SceneRecorder.Infrastructure.Validation;
 
 public readonly ref struct Validatable<T>
 {

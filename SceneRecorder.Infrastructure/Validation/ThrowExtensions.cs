@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
-namespace SceneRecorder.Shared.Validation;
+namespace SceneRecorder.Infrastructure.Validation;
 
 public static class ThrowExtensions
 {

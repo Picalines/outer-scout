@@ -1,9 +1,9 @@
-using SceneRecorder.Shared.Validation;
+using SceneRecorder.Infrastructure.Validation;
 using UnityEngine;
 
-namespace SceneRecorder.Shared.DependencyInjection;
+namespace SceneRecorder.Infrastructure.DependencyInjection;
 
-file struct InitArguments<T1, T2, T3, T4, T5> : IDisposable
+file struct InitArguments<T1, T2, T3, T4, T5, T6> : IDisposable
 {
     public T1 Argument1 { get; }
 
@@ -15,9 +15,11 @@ file struct InitArguments<T1, T2, T3, T4, T5> : IDisposable
 
     public T5 Argument5 { get; }
 
-    private static readonly Stack<InitArguments<T1, T2, T3, T4, T5>> _stack = new();
+    public T6 Argument6 { get; }
 
-    public InitArguments(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5)
+    private static readonly Stack<InitArguments<T1, T2, T3, T4, T5, T6>> _stack = new();
+
+    public InitArguments(T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5, T6 arg6)
     {
         _stack.Push(this);
 
@@ -26,9 +28,10 @@ file struct InitArguments<T1, T2, T3, T4, T5> : IDisposable
         Argument3 = arg3;
         Argument4 = arg4;
         Argument5 = arg5;
+        Argument6 = arg6;
     }
 
-    public static InitArguments<T1, T2, T3, T4, T5> LastInstance
+    public static InitArguments<T1, T2, T3, T4, T5, T6> LastInstance
     {
         get
         {
@@ -43,7 +46,7 @@ file struct InitArguments<T1, T2, T3, T4, T5> : IDisposable
     }
 }
 
-public abstract class InitializedBehaviour<T1, T2, T3, T4, T5> : MonoBehaviour
+public abstract class InitializedBehaviour<T1, T2, T3, T4, T5, T6> : MonoBehaviour
 {
     private T1 _arg1;
 
@@ -55,17 +58,27 @@ public abstract class InitializedBehaviour<T1, T2, T3, T4, T5> : MonoBehaviour
 
     private T5 _arg5;
 
+    private T6 _arg6;
+
     private InitializedBehaviour()
     {
-        var args = InitArguments<T1, T2, T3, T4, T5>.LastInstance;
+        var args = InitArguments<T1, T2, T3, T4, T5, T6>.LastInstance;
         _arg1 = args.Argument1;
         _arg2 = args.Argument2;
         _arg3 = args.Argument3;
         _arg4 = args.Argument4;
         _arg5 = args.Argument5;
+        _arg6 = args.Argument6;
     }
 
-    protected InitializedBehaviour(out T1 arg1, out T2 arg2, out T3 arg3, out T4 arg4, out T5 arg5)
+    protected InitializedBehaviour(
+        out T1 arg1,
+        out T2 arg2,
+        out T3 arg3,
+        out T4 arg4,
+        out T5 arg5,
+        out T6 arg6
+    )
         : this()
     {
         arg1 = _arg1;
@@ -73,28 +86,31 @@ public abstract class InitializedBehaviour<T1, T2, T3, T4, T5> : MonoBehaviour
         arg3 = _arg3;
         arg4 = _arg4;
         arg5 = _arg5;
+        arg6 = _arg6;
 
         _arg1 = default!;
         _arg2 = default!;
         _arg3 = default!;
         _arg4 = default!;
         _arg5 = default!;
+        _arg6 = default!;
     }
 }
 
 public static partial class InitializedBehaviourExtensions
 {
-    public static T AddComponent<T, T1, T2, T3, T4, T5>(
+    public static T AddComponent<T, T1, T2, T3, T4, T5, T6>(
         this GameObject gameObject,
         T1 arg1,
         T2 arg2,
         T3 arg3,
         T4 arg4,
-        T5 arg5
+        T5 arg5,
+        T6 arg6
     )
-        where T : InitializedBehaviour<T1, T2, T3, T4, T5>
+        where T : InitializedBehaviour<T1, T2, T3, T4, T5, T6>
     {
-        using var _ = new InitArguments<T1, T2, T3, T4, T5>(arg1, arg2, arg3, arg4, arg5);
+        using var _ = new InitArguments<T1, T2, T3, T4, T5, T6>(arg1, arg2, arg3, arg4, arg5, arg6);
 
         return gameObject.AddComponent<T>();
     }

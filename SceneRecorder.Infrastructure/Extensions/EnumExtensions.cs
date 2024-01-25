@@ -1,4 +1,4 @@
-namespace SceneRecorder.Shared.Extensions;
+namespace SceneRecorder.Infrastructure.Extensions;
 
 public static class EnumExtensions
 {

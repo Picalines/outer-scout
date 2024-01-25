@@ -1,4 +1,4 @@
-using SceneRecorder.Shared.Validation;
+using SceneRecorder.Infrastructure.Validation;
 
 namespace SceneRecorder.Recording.Animators;
 

@@ -4,7 +4,7 @@ using System.Net;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using OWML.Common;
-using SceneRecorder.Shared.Extensions;
+using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.WebApi.Http.Response;
 using SceneRecorder.WebApi.Http.Routing;
 using UnityEngine;

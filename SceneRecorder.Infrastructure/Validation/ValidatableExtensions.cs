@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace SceneRecorder.Shared.Validation;
+namespace SceneRecorder.Infrastructure.Validation;
 
 public static class ValidatableExtensions
 {

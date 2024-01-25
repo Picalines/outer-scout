@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using OWML.Common;
-using SceneRecorder.Shared.Extensions;
+using SceneRecorder.Infrastructure.Extensions;
 
 namespace SceneRecorder.Recording.FFmpeg;
 

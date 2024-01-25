@@ -1,7 +1,7 @@
-using SceneRecorder.Shared.Validation;
+using SceneRecorder.Infrastructure.Validation;
 using UnityEngine;
 
-namespace SceneRecorder.Shared.DependencyInjection;
+namespace SceneRecorder.Infrastructure.DependencyInjection;
 
 file struct InitArguments<T1> : IDisposable
 {

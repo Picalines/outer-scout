@@ -1,8 +1,8 @@
 using SceneRecorder.Recording.Animators;
 using SceneRecorder.Recording.Domain;
-using SceneRecorder.Shared.DependencyInjection;
-using SceneRecorder.Shared.Extensions;
-using SceneRecorder.Shared.Validation;
+using SceneRecorder.Infrastructure.DependencyInjection;
+using SceneRecorder.Infrastructure.Extensions;
+using SceneRecorder.Infrastructure.Validation;
 using UnityEngine;
 using UnityEngine.InputSystem;
 

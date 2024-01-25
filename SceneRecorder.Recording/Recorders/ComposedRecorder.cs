@@ -1,5 +1,5 @@
-﻿using SceneRecorder.Shared.Extensions;
-using SceneRecorder.Shared.Validation;
+﻿using SceneRecorder.Infrastructure.Extensions;
+using SceneRecorder.Infrastructure.Validation;
 
 namespace SceneRecorder.Recording.Recorders;
 

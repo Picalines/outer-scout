@@ -1,4 +1,4 @@
-using SceneRecorder.Shared.Extensions;
+using SceneRecorder.Infrastructure.Extensions;
 using UnityEngine;
 
 namespace SceneRecorder.WebApi.DTOs.Json;

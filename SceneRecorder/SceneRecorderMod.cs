@@ -3,8 +3,8 @@ using OWML.ModHelper;
 using SceneRecorder.Infrastructure.API;
 using SceneRecorder.Recording.FFmpeg;
 using SceneRecorder.Recording.Recorders;
-using SceneRecorder.Shared.DependencyInjection;
-using SceneRecorder.Shared.Extensions;
+using SceneRecorder.Infrastructure.DependencyInjection;
+using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.WebApi;
 using UnityEngine;
 

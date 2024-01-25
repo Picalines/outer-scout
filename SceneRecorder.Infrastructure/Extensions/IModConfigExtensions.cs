@@ -1,6 +1,6 @@
 using OWML.Common;
 
-namespace SceneRecorder.Shared.Extensions;
+namespace SceneRecorder.Infrastructure.Extensions;
 
 public static class IModConfigExtensions
 {

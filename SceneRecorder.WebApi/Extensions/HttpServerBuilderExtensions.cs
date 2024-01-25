@@ -1,4 +1,4 @@
-﻿using SceneRecorder.Shared.Extensions;
+﻿using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
 

@@ -1,4 +1,4 @@
-﻿using SceneRecorder.Shared.Validation;
+﻿using SceneRecorder.Infrastructure.Validation;
 using UnityEngine;
 
 namespace SceneRecorder.Recording.FFmpeg;

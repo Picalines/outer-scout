@@ -1,5 +1,5 @@
 using System.Web;
-using SceneRecorder.Shared.Extensions;
+using SceneRecorder.Infrastructure.Extensions;
 using UnityEngine;
 
 namespace SceneRecorder.Recording.Recorders;

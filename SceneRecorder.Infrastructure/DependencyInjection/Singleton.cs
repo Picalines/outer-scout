@@ -1,4 +1,4 @@
-namespace SceneRecorder.Shared.DependencyInjection;
+namespace SceneRecorder.Infrastructure.DependencyInjection;
 
 public static class Singleton<T>
 {

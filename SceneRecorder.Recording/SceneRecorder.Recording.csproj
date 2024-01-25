@@ -22,6 +22,5 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\SceneRecorder.Infrastructure\SceneRecorder.Infrastructure.csproj" />
 	  <ProjectReference Include="..\SceneRecorder.Recording.FFmpeg\SceneRecorder.Recording.FFmpeg.csproj" />
-	  <ProjectReference Include="..\SceneRecorder.Shared\SceneRecorder.Shared.csproj" />
 	</ItemGroup>
 </Project>

@@ -1,4 +1,4 @@
-using SceneRecorder.Shared.Extensions;
+using SceneRecorder.Infrastructure.Extensions;
 
 namespace SceneRecorder.Recording.Animators;
 

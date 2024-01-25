@@ -1,5 +1,5 @@
-using SceneRecorder.Shared;
-using SceneRecorder.Shared.Validation;
+using SceneRecorder.Infrastructure;
+using SceneRecorder.Infrastructure.Validation;
 
 namespace SceneRecorder.Recording.Domain;
 
