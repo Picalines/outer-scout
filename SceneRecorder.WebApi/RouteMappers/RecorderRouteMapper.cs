@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 using SceneRecorder.Recording.Recorders;
-using SceneRecorder.Shared.Models;
+using SceneRecorder.Shared.DTOs;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
@@ -29,7 +29,7 @@ internal sealed class RecorderRouteMapper : IRouteMapper
 
         serverBuilder.MapPut(
             "recorder/settings",
-            (RecorderSettingsDTO newSettings) =>
+            (SceneSettingsDTO newSettings) =>
             {
                 if (outputRecorder.IsRecording)
                 {

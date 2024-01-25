@@ -1,4 +1,4 @@
-using SceneRecorder.Shared.Models;
+using SceneRecorder.Shared.DTOs;
 
 namespace SceneRecorder.WebApi.RouteMappers.DTOs;
 

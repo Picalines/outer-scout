@@ -1,5 +1,5 @@
 ﻿using SceneRecorder.Shared.Extensions;
-using SceneRecorder.Shared.Models;
+using SceneRecorder.Shared.DTOs;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
@@ -32,14 +32,14 @@ internal sealed class CameraInfoRouteMapper : IRouteMapper
     {
         serverBuilder.MapGet(
             $"{routePrefix}/camera-info",
-            () => getOwCamera() is { } camera ? Ok(CameraDTO.FromOWCamera(camera)) : NotFound()
+            () => getOwCamera() is { } camera ? Ok(CameraInfoDTO.FromOWCamera(camera)) : NotFound()
         );
 
         if (mutable)
         {
             serverBuilder.MapPut(
                 $"{routePrefix}/camera-info",
-                (CameraDTO cameraInfo) =>
+                (CameraInfoDTO cameraInfo) =>
                 {
                     if (getOwCamera() is not { } camera)
                     {
