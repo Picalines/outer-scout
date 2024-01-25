@@ -1,3 +1,4 @@
+using SceneRecorder.Recording.Animators;
 using SceneRecorder.Recording.Domain;
 using SceneRecorder.Shared.DependencyInjection;
 using SceneRecorder.Shared.Extensions;
@@ -19,6 +20,8 @@ public sealed class SceneRecorder : InitializedBehaviour<SceneRecorder.Parameter
     public int CurrentFrame { get; private set; }
 
     private readonly SceneSettings _settings;
+
+    private readonly ComposedAnimator _animators = new();
 
     private readonly ComposedRecorder _recorders = new();
 
@@ -52,6 +55,13 @@ public sealed class SceneRecorder : InitializedBehaviour<SceneRecorder.Parameter
         _recorders.AddRecorder(recorder);
     }
 
+    public void AddAnimator(IAnimator animator)
+    {
+        IsRecording.Throw().IfTrue();
+
+        _animators.AddAnimator(animator);
+    }
+
     public void StartRecording()
     {
         IsRecording.Throw().IfTrue();
@@ -74,7 +84,7 @@ public sealed class SceneRecorder : InitializedBehaviour<SceneRecorder.Parameter
 
     private void OnFrameStarted()
     {
-        // TODO: apply keyframes
+        _animators.ApplyFrame(CurrentFrame);
     }
 
     private void OnFrameEnded()
