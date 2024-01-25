@@ -1,11 +1,11 @@
 ﻿using Newtonsoft.Json;
-using SceneRecorder.WebApi.RouteMappers.DTOs.JsonConverters;
+using SceneRecorder.WebApi.DTOs.Json;
 using UnityEngine;
 
-namespace SceneRecorder.WebApi.RouteMappers.DTOs;
+namespace SceneRecorder.WebApi.DTOs;
 
 [JsonConverter(typeof(TransformDTOConverter))]
-public readonly record struct TransformDTO
+internal readonly record struct TransformDTO
 {
     public required Vector3 Position { get; init; }
 

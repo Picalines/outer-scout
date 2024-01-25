@@ -1,8 +1,6 @@
-﻿using SceneRecorder.Shared.DTOs;
+﻿namespace SceneRecorder.WebApi.DTOs;
 
-namespace SceneRecorder.WebApi.RouteMappers.DTOs;
-
-public sealed class MeshDTO
+internal sealed class MeshDTO
 {
     // GameObject path for "static" meshes, Asset path for streamed ones
     public required string Path { get; init; }

@@ -1,8 +1,6 @@
-using SceneRecorder.Shared.DTOs;
+namespace SceneRecorder.WebApi.DTOs;
 
-namespace SceneRecorder.WebApi.RouteMappers.DTOs;
-
-public readonly record struct GameObjectDTO
+internal readonly record struct GameObjectDTO
 {
     public required string Name { get; init; }
 

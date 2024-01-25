@@ -1,4 +1,4 @@
-namespace SceneRecorder.WebApi.RouteMappers.DTOs;
+namespace SceneRecorder.WebApi.DTOs;
 
 internal sealed class RecorderStatusResponse
 {

@@ -1,5 +1,5 @@
 ﻿using SceneRecorder.Shared.Extensions;
-using SceneRecorder.Shared.DTOs;
+using SceneRecorder.WebApi.DTOs;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;

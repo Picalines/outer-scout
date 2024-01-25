@@ -1,11 +1,11 @@
 ﻿using Newtonsoft.Json;
-using SceneRecorder.WebApi.RouteMappers.DTOs.JsonConverters;
+using SceneRecorder.WebApi.DTOs.Json;
 using UnityEngine;
 
-namespace SceneRecorder.Shared.DTOs;
+namespace SceneRecorder.WebApi.DTOs;
 
 [JsonConverter(typeof(CameraInfoDTOConverter))]
-public record struct CameraInfoDTO
+internal record struct CameraInfoDTO
 {
     public required float FocalLength { get; init; }
 

@@ -1,6 +1,6 @@
-﻿namespace SceneRecorder.WebApi.RouteMappers.DTOs;
+﻿namespace SceneRecorder.WebApi.DTOs;
 
-public sealed class SectorMeshDTO
+internal sealed class SectorMeshDTO
 {
     public required string Path { get; init; }
 

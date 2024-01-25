@@ -1,8 +1,6 @@
-﻿using SceneRecorder.Shared.DTOs;
+﻿namespace SceneRecorder.WebApi.DTOs;
 
-namespace SceneRecorder.WebApi.RouteMappers.DTOs;
-
-public sealed class BodyMeshDTO
+internal sealed class BodyMeshDTO
 {
     public required GameObjectDTO Body { get; init; }
 

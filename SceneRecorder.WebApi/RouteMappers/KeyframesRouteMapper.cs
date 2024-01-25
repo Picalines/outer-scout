@@ -1,8 +1,7 @@
-﻿using SceneRecorder.Recording;
+﻿using SceneRecorder.WebApi.DTOs;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
-using SceneRecorder.WebApi.RouteMappers.DTOs;
 
 namespace SceneRecorder.WebApi.RouteMappers;
 

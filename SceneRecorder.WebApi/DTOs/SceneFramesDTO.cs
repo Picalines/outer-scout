@@ -1,6 +1,6 @@
-namespace SceneRecorder.WebApi.RouteMappers.DTOs;
+namespace SceneRecorder.WebApi.DTOs;
 
-public sealed class SceneFramesDTO
+internal sealed class SceneFramesDTO
 {
     public required int Start { get; init; }
 

@@ -1,6 +1,6 @@
-﻿namespace SceneRecorder.WebApi.RouteMappers.DTOs;
+﻿namespace SceneRecorder.WebApi.DTOs;
 
-public sealed class SceneSettingsDTO
+internal sealed class SceneSettingsDTO
 {
     public required string OutputDirectory { get; init; }
 
