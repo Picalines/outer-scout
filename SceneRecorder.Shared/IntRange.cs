@@ -50,6 +50,12 @@ public record struct IntRange : IEnumerable<int>
         return value;
     }
 
+    public void Deconstruct(out int start, out int end)
+    {
+        start = Start;
+        end = End;
+    }
+
     public IEnumerator<int> GetEnumerator()
     {
         return Enumerable.Range(Start, Length + 1).GetEnumerator();
