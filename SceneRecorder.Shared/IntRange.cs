@@ -28,6 +28,28 @@ public record struct IntRange : IEnumerable<int>
         get => End - Start;
     }
 
+    public bool Contains(int value)
+    {
+        return value >= Start && value <= End;
+    }
+
+    public int ValueToIndex(int valueInRange)
+    {
+        valueInRange.Throw().If(!Contains(valueInRange));
+
+        return valueInRange - Start;
+    }
+
+    public int IndexToValue(int index)
+    {
+        index.Throw().IfLessThan(0);
+
+        var value = Start + index;
+        value.Throw().IfGreaterThan(End);
+
+        return value;
+    }
+
     public IEnumerator<int> GetEnumerator()
     {
         return Enumerable.Range(Start, Length + 1).GetEnumerator();
