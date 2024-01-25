@@ -1,7 +1,7 @@
 using System.Collections;
 using SceneRecorder.Infrastructure.Validation;
 
-namespace SceneRecorder.Infrastructure;
+namespace SceneRecorder.Recording.Domain;
 
 public record struct IntRange : IEnumerable<int>
 {
