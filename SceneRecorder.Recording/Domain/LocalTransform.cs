@@ -22,18 +22,16 @@ public record struct LocalTransform
         Parent = null;
     }
 
-    public void Apply(Transform transform)
+    public void Deconstruct(
+        out Vector3 position,
+        out Quaternion rotation,
+        out Vector3 scale,
+        out Transform? parent
+    )
     {
-        if (Parent is null)
-        {
-            transform.position = Position;
-            transform.rotation = Rotation;
-            transform.localScale = Scale;
-            return;
-        }
-
-        transform.position = Parent.TransformPoint(Position);
-        transform.rotation = Parent.rotation * Rotation;
-        transform.localScale = Scale;
+        position = Position;
+        rotation = Rotation;
+        scale = Scale;
+        parent = Parent;
     }
 }
