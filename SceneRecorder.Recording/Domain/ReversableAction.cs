@@ -1,6 +1,6 @@
-namespace SceneRecorder.Recording;
+namespace SceneRecorder.Recording.Domain;
 
-internal sealed class ReversableAction
+public sealed class ReversableAction
 {
     private Action? _perform = null;
 
