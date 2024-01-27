@@ -1,4 +1,3 @@
-using SceneRecorder.Infrastructure;
 using SceneRecorder.Infrastructure.Validation;
 
 namespace SceneRecorder.Recording.Domain;
@@ -28,8 +27,6 @@ public sealed class SceneSettings
     }
 
     public required bool HidePlayerModel { get; init; }
-
-    public int NumberOfFrames => FrameRange.Length + 1;
 
     private string _outputDirectory = null!;
 
