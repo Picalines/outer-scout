@@ -1,4 +1,4 @@
-namespace SceneRecorder.Recording.Animators;
+namespace SceneRecorder.Recording.Animation.ValueApplication;
 
 public interface IValueApplier<T>
 {

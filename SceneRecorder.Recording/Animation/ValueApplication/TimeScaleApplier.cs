@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SceneRecorder.Recording.Animators;
+namespace SceneRecorder.Recording.Animation.ValueApplication;
 
 public sealed class TimeScaleApplier : IValueApplier<float>
 {

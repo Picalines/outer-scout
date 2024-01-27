@@ -2,7 +2,7 @@ using System.Collections;
 using SceneRecorder.Infrastructure.Validation;
 using SceneRecorder.Recording.Domain;
 
-namespace SceneRecorder.Recording.Animators;
+namespace SceneRecorder.Recording.Animation;
 
 public sealed class KeyframeStorage<T>
 {
