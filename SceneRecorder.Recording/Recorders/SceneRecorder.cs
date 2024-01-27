@@ -1,187 +1,65 @@
-using SceneRecorder.Infrastructure.DependencyInjection;
+using System.Collections;
 using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.Infrastructure.Validation;
 using SceneRecorder.Recording.Animation;
 using SceneRecorder.Recording.Domain;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace SceneRecorder.Recording.Recorders;
 
-public sealed class SceneRecorder : InitializedBehaviour<SceneRecorder.Parameters>
+public sealed partial class SceneRecorder
 {
-    public record struct Parameters
-    {
-        public required SceneSettings Settings { get; init; }
-    }
-
-    public bool IsRecording { get; private set; } = false;
-
     public int CurrentFrame { get; private set; }
 
-    private readonly SceneSettings _settings;
+    private readonly IntRange _frameRange;
+    private readonly ComposedAnimator _animators;
+    private readonly ComposedRecorder _recorders;
+    private readonly ReversableAction[] _scenePatches;
 
-    private readonly ComposedAnimator _animators = new();
+    private static readonly WaitForEndOfFrame _waitForEndOfFrame = new();
 
-    private readonly ComposedRecorder _recorders = new();
-
-    private readonly UnityFrameNotifier _frameNotifier;
-
-    private readonly ReversableAction[] _scenePatchers;
-
-    private SceneRecorder()
-        : base(out var parameters)
+    private SceneRecorder(
+        IntRange frameRange,
+        IAnimator[] animators,
+        IRecorder[] recorders,
+        ReversableAction[] scenePatches
+    )
     {
-        _settings = parameters.Settings;
+        _frameRange = frameRange;
+        _animators = new ComposedAnimator(animators);
+        _recorders = new ComposedRecorder(recorders);
+        _scenePatches = scenePatches;
 
-        CurrentFrame = _settings.FrameRange.Start;
+        CurrentFrame = frameRange.Start;
 
-        _frameNotifier = gameObject.AddComponent<UnityFrameNotifier>();
-
-        _scenePatchers = CreateScenePatchers();
-    }
-
-    private void OnDestroy()
-    {
-        IsRecording.Throw().IfTrue();
-
-        Destroy(_frameNotifier);
-    }
-
-    public void AddRecorder(IRecorder recorder)
-    {
-        IsRecording.Throw().IfTrue();
-
-        _recorders.AddRecorder(recorder);
-    }
-
-    public void AddAnimator(IAnimator animator)
-    {
-        IsRecording.Throw().IfTrue();
-
-        _animators.AddAnimator(animator);
-    }
-
-    public void StartRecording()
-    {
-        IsRecording.Throw().IfTrue();
-        IsRecording = true;
-
-        _scenePatchers.ForEach(action => action.Perform());
-
-        _recorders.StartRecording();
-
-        CurrentFrame = _settings.FrameRange.Start;
-
-        _frameNotifier.FrameStarted += OnFrameStarted;
-        _frameNotifier.FrameEnded += OnFrameEnded;
+        GlobalCoroutine.Start(RecordScene());
     }
 
     public int FramesRecorded
     {
-        get => IsRecording ? CurrentFrame - _settings.FrameRange.Start : _settings.NumberOfFrames;
+        get => CurrentFrame - _frameRange.Start;
     }
 
-    private void OnFrameStarted()
+    private IEnumerator RecordScene()
     {
-        _animators.ApplyFrame(CurrentFrame);
-    }
+        _scenePatches.ForEach(patch => patch.Perform());
 
-    private void OnFrameEnded()
-    {
-        _recorders.RecordData();
+        yield return null;
 
-        if (++CurrentFrame >= _settings.FrameRange.End)
+        foreach (var frame in _frameRange)
         {
-            _frameNotifier.FrameStarted -= OnFrameStarted;
-            _frameNotifier.FrameEnded -= OnFrameEnded;
+            CurrentFrame = frame;
 
-            _recorders.StopRecording();
+            yield return null;
 
-            _scenePatchers.ForEach(action => action.Reverse());
+            _animators.ApplyFrame(frame);
 
-            IsRecording = false;
+            yield return _waitForEndOfFrame;
+
+            _recorders.Capture();
         }
+
+        _scenePatches.ForEach(patch => patch.Reverse());
+
+        _recorders.Dispose();
     }
-
-    private ReversableAction[] CreateScenePatchers() =>
-        [
-            // time scale
-            new(() =>
-            {
-                var timeScaleBeforeRecoding = Time.timeScale;
-                Time.captureFramerate = _settings.FrameRate;
-
-                return () =>
-                {
-                    Time.timeScale = timeScaleBeforeRecoding;
-                    Time.captureFramerate = 0;
-                };
-            }),
-            // input devices
-            new(() =>
-            {
-                var inputDevicesToEnable = InputSystem
-                    .devices.Where(device => device.enabled)
-                    .ForEach(device => InputSystem.DisableDevice(device))
-                    .ToArray();
-
-                return () => inputDevicesToEnable.ForEach(InputSystem.EnableDevice);
-            }),
-            // pause menu
-            new(() =>
-            {
-                var pauseMenuManager = Locator.GetPauseCommandListener()._pauseMenu;
-                pauseMenuManager._pauseMenu.EnableMenu(false);
-
-                return () => pauseMenuManager.TryOpenPauseMenu();
-            }),
-            // player invincibility
-            new(() =>
-            {
-                var deathManager = Locator.GetDeathManager().OrNull();
-                var playerResources = Locator
-                    .GetPlayerTransform()
-                    .OrNull()
-                    ?.GetComponent<PlayerResources>();
-
-                if (playerResources?.IsInvincible() is false)
-                {
-                    playerResources.ToggleInvincibility();
-                }
-
-                if (deathManager is { _invincible: false })
-                {
-                    deathManager.ToggleInvincibility();
-                }
-
-                return () =>
-                {
-                    playerResources?.ToggleInvincibility();
-                    deathManager?.ToggleInvincibility();
-                };
-            }),
-            // player model
-            new(() =>
-            {
-                var playerRenderersToEnable = _settings.HidePlayerModel
-                    ? Locator
-                        .GetPlayerBody()
-                        .OrNull()
-                        ?.GetComponentsInChildren<Renderer>()
-                        .Where(renderer => renderer.enabled)
-                        .ForEach(renderer => renderer.enabled = false)
-                        .ToArray()
-                    : null;
-
-                return () => playerRenderersToEnable?.ForEach(renderer => renderer.enabled = true);
-            }),
-            // quantum moon
-            new(() =>
-            {
-                Locator.GetQuantumMoon().OrNull()?.SetActivation(false);
-
-                return () => Locator.GetQuantumMoon().OrNull()?.SetActivation(true);
-            })
-        ];
 }

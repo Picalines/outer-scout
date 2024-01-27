@@ -1,10 +1,6 @@
 ﻿namespace SceneRecorder.Recording.Recorders;
 
-public interface IRecorder
+public interface IRecorder : IDisposable
 {
-    public void StartRecording();
-
-    public void RecordData();
-
-    public void StopRecording();
+    public void Capture();
 }

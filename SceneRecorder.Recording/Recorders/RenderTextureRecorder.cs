@@ -9,79 +9,95 @@ namespace SceneRecorder.Recording.Recorders;
 
 public sealed class RenderTextureRecorder : IRecorder
 {
-    public required RenderTexture Texture { get; init; }
+    public sealed class Parameters
+    {
+        public required RenderTexture Texture { get; init; }
 
-    public required string TargetFile { get; init; }
+        public required string TargetFile { get; init; }
 
-    public required int FrameRate { get; init; }
+        public required int FrameRate { get; init; }
+    }
+
+    private readonly RenderTexture _texture;
 
     private FFmpegTextureEncoder? _ffmpegTextureEncoder = null;
 
     private RenderTexture? _coloredDepthTexture = null;
 
-    public void StartRecording()
+    private RenderTextureRecorder(RenderTexture texture, FFmpegTextureEncoder textureEncoder)
     {
-        Texture.ThrowIfNull();
-        TargetFile.ThrowIfNull();
-        FrameRate.ThrowIfNull().IfLessThan(1);
+        _texture = texture;
 
-        var modConfig = Singleton<IModConfig>.Instance;
+        _ffmpegTextureEncoder = textureEncoder;
 
-        var inputOptions = new FFmpegTextureEncoder.InputOptions()
-        {
-            Width = Texture.width,
-            Height = Texture.height,
-            PixelFormat = Texture.format switch
-            {
-                RenderTextureFormat.ARGB32 => FFmpegPixelFormat.RGBA,
-                RenderTextureFormat.Depth => FFmpegPixelFormat.GrayF32LE,
-                _
-                    => throw new NotImplementedException(
-                        $"{Texture.format.ToStringWithType()} input is not supported"
-                    ),
-            },
-        };
-
-        var outputOptions = new FFmpegTextureEncoder.OutputOptions()
-        {
-            FilePath = TargetFile,
-            FrameRate = FrameRate,
-            PixelFormat = FFmpegPixelFormat.YUV420P
-        };
-
-        _ffmpegTextureEncoder = new FFmpegTextureEncoder(
-            modConfig.GetFFmpegExecutablePathSetting(),
-            inputOptions,
-            outputOptions
-        );
-
-        SetupEncoderLogs(_ffmpegTextureEncoder);
-
-        if (Texture.format is RenderTextureFormat.Depth)
+        if (_texture.format is RenderTextureFormat.Depth)
         {
             _coloredDepthTexture = new RenderTexture(
-                Texture.width,
-                Texture.height,
+                _texture.width,
+                _texture.height,
                 0,
                 RenderTextureFormat.RFloat
             );
         }
     }
 
-    public void RecordData()
+    public static RenderTextureRecorder StartRecording(Parameters parameters)
     {
-        var textureToEncode = Texture;
+        parameters.Texture.ThrowIfNull();
+        parameters.TargetFile.ThrowIfNull();
+        parameters.FrameRate.ThrowIfNull().IfLessThan(1);
+
+        var texture = parameters.Texture;
+
+        var modConfig = Singleton<IModConfig>.Instance;
+
+        var inputOptions = new FFmpegTextureEncoder.InputOptions()
+        {
+            Width = texture.width,
+            Height = texture.height,
+            PixelFormat = texture.format switch
+            {
+                RenderTextureFormat.ARGB32 => FFmpegPixelFormat.RGBA,
+                RenderTextureFormat.Depth => FFmpegPixelFormat.GrayF32LE,
+                _
+                    => throw new NotImplementedException(
+                        $"{texture.format.ToStringWithType()} input is not supported"
+                    ),
+            },
+        };
+
+        var outputOptions = new FFmpegTextureEncoder.OutputOptions()
+        {
+            FilePath = parameters.TargetFile,
+            FrameRate = parameters.FrameRate,
+            PixelFormat = FFmpegPixelFormat.YUV420P
+        };
+
+        var textureEncoder = new FFmpegTextureEncoder(
+            modConfig.GetFFmpegExecutablePathSetting(),
+            inputOptions,
+            outputOptions
+        );
+
+        SetupEncoderLogs(textureEncoder);
+
+        return new RenderTextureRecorder(texture, textureEncoder);
+    }
+
+    public void Capture()
+    {
+        var textureToEncode = _texture;
 
         if (_coloredDepthTexture is not null)
         {
-            Graphics.Blit(Texture, _coloredDepthTexture);
+            Graphics.Blit(_texture, _coloredDepthTexture);
             textureToEncode = _coloredDepthTexture;
         }
 
         _ffmpegTextureEncoder?.AddFrame(textureToEncode);
     }
 
-    public void StopRecording()
+    public void Dispose()
     {
         _ffmpegTextureEncoder!.Dispose();
         _ffmpegTextureEncoder = null;
