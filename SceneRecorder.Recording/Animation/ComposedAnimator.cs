@@ -4,11 +4,11 @@ namespace SceneRecorder.Recording.Animation;
 
 internal sealed class ComposedAnimator : IAnimator
 {
-    private readonly HashSet<IAnimator> _animators = [];
+    private readonly IReadOnlyList<IAnimator> _animators;
 
-    public void AddAnimator(IAnimator animator)
+    public ComposedAnimator(IReadOnlyList<IAnimator> animators)
     {
-        _animators.Add(animator);
+        _animators = animators;
     }
 
     public void ApplyFrame(int frame)

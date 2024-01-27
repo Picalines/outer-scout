@@ -1,39 +1,37 @@
 ﻿using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.Infrastructure.Validation;
 
 namespace SceneRecorder.Recording.Recorders;
 
 internal sealed class ComposedRecorder : IRecorder
 {
-    private readonly HashSet<IRecorder> _recorders = [];
+    private readonly IReadOnlyList<IRecorder> _recorders;
 
-    private bool _isRecording = false;
+    private bool _disposed = false;
 
-    public IEnumerable<IRecorder> Recorders => _recorders;
-
-    public void AddRecorder(IRecorder recorder)
+    public ComposedRecorder(IReadOnlyList<IRecorder> recorders)
     {
-        _isRecording.Throw().IfTrue();
-
-        _recorders.Add(recorder);
+        _recorders = recorders;
     }
 
-    public void StartRecording()
+    public void Capture()
     {
-        _isRecording = true;
+        if (_disposed)
+        {
+            throw new InvalidOperationException($"{nameof(ComposedRecorder)} is disposed");
+        }
 
-        _recorders.ForEach(r => r.StartRecording());
+        _recorders.ForEach(recorder => recorder.Capture());
     }
 
-    public void RecordData()
+    public void Dispose()
     {
-        _recorders.ForEach(r => r.RecordData());
-    }
+        if (_disposed)
+        {
+            return;
+        }
 
-    public void StopRecording()
-    {
-        _recorders.ForEach(r => r.StopRecording());
+        _recorders.ForEach(recorder => recorder.Dispose());
 
-        _isRecording = false;
+        _disposed = true;
     }
 }
