@@ -1,7 +1,7 @@
-using SceneRecorder.Recording.Domain;
-using SceneRecorder.Recording.Extensions;
 using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Validation;
+using SceneRecorder.Recording.Domain;
+using SceneRecorder.Recording.Extensions;
 using UnityEngine;
 
 namespace SceneRecorder.Recording.SceneCameras;

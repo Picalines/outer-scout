@@ -69,4 +69,3 @@ public static partial class InitializedBehaviourExtensions
         return gameObject.AddComponent<T>();
     }
 }
-

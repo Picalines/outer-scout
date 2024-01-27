@@ -1,8 +1,8 @@
 ﻿using OWML.Common;
-using SceneRecorder.Recording.FFmpeg;
 using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.Infrastructure.Validation;
+using SceneRecorder.Recording.FFmpeg;
 using UnityEngine;
 
 namespace SceneRecorder.Recording.Recorders;
