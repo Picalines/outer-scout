@@ -8,6 +8,8 @@ namespace SceneRecorder.Recording.Recorders;
 
 public sealed partial class SceneRecorder
 {
+    public bool IsRecording { get; private set; } = true;
+
     public int CurrentFrame { get; private set; }
 
     private readonly IntRange _frameRange;
@@ -29,8 +31,6 @@ public sealed partial class SceneRecorder
         _recorders = new ComposedRecorder(recorders);
         _scenePatches = scenePatches;
 
-        CurrentFrame = frameRange.Start;
-
         GlobalCoroutine.Start(RecordScene());
     }
 
@@ -41,6 +41,8 @@ public sealed partial class SceneRecorder
 
     private IEnumerator RecordScene()
     {
+        CurrentFrame = _frameRange.Start;
+
         _scenePatches.ForEach(patch => patch.Perform());
 
         yield return null;
@@ -61,5 +63,7 @@ public sealed partial class SceneRecorder
         _scenePatches.ForEach(patch => patch.Reverse());
 
         _recorders.Dispose();
+
+        IsRecording = false;
     }
 }
