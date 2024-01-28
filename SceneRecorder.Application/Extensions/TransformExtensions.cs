@@ -1,20 +1,29 @@
 ﻿using System.Runtime.CompilerServices;
+using SceneRecorder.Domain;
 using UnityEngine;
 
-namespace SceneRecorder.Infrastructure.Extensions;
+namespace SceneRecorder.Application.Extensions;
 
 public static class TransformExtensions
 {
     private static readonly ConditionalWeakTable<Transform, string> _CachedTransformPaths = new();
 
-    public static void CopyGlobalTransformTo(
-        this Transform sourceTransform,
-        Transform destinationTransform
-    )
+    public static void Apply(this Transform transform, LocalTransform localTransform)
     {
-        destinationTransform.position = sourceTransform.position;
-        destinationTransform.rotation = sourceTransform.rotation;
-        destinationTransform.localScale = sourceTransform.localScale;
+        var (position, rotation, scale, parent) = localTransform;
+
+        if (parent is null)
+        {
+            transform.position = position;
+            transform.rotation = rotation;
+            transform.localScale = scale;
+        }
+        else
+        {
+            transform.position = parent.TransformPoint(position);
+            transform.rotation = parent.rotation * rotation;
+            transform.localScale = scale;
+        }
     }
 
     public static string GetPath(this Transform transform)
