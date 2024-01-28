@@ -1,4 +1,4 @@
-namespace SceneRecorder.Recording.Animation.Interpolation;
+namespace SceneRecorder.Application.Animation.Interpolation;
 
 public sealed class LambdaInterpolation<T>(Func<T, T, float, T> interpolate) : IInterpolation<T>
 {

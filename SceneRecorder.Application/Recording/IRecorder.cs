@@ -1,4 +1,4 @@
-﻿namespace SceneRecorder.Recording.Recorders;
+﻿namespace SceneRecorder.Application.Recording;
 
 public interface IRecorder : IDisposable
 {

@@ -1,4 +1,4 @@
-namespace SceneRecorder.Recording.Animation.Interpolation;
+namespace SceneRecorder.Application.Animation.Interpolation;
 
 public interface IInterpolation<T>
 {

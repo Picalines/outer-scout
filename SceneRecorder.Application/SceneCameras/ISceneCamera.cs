@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SceneRecorder.Recording.SceneCameras;
+namespace SceneRecorder.Application.SceneCameras;
 
 public interface ISceneCamera
 {

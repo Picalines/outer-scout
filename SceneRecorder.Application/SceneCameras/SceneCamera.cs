@@ -1,10 +1,10 @@
 using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Validation;
-using SceneRecorder.Recording.Extensions;
+using SceneRecorder.Application.Extensions;
 using UnityEngine;
 
-namespace SceneRecorder.Recording.SceneCameras;
+namespace SceneRecorder.Application.SceneCameras;
 
 [RequireComponent(typeof(OWCamera))]
 public sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>, ISceneCamera

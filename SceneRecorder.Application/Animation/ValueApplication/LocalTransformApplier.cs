@@ -1,7 +1,7 @@
 using SceneRecorder.Domain;
 using UnityEngine;
 
-namespace SceneRecorder.Recording.Animation.ValueApplication;
+namespace SceneRecorder.Application.Animation.ValueApplication;
 
 public sealed class LocalTransformApplier : IValueApplier<LocalTransform>
 {

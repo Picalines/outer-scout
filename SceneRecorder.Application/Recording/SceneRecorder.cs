@@ -1,11 +1,10 @@
 using System.Collections;
-using SceneRecorder.Application;
 using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.Recording.Animation;
+using SceneRecorder.Application.Animation;
 using UnityEngine;
 
-namespace SceneRecorder.Recording.Recorders;
+namespace SceneRecorder.Application.Recording;
 
 public sealed partial class SceneRecorder
 {

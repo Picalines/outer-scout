@@ -1,7 +1,7 @@
 using SceneRecorder.Domain;
-using SceneRecorder.Recording.Animation;
+using SceneRecorder.Application.Animation;
 
-namespace SceneRecorder.Recording.Recorders;
+namespace SceneRecorder.Application.Recording;
 
 public sealed partial class SceneRecorder
 {

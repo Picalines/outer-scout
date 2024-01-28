@@ -1,6 +1,6 @@
 ﻿using SceneRecorder.Infrastructure.Extensions;
 
-namespace SceneRecorder.Recording.Recorders;
+namespace SceneRecorder.Application.Recording;
 
 internal sealed class ComposedRecorder : IRecorder
 {

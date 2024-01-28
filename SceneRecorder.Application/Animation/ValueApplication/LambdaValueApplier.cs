@@ -1,4 +1,4 @@
-namespace SceneRecorder.Recording.Animation.ValueApplication;
+namespace SceneRecorder.Application.Animation.ValueApplication;
 
 public sealed class LambdaValueApplier<T>(Action<T> apply) : IValueApplier<T>
 {

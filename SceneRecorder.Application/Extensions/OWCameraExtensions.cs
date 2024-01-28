@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.PostProcessing;
 
-namespace SceneRecorder.Recording.Extensions;
+namespace SceneRecorder.Application.Extensions;
 
 internal static class OWCameraExtensions
 {

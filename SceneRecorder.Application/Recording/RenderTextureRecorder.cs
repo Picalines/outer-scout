@@ -5,7 +5,7 @@ using SceneRecorder.Infrastructure.Validation;
 using SceneRecorder.Application.FFmpeg;
 using UnityEngine;
 
-namespace SceneRecorder.Recording.Recorders;
+namespace SceneRecorder.Application.Recording;
 
 public sealed class RenderTextureRecorder : IRecorder
 {

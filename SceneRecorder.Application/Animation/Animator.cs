@@ -1,8 +1,8 @@
 using SceneRecorder.Infrastructure.Validation;
-using SceneRecorder.Recording.Animation.Interpolation;
-using SceneRecorder.Recording.Animation.ValueApplication;
+using SceneRecorder.Application.Animation.Interpolation;
+using SceneRecorder.Application.Animation.ValueApplication;
 
-namespace SceneRecorder.Recording.Animation;
+namespace SceneRecorder.Application.Animation;
 
 public sealed class Animator<T> : IAnimator
 {

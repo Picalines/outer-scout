@@ -1,6 +1,6 @@
 using SceneRecorder.Infrastructure.Extensions;
 
-namespace SceneRecorder.Recording.Animation;
+namespace SceneRecorder.Application.Animation;
 
 internal sealed class ComposedAnimator : IAnimator
 {

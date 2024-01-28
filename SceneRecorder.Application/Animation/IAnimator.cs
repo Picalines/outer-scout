@@ -1,4 +1,4 @@
-namespace SceneRecorder.Recording.Animation;
+namespace SceneRecorder.Application.Animation;
 
 public interface IAnimator
 {

@@ -1,6 +1,6 @@
 ﻿using OWML.Common;
 using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.Application.Recorders;
+using SceneRecorder.Application.Recording;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.RouteMappers;
 using UnityEngine;

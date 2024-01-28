@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SceneRecorder.Recording;
+namespace SceneRecorder.Application;
 
 [RequireComponent(typeof(Camera))]
 internal sealed class TargetDisplayEnabler : MonoBehaviour

@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
 using SceneRecorder.Infrastructure.Validation;
 
-namespace SceneRecorder.Recording.Recorders;
+namespace SceneRecorder.Application.Recording;
 
 public sealed class JsonRecorder<T> : IRecorder
 {

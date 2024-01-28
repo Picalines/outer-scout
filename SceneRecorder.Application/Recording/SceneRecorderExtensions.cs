@@ -2,7 +2,7 @@ using SceneRecorder.Infrastructure.Extensions;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace SceneRecorder.Recording.Recorders;
+namespace SceneRecorder.Application.Recording;
 
 public static class SceneRecorderExtensions
 {

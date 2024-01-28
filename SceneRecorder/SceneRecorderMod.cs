@@ -4,7 +4,7 @@ using SceneRecorder.Infrastructure.API;
 using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.Application.FFmpeg;
-using SceneRecorder.Application.Recorders;
+using SceneRecorder.Application.Recording;
 using SceneRecorder.WebApi;
 using UnityEngine;
 

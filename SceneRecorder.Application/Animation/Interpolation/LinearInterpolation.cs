@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SceneRecorder.Recording.Animation.Interpolation;
+namespace SceneRecorder.Application.Animation.Interpolation;
 
 public sealed class LinearInterpolation : IInterpolation<float>
 {
