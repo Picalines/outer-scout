@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+﻿using SceneRecorder.Infrastructure.Extensions;
+using UnityEngine;
 
-namespace SceneRecorder.Infrastructure.Extensions;
+namespace SceneRecorder.Application.Extensions;
 
 public static class LocatorExtensions
 {
