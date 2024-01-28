@@ -1,4 +1,4 @@
-namespace SceneRecorder.Recording.Domain;
+namespace SceneRecorder.Domain;
 
 public sealed class ReversableAction
 {

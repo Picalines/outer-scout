@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using UnityEngine;
 
-namespace SceneRecorder.Recording.Domain;
+namespace SceneRecorder.Domain;
 
 [StructLayout(LayoutKind.Auto)]
 public record struct LocalTransform

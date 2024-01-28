@@ -1,5 +1,7 @@
 using UnityEngine;
 
+namespace SceneRecorder.Domain;
+
 public record struct CameraInfo
 {
     public required float FocalLength { get; init; }

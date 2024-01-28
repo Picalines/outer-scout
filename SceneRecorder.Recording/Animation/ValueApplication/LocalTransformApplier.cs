@@ -1,4 +1,4 @@
-using SceneRecorder.Recording.Domain;
+using SceneRecorder.Domain;
 using UnityEngine;
 
 namespace SceneRecorder.Recording.Animation.ValueApplication;

@@ -1,6 +1,6 @@
 using System.Collections;
+using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.Validation;
-using SceneRecorder.Recording.Domain;
 
 namespace SceneRecorder.Recording.Animation;
 

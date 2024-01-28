@@ -1,3 +1,4 @@
+using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Validation;
 using SceneRecorder.Recording.Extensions;

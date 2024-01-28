@@ -1,6 +1,6 @@
 using SceneRecorder.Infrastructure.Validation;
 
-namespace SceneRecorder.Recording.Domain;
+namespace SceneRecorder.Domain;
 
 public sealed class SceneSettings
 {
