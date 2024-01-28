@@ -1,7 +1,8 @@
 using System.Collections;
+using SceneRecorder.Application.Animation;
+using SceneRecorder.Application.Components;
 using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.Application.Animation;
 using UnityEngine;
 
 namespace SceneRecorder.Application.Recording;
