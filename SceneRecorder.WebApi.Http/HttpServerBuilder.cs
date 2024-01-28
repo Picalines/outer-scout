@@ -74,11 +74,11 @@ public sealed class HttpServerBuilder
     private void Map(HttpMethod method, string path, Delegate handlerFunc)
     {
         var route = RouteFromString(method, path);
-        var handler = FuncRequestHandler.Create(route, handlerFunc);
+        var handler = LambdaRequestHandler.Create(route, handlerFunc);
 
         var preconditionHandlers = _PreconditionHandlerStack.Reverse().ToArray();
 
-        var wrappedHandler = FuncRequestHandler.Create(
+        var wrappedHandler = LambdaRequestHandler.Create(
             route,
             (Request request) =>
             {

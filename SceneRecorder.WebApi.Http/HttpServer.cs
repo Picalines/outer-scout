@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Concurrent;
 using System.Net;
-using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using OWML.Common;
 using SceneRecorder.Infrastructure.Extensions;
