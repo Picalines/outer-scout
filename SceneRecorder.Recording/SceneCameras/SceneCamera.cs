@@ -1,6 +1,5 @@
 using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Validation;
-using SceneRecorder.Recording.Domain;
 using SceneRecorder.Recording.Extensions;
 using UnityEngine;
 
@@ -11,8 +10,6 @@ public sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>, 
 {
     public record struct Parameters
     {
-        public required SceneSettings SceneSettings { get; init; }
-
         public required string Id { get; init; }
 
         public required Vector2Int Resolution { get; init; }
@@ -21,8 +18,6 @@ public sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>, 
     public string Id { get; }
 
     public Transform Transform { get; private set; } = null!;
-
-    private SceneSettings _sceneSettings;
 
     private CameraInfo _cameraInfo;
 
@@ -40,7 +35,6 @@ public sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>, 
         parameters.Resolution.y.Throw().IfLessThan(1);
 
         Id = parameters.Id;
-        _sceneSettings = parameters.SceneSettings;
         var resolution = parameters.Resolution;
 
         _colorTexture = new RenderTexture(
