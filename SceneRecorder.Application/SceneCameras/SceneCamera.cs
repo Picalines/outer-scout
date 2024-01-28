@@ -1,7 +1,7 @@
+using SceneRecorder.Application.Extensions;
 using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Validation;
-using SceneRecorder.Application.Extensions;
 using UnityEngine;
 
 namespace SceneRecorder.Application.SceneCameras;
@@ -55,7 +55,7 @@ public sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>, 
         _colorCamera.mainCamera.usePhysicalProperties = true;
         _colorCamera.targetTexture = _colorTexture;
 
-        _cameraInfo = GetCameraInfo(_colorCamera);
+        _cameraInfo = _colorCamera.GetCameraInfo();
     }
 
     private void Awake()
@@ -79,38 +79,9 @@ public sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>, 
         set
         {
             _cameraInfo = value;
-            ApplyCameraInfo(_colorCamera, value);
-            ApplyCameraInfo(_depthCamera, value);
+            _colorCamera.ApplyCameraInfo(value);
+            _depthCamera.ApplyCameraInfo(value);
         }
-    }
-
-    private static CameraInfo GetCameraInfo(OWCamera owCamera)
-    {
-        var camera = owCamera.mainCamera;
-
-        return new()
-        {
-            SensorSize = camera.sensorSize,
-            FocalLength = camera.focalLength,
-            LensShift = camera.lensShift,
-            NearClipPlane = camera.nearClipPlane,
-            FarClipPlane = camera.farClipPlane,
-            GateFit = camera.gateFit,
-        };
-    }
-
-    private static void ApplyCameraInfo(OWCamera owCamera, CameraInfo cameraInfo)
-    {
-        var camera = owCamera.mainCamera;
-        camera.usePhysicalProperties = true;
-
-        camera.focalLength = cameraInfo.FocalLength;
-        camera.sensorSize = cameraInfo.SensorSize;
-        camera.lensShift = cameraInfo.LensShift;
-        camera.gateFit = cameraInfo.GateFit;
-
-        owCamera.nearClipPlane = cameraInfo.NearClipPlane;
-        owCamera.farClipPlane = cameraInfo.FarClipPlane;
     }
 
     private OWCamera CreateDepthCamera()

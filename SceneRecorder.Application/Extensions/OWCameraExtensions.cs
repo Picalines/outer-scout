@@ -1,10 +1,44 @@
-﻿using UnityEngine;
+﻿using SceneRecorder.Domain;
+using SceneRecorder.Infrastructure.Validation;
+using UnityEngine;
 using UnityEngine.PostProcessing;
 
 namespace SceneRecorder.Application.Extensions;
 
-internal static class OWCameraExtensions
+public static class OWCameraExtensions
 {
+    public static CameraInfo GetCameraInfo(this OWCamera owCamera)
+    {
+        owCamera.Throw().If(owCamera.mainCamera.usePhysicalProperties is false);
+
+        var camera = owCamera.mainCamera;
+
+        return new()
+        {
+            SensorSize = camera.sensorSize,
+            FocalLength = camera.focalLength,
+            LensShift = camera.lensShift,
+            NearClipPlane = camera.nearClipPlane,
+            FarClipPlane = camera.farClipPlane,
+            GateFit = camera.gateFit,
+        };
+    }
+
+    public static void ApplyCameraInfo(this OWCamera owCamera, CameraInfo cameraInfo)
+    {
+        owCamera.Throw().If(owCamera.mainCamera.usePhysicalProperties is false);
+
+        var camera = owCamera.mainCamera;
+
+        camera.focalLength = cameraInfo.FocalLength;
+        camera.sensorSize = cameraInfo.SensorSize;
+        camera.lensShift = cameraInfo.LensShift;
+        camera.gateFit = cameraInfo.GateFit;
+
+        owCamera.nearClipPlane = cameraInfo.NearClipPlane;
+        owCamera.farClipPlane = cameraInfo.FarClipPlane;
+    }
+
     public static OWCamera CopyTo(
         this OWCamera sourceOWCamera,
         GameObject cameraParent,
