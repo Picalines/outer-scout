@@ -1,6 +1,6 @@
-using SceneRecorder.Infrastructure.Validation;
 using SceneRecorder.Application.Animation.Interpolation;
 using SceneRecorder.Application.Animation.ValueApplication;
+using SceneRecorder.Infrastructure.Validation;
 
 namespace SceneRecorder.Application.Animation;
 

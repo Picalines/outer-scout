@@ -1,5 +1,5 @@
-using SceneRecorder.Domain;
 using SceneRecorder.Application.Animation;
+using SceneRecorder.Domain;
 
 namespace SceneRecorder.Application.Recording;
 

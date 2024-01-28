@@ -1,10 +1,10 @@
 ﻿using OWML.Common;
 using OWML.ModHelper;
+using SceneRecorder.Application.FFmpeg;
+using SceneRecorder.Application.Recording;
 using SceneRecorder.Infrastructure.API;
 using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.Application.FFmpeg;
-using SceneRecorder.Application.Recording;
 using SceneRecorder.WebApi;
 using UnityEngine;
 
