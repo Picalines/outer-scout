@@ -2,7 +2,7 @@ using System.Collections;
 using SceneRecorder.Infrastructure.Validation;
 using UnityEngine;
 
-namespace SceneRecorder.Recording;
+namespace SceneRecorder.Application;
 
 internal sealed class GlobalCoroutine : MonoBehaviour
 {

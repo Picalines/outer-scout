@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace SceneRecorder.Recording.FFmpeg;
+namespace SceneRecorder.Application.FFmpeg;
 
 internal readonly ref struct CommandLineArguments
 {

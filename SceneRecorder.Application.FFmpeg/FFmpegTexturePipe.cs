@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 
 // Modified from: https://github.com/keijiro/FFmpegOut
 
-namespace SceneRecorder.Recording.FFmpeg;
+namespace SceneRecorder.Application.FFmpeg;
 
 internal sealed class FFmpegTexturePipe : IDisposable
 {

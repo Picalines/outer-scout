@@ -3,8 +3,8 @@ using OWML.ModHelper;
 using SceneRecorder.Infrastructure.API;
 using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.Recording.FFmpeg;
-using SceneRecorder.Recording.Recorders;
+using SceneRecorder.Application.FFmpeg;
+using SceneRecorder.Application.Recorders;
 using SceneRecorder.WebApi;
 using UnityEngine;
 
@@ -86,7 +86,7 @@ internal sealed class SceneRecorderMod : ModBehaviour
             return;
         }
 
-        Application.runInBackground = true;
+        UnityEngine.Application.runInBackground = true;
         ModHelper.Console.WriteLine("Outer Wilds will run in background", MessageType.Warning);
 
         _OutputRecorder = gameObject.AddComponent<OutputRecorder>();

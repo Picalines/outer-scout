@@ -3,7 +3,7 @@ using Unity.Collections;
 
 // Modified from: https://github.com/keijiro/FFmpegOut
 
-namespace SceneRecorder.Recording.FFmpeg;
+namespace SceneRecorder.Application.FFmpeg;
 
 internal sealed class FFmpegPipe : IDisposable
 {

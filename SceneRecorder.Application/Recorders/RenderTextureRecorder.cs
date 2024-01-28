@@ -2,7 +2,7 @@
 using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.Infrastructure.Validation;
-using SceneRecorder.Recording.FFmpeg;
+using SceneRecorder.Application.FFmpeg;
 using UnityEngine;
 
 namespace SceneRecorder.Recording.Recorders;

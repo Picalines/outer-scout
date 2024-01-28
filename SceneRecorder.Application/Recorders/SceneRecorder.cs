@@ -1,4 +1,5 @@
 using System.Collections;
+using SceneRecorder.Application;
 using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.Recording.Animation;

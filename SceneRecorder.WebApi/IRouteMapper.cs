@@ -1,4 +1,4 @@
-﻿using SceneRecorder.Recording.Recorders;
+﻿using SceneRecorder.Application.Recorders;
 using SceneRecorder.WebApi.Http;
 
 namespace SceneRecorder.WebApi;

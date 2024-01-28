@@ -1,4 +1,4 @@
-namespace SceneRecorder.Recording.FFmpeg;
+namespace SceneRecorder.Application.FFmpeg;
 
 public enum FFmpegPixelFormat
 {

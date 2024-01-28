@@ -21,7 +21,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\SceneRecorder.Infrastructure\SceneRecorder.Infrastructure.csproj" />
-		<ProjectReference Include="..\SceneRecorder.Recording\SceneRecorder.Recording.csproj" />
+		<ProjectReference Include="..\SceneRecorder.Application\SceneRecorder.Application.csproj" />
 		<ProjectReference Include="..\SceneRecorder.WebApi\SceneRecorder.WebApi.csproj" />
 	</ItemGroup>
 	<ItemGroup>

@@ -2,7 +2,7 @@ using System.Diagnostics;
 using OWML.Common;
 using SceneRecorder.Infrastructure.Extensions;
 
-namespace SceneRecorder.Recording.FFmpeg;
+namespace SceneRecorder.Application.FFmpeg;
 
 public static class FFmpeg
 {
