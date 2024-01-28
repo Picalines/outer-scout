@@ -6,7 +6,7 @@
   "uniqueName": "Picalines.SceneRecorder",
   "version": "0.1.0",
   "owmlVersion": "2.9.8",
-  "dependencies": ["xen.CommonCameraUtility", "misternebula.FreeCam"],
+  "dependencies": [],
   "warning": {
     "title": "Scene Recorder warning",
     "body": "FFmpeg is required to save mp4 videos from cameras\n\nYou can change location of FFmpeg's executable in the mod settings"

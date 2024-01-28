@@ -1,8 +1,6 @@
 ﻿using OWML.Common;
 using OWML.ModHelper;
 using SceneRecorder.Application.FFmpeg;
-using SceneRecorder.Application.Recording;
-using SceneRecorder.Infrastructure.API;
 using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.WebApi;
@@ -12,10 +10,6 @@ namespace SceneRecorder;
 
 internal sealed class SceneRecorderMod : ModBehaviour
 {
-    private const string CommonCameraAPIModId = "xen.CommonCameraUtility";
-
-    private OutputRecorder _OutputRecorder = null!;
-
     private WebApiServer? _WebApiServer = null;
 
     private SceneRecorderMod()
@@ -26,27 +20,6 @@ internal sealed class SceneRecorderMod : ModBehaviour
 
     public override void Configure(IModConfig config)
     {
-        if (_OutputRecorder is not null)
-        {
-            _OutputRecorder.ModConfig = config;
-            _OutputRecorder.ModConsole = ModHelper.Console;
-
-            var commonCameraAPI = ModHelper.Interaction.TryGetModApi<ICommonCameraAPI>(
-                CommonCameraAPIModId
-            );
-
-            if (commonCameraAPI is null)
-            {
-                ModHelper.Console.WriteLine(
-                    $"{CommonCameraAPIModId} is required for {nameof(SceneRecorder)}",
-                    MessageType.Error
-                );
-                return;
-            }
-
-            _OutputRecorder.CommonCameraAPI = commonCameraAPI;
-        }
-
         _WebApiServer?.Configure(config, ModHelper.Console);
     }
 
@@ -54,14 +27,28 @@ internal sealed class SceneRecorderMod : ModBehaviour
     {
         ModHelper.Console.WriteLine($"{nameof(SceneRecorder)} is loaded!", MessageType.Success);
 
+        if (CheckCompatibility() is false)
+        {
+            return;
+        }
+
+        UnityEngine.Application.runInBackground = true;
+        ModHelper.Console.WriteLine("Outer Wilds will run in background", MessageType.Warning);
+
+        _WebApiServer = gameObject.AddComponent<WebApiServer>();
+
+        Configure(ModHelper.Config);
+    }
+
+    private bool CheckCompatibility()
+    {
         if (SystemInfo.supportsAsyncGPUReadback is false)
         {
             ModHelper.Console.WriteLine(
                 $"async gpu readback is not supported, {nameof(SceneRecorder)} is not available",
                 MessageType.Error
             );
-
-            return;
+            return false;
         }
 
         if (SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.Depth) is false)
@@ -70,10 +57,10 @@ internal sealed class SceneRecorderMod : ModBehaviour
                 $"{RenderTextureFormat.Depth.ToStringWithType()} is not supported, {nameof(SceneRecorder)} is not available",
                 MessageType.Error
             );
-
-            return;
+            return false;
         }
 
+        // TODO: should only block RenderTextureRecorders
         if (FFmpeg.CheckInstallation(ModHelper.Config) is { } checkException)
         {
             ModHelper.Console.WriteLine(
@@ -82,17 +69,9 @@ internal sealed class SceneRecorderMod : ModBehaviour
             );
 
             ModHelper.Console.WriteLine(checkException.ToString(), MessageType.Warning);
-
-            return;
+            return false;
         }
 
-        UnityEngine.Application.runInBackground = true;
-        ModHelper.Console.WriteLine("Outer Wilds will run in background", MessageType.Warning);
-
-        _OutputRecorder = gameObject.AddComponent<OutputRecorder>();
-
-        _WebApiServer = gameObject.AddComponent<WebApiServer>();
-
-        Configure(ModHelper.Config);
+        return true;
     }
 }
