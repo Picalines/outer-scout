@@ -21,17 +21,20 @@ public sealed class WebApiServer : IDisposable
         WarpRouteMapper.Instance,
     };
 
+    private readonly ServiceContainer _services;
+
     private readonly HttpServer _httpServer;
 
     public WebApiServer()
     {
         var modConfig = Singleton<IModConfig>.Instance;
 
-        var httpServerBuilder = new HttpServer.Builder(
-            $"http://localhost:{modConfig.GetApiPortSetting()}/"
-        );
+        _services = CreateServiceContainer();
 
-        ConfigureServices(httpServerBuilder);
+        var httpServerBuilder = new HttpServer.Builder(
+            $"http://localhost:{modConfig.GetApiPortSetting()}/",
+            _services
+        );
 
         MapRoutes(httpServerBuilder);
 
@@ -41,20 +44,23 @@ public sealed class WebApiServer : IDisposable
     public void Dispose()
     {
         _httpServer.Dispose();
+        _services.Dispose();
     }
 
-    private void ConfigureServices(HttpServer.Builder serverBuilder)
+    private static ServiceContainer CreateServiceContainer()
     {
         var modConfig = Singleton<IModConfig>.Instance;
         var modConsole = Singleton<IModConsole>.Instance;
 
-        serverBuilder.Services.RegisterInstance<IModConsole>(
+        var services = new ServiceContainer();
+
+        services.RegisterInstance<IModConsole>(
             modConfig.GetEnableApiInfoLogsSetting()
                 ? modConsole
                 : modConsole.WithOnlyMessagesOfType(MessageType.Warning, MessageType.Error)
         );
 
-        serverBuilder.Services.RegisterInstance(
+        services.RegisterInstance(
             new JsonSerializer()
             {
                 MissingMemberHandling = MissingMemberHandling.Error,
@@ -69,6 +75,8 @@ public sealed class WebApiServer : IDisposable
                 },
             }
         );
+
+        return services;
     }
 
     private void MapRoutes(HttpServer.Builder serverBuilder)

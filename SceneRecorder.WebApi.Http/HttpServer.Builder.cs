@@ -10,20 +10,19 @@ public sealed partial class HttpServer
     public sealed class Builder
     {
         private readonly string _baseUrl;
-        private readonly ServiceContainer _services = new();
+        private readonly ServiceContainer _services;
         private readonly Router.Builder _routerBuilder = new();
         private readonly Stack<RequestFiler> _filterStack = new();
 
         private bool _built = false;
 
-        public Builder(string baseUrl)
+        public Builder(string baseUrl, ServiceContainer services)
         {
             _baseUrl = baseUrl;
+            _services = services;
 
             RegisterJsonServices();
         }
-
-        public ServiceContainer Services => _services;
 
         public void MapGet(string path, Delegate handler)
         {
