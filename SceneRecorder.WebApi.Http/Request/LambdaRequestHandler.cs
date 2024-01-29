@@ -1,6 +1,9 @@
 ﻿using System.ComponentModel;
 using System.Reflection;
+using Newtonsoft.Json;
+using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Extensions;
+using SceneRecorder.Infrastructure.Validation;
 using SceneRecorder.WebApi.Http.Response;
 using SceneRecorder.WebApi.Http.Routing;
 
@@ -20,17 +23,25 @@ internal sealed class LambdaRequestHandler : IRequestHandler
         return _handler.Invoke(request);
     }
 
-    public static LambdaRequestHandler Create(Route route, Delegate handler)
+    public static LambdaRequestHandler Create(
+        ServiceContainer services,
+        Route route,
+        Delegate handler
+    )
     {
-        return new(BindDelegate(route, handler));
+        return new(BindDelegate(services, route, handler));
     }
 
     private interface IBinder
     {
-        public object Bind(Request request);
+        public object? Bind(Request request);
     }
 
-    private static Func<Request, IResponse> BindDelegate(Route route, Delegate handler)
+    private static Func<Request, IResponse> BindDelegate(
+        ServiceContainer services,
+        Route route,
+        Delegate handler
+    )
     {
         var handlerMethod = handler.Method;
         var handlerTarget = handler.Target;
@@ -46,11 +57,6 @@ internal sealed class LambdaRequestHandler : IRequestHandler
             {
                 var parameterType = parameter.ParameterType;
 
-                if (parameterType == typeof(Request))
-                {
-                    return RequestBinder.Instance;
-                }
-
                 var parameterName = parameter.Name;
 
                 if (parameterType.IsPrimitive || parameterType == typeof(string))
@@ -64,21 +70,26 @@ internal sealed class LambdaRequestHandler : IRequestHandler
                     );
                 }
 
-                return request => jsonBodyMethod.Invoke(request, Array.Empty<object>());
+                if (parameter.GetCustomAttribute<FromBodyAttribute>() is { })
+                {
+                    return new JsonBodyBinder(services, parameterType);
+                }
+
+                return new ServiceBinder(services, parameterType);
             })
             .ToArray();
 
         return request =>
         {
-            var handlerArguments = new object[handlerParametersCount];
+            var handlerArguments = new object?[handlerParametersCount];
 
             foreach (var (index, binder) in argumentBinders.Indexed())
             {
-                var argument = binder(request);
+                var argument = binder.Bind(request);
 
-                if (argument is IResponse errorResponse)
+                if (argument is IResponse earlyResponse)
                 {
-                    return errorResponse;
+                    return earlyResponse;
                 }
 
                 handlerArguments[index] = argument;
@@ -91,18 +102,6 @@ internal sealed class LambdaRequestHandler : IRequestHandler
                 var value => ResponseFabric.Ok(value),
             };
         };
-    }
-
-    private sealed class RequestBinder : IBinder
-    {
-        public static RequestBinder Instance { get; } = new();
-
-        private RequestBinder() { }
-
-        public object Bind(Request request)
-        {
-            return request;
-        }
     }
 
     private sealed class UrlBinder(string paramName, Type paramType, UrlBinder.SourceType source)
@@ -123,7 +122,7 @@ internal sealed class LambdaRequestHandler : IRequestHandler
             _ => throw new NotImplementedException(),
         };
 
-        public object Bind(Request request)
+        public object? Bind(Request request)
         {
             return request.RouteParameters.TryGetValue(paramName, out var paramValue)
                 ? _typeConverter.ConvertFromString(paramValue)
@@ -131,17 +130,26 @@ internal sealed class LambdaRequestHandler : IRequestHandler
         }
     }
 
-    private sealed class JsonBodyBinder(Type paramType) : IBinder
+    private sealed class ServiceBinder(ServiceContainer services, Type paramType) : IBinder
     {
-        private readonly MethodInfo _jsonBodyMethod =
-            typeof(Request).GetMethod(nameof(Request.JsonBody)).MakeGenericMethod(paramType)
-            ?? throw new InvalidOperationException(
-                $"{nameof(Request)}.{nameof(Request.JsonBody)}<{paramType.FullName}> not found"
-            );
-
-        public object Bind(Request request)
+        public object? Bind(Request request)
         {
-            throw new NotImplementedException();
+            return services.Resolve(paramType)
+                ?? throw new InvalidOperationException(
+                    $"failed to resolve service of type {paramType}"
+                );
+        }
+    }
+
+    private sealed class JsonBodyBinder(ServiceContainer services, Type paramType) : IBinder
+    {
+        public object? Bind(Request request)
+        {
+            var jsonSerializer = services.Resolve<JsonSerializer>();
+            jsonSerializer.ThrowIfNull();
+
+            using var jsonReader = new JsonTextReader(request.BodyReader);
+            return jsonSerializer.Deserialize(jsonReader, paramType);
         }
     }
 }
