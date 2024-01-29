@@ -111,6 +111,8 @@ public sealed class ServiceContainer : IDisposable
             _disposed = true;
 
             serviceList.Remove(service);
+
+            (service as IDisposable)?.Dispose();
         }
     }
 }
