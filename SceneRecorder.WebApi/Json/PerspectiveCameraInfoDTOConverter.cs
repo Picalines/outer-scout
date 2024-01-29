@@ -3,12 +3,12 @@ using UnityEngine;
 
 namespace SceneRecorder.WebApi.DTOs.Json;
 
-internal sealed class CameraInfoDTOConverter : NumberArrayConverter<CameraInfoDTO>
+internal sealed class PerspectiveCameraInfoDTOConverter : NumberArrayConverter<PerspectiveCameraInfoDTO>
 {
-    public CameraInfoDTOConverter()
+    public PerspectiveCameraInfoDTOConverter()
         : base(8) { }
 
-    protected override CameraInfoDTO ReadJson(ReadOnlySpan<float> array)
+    protected override PerspectiveCameraInfoDTO ReadJson(ReadOnlySpan<float> array)
     {
         return new()
         {
@@ -21,7 +21,7 @@ internal sealed class CameraInfoDTOConverter : NumberArrayConverter<CameraInfoDT
         };
     }
 
-    protected override void WriteJson(in CameraInfoDTO value, ref Span<float> array)
+    protected override void WriteJson(in PerspectiveCameraInfoDTO value, ref Span<float> array)
     {
         array[0] = value.FocalLength;
 
