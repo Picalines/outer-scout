@@ -7,7 +7,7 @@ namespace SceneRecorder.Application.Extensions;
 
 public static class OWCameraExtensions
 {
-    public static CameraInfo GetCameraInfo(this OWCamera owCamera)
+    public static PerspectiveCameraInfo GetPerspectiveInfo(this OWCamera owCamera)
     {
         owCamera.Throw().If(owCamera.mainCamera.usePhysicalProperties is false);
 
@@ -24,7 +24,10 @@ public static class OWCameraExtensions
         };
     }
 
-    public static void ApplyCameraInfo(this OWCamera owCamera, CameraInfo cameraInfo)
+    public static void ApplyPerspectiveInfo(
+        this OWCamera owCamera,
+        PerspectiveCameraInfo cameraInfo
+    )
     {
         owCamera.Throw().If(owCamera.mainCamera.usePhysicalProperties is false);
 

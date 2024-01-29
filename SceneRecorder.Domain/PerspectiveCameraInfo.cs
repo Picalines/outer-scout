@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace SceneRecorder.Domain;
 
-public record struct CameraInfo
+public record struct PerspectiveCameraInfo
 {
     public required float FocalLength { get; init; }
 

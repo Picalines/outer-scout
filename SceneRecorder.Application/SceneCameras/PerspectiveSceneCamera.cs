@@ -7,7 +7,9 @@ using UnityEngine;
 namespace SceneRecorder.Application.SceneCameras;
 
 [RequireComponent(typeof(OWCamera))]
-public sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>, ISceneCamera
+public sealed class PerspectiveSceneCamera
+    : InitializedBehaviour<PerspectiveSceneCamera.Parameters>,
+        ISceneCamera
 {
     public record struct Parameters
     {
@@ -20,7 +22,7 @@ public sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>, 
 
     public Transform Transform { get; private set; } = null!;
 
-    private CameraInfo _cameraInfo;
+    private PerspectiveCameraInfo _perspectiveInfo;
 
     private OWCamera _colorCamera = null!;
     private OWCamera _depthCamera = null!;
@@ -28,7 +30,7 @@ public sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>, 
     private RenderTexture _colorTexture = null!;
     private RenderTexture _depthTexture = null!;
 
-    private SceneCamera()
+    private PerspectiveSceneCamera()
         : base(out var parameters)
     {
         parameters.Id.Throw().IfNullOrWhiteSpace();
@@ -55,7 +57,7 @@ public sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>, 
         _colorCamera.mainCamera.usePhysicalProperties = true;
         _colorCamera.targetTexture = _colorTexture;
 
-        _cameraInfo = _colorCamera.GetCameraInfo();
+        _perspectiveInfo = _colorCamera.GetPerspectiveInfo();
     }
 
     private void Awake()
@@ -73,14 +75,14 @@ public sealed class SceneCamera : InitializedBehaviour<SceneCamera.Parameters>, 
 
     public RenderTexture? DepthTexture => _depthTexture;
 
-    public CameraInfo CameraInfo
+    public PerspectiveCameraInfo PerspectiveInfo
     {
-        get => _cameraInfo;
+        get => _perspectiveInfo;
         set
         {
-            _cameraInfo = value;
-            _colorCamera.ApplyCameraInfo(value);
-            _depthCamera.ApplyCameraInfo(value);
+            _perspectiveInfo = value;
+            _colorCamera.ApplyPerspectiveInfo(value);
+            _depthCamera.ApplyPerspectiveInfo(value);
         }
     }
 
