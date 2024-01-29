@@ -1,181 +1,132 @@
 ﻿using System.Collections;
-using System.Collections.Concurrent;
 using System.Net;
-using Newtonsoft.Json;
 using OWML.Common;
+using SceneRecorder.Infrastructure.Components;
+using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Extensions;
+using SceneRecorder.Infrastructure.Validation;
+using SceneRecorder.WebApi.Http.Components;
 using SceneRecorder.WebApi.Http.Response;
 using SceneRecorder.WebApi.Http.Routing;
-using UnityEngine;
 
 namespace SceneRecorder.WebApi.Http;
 
-public class HttpServer : MonoBehaviour
+public sealed partial class HttpServer : IDisposable
 {
-    public IModConsole? ModConsole { get; set; } = null;
+    private readonly string _baseUrl;
+    private readonly ServiceContainer _services;
+    private readonly Router _router;
+    private readonly HttpListener _httpListener;
 
-    public bool Listening { get; private set; } = false;
+    private CancellationTokenSource? _cancellationTokenSource = null;
+    private TaskCompletionSource<object?>? _stoppedListening;
 
-    private string _BaseUrl = null!;
+    private bool _disposed = false;
 
-    private HttpListener _HttpListener = null!;
-
-    private Router _Router = null!;
-
-    private CancellationTokenSource? _CancellationTokenSource = null;
-
-    private TaskCompletionSource<object?>? _StoppedListening;
-
-    private readonly ConcurrentQueue<Action> _UnityThreadActionQueue = new();
-
-    internal void Configure(string baseUrl, IReadOnlyList<RequestHandler> requestHandlers)
+    private HttpServer(string baseUrl, ServiceContainer services, Router router)
     {
-        if (Listening)
-        {
-            throw new InvalidOperationException(
-                $"{nameof(Configure)} method called before {nameof(StopListening)}"
-            );
-        }
+        baseUrl.Throw().If(baseUrl.EndsWith("/") is false);
 
-        if (baseUrl.EndsWith("/") is false)
-        {
-            throw new ArgumentException("must end with /", nameof(baseUrl));
-        }
+        _baseUrl = baseUrl;
+        _services = services;
+        _router = router;
 
-        _Router = new(requestHandlers);
+        _httpListener = new();
+        _httpListener.Prefixes.Add(_baseUrl);
 
-        _BaseUrl = baseUrl;
-
-        _HttpListener = new();
-
-        _HttpListener.Prefixes.Add(_BaseUrl);
+        Task.Run(ListenAsync);
     }
 
-    public void StartListening()
+    public void Dispose()
     {
-        if (Listening)
+        if (_disposed)
         {
-            throw new InvalidOperationException(
-                $"{nameof(StartListening)} method called before {nameof(StopListening)}"
-            );
+            return;
         }
 
-        Listening = true;
+        _disposed = true;
 
-        Log($"started listening at {_HttpListener.Prefixes.Single()}", MessageType.Info);
-
-        Task.Run(Listen);
-    }
-
-    public void StopListening()
-    {
-        if (Listening is false)
-        {
-            throw new InvalidOperationException(
-                $"{nameof(StopListening)} method called before {nameof(StartListening)}"
-            );
-        }
-
-        Listening = false;
-        _CancellationTokenSource!.Cancel();
-        _StoppedListening!.Task.Wait();
+        _cancellationTokenSource!.Cancel();
+        _stoppedListening!.Task.Wait();
 
         Log($"stopped listening", MessageType.Info);
     }
 
-    public async Task StopListeningAsync()
+    private async Task ListenAsync()
     {
-        StopListening();
+        Log($"started listening at {_httpListener.Prefixes.Single()}", MessageType.Info);
 
-        await _StoppedListening!.Task;
-    }
+        _stoppedListening = new();
+        _httpListener.Start();
 
-    private void OnDestroy()
-    {
-        StopListening();
-    }
-
-    private async Task Listen()
-    {
-        _StoppedListening = new();
-        _HttpListener.Start();
+        var unityThreadExecutor = UnityThreadExecutor.Create();
 
         using var cancellationTokenSource = new CancellationTokenSource();
-        _CancellationTokenSource = cancellationTokenSource;
-        var cancellationToken = _CancellationTokenSource.Token;
+        _cancellationTokenSource = cancellationTokenSource;
+        var cancellationToken = _cancellationTokenSource.Token;
 
-        while (Listening)
+        while (_disposed is false)
         {
             HttpListenerContext context;
             try
             {
-                context = await _HttpListener.GetContextAsync().AsCancellable(cancellationToken);
+                context = await _httpListener.GetContextAsync().AsCancellable(cancellationToken);
             }
             catch (TaskCanceledException)
             {
                 break;
             }
 
-            string requestContent;
-            using (
-                var requestContentReader = new StreamReader(
-                    context.Request.InputStream,
-                    context.Request.ContentEncoding
-                )
-            )
-            {
-                requestContent = requestContentReader.ReadToEnd();
-            }
-
             var httpMethod = new HttpMethod(context.Request.HttpMethod);
 
             Log($"received {httpMethod} request at '{context.Request.Url}'", MessageType.Info);
 
-            Request request;
+            var bodyReader = new StreamReader(
+                context.Request.InputStream,
+                context.Request.ContentEncoding
+            );
 
-            try
+            var requestBuilder = new Request.Builder()
+                .WithHttpMethod(httpMethod)
+                .WithUri(context.Request.Url)
+                .WithBodyReader(bodyReader);
+
+            if (_router.Match(requestBuilder) is (var route, var requestHandler))
             {
-                request = new Request(httpMethod, context.Request.Url, requestContent);
-            }
-            catch (JsonSerializationException exception)
-            {
-                var response = ResponseFabric.BadRequest(new { exception.Message });
-                ((SyncResponse)response).Send(context.Response);
+                var request = requestBuilder.Build();
 
-                Log(
-                    $"bad request at '{context.Request.Url}': {exception.Message}",
-                    MessageType.Warning
-                );
-
-                continue;
-            }
-
-            var requestHandler = _Router.Match(request);
-
-            if (requestHandler is not null)
-            {
-                _UnityThreadActionQueue.Enqueue(
-                    () => HandleRequest(context, request, requestHandler)
+                unityThreadExecutor.EnqueueTask(
+                    () => HandleRequest(context, route, request, requestHandler)
                 );
             }
             else
             {
+                bodyReader.Dispose();
+
                 ((SyncResponse)ResponseFabric.NotFound()).Send(context.Response);
 
                 Log($"route '{context.Request.Url}' not found", MessageType.Warning);
             }
         }
 
-        _UnityThreadActionQueue.Clear();
-        StopAllCoroutines();
+        UnityEngine.Object.Destroy(unityThreadExecutor);
 
-        _HttpListener.Stop();
-        _StoppedListening.SetResult(null);
+        _httpListener.Stop();
+        _stoppedListening.SetResult(null);
     }
 
-    private void HandleRequest(HttpListenerContext context, Request request, RequestHandler handler)
+    private void HandleRequest(
+        HttpListenerContext context,
+        Route route,
+        Request request,
+        IRequestHandler handler
+    )
     {
+        using var _ = _services.RegisterInstance(request);
+
         var response = handler.Handle(request);
+
+        request.BodyReader.Dispose();
 
         var isInternalError = response.StatusCode is HttpStatusCode.InternalServerError;
 
@@ -194,16 +145,16 @@ public class HttpServer : MonoBehaviour
                 syncResponse.Send(context.Response);
 
                 Log(
-                    $"sent response {response.StatusCode} to {request.HttpMethod} request at '{handler.Route}'",
+                    $"sent response {response.StatusCode} to {request.HttpMethod} request at '{route}'",
                     isInternalError ? MessageType.Error : MessageType.Info
                 );
                 break;
 
             case CoroutineResponse coroutineResponse:
-                StartCoroutine(
+                GlobalCoroutine.Start(
                     CoroutineRequestHandler(
                         request.HttpMethod,
-                        handler.Route,
+                        route,
                         context.Response,
                         coroutineResponse
                     )
@@ -277,14 +228,8 @@ public class HttpServer : MonoBehaviour
 
     private void Log(string message, MessageType messageType)
     {
-        ModConsole?.WriteLine($"{nameof(SceneRecorder)} API: {message}", messageType);
-    }
+        var modConsole = Singleton<IModConsole>.Instance;
 
-    private void Update()
-    {
-        if (_UnityThreadActionQueue.TryDequeue(out var action))
-        {
-            action();
-        }
+        modConsole.WriteLine($"{nameof(SceneRecorder)} API: {message}", messageType);
     }
 }
