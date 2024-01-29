@@ -1,7 +1,7 @@
 using System.Collections;
 using SceneRecorder.Application.Animation;
-using SceneRecorder.Application.Components;
 using SceneRecorder.Domain;
+using SceneRecorder.Infrastructure.Components;
 using SceneRecorder.Infrastructure.Extensions;
 using UnityEngine;
 

@@ -2,9 +2,9 @@ using System.Collections;
 using SceneRecorder.Infrastructure.Validation;
 using UnityEngine;
 
-namespace SceneRecorder.Application.Components;
+namespace SceneRecorder.Infrastructure.Components;
 
-internal sealed class GlobalCoroutine : MonoBehaviour
+public sealed class GlobalCoroutine : MonoBehaviour
 {
     private IEnumerator _coroutine = null!;
 
@@ -19,7 +19,7 @@ internal sealed class GlobalCoroutine : MonoBehaviour
 
     public static void Start(IEnumerator coroutine)
     {
-        var gameObject = new GameObject($"{nameof(GlobalCoroutine)}");
+        var gameObject = new GameObject($"{nameof(SceneRecorder)}.{nameof(GlobalCoroutine)}");
 
         gameObject.SetActive(false);
 
