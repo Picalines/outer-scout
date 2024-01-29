@@ -31,4 +31,11 @@ public static class IEnumerableExtensions
             yield return (element, index++ == lastIndex);
         }
     }
+
+    public static Dictionary<K, V> ToDictionary<K, V>(
+        this IEnumerable<KeyValuePair<K, V>> dictonary
+    )
+    {
+        return dictonary.ToDictionary(p => p.Key, p => p.Value);
+    }
 }

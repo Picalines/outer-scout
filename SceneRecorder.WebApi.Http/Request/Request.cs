@@ -1,4 +1,6 @@
-﻿namespace SceneRecorder.WebApi.Http;
+﻿using SceneRecorder.Infrastructure.Extensions;
+
+namespace SceneRecorder.WebApi.Http;
 
 public sealed class Request
 {
@@ -49,8 +51,8 @@ public sealed class Request
                 _httpMethod,
                 _uri,
                 _bodyReader,
-                _routeParameters.ToDictionary(p => p.Key, p => p.Value),
-                _queryParameters.ToDictionary(p => p.Key, p => p.Value)
+                _routeParameters.ToDictionary(),
+                _queryParameters.ToDictionary()
             );
         }
 
