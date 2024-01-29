@@ -7,7 +7,7 @@ public sealed partial class SceneRecorder
 {
     public sealed class Builder
     {
-        private IntRange _frameRange = new IntRange(1, 100);
+        private IntRange _frameRange = IntRange.FromValues(1, 100);
 
         private readonly HashSet<IAnimator> _animators = [];
 

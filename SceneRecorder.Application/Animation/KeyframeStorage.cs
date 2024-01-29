@@ -130,7 +130,7 @@ public sealed class KeyframeStorage<T>
         var (spanLeft, spanStart) = leftKeyframe.GetValueOrDefault();
         var (spanRight, spanEnd) = rightKeyframe.GetValueOrDefault();
 
-        return new(new IntRange(spanStart, spanEnd), spanLeft, spanRight);
+        return new(IntRange.FromValues(spanStart, spanEnd), spanLeft, spanRight);
     }
 
     private Keyframe? FindKeyframe(int frame, int searchStep, int safeOffset = 0)

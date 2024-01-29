@@ -15,12 +15,31 @@ public record struct IntRange : IEnumerable<int>
         End = 0;
     }
 
-    public IntRange(int start, int end)
+    private IntRange(int start, int end)
     {
         end.Throw().IfLessThan(start);
 
         Start = start;
         End = end;
+    }
+
+    public static IntRange FromValues(int startValue, int endValue)
+    {
+        return new IntRange(startValue, endValue);
+    }
+
+    public static IntRange FromOffset(int startValue, int offset)
+    {
+        offset.Throw().IfLessThan(0);
+
+        return FromValues(startValue, startValue + offset);
+    }
+
+    public static IntRange FromCount(int startValue, int valuesCount)
+    {
+        valuesCount.Throw().IfLessThan(1);
+
+        return FromValues(startValue, startValue + valuesCount - 1);
     }
 
     public int Length
@@ -31,6 +50,11 @@ public record struct IntRange : IEnumerable<int>
     public bool Contains(int value)
     {
         return value >= Start && value <= End;
+    }
+
+    public bool Contains(IntRange innerRange)
+    {
+        return Contains(innerRange.Start) && Contains(innerRange.End);
     }
 
     public int ValueToIndex(int valueInRange)
