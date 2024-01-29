@@ -75,7 +75,7 @@ internal sealed class LambdaRequestHandler : IRequestHandler
                     return new JsonBodyBinder(services, parameterType);
                 }
 
-                return new ServiceBinder(services, parameterType);
+                return new ServiceBinder(services, parameterType, parameter.IsNullable());
             })
             .ToArray();
 
@@ -130,14 +130,21 @@ internal sealed class LambdaRequestHandler : IRequestHandler
         }
     }
 
-    private sealed class ServiceBinder(ServiceContainer services, Type paramType) : IBinder
+    private sealed class ServiceBinder(ServiceContainer services, Type paramType, bool isNullable)
+        : IBinder
     {
         public object? Bind(Request request)
         {
-            return services.Resolve(paramType)
-                ?? throw new InvalidOperationException(
+            var instance = services.Resolve(paramType);
+
+            if ((instance, isNullable) is (null, false))
+            {
+                throw new InvalidOperationException(
                     $"failed to resolve service of type {paramType}"
                 );
+            }
+
+            return instance;
         }
     }
 
