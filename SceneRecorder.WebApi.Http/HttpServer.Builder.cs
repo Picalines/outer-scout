@@ -1,4 +1,5 @@
-﻿using SceneRecorder.Infrastructure.DependencyInjection;
+﻿using Newtonsoft.Json;
+using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.WebApi.Http.Response;
 using SceneRecorder.WebApi.Http.Routing;
 
@@ -18,7 +19,11 @@ public sealed partial class HttpServer
         public Builder(string baseUrl)
         {
             _baseUrl = baseUrl;
+
+            RegisterJsonServices();
         }
+
+        public ServiceContainer Services => _services;
 
         public void MapGet(string path, Delegate handler)
         {
@@ -85,6 +90,16 @@ public sealed partial class HttpServer
             wrappedHandler = new FilteredRequestHandler(wrappedHandler);
 
             _routerBuilder.WithRoute(route, wrappedHandler);
+        }
+
+        private void RegisterJsonServices()
+        {
+            var jsonSerializer = new JsonSerializer()
+            {
+                MissingMemberHandling = MissingMemberHandling.Error,
+            };
+
+            _services.RegisterInstance(jsonSerializer);
         }
 
         private static Route RouteFromString(HttpMethod httpMethod, string path)
