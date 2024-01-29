@@ -2,21 +2,22 @@ namespace SceneRecorder.Infrastructure.DependencyInjection;
 
 public sealed class ServiceContainer
 {
-    private readonly Dictionary<Type, IService<object>> _services = [];
+    private readonly Dictionary<Type, List<IService<object>>> _services = [];
+
+    public ServiceContainer()
+    {
+        RegisterInstance(this);
+    }
 
     public object? Resolve(Type serviceType)
     {
-        return _services.TryGetValue(serviceType, out var service) ? service.GetInstance() : null;
+        return ResolveLastService(serviceType)?.GetInstance();
     }
 
     public T? Resolve<T>()
         where T : class
     {
-        return
-            _services.TryGetValue(typeof(T), out var anyService)
-            && anyService is IService<T> serviceOfT
-            ? serviceOfT.GetInstance()
-            : null;
+        return (ResolveLastService(typeof(T)) as IService<T>)?.GetInstance();
     }
 
     public IDisposable RegisterInstance<T>(T instance)
@@ -37,24 +38,32 @@ public sealed class ServiceContainer
         return RegisterService(new LazyService<T>(lazyInstance));
     }
 
+    private IService<object>? ResolveLastService(Type type)
+    {
+        return _services.TryGetValue(type, out var serviceList)
+            ? serviceList.LastOrDefault()
+            : null;
+    }
+
     private IDisposable RegisterService<T>(IService<T> service)
         where T : class
     {
         var serviceType = typeof(T);
 
-        if (_services.ContainsKey(serviceType))
+        if (_services.TryGetValue(serviceType, out var serviceList) is false)
         {
-            throw new InvalidOperationException(
-                $"{nameof(ServiceContainer)} already contains service for type {serviceType.FullName}"
-            );
+            _services[serviceType] = serviceList = [];
         }
 
-        _services[serviceType] = service;
+        serviceList.Add(service);
 
-        return new ServiceDisposer(this, serviceType);
+        return new ServiceDisposer(serviceList, service);
     }
 
-    private sealed class ServiceDisposer(ServiceContainer container, Type serviceType) : IDisposable
+    private sealed class ServiceDisposer(
+        IList<IService<object>> serviceList,
+        IService<object> service
+    ) : IDisposable
     {
         private bool _disposed = false;
 
@@ -67,7 +76,7 @@ public sealed class ServiceContainer
 
             _disposed = true;
 
-            container._services.Remove(serviceType);
+            serviceList.Remove(service);
         }
     }
 }
