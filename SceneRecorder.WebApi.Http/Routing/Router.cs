@@ -1,34 +1,36 @@
+using SceneRecorder.Infrastructure.Extensions;
+
 namespace SceneRecorder.WebApi.Http.Routing;
 
 internal sealed class Router
 {
-    private sealed class RouteNode
+    private sealed record RouteTreeLeaf(Route Route, IRequestHandler Handler);
+
+    private sealed class RouteTreeNode
     {
-        public Dictionary<HttpMethod, RequestHandler> Handlers { get; } = new();
+        public Dictionary<HttpMethod, RouteTreeLeaf> Leaves { get; } = [];
 
-        public Dictionary<string, RouteNode> PlainChildren { get; } = new();
+        public Dictionary<string, RouteTreeNode> PlainChildren { get; } = [];
 
-        public (string ParameterName, RouteNode ChildNode)? ParameterChild { get; set; }
+        public (string ParameterName, RouteTreeNode ChildNode)? ParameterChild { get; set; }
     }
 
-    private readonly RouteNode _RouteTreeRoot;
+    private readonly RouteTreeNode _routeTreeRoot;
 
-    public Router(IReadOnlyList<RequestHandler> requestHandlers)
+    private Router(RouteTreeNode routeTreeRoot)
     {
-        _RouteTreeRoot = CreateRouteTree(requestHandlers);
+        _routeTreeRoot = routeTreeRoot;
     }
 
-    public RequestHandler? Match(Request request)
+    public (Route Route, IRequestHandler Handler)? Match(Request.Builder requestBuilder)
     {
-        var httpMethod = request.HttpMethod;
+        var httpMethod = requestBuilder.HttpMethod;
 
-        request.MutableRouteParameters.Clear();
+        var currentNode = _routeTreeRoot;
 
-        var urlRouteSegments = request.Uri.LocalPath.Trim('/').Split('/');
+        var urlRouteSegments = requestBuilder.Uri.LocalPath.Trim('/').Split('/');
 
-        var currentNode = _RouteTreeRoot;
-
-        foreach (var (urlRouteSegment, isLast) in EnumerateWithLastFlag(urlRouteSegments))
+        foreach (var (urlRouteSegment, isLast) in urlRouteSegments.WithIsLast())
         {
             if (currentNode.PlainChildren.ContainsKey(urlRouteSegment))
             {
@@ -41,33 +43,48 @@ internal sealed class Router
             )
             {
                 currentNode = parameterChild;
-                request.MutableRouteParameters[parameterName] = urlRouteSegment;
+                requestBuilder.WithRouteParameter(parameterName, urlRouteSegment);
             }
 
             if (isLast)
             {
-                if (currentNode.Handlers.TryGetValue(httpMethod, out var requestHandler) is false)
+                if (currentNode.Leaves.TryGetValue(httpMethod, out var leaf) is false)
                 {
                     return null;
                 }
 
-                return requestHandler;
+                var (route, requestHandler) = leaf;
+
+                return (route, requestHandler);
             }
         }
 
         return null;
     }
 
-    private RouteNode CreateRouteTree(IReadOnlyList<RequestHandler> requestHandlers)
+    public sealed class Builder
     {
-        var root = new RouteNode();
+        private readonly RouteTreeNode _root = new();
 
-        foreach (var requestHandler in requestHandlers)
+        private bool _built = false;
+
+        public Router Build()
         {
-            var route = requestHandler.Route;
-            var currentNode = root;
+            if (_built)
+            {
+                throw new InvalidOperationException($"{nameof(Build)} called twice");
+            }
 
-            foreach (var (routeSegment, isLast) in EnumerateWithLastFlag(route.Segments))
+            _built = true;
+
+            return new Router(_root);
+        }
+
+        public Builder WithRoute(Route route, IRequestHandler requestHandler)
+        {
+            var currentNode = _root;
+
+            foreach (var (routeSegment, isLast) in route.Segments.WithIsLast())
             {
                 switch (routeSegment.Type)
                 {
@@ -76,13 +93,13 @@ internal sealed class Router
 
                         currentNode = currentNode.PlainChildren.ContainsKey(plainSegment)
                             ? currentNode.PlainChildren[plainSegment]
-                            : (currentNode.PlainChildren[plainSegment] = new RouteNode());
+                            : (currentNode.PlainChildren[plainSegment] = new RouteTreeNode());
                         break;
 
                     case Route.SegmentType.Parameter:
                         if (currentNode.ParameterChild is not (_, { } childNode))
                         {
-                            childNode = new RouteNode();
+                            childNode = new RouteTreeNode();
                             currentNode.ParameterChild = (routeSegment.Value, childNode);
                         }
 
@@ -95,41 +112,30 @@ internal sealed class Router
 
                 if (isLast)
                 {
-                    if (currentNode.Handlers.ContainsKey(route.HttpMethod))
+                    if (currentNode.Leaves.ContainsKey(route.HttpMethod))
                     {
                         throw new InvalidOperationException(
                             $"{route.HttpMethod.Method} {route} route is ambiguous"
                         );
                     }
 
-                    currentNode.Handlers[route.HttpMethod] = requestHandler;
+                    currentNode.Leaves[route.HttpMethod] = new(route, requestHandler);
                 }
             }
 
             if (route.Segments.Count is 0)
             {
-                if (root.Handlers.ContainsKey(route.HttpMethod))
+                if (_root.Leaves.ContainsKey(route.HttpMethod))
                 {
                     throw new InvalidOperationException(
                         $"index {route.HttpMethod.Method} route is ambiguous"
                     );
                 }
 
-                root.Handlers[route.HttpMethod] = requestHandler;
+                _root.Leaves[route.HttpMethod] = new(route, requestHandler);
             }
-        }
 
-        return root;
-    }
-
-    private IEnumerable<(T Element, bool IsLast)> EnumerateWithLastFlag<T>(IReadOnlyList<T> list)
-    {
-        int index = 0;
-        var lastIndex = list.Count - 1;
-
-        foreach (var element in list)
-        {
-            yield return (element, index++ == lastIndex);
+            return this;
         }
     }
 }
