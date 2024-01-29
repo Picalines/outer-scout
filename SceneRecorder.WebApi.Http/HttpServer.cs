@@ -122,11 +122,13 @@ public sealed partial class HttpServer : IDisposable
         IRequestHandler handler
     )
     {
-        using var _ = _services.RegisterInstance(request);
+        IResponse response;
 
-        var response = handler.Handle(request);
-
-        request.BodyReader.Dispose();
+        using (request.BodyReader)
+        using (_services.RegisterInstance(request))
+        {
+            response = handler.Handle(request);
+        }
 
         var isInternalError = response.StatusCode is HttpStatusCode.InternalServerError;
 
@@ -228,8 +230,8 @@ public sealed partial class HttpServer : IDisposable
 
     private void Log(string message, MessageType messageType)
     {
-        var modConsole = Singleton<IModConsole>.Instance;
+        var modConsole = _services.Resolve<IModConsole>();
 
-        modConsole.WriteLine($"{nameof(SceneRecorder)} API: {message}", messageType);
+        modConsole?.WriteLine($"{nameof(SceneRecorder)} API: {message}", messageType);
     }
 }
