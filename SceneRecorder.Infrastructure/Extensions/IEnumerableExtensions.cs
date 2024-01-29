@@ -20,4 +20,15 @@ public static class IEnumerableExtensions
             yield return (index++, value);
         }
     }
+
+    public static IEnumerable<(T Item, bool IsLast)> WithIsLast<T>(this IReadOnlyList<T> list)
+    {
+        int index = 0;
+        var lastIndex = list.Count - 1;
+
+        foreach (var element in list)
+        {
+            yield return (element, index++ == lastIndex);
+        }
+    }
 }
