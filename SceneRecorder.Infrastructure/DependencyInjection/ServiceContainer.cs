@@ -6,11 +6,6 @@ public sealed class ServiceContainer : IDisposable
 
     private bool _disposed = false;
 
-    public ServiceContainer()
-    {
-        RegisterInstance(this);
-    }
-
     public object? Resolve(Type serviceType)
     {
         return ResolveLastService(serviceType)?.GetInstance();
@@ -22,22 +17,21 @@ public sealed class ServiceContainer : IDisposable
         return (ResolveLastService(typeof(T)) as IService<T>)?.GetInstance();
     }
 
-    public IDisposable RegisterInstance<T>(T instance)
+    public IDisposable RegisterService<T>(IService<T> service)
         where T : class
     {
-        return RegisterService(new SingletonService<T>(instance));
-    }
+        AssertNotDisposed();
 
-    public IDisposable RegisterFactory<T>(Func<T> instanceFactory)
-        where T : class
-    {
-        return RegisterService(new FactoryService<T>(instanceFactory));
-    }
+        var serviceType = typeof(T);
 
-    public IDisposable RegisterLazy<T>(Lazy<T> lazyInstance)
-        where T : class
-    {
-        return RegisterService(new LazyService<T>(lazyInstance));
+        if (_services.TryGetValue(serviceType, out var serviceList) is false)
+        {
+            _services[serviceType] = serviceList = [];
+        }
+
+        serviceList.Add(service);
+
+        return new ServiceDisposer(serviceList, service);
     }
 
     public void Dispose()
@@ -69,23 +63,6 @@ public sealed class ServiceContainer : IDisposable
             : null;
     }
 
-    private IDisposable RegisterService<T>(IService<T> service)
-        where T : class
-    {
-        AssertNotDisposed();
-
-        var serviceType = typeof(T);
-
-        if (_services.TryGetValue(serviceType, out var serviceList) is false)
-        {
-            _services[serviceType] = serviceList = [];
-        }
-
-        serviceList.Add(service);
-
-        return new ServiceDisposer(serviceList, service);
-    }
-
     private void AssertNotDisposed()
     {
         if (_disposed)
@@ -113,52 +90,6 @@ public sealed class ServiceContainer : IDisposable
             serviceList.Remove(service);
 
             (service as IDisposable)?.Dispose();
-        }
-    }
-}
-
-internal interface IService<out T>
-    where T : class
-{
-    public T GetInstance();
-}
-
-internal sealed class SingletonService<T>(T instance) : IService<T>, IDisposable
-    where T : class
-{
-    public T GetInstance()
-    {
-        return instance;
-    }
-
-    public void Dispose()
-    {
-        (instance as IDisposable)?.Dispose();
-    }
-}
-
-internal sealed class FactoryService<T>(Func<T> instanceFactory) : IService<T>
-    where T : class
-{
-    public T GetInstance()
-    {
-        return instanceFactory.Invoke();
-    }
-}
-
-internal sealed class LazyService<T>(Lazy<T> lazyInstance) : IService<T>, IDisposable
-    where T : class
-{
-    public T GetInstance()
-    {
-        return lazyInstance.Value;
-    }
-
-    public void Dispose()
-    {
-        if (lazyInstance.IsValueCreated)
-        {
-            (lazyInstance.Value as IDisposable)?.Dispose();
         }
     }
 }
