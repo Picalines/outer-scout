@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using SceneRecorder.Infrastructure.Validation;
 using UnityEngine;
 
@@ -9,13 +10,11 @@ internal sealed class SceneSingleton<T> : MonoBehaviour
 
     private static Func<T>? _instanceFactory = null;
 
-    private readonly T _instance;
+    private T _instance = default!;
 
     private SceneSingleton()
     {
         _instanceFactory.ThrowIfNull();
-
-        _instance = _instanceFactory();
 
         gameObject.name = $"{nameof(SceneRecorder)}.{nameof(SceneSingleton<T>)}";
     }
@@ -24,6 +23,8 @@ internal sealed class SceneSingleton<T> : MonoBehaviour
     {
         _singletonInstance = null;
     }
+
+    public static bool IsConfigured => _instanceFactory is not null;
 
     public static void ProvideFactory(Func<T> instanceFactory)
     {
@@ -48,7 +49,14 @@ internal sealed class SceneSingleton<T> : MonoBehaviour
                 );
             }
 
-            _singletonInstance ??= new GameObject().AddComponent<SceneSingleton<T>>();
+            if (_singletonInstance is null)
+            {
+                var instance = _instanceFactory();
+
+                _singletonInstance = new GameObject().AddComponent<SceneSingleton<T>>();
+
+                _singletonInstance._instance = instance;
+            }
 
             return _singletonInstance._instance;
         }
