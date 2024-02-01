@@ -1,7 +1,11 @@
-﻿using SceneRecorder.WebApi.DTOs;
+﻿using SceneRecorder.Application.Animation;
+using SceneRecorder.Domain;
+using SceneRecorder.Infrastructure.Extensions;
+using SceneRecorder.WebApi.DTOs;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
+using UnityEngine;
 
 namespace SceneRecorder.WebApi.RouteMappers;
 
@@ -13,77 +17,71 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
 
     private KeyframesRouteMapper() { }
 
-    public void MapRoutes(HttpServerBuilder serverBuilder, IRouteMapper.IContext context)
+    public void MapRoutes(HttpServer.Builder serverBuilder)
     {
-        using var gameScenePrecondition = serverBuilder.UseInPlayableScenePrecondition();
-        using var ableToRecordPrecondition = serverBuilder.UsePrecondition(request =>
+        using (serverBuilder.UseInPlayableSceneFilter())
         {
-            return context.OutputRecorder.IsAbleToRecord ? null : ServiceUnavailable();
-        });
+            serverBuilder.MapPut(
+                "gameObjects/:name/transform/keyframes",
+                PutGameObjectTransformKeyframes
+            );
 
-        MapAnimatorRoutes(
-            serverBuilder,
-            "free-camera/transform",
-            () => context.OutputRecorder.FreeCameraTransformAnimator
-        );
+            serverBuilder.MapPut("cameras/:id/transform/keyframes", PutCameraTransformKeyframes);
 
-        MapAnimatorRoutes(
-            serverBuilder,
-            "free-camera/camera-info",
-            () => context.OutputRecorder.FreeCameraInfoAnimator
-        );
-
-        MapAnimatorRoutes(
-            serverBuilder,
-            "hdri-pivot/transform",
-            () => context.OutputRecorder.HdriTransformAnimator
-        );
-
-        MapAnimatorRoutes(
-            serverBuilder,
-            "time/scale",
-            () => context.OutputRecorder.TimeScaleAnimator
-        );
+            serverBuilder.MapPut("cameras/:id/perspective-info/keyframes", null!);
+        }
     }
 
-    private void MapAnimatorRoutes<T>(
-        HttpServerBuilder serverBuilder,
-        string routePrefix,
-        Func<IAnimator<T>?> getAnimator
+    private static IResponse PutGameObjectTransformKeyframes(
+        string name,
+        [FromBody] SetKeyframesRequest<TransformDTO> request
     )
     {
-        serverBuilder.MapPut(
-            $"{routePrefix}/keyframes",
-            (SetKeyframesRequest<T> request) =>
-            {
-                if (getAnimator() is not { } animator)
-                {
-                    return NotFound("animator not found");
-                }
+        if (GameObject.Find(name).OrNull() is not { } gameObject)
+        {
+            return NotFound();
+        }
 
-                var newValues = request.Values;
-                var fromFrame = request.FromFrame;
-                var allFrameNumbers = animator.GetFrameNumbers();
+        // TODO: get or create animator, save it to Builder
+        Animator<TransformDTO> animator = null!;
 
-                if (allFrameNumbers.Contains(fromFrame) is false)
-                {
-                    return BadRequest("invalid start frame");
-                }
+        return SetKeyframes(animator, request);
+    }
 
-                var toFrame = fromFrame + newValues.Length - 1;
+    private static IResponse PutCameraTransformKeyframes(
+        string id,
+        [FromBody] SetKeyframesRequest<TransformDTO> request
+    )
+    {
+        throw new NotImplementedException();
+    }
 
-                if (allFrameNumbers.Contains(toFrame) is false)
-                {
-                    return BadRequest("frame range out of bounds");
-                }
+    private static IResponse PutCameraPerspectiveKeyframes(
+        string id,
+        [FromBody] SetKeyframesRequest<PerspectiveSceneCameraDTO> request
+    )
+    {
+        throw new NotImplementedException();
+    }
 
-                for (int frame = fromFrame; frame <= toFrame; frame++)
-                {
-                    animator.SetValueAtFrame(frame, newValues[frame - fromFrame]);
-                }
+    private static IResponse SetKeyframes<T>(Animator<T> animator, SetKeyframesRequest<T> request)
+    {
+        var newValues = request.Values;
+        var fromFrame = request.FromFrame;
 
-                return Ok();
-            }
-        );
+        var animatorFrameRange = animator.Keyframes.FrameRange;
+        var requestFrameRange = IntRange.FromCount(request.FromFrame, newValues.Length);
+
+        if (animatorFrameRange.Contains(requestFrameRange) is false)
+        {
+            return BadRequest("invalid frame range");
+        }
+
+        foreach (var (index, frame) in requestFrameRange.Indexed())
+        {
+            animator.Keyframes.SetKeyframe(frame, newValues[index]);
+        }
+
+        return Ok();
     }
 }
