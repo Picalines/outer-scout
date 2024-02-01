@@ -1,4 +1,5 @@
-﻿using SceneRecorder.Infrastructure.Extensions;
+﻿using SceneRecorder.Application.Extensions;
+using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.WebApi.DTOs;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
@@ -15,37 +16,40 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
 
     private GroundBodyRouteMapper() { }
 
-    public void MapRoutes(HttpServerBuilder serverBuilder, IRouteMapper.IContext context)
+    public void MapRoutes(HttpServer.Builder serverBuilder)
     {
-        using var precondition = serverBuilder.UseInPlayableScenePrecondition();
+        using (serverBuilder.UseInPlayableSceneFilter())
+        {
+            serverBuilder.MapGet("player/ground-body", GetPlayerGroundBody);
 
-        serverBuilder.MapGet(
-            "player/ground-body",
-            () =>
-                LocatorExtensions.GetCurrentGroundBody() switch
-                {
-                    { name: var name, transform: var transform }
-                        => Ok(
-                            new GameObjectDTO
-                            {
-                                Name = name,
-                                Path = transform.GetPath(),
-                                Transform = TransformDTO.FromGlobal(transform)
-                            }
-                        ),
-                    _ => NotFound(),
-                }
-        );
+            serverBuilder.MapGet("gameObjects/:name/mesh", GetGameObjectMesh);
+        }
+    }
 
-        serverBuilder.MapGet(
-            "player/ground-body/meshes",
-            () =>
-                LocatorExtensions.GetCurrentGroundBody() switch
-                {
-                    { } groundBody => Ok(GetBodyMeshDTO(groundBody)),
-                    _ => NotFound(),
-                }
-        );
+    private static IResponse GetPlayerGroundBody()
+    {
+        return LocatorExtensions.GetCurrentGroundBody() switch
+        {
+            { name: var name, transform: var transform }
+                => Ok(
+                    new GameObjectDTO
+                    {
+                        Name = name,
+                        Path = transform.GetPath(),
+                        Transform = TransformDTO.FromGlobal(transform)
+                    }
+                ),
+            _ => NotFound(),
+        };
+    }
+
+    private static IResponse GetGameObjectMesh(string name)
+    {
+        return GameObject.Find(name).OrNull() switch
+        {
+            { } gameObject => Ok(GetBodyMeshDTO(gameObject)),
+            _ => NotFound(),
+        };
     }
 
     private static BodyMeshDTO GetBodyMeshDTO(GameObject body)
