@@ -47,12 +47,26 @@ public sealed class WebApiServer : IDisposable
         _services.Dispose();
     }
 
+    private void MapRoutes(HttpServer.Builder serverBuilder)
+    {
+        foreach (var mapper in _RouteMappers)
+        {
+            mapper.MapRoutes(serverBuilder);
+        }
+
+        serverBuilder.MapGet("", () => $"Welcome to Outer Wilds {nameof(SceneRecorder)} API!");
+
+        serverBuilder.MapGet("api-status", () => new { Available = true });
+    }
+
     private static ServiceContainer CreateServiceContainer()
     {
         var modConfig = Singleton<IModConfig>.Instance;
         var modConsole = Singleton<IModConsole>.Instance;
 
         var services = new ServiceContainer();
+
+        services.RegisterInstance(services);
 
         services.RegisterInstance<IModConsole>(
             modConfig.GetEnableApiInfoLogsSetting()
@@ -77,17 +91,5 @@ public sealed class WebApiServer : IDisposable
         );
 
         return services;
-    }
-
-    private void MapRoutes(HttpServer.Builder serverBuilder)
-    {
-        foreach (var mapper in _RouteMappers)
-        {
-            mapper.MapRoutes(serverBuilder);
-        }
-
-        serverBuilder.MapGet("", () => $"Welcome to Outer Wilds {nameof(SceneRecorder)} API!");
-
-        serverBuilder.MapGet("api-status", () => new { Available = true });
     }
 }
