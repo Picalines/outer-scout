@@ -44,7 +44,7 @@ public sealed partial class HttpServer
             Map(HttpMethod.Delete, path, handler);
         }
 
-        public IDisposable UseFilter(Func<Request, IResponse?> filter)
+        public IDisposable WithFilter(Func<Request, IResponse?> filter)
         {
             return new RequestFiler(_filterStack, filter);
         }
@@ -86,7 +86,7 @@ public sealed partial class HttpServer
                 }
             );
 
-            wrappedHandler = new FilteredRequestHandler(wrappedHandler);
+            wrappedHandler = new SafeRequestHandler(wrappedHandler);
 
             _routerBuilder.WithRoute(route, wrappedHandler);
         }
@@ -139,12 +139,7 @@ public sealed partial class HttpServer
 
                 _disposed = true;
 
-                _filterStack.TryPop(out var poppedFilter);
-
-                if (poppedFilter != this)
-                {
-                    throw new InvalidOperationException($"invalid use of {nameof(UseFilter)}");
-                }
+                while (_filterStack.TryPop(out var filter) && filter != this) { }
             }
         }
     }

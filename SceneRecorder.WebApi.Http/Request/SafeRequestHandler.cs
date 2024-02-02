@@ -4,11 +4,11 @@ using SceneRecorder.WebApi.Http.Response;
 
 namespace SceneRecorder.WebApi.Http;
 
-internal sealed class FilteredRequestHandler : IRequestHandler
+internal sealed class SafeRequestHandler : IRequestHandler
 {
     private readonly IRequestHandler _requestHandler;
 
-    public FilteredRequestHandler(IRequestHandler requestHandler)
+    public SafeRequestHandler(IRequestHandler requestHandler)
     {
         _requestHandler = requestHandler;
     }
