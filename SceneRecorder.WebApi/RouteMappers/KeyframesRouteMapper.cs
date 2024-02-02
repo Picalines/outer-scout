@@ -19,7 +19,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
 
     public void MapRoutes(HttpServer.Builder serverBuilder)
     {
-        using (serverBuilder.UseInPlayableSceneFilter())
+        using (serverBuilder.WithPlayableSceneFilter())
         {
             serverBuilder.MapPut(
                 "gameObjects/:name/transform/keyframes",
