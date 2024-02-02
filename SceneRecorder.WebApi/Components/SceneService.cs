@@ -4,13 +4,13 @@ namespace SceneRecorder.WebApi.Components;
 
 internal sealed class SceneService<T>(Func<T> instanceFactory) : IService<T>, IDisposable
 {
-    private ApiResource<T>? _resource = null;
+    private SceneResource<T>? _resource = null;
 
     public T GetInstance()
     {
         if (_resource is not { IsAccessable: true })
         {
-            _resource = ApiResource<T>.CreateGlobal(instanceFactory());
+            _resource = SceneResource<T>.CreateGlobal(instanceFactory());
         }
 
         return _resource.Value;

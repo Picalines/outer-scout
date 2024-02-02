@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace SceneRecorder.WebApi.Components;
 
-internal sealed class ApiResource<T> : InitializedBehaviour<T>, IDisposable
+internal sealed class SceneResource<T> : InitializedBehaviour<T>, IDisposable
 {
     private T _value;
 
@@ -11,17 +11,17 @@ internal sealed class ApiResource<T> : InitializedBehaviour<T>, IDisposable
 
     private bool _destroyed = false;
 
-    private ApiResource()
+    private SceneResource()
         : base(out T value)
     {
         _value = value;
     }
 
-    public static ApiResource<T> CreateGlobal(T value)
+    public static SceneResource<T> CreateGlobal(T value)
     {
-        var gameObject = new GameObject($"{nameof(SceneRecorder)}.{nameof(ApiResource<T>)}");
+        var gameObject = new GameObject($"{nameof(SceneRecorder)}.{nameof(SceneResource<T>)}");
 
-        var resource = gameObject.AddComponent<ApiResource<T>, T>(value);
+        var resource = gameObject.AddComponent<SceneResource<T>, T>(value);
 
         resource._destroyGameObject = true;
 
@@ -34,7 +34,7 @@ internal sealed class ApiResource<T> : InitializedBehaviour<T>, IDisposable
         {
             if (_destroyed)
             {
-                throw new InvalidOperationException($"{nameof(ApiResource<T>)} is destroyed");
+                throw new InvalidOperationException($"{nameof(SceneResource<T>)} is destroyed");
             }
 
             return _value;
