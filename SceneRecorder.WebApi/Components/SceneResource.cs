@@ -11,10 +11,14 @@ internal sealed class SceneResource<T> : InitializedBehaviour<T>, IDisposable
 
     private bool _destroyed = false;
 
+    private static HashSet<SceneResource<T>> _instances = [];
+
     private SceneResource()
         : base(out T value)
     {
         _value = value;
+
+        _instances.Add(this);
     }
 
     public static SceneResource<T> CreateGlobal(T value)
@@ -26,6 +30,11 @@ internal sealed class SceneResource<T> : InitializedBehaviour<T>, IDisposable
         resource._destroyGameObject = true;
 
         return resource;
+    }
+
+    public static IEnumerable<SceneResource<T>> Instances
+    {
+        get => _instances;
     }
 
     public T Value
@@ -58,10 +67,15 @@ internal sealed class SceneResource<T> : InitializedBehaviour<T>, IDisposable
 
     private void OnDestroy()
     {
+        if (_destroyed)
+        {
+            return;
+        }
+
+        _instances.Remove(this);
         _destroyed = true;
 
         (_value as IDisposable)?.Dispose();
-
         _value = default!;
     }
 }

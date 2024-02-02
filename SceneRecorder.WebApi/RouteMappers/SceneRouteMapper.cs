@@ -57,16 +57,12 @@ internal sealed class SceneRouteMapper : IRouteMapper
 
     private static void DisposeResources()
     {
-        GameObject
-            .FindObjectsOfType<SceneResource<IAnimator>>()
-            .ForEach(resource => resource.Dispose());
+        SceneResource<IAnimator>.Instances.ForEach(resource => resource.Dispose());
 
-        GameObject
-            .FindObjectsOfType<SceneResource<ISceneCamera>>()
-            .ForEach(sceneCameraResource =>
-            {
-                sceneCameraResource.Dispose();
-                UnityEngine.Object.Destroy(sceneCameraResource.gameObject);
-            });
+        SceneResource<ISceneCamera>.Instances.ForEach(resource =>
+        {
+            resource.Dispose();
+            UnityEngine.Object.Destroy(resource.gameObject);
+        });
     }
 }
