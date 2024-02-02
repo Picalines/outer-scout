@@ -3,10 +3,16 @@ using Newtonsoft.Json;
 using OWML.Common;
 using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Extensions;
+using SceneRecorder.WebApi.Components;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.RouteMappers;
 
 namespace SceneRecorder.WebApi;
+
+using SceneRecorder.Application.Extensions;
+using SceneRecorder.Application.Recording;
+using SceneRecorder.Domain;
+using SceneRecorder.Infrastructure.Validation;
 
 public sealed class WebApiServer : IDisposable
 {
@@ -89,6 +95,20 @@ public sealed class WebApiServer : IDisposable
                 },
             }
         );
+
+        services.RegisterSceneInstance<ResettableLazy<SceneRecorder.Builder>>(() =>
+        {
+            LocatorExtensions.IsInPlayableScene().Throw().IfFalse();
+
+            return ResettableLazy.Of<SceneRecorder.Builder>();
+        });
+
+        services.RegisterFactory<SceneRecorder.Builder>(() =>
+        {
+            var lazy = services.Resolve<ResettableLazy<SceneRecorder.Builder>>();
+            lazy.ThrowIfNull();
+            return lazy.Value;
+        });
 
         return services;
     }
