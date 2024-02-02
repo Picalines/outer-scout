@@ -28,7 +28,10 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
 
             serverBuilder.MapPut("cameras/:id/transform/keyframes", PutCameraTransformKeyframes);
 
-            serverBuilder.MapPut("cameras/:id/perspective-info/keyframes", null!);
+            serverBuilder.MapPut(
+                "cameras/:id/perspective-info/keyframes",
+                PutCameraPerspectiveKeyframes
+            );
         }
     }
 
