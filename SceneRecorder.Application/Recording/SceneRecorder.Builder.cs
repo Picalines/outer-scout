@@ -25,6 +25,11 @@ public sealed partial class SceneRecorder
             );
         }
 
+        public IntRange FrameRange
+        {
+            get => _frameRange;
+        }
+
         public Builder WithFrameRange(IntRange frameRange)
         {
             _frameRange = frameRange;
