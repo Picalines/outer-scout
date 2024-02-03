@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace SceneRecorder.Application.SceneCameras;
 
-public interface ISceneCamera
+public interface ISceneCamera : IDisposable
 {
     public string Id { get; }
 

@@ -30,6 +30,8 @@ public sealed class PerspectiveSceneCamera
     private RenderTexture _colorTexture = null!;
     private RenderTexture _depthTexture = null!;
 
+    private bool _disposed = false;
+
     private PerspectiveSceneCamera()
         : base(out var parameters)
     {
@@ -119,5 +121,17 @@ public sealed class PerspectiveSceneCamera
         Destroy(_colorTexture);
         Destroy(_depthTexture);
         Destroy(_depthCamera.gameObject);
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
+        Destroy(gameObject);
     }
 }
