@@ -1,4 +1,5 @@
 using SceneRecorder.Infrastructure.DependencyInjection;
+using SceneRecorder.Infrastructure.Extensions;
 using UnityEngine;
 
 namespace SceneRecorder.Domain;
@@ -7,6 +8,8 @@ public interface ISceneResource<out T> : IDisposable
     where T : class
 {
     public T Value { get; }
+
+    public bool IsAccessable { get; }
 
     internal void InternalOnly();
 }
@@ -95,5 +98,17 @@ public static class SceneResource
         where T : class
     {
         return Instances.OfType<ISceneResource<T>>().ToArray();
+    }
+
+    public static SceneResource<T> AddResource<T>(this GameObject gameObject, T value)
+        where T : class
+    {
+        return gameObject.AddComponent<SceneResource<T>, T>(value);
+    }
+
+    public static SceneResource<T>? GetResource<T>(this GameObject gameObject)
+        where T : class
+    {
+        return gameObject.GetComponent<SceneResource<T>>().OrNull();
     }
 }
