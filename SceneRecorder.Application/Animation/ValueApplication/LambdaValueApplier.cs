@@ -7,3 +7,9 @@ public sealed class LambdaValueApplier<T>(Action<T> apply) : IValueApplier<T>
         apply(value);
     }
 }
+
+public static partial class ValueApplier
+{
+    public static LambdaValueApplier<T> Lambda<T>(Action<T> apply) =>
+        new LambdaValueApplier<T>(apply);
+}
