@@ -16,6 +16,8 @@ public sealed class PerspectiveSceneCamera
         public required string Id { get; init; }
 
         public required Vector2Int Resolution { get; init; }
+
+        public required Camera.GateFitMode GateFit {get; init;}
     }
 
     public string Id { get; }
@@ -57,6 +59,7 @@ public sealed class PerspectiveSceneCamera
         );
 
         _colorCamera.mainCamera.usePhysicalProperties = true;
+        _colorCamera.mainCamera.gateFit = parameters.GateFit;
         _colorCamera.targetTexture = _colorTexture;
 
         _perspectiveInfo = _colorCamera.GetPerspectiveInfo();

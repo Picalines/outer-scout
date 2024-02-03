@@ -13,6 +13,4 @@ public record struct PerspectiveCameraInfo
     public required float NearClipPlane { get; init; }
 
     public required float FarClipPlane { get; init; }
-
-    public required Camera.GateFitMode GateFit { get; init; }
 }

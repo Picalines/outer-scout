@@ -15,8 +15,6 @@ internal record struct PerspectiveCameraInfoDTO
 
     public required float FarClipPlane { get; init; }
 
-    public required Camera.GateFitMode GateFit { get; init; }
-
     public PerspectiveCameraInfo ToCameraInfo()
     {
         return new()
@@ -26,7 +24,6 @@ internal record struct PerspectiveCameraInfoDTO
             LensShift = LensShift,
             NearClipPlane = NearClipPlane,
             FarClipPlane = FarClipPlane,
-            GateFit = GateFit,
         };
     }
 }

@@ -20,7 +20,6 @@ public static class OWCameraExtensions
             LensShift = camera.lensShift,
             NearClipPlane = camera.nearClipPlane,
             FarClipPlane = camera.farClipPlane,
-            GateFit = camera.gateFit,
         };
     }
 
@@ -36,7 +35,6 @@ public static class OWCameraExtensions
         camera.focalLength = cameraInfo.FocalLength;
         camera.sensorSize = cameraInfo.SensorSize;
         camera.lensShift = cameraInfo.LensShift;
-        camera.gateFit = cameraInfo.GateFit;
 
         owCamera.nearClipPlane = cameraInfo.NearClipPlane;
         owCamera.farClipPlane = cameraInfo.FarClipPlane;
@@ -72,6 +70,8 @@ public static class OWCameraExtensions
         newOWCamera.mainCamera.usePhysicalProperties = sourceOWCamera
             .mainCamera
             .usePhysicalProperties;
+
+        newOWCamera.mainCamera.gateFit = sourceOWCamera.mainCamera.gateFit;
 
         newOWCamera.backgroundColor = sourceOWCamera.backgroundColor;
         newOWCamera.clearFlags = sourceOWCamera.clearFlags;

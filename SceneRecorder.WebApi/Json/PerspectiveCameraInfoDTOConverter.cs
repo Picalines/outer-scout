@@ -3,10 +3,11 @@ using UnityEngine;
 
 namespace SceneRecorder.WebApi.DTOs.Json;
 
-internal sealed class PerspectiveCameraInfoDTOConverter : NumberArrayConverter<PerspectiveCameraInfoDTO>
+internal sealed class PerspectiveCameraInfoDTOConverter
+    : NumberArrayConverter<PerspectiveCameraInfoDTO>
 {
     public PerspectiveCameraInfoDTOConverter()
-        : base(8) { }
+        : base(7) { }
 
     protected override PerspectiveCameraInfoDTO ReadJson(ReadOnlySpan<float> array)
     {
@@ -17,7 +18,6 @@ internal sealed class PerspectiveCameraInfoDTOConverter : NumberArrayConverter<P
             LensShift = new Vector2(array[3], array[4]),
             NearClipPlane = array[5],
             FarClipPlane = array[6],
-            GateFit = (Camera.GateFitMode)(int)array[7],
         };
     }
 
@@ -30,7 +30,5 @@ internal sealed class PerspectiveCameraInfoDTOConverter : NumberArrayConverter<P
 
         array[5] = value.NearClipPlane;
         array[6] = value.FarClipPlane;
-
-        array[7] = (int)value.GateFit;
     }
 }
