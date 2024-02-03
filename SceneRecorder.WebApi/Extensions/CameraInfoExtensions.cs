@@ -14,7 +14,6 @@ internal static class CameraInfoExtensions
             LensShift = cameraInfo.LensShift,
             NearClipPlane = cameraInfo.NearClipPlane,
             FarClipPlane = cameraInfo.FarClipPlane,
-            GateFit = cameraInfo.GateFit,
         };
     }
 }
