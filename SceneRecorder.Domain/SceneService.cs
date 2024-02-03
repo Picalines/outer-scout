@@ -1,8 +1,8 @@
 using SceneRecorder.Infrastructure.DependencyInjection;
 
-namespace SceneRecorder.WebApi.Components;
+namespace SceneRecorder.Domain;
 
-internal sealed class SceneService<T>(Func<T> instanceFactory) : IService<T>, IDisposable
+public sealed class SceneService<T>(Func<T> instanceFactory) : IService<T>, IDisposable
 {
     private SceneResource<T>? _resource = null;
 
@@ -25,7 +25,7 @@ internal sealed class SceneService<T>(Func<T> instanceFactory) : IService<T>, ID
     }
 }
 
-internal static class SceneServiceExtensions
+public static class SceneServiceExtensions
 {
     public static IDisposable RegisterSceneInstance<T>(
         this ServiceContainer services,

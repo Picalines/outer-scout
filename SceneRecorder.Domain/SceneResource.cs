@@ -1,9 +1,18 @@
 using SceneRecorder.Infrastructure.DependencyInjection;
 using UnityEngine;
 
-namespace SceneRecorder.WebApi.Components;
+namespace SceneRecorder.Domain;
 
-internal sealed class SceneResource<T> : InitializedBehaviour<T>, IDisposable
+public interface ISceneResource<out T> : IDisposable
+    where T : class
+{
+    public T Value { get; }
+
+    internal void InternalOnly();
+}
+
+public sealed class SceneResource<T> : InitializedBehaviour<T>, ISceneResource<T>
+    where T : class
 {
     private T _value;
 
@@ -15,6 +24,8 @@ internal sealed class SceneResource<T> : InitializedBehaviour<T>, IDisposable
         : base(out T value)
     {
         _value = value;
+
+        SceneResource.Instances.Add(this);
     }
 
     public static SceneResource<T> CreateGlobal(T value)
@@ -58,10 +69,31 @@ internal sealed class SceneResource<T> : InitializedBehaviour<T>, IDisposable
 
     private void OnDestroy()
     {
+        if (_destroyed)
+        {
+            return;
+        }
+
         _destroyed = true;
+        SceneResource.Instances.Remove(this);
 
         (_value as IDisposable)?.Dispose();
-
         _value = default!;
+    }
+
+    void ISceneResource<T>.InternalOnly()
+    {
+        throw new NotImplementedException();
+    }
+}
+
+public static class SceneResource
+{
+    internal static HashSet<ISceneResource<object>> Instances { get; } = [];
+
+    public static IEnumerable<ISceneResource<T>> FindInstances<T>()
+        where T : class
+    {
+        return Instances.OfType<ISceneResource<T>>().ToArray();
     }
 }
