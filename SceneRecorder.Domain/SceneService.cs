@@ -1,16 +1,22 @@
 using SceneRecorder.Infrastructure.DependencyInjection;
+using UnityEngine;
 
 namespace SceneRecorder.Domain;
 
 public sealed class SceneService<T>(Func<T> instanceFactory) : IService<T>, IDisposable
+    where T : class
 {
-    private SceneResource<T>? _resource = null;
+    private ISceneResource<T>? _resource = null;
 
     public T GetInstance()
     {
         if (_resource is not { IsAccessable: true })
         {
-            _resource = SceneResource<T>.CreateGlobal(instanceFactory());
+            var resourceValue = instanceFactory();
+
+            var gameObject = new GameObject($"{nameof(SceneRecorder)}.{nameof(SceneService<T>)}");
+
+            _resource = gameObject.AddResource(resourceValue);
         }
 
         return _resource.Value;
@@ -18,9 +24,10 @@ public sealed class SceneService<T>(Func<T> instanceFactory) : IService<T>, IDis
 
     public void Dispose()
     {
-        if (_resource is { IsAccessable: true } and IDisposable disposable)
+        if (_resource is { IsAccessable: true } and MonoBehaviour { gameObject: var gameObject })
         {
-            disposable.Dispose();
+            _resource.Dispose();
+            UnityEngine.Object.Destroy(gameObject);
         }
     }
 }

@@ -14,32 +14,83 @@ public interface ISceneResource<out T> : IDisposable
     internal void InternalOnly();
 }
 
-public sealed class SceneResource<T> : InitializedBehaviour<T>, ISceneResource<T>
+public static class SceneResource
+{
+    internal static HashSet<ISceneResource<object>> Instances { get; } = [];
+
+    internal static Dictionary<string, ISceneResource<object>> InstancesById = [];
+
+    public static ISceneResource<T> AddResource<T>(
+        this GameObject gameObject,
+        T value,
+        string? uniqueId = null
+    )
+        where T : class
+    {
+        if (uniqueId is not null && InstancesById.ContainsKey(uniqueId))
+        {
+            throw new ArgumentException(
+                $"{nameof(SceneResource<T>)} {uniqueId} already exists",
+                nameof(uniqueId)
+            );
+        }
+
+        return gameObject.AddComponent<SceneResource<T>, SceneResource<T>.Parameters>(
+            new() { Value = value, Id = uniqueId }
+        );
+    }
+
+    public static ISceneResource<T>? GetResource<T>(this GameObject gameObject)
+        where T : class
+    {
+        return gameObject.GetComponent<SceneResource<T>>().OrNull();
+    }
+
+    public static IEnumerable<ISceneResource<T>> Find<T>()
+        where T : class
+    {
+        return Instances.OfType<ISceneResource<T>>().ToArray();
+    }
+
+    public static ISceneResource<T>? Find<T>(string id)
+        where T : class
+    {
+        return InstancesById.TryGetValue(id, out var resource)
+            ? resource as ISceneResource<T>
+            : null;
+    }
+}
+
+internal sealed class SceneResource<T>
+    : InitializedBehaviour<SceneResource<T>.Parameters>,
+        ISceneResource<T>
     where T : class
 {
+    public struct Parameters
+    {
+        public required T Value { get; init; }
+
+        public required string? Id { get; init; }
+    }
+
     private T _value;
 
-    private bool _destroyGameObject = false;
+    private readonly string? _id;
 
     private bool _destroyed = false;
 
     private SceneResource()
-        : base(out T value)
+        : base(out var parameters)
     {
-        _value = value;
+        _value = parameters.Value;
+        _id = parameters.Id;
 
         SceneResource.Instances.Add(this);
-    }
 
-    public static SceneResource<T> CreateGlobal(T value)
-    {
-        var gameObject = new GameObject($"{nameof(SceneRecorder)}.{nameof(SceneResource<T>)}");
-
-        var resource = gameObject.AddComponent<SceneResource<T>, T>(value);
-
-        resource._destroyGameObject = true;
-
-        return resource;
+        if (_id is not null)
+        {
+            SceneResource.InstancesById[_id] = this;
+        }
     }
 
     public T Value
@@ -67,7 +118,7 @@ public sealed class SceneResource<T> : InitializedBehaviour<T>, ISceneResource<T
             return;
         }
 
-        Destroy(_destroyGameObject ? gameObject : this);
+        Destroy(this);
     }
 
     private void OnDestroy()
@@ -79,6 +130,10 @@ public sealed class SceneResource<T> : InitializedBehaviour<T>, ISceneResource<T
 
         _destroyed = true;
         SceneResource.Instances.Remove(this);
+        if (_id is not null)
+        {
+            SceneResource.InstancesById.Remove(_id);
+        }
 
         (_value as IDisposable)?.Dispose();
         _value = default!;
@@ -87,28 +142,5 @@ public sealed class SceneResource<T> : InitializedBehaviour<T>, ISceneResource<T
     void ISceneResource<T>.InternalOnly()
     {
         throw new NotImplementedException();
-    }
-}
-
-public static class SceneResource
-{
-    internal static HashSet<ISceneResource<object>> Instances { get; } = [];
-
-    public static IEnumerable<ISceneResource<T>> FindInstances<T>()
-        where T : class
-    {
-        return Instances.OfType<ISceneResource<T>>().ToArray();
-    }
-
-    public static SceneResource<T> AddResource<T>(this GameObject gameObject, T value)
-        where T : class
-    {
-        return gameObject.AddComponent<SceneResource<T>, T>(value);
-    }
-
-    public static SceneResource<T>? GetResource<T>(this GameObject gameObject)
-        where T : class
-    {
-        return gameObject.GetComponent<SceneResource<T>>().OrNull();
     }
 }
