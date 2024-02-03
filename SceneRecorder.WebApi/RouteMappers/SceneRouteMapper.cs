@@ -1,13 +1,9 @@
-using SceneRecorder.Application.Animation;
-using SceneRecorder.Application.SceneCameras;
 using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.WebApi.Components;
 using SceneRecorder.WebApi.DTOs;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
-using UnityEngine;
 
 namespace SceneRecorder.WebApi.RouteMappers;
 
@@ -39,7 +35,8 @@ internal sealed class SceneRouteMapper : IRouteMapper
         }
 
         lazyBuilder.Reset();
-        DisposeResources();
+
+        SceneResource.FindInstances<object>().ForEach(resource => resource.Dispose());
 
         var sceneRecorderBuilder = lazyBuilder.Value;
 
@@ -53,20 +50,5 @@ internal sealed class SceneRouteMapper : IRouteMapper
         }
 
         return Ok();
-    }
-
-    private static void DisposeResources()
-    {
-        GameObject
-            .FindObjectsOfType<SceneResource<IAnimator>>()
-            .ForEach(resource => resource.Dispose());
-
-        GameObject
-            .FindObjectsOfType<SceneResource<ISceneCamera>>()
-            .ForEach(sceneCameraResource =>
-            {
-                sceneCameraResource.Dispose();
-                UnityEngine.Object.Destroy(sceneCameraResource.gameObject);
-            });
     }
 }
