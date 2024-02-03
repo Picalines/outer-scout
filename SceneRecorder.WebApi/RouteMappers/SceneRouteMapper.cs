@@ -38,8 +38,8 @@ internal sealed class SceneRouteMapper : IRouteMapper
 
         lazyBuilder.Reset();
 
-        SceneResource.FindInstances<IAnimator>().ForEach(resource => resource.Dispose());
-        SceneResource.FindInstances<ISceneCamera>().ForEach(resource => resource.Dispose());
+        SceneResource.Find<IAnimator>().ForEach(resource => resource.Dispose());
+        SceneResource.Find<ISceneCamera>().ForEach(resource => resource.Dispose());
 
         var sceneRecorderBuilder = lazyBuilder.Value;
 
