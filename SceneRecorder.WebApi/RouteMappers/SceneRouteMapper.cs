@@ -1,3 +1,5 @@
+using SceneRecorder.Application.Animation;
+using SceneRecorder.Application.SceneCameras;
 using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.WebApi.DTOs;
@@ -36,7 +38,8 @@ internal sealed class SceneRouteMapper : IRouteMapper
 
         lazyBuilder.Reset();
 
-        SceneResource.FindInstances<object>().ForEach(resource => resource.Dispose());
+        SceneResource.FindInstances<IAnimator>().ForEach(resource => resource.Dispose());
+        SceneResource.FindInstances<ISceneCamera>().ForEach(resource => resource.Dispose());
 
         var sceneRecorderBuilder = lazyBuilder.Value;
 
