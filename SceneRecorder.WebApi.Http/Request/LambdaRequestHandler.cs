@@ -124,7 +124,14 @@ internal sealed class LambdaRequestHandler : IRequestHandler
 
         public object? Bind(Request request)
         {
-            return request.RouteParameters.TryGetValue(paramName, out var paramValue)
+            var parameterSource = source switch
+            {
+                SourceType.Route => request.RouteParameters,
+                SourceType.Query => request.QueryParameters,
+                _ => throw new NotImplementedException(),
+            };
+
+            return parameterSource.TryGetValue(paramName, out var paramValue)
                 ? _typeConverter.ConvertFromString(paramValue)
                 : ResponseFabric.BadRequest(_badRequestMessage);
         }
