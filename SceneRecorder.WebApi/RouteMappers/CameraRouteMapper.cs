@@ -25,9 +25,17 @@ internal sealed class CameraRouteMapper : IRouteMapper
         {
             serverBuilder.MapPost("cameras", CreateSceneCamera);
 
-            serverBuilder.MapGet("active-camera/perspective", GetActiveCameraPerspective);
+            serverBuilder.MapGet("active-camera", GetActiveGamera);
 
-            serverBuilder.MapPut("active-camera/perspective", PutActiveCameraPerspective);
+            serverBuilder.MapGet(
+                "gameObjects/:name/camera/perspective",
+                GetGameObjectCameraPerspective
+            );
+
+            serverBuilder.MapPut(
+                "gameObjects/:name/camera/perspective",
+                PutGameObjectCameraPerspective
+            );
         }
     }
 
@@ -69,21 +77,32 @@ internal sealed class CameraRouteMapper : IRouteMapper
         return Ok();
     }
 
-    public static IResponse GetActiveCameraPerspective()
+    private static IResponse GetActiveGamera()
     {
         if (Locator.GetActiveCamera().OrNull() is not { } camera)
         {
             return ServiceUnavailable();
         }
 
+        return Ok(new { Name = camera.name, Perspective = camera.GetPerspective() });
+    }
+
+    private static IResponse GetGameObjectCameraPerspective(string name)
+    {
+        if (GameObject.Find(name).OrNull()?.GetComponent<OWCamera>().OrNull() is not { } camera)
+        {
+            return NotFound();
+        }
+
         return Ok(new { Perspective = camera.GetPerspective() });
     }
 
-    public static IResponse PutActiveCameraPerspective(
+    private static IResponse PutGameObjectCameraPerspective(
+        string name,
         [FromBody] CameraPerspectiveDTO perspectiveDTO
     )
     {
-        if (Locator.GetActiveCamera().OrNull() is not { } camera)
+        if (GameObject.Find(name).OrNull()?.GetComponent<OWCamera>().OrNull() is not { } camera)
         {
             return NotFound();
         }
