@@ -15,94 +15,101 @@ internal sealed class TransformRouteMapper : IRouteMapper
 
     private TransformRouteMapper() { }
 
-    public void MapRoutes(HttpServerBuilder serverBuilder, IRouteMapper.IContext context)
+    public void MapRoutes(HttpServer.Builder serverBuilder)
     {
-        using var precondition = serverBuilder.UseInPlayableScenePrecondition();
+        using (serverBuilder.WithPlayableSceneFilter())
+        using (serverBuilder.WithNotRecordingFilter())
+        {
+            serverBuilder.MapGet("gameObjects/:name/transform", GetGameObjectTransform);
 
-        MapTransformRoutes(
-            serverBuilder,
-            "free-camera",
-            true,
-            () => LocatorExtensions.GetFreeCamera()?.transform
-        );
-
-        MapTransformRoutes(
-            serverBuilder,
-            "player/body",
-            true,
-            () => Locator.GetPlayerBody().OrNull()?.transform
-        );
-
-        MapTransformRoutes(
-            serverBuilder,
-            "player/camera",
-            false,
-            () => Locator.GetPlayerCamera().OrNull()?.transform
-        );
+            serverBuilder.MapPut("gameObjects/:name/transform", PutGameObjectTransform);
+        }
     }
 
-    private void MapTransformRoutes(
-        HttpServerBuilder serverBuilder,
-        string routePrefix,
-        bool mutable,
-        Func<Transform?> getTransform
+    private static IResponse GetGameObjectTransform(string name, string parent)
+    {
+        if (GameObject.Find(name).OrNull() is not { transform: var transform })
+        {
+            return BadRequest();
+        }
+
+        if (GameObject.Find(parent).OrNull() is not { transform: var parentTransform })
+        {
+            return BadRequest();
+        }
+
+        var globalTransform = new TransformDTO()
+        {
+            Position = transform.position,
+            Rotation = transform.rotation,
+            Scale = transform.lossyScale,
+        };
+
+        var localTransform = new TransformDTO()
+        {
+            Parent = parentTransform.name,
+            Position = parentTransform.InverseTransformPoint(transform.position),
+            Rotation = transform.InverseTransformRotation(transform.rotation),
+            Scale = transform.lossyScale,
+        };
+
+        return Ok(new { Global = globalTransform, Local = localTransform, });
+    }
+
+    private static IResponse PutGameObjectTransform(
+        string name,
+        [FromBody] TransformDTO transformDTO
     )
     {
-        serverBuilder.MapGet(
-            $"{routePrefix}/transform",
-            (string localTo) =>
-            {
-                if (
-                    getTransform() is not { } entityTransform
-                    || GameObject.Find(localTo).OrNull() is not { transform: var origin }
-                )
-                {
-                    return NotFound();
-                }
-
-                return Ok(
-                    new
-                    {
-                        Origin = TransformDTO.FromGlobal(origin),
-                        Transform = TransformDTO.FromInverse(origin, entityTransform)
-                    }
-                );
-            }
-        );
-
-        if (mutable)
+        if (GameObject.Find(name).OrNull() is not { transform: var transform })
         {
-            serverBuilder.MapPut(
-                $"{routePrefix}/transform",
-                (SetTransformRequest request) =>
-                {
-                    if (getTransform() is not { } entityTransform)
-                    {
-                        return NotFound();
-                    }
-
-                    if (request.LocalTo is { } localTo)
-                    {
-                        if (GameObject.Find(localTo).OrNull() is not { } origin)
-                        {
-                            return NotFound();
-                        }
-
-                        var oldEntityParent = entityTransform.parent;
-                        entityTransform.parent = origin.transform;
-
-                        request.Transform.ApplyLocal(entityTransform);
-
-                        entityTransform.parent = oldEntityParent;
-                    }
-                    else
-                    {
-                        request.Transform.ApplyGlobal(entityTransform);
-                    }
-
-                    return Ok();
-                }
-            );
+            return BadRequest();
         }
+
+        if (transform == Locator.GetPlayerCamera().OrNull()?.transform)
+        {
+            return MethodNotAllowed();
+        }
+
+        var parentTransform = transformDTO.Parent is { } parentName
+            ? GameObject.Find(parentName).OrNull()?.transform
+            : null;
+
+        if ((transformDTO.Parent, parentTransform) is (not null, null))
+        {
+            return BadRequest();
+        }
+
+        if (parentTransform is null)
+        {
+            if (transformDTO.Position is { } globalPosition)
+            {
+                transform.position = globalPosition;
+            }
+
+            if (transformDTO.Rotation is { } globalRotation)
+            {
+                transform.rotation = globalRotation;
+            }
+        }
+        else
+        {
+            if (transformDTO.Position is { } localPosition)
+            {
+                transform.position = parentTransform.TransformPoint(localPosition);
+            }
+
+            if (transformDTO.Rotation is { } localRotation)
+            {
+                transform.rotation = parentTransform.rotation * localRotation;
+            }
+        }
+
+        if (transformDTO.Scale is { } localScale)
+        {
+            transform.localScale = localScale;
+        }
+
+        return Ok();
     }
 }
