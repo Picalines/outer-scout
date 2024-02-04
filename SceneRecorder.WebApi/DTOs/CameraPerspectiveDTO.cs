@@ -15,7 +15,7 @@ internal record struct CameraPerspectiveDTO
 
     public required float FarClipPlane { get; init; }
 
-    public CameraPerspective ToCameraInfo()
+    public CameraPerspective ToPerspective()
     {
         return new()
         {
