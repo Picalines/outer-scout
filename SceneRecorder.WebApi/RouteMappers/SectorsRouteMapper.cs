@@ -1,5 +1,5 @@
+using SceneRecorder.Application.Extensions;
 using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.WebApi.DTOs;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
@@ -14,33 +14,31 @@ internal sealed class SectorsRouteMapper : IRouteMapper
 
     private SectorsRouteMapper() { }
 
-    public void MapRoutes(HttpServerBuilder serverBuilder, IRouteMapper.IContext context)
+    public void MapRoutes(HttpServer.Builder serverBuilder)
     {
-        using var precondition = serverBuilder.UseInPlayableScenePrecondition();
+        using (serverBuilder.WithPlayableSceneFilter())
+        using (serverBuilder.WithNotRecordingFilter())
+        {
+            serverBuilder.MapGet("player/sectors", GetPlayerSectors);
+        }
+    }
 
-        serverBuilder.MapGet(
-            "player/sectors",
-            () =>
+    private static IResponse GetPlayerSectors()
+    {
+        var sectorDetector = Locator.GetPlayerDetector().OrNull()?.GetComponent<SectorDetector>();
+
+        if (sectorDetector is null)
+        {
+            return ServiceUnavailable();
+        }
+
+        return Ok(
+            new
             {
-                var sectorDetector = Locator
-                    .GetPlayerDetector()
-                    .OrNull()
-                    ?.GetComponent<SectorDetector>();
-
-                if (sectorDetector is null)
-                {
-                    return ServiceUnavailable();
-                }
-
-                return Ok(
-                    new CurrentSectorsResponse
-                    {
-                        Current = sectorDetector.GetLastEnteredSector().transform.GetPath(),
-                        Sectors = sectorDetector
-                            ._sectorList.Select(sector => sector.transform.GetPath())
-                            .ToArray(),
-                    }
-                );
+                Current = sectorDetector.GetLastEnteredSector().transform.GetPath(),
+                Sectors = sectorDetector
+                    ._sectorList.Select(sector => sector.transform.GetPath())
+                    .ToArray(),
             }
         );
     }
