@@ -4,11 +4,11 @@ namespace SceneRecorder.WebApi.DTOs;
 
 internal sealed class TransformDTO
 {
-    public string? Parent { get; init; } = null;
+    public string? Parent { get; init; }
 
-    public Vector3 Position { get; init; } = Vector3.zero;
+    public Vector3? Position { get; init; }
 
-    public Quaternion Rotation { get; init; } = Quaternion.identity;
+    public Quaternion? Rotation { get; init; }
 
-    public Vector3 Scale { get; init; } = Vector3.one;
+    public Vector3? Scale { get; init; }
 }

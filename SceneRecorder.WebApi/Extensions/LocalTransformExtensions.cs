@@ -10,9 +10,9 @@ internal static class LocalTransformExtensions
     {
         return new LocalTransform()
         {
-            Position = transformDTO.Position,
-            Rotation = transformDTO.Rotation,
-            Scale = transformDTO.Scale,
+            Position = transformDTO.Position ?? Vector3.zero,
+            Rotation = transformDTO.Rotation ?? Quaternion.identity,
+            Scale = transformDTO.Scale ?? Vector3.one,
             Parent = parent
         };
     }
