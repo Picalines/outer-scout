@@ -4,8 +4,6 @@ namespace SceneRecorder.Application.SceneCameras;
 
 public interface ISceneCamera : IDisposable
 {
-    public string Id { get; }
-
     public Transform Transform { get; }
 
     public RenderTexture? ColorTexture { get; }

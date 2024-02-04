@@ -1,6 +1,7 @@
 using SceneRecorder.Application.Extensions;
 using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.DependencyInjection;
+using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.Infrastructure.Validation;
 using UnityEngine;
 
@@ -13,17 +14,16 @@ public sealed class PerspectiveSceneCamera
 {
     public record struct Parameters
     {
-        public required string Id { get; init; }
-
         public required Vector2Int Resolution { get; init; }
 
-        public required Camera.GateFitMode GateFit {get; init;}
-    }
+        public required Camera.GateFitMode GateFit { get; init; }
 
-    public string Id { get; }
+        public required CameraPerspective Perspective { get; init; }
+    }
 
     public Transform Transform { get; private set; } = null!;
 
+    private readonly Camera.GateFitMode _gateFit;
     private CameraPerspective _perspective;
 
     private OWCamera _colorCamera = null!;
@@ -37,11 +37,9 @@ public sealed class PerspectiveSceneCamera
     private PerspectiveSceneCamera()
         : base(out var parameters)
     {
-        parameters.Id.Throw().IfNullOrWhiteSpace();
         parameters.Resolution.x.Throw().IfLessThan(1);
         parameters.Resolution.y.Throw().IfLessThan(1);
 
-        Id = parameters.Id;
         var resolution = parameters.Resolution;
 
         _colorTexture = new RenderTexture(
@@ -58,18 +56,18 @@ public sealed class PerspectiveSceneCamera
             RenderTextureFormat.Depth
         );
 
-        _colorCamera.mainCamera.usePhysicalProperties = true;
-        _colorCamera.mainCamera.gateFit = parameters.GateFit;
-        _colorCamera.targetTexture = _colorTexture;
-
-        _perspective = _colorCamera.GetPerspective();
+        _gateFit = parameters.GateFit;
+        Perspective = parameters.Perspective;
     }
 
     private void Awake()
     {
-        name = $"{nameof(SceneRecorder)} camera {Id}";
-
         _colorCamera = GetComponent<OWCamera>();
+
+        _colorCamera.mainCamera.usePhysicalProperties = true;
+        _colorCamera.mainCamera.gateFit = _gateFit;
+        _colorCamera.targetTexture = _colorTexture;
+
         Transform = transform;
 
         _depthCamera = CreateDepthCamera();
@@ -91,12 +89,28 @@ public sealed class PerspectiveSceneCamera
         }
     }
 
+    public static PerspectiveSceneCamera? Create(Parameters parameters)
+    {
+        var playerCamera = Locator.GetPlayerCamera().OrNull();
+        if (playerCamera is null)
+        {
+            return null;
+        }
+
+        var gameObject = new GameObject(
+            $"{nameof(SceneRecorder)}.{nameof(PerspectiveSceneCamera)}"
+        );
+
+        playerCamera.CopyTo(gameObject, copyPostProcessing: true);
+
+        return gameObject.AddComponent<PerspectiveSceneCamera, Parameters>(parameters);
+    }
+
     private OWCamera CreateDepthCamera()
     {
-        var depthCameraObject = new GameObject()
-        {
-            name = $"{nameof(SceneRecorder)} depth camera {Id}",
-        };
+        var depthCameraObject = new GameObject(
+            $"{nameof(SceneRecorder)}.{nameof(PerspectiveSceneCamera)}.depth"
+        );
 
         var depthTransform = depthCameraObject.transform;
 
