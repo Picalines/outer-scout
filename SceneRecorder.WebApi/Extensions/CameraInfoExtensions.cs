@@ -5,9 +5,9 @@ namespace SceneRecorder.WebApi.Extensions;
 
 internal static class CameraInfoExtensions
 {
-    public static PerspectiveCameraInfoDTO ToDTO(this PerspectiveCameraInfo cameraInfo)
+    public static CameraPerspectiveDTO ToDTO(this CameraPerspective cameraInfo)
     {
-        return new PerspectiveCameraInfoDTO()
+        return new CameraPerspectiveDTO()
         {
             FocalLength = cameraInfo.FocalLength,
             SensorSize = cameraInfo.SensorSize,

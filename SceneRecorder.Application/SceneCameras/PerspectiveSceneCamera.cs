@@ -24,7 +24,7 @@ public sealed class PerspectiveSceneCamera
 
     public Transform Transform { get; private set; } = null!;
 
-    private PerspectiveCameraInfo _perspectiveInfo;
+    private CameraPerspective _perspective;
 
     private OWCamera _colorCamera = null!;
     private OWCamera _depthCamera = null!;
@@ -62,7 +62,7 @@ public sealed class PerspectiveSceneCamera
         _colorCamera.mainCamera.gateFit = parameters.GateFit;
         _colorCamera.targetTexture = _colorTexture;
 
-        _perspectiveInfo = _colorCamera.GetPerspectiveInfo();
+        _perspective = _colorCamera.GetPerspective();
     }
 
     private void Awake()
@@ -80,14 +80,14 @@ public sealed class PerspectiveSceneCamera
 
     public RenderTexture? DepthTexture => _depthTexture;
 
-    public PerspectiveCameraInfo PerspectiveInfo
+    public CameraPerspective Perspective
     {
-        get => _perspectiveInfo;
+        get => _perspective;
         set
         {
-            _perspectiveInfo = value;
-            _colorCamera.ApplyPerspectiveInfo(value);
-            _depthCamera.ApplyPerspectiveInfo(value);
+            _perspective = value;
+            _colorCamera.ApplyPerspective(value);
+            _depthCamera.ApplyPerspective(value);
         }
     }
 

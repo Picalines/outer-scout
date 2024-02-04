@@ -30,7 +30,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
 
     internal sealed record SetPerspectiveKeyframesRequest(
         int FromFrame,
-        PerspectiveCameraInfoDTO[] Values
+        CameraPerspectiveDTO[] Values
     );
 
     public void MapRoutes(HttpServer.Builder serverBuilder)
@@ -128,21 +128,21 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
         }
 
         if (
-            gameObject.GetResource<Animator<PerspectiveCameraInfo>>() is not { Value: var animator }
+            gameObject.GetResource<Animator<CameraPerspective>>() is not { Value: var animator }
         )
         {
-            var keyframes = new KeyframeStorage<PerspectiveCameraInfo>(sceneFrameRange);
+            var keyframes = new KeyframeStorage<CameraPerspective>(sceneFrameRange);
 
-            var valueApplier = ValueApplier.Lambda<PerspectiveCameraInfo>(newPerspective =>
-                camera.PerspectiveInfo = newPerspective
+            var valueApplier = ValueApplier.Lambda<CameraPerspective>(newPerspective =>
+                camera.Perspective = newPerspective
             );
 
             gameObject.AddResource(
-                animator = new Animator<PerspectiveCameraInfo>()
+                animator = new Animator<CameraPerspective>()
                 {
                     Keyframes = keyframes,
                     ValueApplier = valueApplier,
-                    Interpolation = ConstantInterpolation<PerspectiveCameraInfo>.Instance
+                    Interpolation = ConstantInterpolation<CameraPerspective>.Instance
                 }
             );
         }

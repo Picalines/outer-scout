@@ -19,9 +19,9 @@ internal sealed class CameraRouteMapper : IRouteMapper
         {
             serverBuilder.MapPost("cameras", CreateSceneCamera);
 
-            serverBuilder.MapGet("cameras/:id/perspective-info", GetCameraPerspectiveInfo);
+            serverBuilder.MapGet("cameras/:id/perspective", GetCameraPerspective);
 
-            serverBuilder.MapPut("cameras/:id/perspective-info", PutCameraPerspectiveInfo);
+            serverBuilder.MapPut("cameras/:id/perspective", PutCameraPerspective);
         }
     }
 
@@ -30,12 +30,12 @@ internal sealed class CameraRouteMapper : IRouteMapper
         throw new NotImplementedException();
     }
 
-    public static IResponse GetCameraPerspectiveInfo(string id)
+    public static IResponse GetCameraPerspective(string id)
     {
         throw new NotImplementedException();
     }
 
-    public static IResponse PutCameraPerspectiveInfo(string id)
+    public static IResponse PutCameraPerspective(string id)
     {
         throw new NotImplementedException();
     }
