@@ -19,6 +19,7 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
     public void MapRoutes(HttpServer.Builder serverBuilder)
     {
         using (serverBuilder.WithPlayableSceneFilter())
+        using (serverBuilder.WithNotRecordingFilter())
         {
             serverBuilder.MapGet("player/ground-body", GetPlayerGroundBody);
 
@@ -36,7 +37,7 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
                     {
                         Name = name,
                         Path = transform.GetPath(),
-                        Transform = TransformDTO.FromGlobal(transform)
+                        Transform = ToGlobalTransformDTO(transform)
                     }
                 ),
             _ => NotFound(),
@@ -70,8 +71,8 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
 
             var (meshGameObject, meshTransform) = (meshFilter.gameObject, meshFilter.transform);
 
-            var globalMeshTransform = TransformDTO.FromGlobal(meshTransform);
-            var localMeshTrasnform = TransformDTO.FromInverse(bodyTransform, meshTransform);
+            var globalMeshTransform = ToGlobalTransformDTO(meshTransform);
+            var localMeshTrasnform = ToLocalTransformDTO(bodyTransform, meshTransform);
 
             if (
                 StreamingManager.s_tableLoaded
@@ -121,7 +122,7 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
             {
                 Name = body.name,
                 Path = bodyTransform.GetPath(),
-                Transform = TransformDTO.FromGlobal(bodyTransform),
+                Transform = ToGlobalTransformDTO(bodyTransform),
             },
             Sectors = sectorMeshInfosList,
         };
@@ -141,6 +142,26 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
     {
         return CreateEmptySectorDTO(sector.transform.GetPath());
     }
+
+    private static TransformDTO ToGlobalTransformDTO(Transform transform) =>
+        new()
+        {
+            Position = transform.position,
+            Rotation = transform.rotation,
+            Scale = transform.lossyScale,
+        };
+
+    private static TransformDTO ToLocalTransformDTO(
+        Transform parentTransform,
+        Transform childTransform
+    ) =>
+        new()
+        {
+            Parent = parentTransform.name,
+            Position = parentTransform.InverseTransformPoint(childTransform.position),
+            Rotation = parentTransform.InverseTransformRotation(childTransform.rotation),
+            Scale = childTransform.lossyScale,
+        };
 
     private static IEnumerable<(Sector? Sector, T Component)> GetComponentsInChildrenWithSector<T>(
         GameObject gameObject,
