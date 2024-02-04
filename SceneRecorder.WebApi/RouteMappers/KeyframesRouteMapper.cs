@@ -22,16 +22,12 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
 
     private KeyframesRouteMapper() { }
 
-    internal sealed record SetTransformKeyframesRequest(
-        int FromFrame,
-        string RelativeTo,
-        TransformDTO[] Values
-    );
+    private sealed class SetKeyframesRequest<T>
+    {
+        public required int FromFrame { get; init; }
 
-    internal sealed record SetPerspectiveKeyframesRequest(
-        int FromFrame,
-        CameraPerspectiveDTO[] Values
-    );
+        public required T[] Values { get; init; }
+    }
 
     public void MapRoutes(HttpServer.Builder serverBuilder)
     {
@@ -45,7 +41,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
             serverBuilder.MapPut("cameras/:id/transform/keyframes", PutCameraTransformKeyframes);
 
             serverBuilder.MapPut(
-                "cameras/:id/perspective-info/keyframes",
+                "cameras/:id/perspective/keyframes",
                 PutCameraPerspectiveKeyframes
             );
         }
@@ -53,65 +49,84 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
 
     private static IResponse PutGameObjectTransformKeyframes(
         string name,
-        [FromBody] SetTransformKeyframesRequest request,
+        [FromBody] SetKeyframesRequest<TransformDTO> request,
         SceneRecorder.Builder sceneRecorderBuilder
     )
     {
-        var sceneFrameRange = sceneRecorderBuilder.FrameRange;
-        var requestFrameRange = IntRange.FromCount(request.FromFrame, request.Values.Length);
-
-        if (sceneFrameRange.Contains(requestFrameRange) is false)
-        {
-            return BadRequest("invalid frame range");
-        }
-
         if (GameObject.Find(name).OrNull() is not { transform: var targetTransform })
         {
             return NotFound();
         }
 
-        if (GameObject.Find(request.RelativeTo).OrNull() is not { transform: var relativeTo })
-        {
-            return NotFound();
-        }
+        var sceneFrameRange = sceneRecorderBuilder.FrameRange;
 
-        return SetTransformKeyframes(sceneRecorderBuilder, request, targetTransform, relativeTo);
+        return SetKeyframes(
+            sceneFrameRange,
+            animator: GetTransformAnimator(sceneFrameRange, targetTransform),
+            request,
+            ConvertTransfromDTO
+        );
     }
 
     private static IResponse PutCameraTransformKeyframes(
         string id,
-        [FromBody] SetTransformKeyframesRequest request,
+        [FromBody] SetKeyframesRequest<TransformDTO> request,
         SceneRecorder.Builder sceneRecorderBuilder
     )
     {
+        if (SceneResource.Find<ISceneCamera>(id) is not { Value.Transform: var targetTransform })
+        {
+            return NotFound();
+        }
+
         var sceneFrameRange = sceneRecorderBuilder.FrameRange;
-        var requestFrameRange = IntRange.FromCount(request.FromFrame, request.Values.Length);
 
-        if (sceneFrameRange.Contains(requestFrameRange) is false)
-        {
-            return BadRequest("invalid frame range");
-        }
-
-        if (SceneResource.Find<ISceneCamera>(id) is not { Value: var camera })
-        {
-            return NotFound();
-        }
-
-        if (GameObject.Find(request.RelativeTo).OrNull() is not { transform: var relativeTo })
-        {
-            return NotFound();
-        }
-
-        return SetTransformKeyframes(sceneRecorderBuilder, request, camera.Transform, relativeTo);
+        return SetKeyframes(
+            sceneFrameRange,
+            animator: GetTransformAnimator(sceneFrameRange, targetTransform),
+            request,
+            ConvertTransfromDTO
+        );
     }
 
     private static IResponse PutCameraPerspectiveKeyframes(
         string id,
-        [FromBody] SetPerspectiveKeyframesRequest request,
+        [FromBody] SetKeyframesRequest<CameraPerspectiveDTO> request,
         SceneRecorder.Builder sceneRecorderBuilder
     )
     {
+        if (SceneResource.Find<ISceneCamera>(id) is not { Value: PerspectiveSceneCamera camera })
+        {
+            return NotFound();
+        }
+
         var sceneFrameRange = sceneRecorderBuilder.FrameRange;
+
+        return SetKeyframes(
+            sceneFrameRange,
+            animator: GetPerspectiveAnimator(sceneFrameRange, camera),
+            request,
+            perspectiveDto => perspectiveDto.ToPerspective()
+        );
+    }
+
+    private static LocalTransform ConvertTransfromDTO(TransformDTO transformDTO)
+    {
+        return transformDTO.ToLocalTransform(
+            parent: transformDTO.Parent is { } parentName
+            && GameObject.Find(parentName).OrNull() is { transform: var parent }
+                ? parent
+                : null
+        );
+    }
+
+    private static IResponse SetKeyframes<T, D>(
+        IntRange sceneFrameRange,
+        Animator<T> animator,
+        SetKeyframesRequest<D> request,
+        Func<D, T?> convertDto
+    )
+    {
         var requestFrameRange = IntRange.FromCount(request.FromFrame, request.Values.Length);
 
         if (sceneFrameRange.Contains(requestFrameRange) is false)
@@ -119,71 +134,26 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
             return BadRequest("invalid frame range");
         }
 
-        if (
-            SceneResource.Find<ISceneCamera>(id)
-            is not { Value: PerspectiveSceneCamera { gameObject: var gameObject } camera }
-        )
+        foreach (var (index, valueDto) in request.Values.Indexed())
         {
-            return NotFound();
-        }
+            var frame = request.FromFrame + index;
 
-        if (
-            gameObject.GetResource<Animator<CameraPerspective>>() is not { Value: var animator }
-        )
-        {
-            var keyframes = new KeyframeStorage<CameraPerspective>(sceneFrameRange);
+            if (convertDto(valueDto) is not { } value)
+            {
+                return BadRequest(new { Frame = frame, Message = "invalid value" });
+            }
 
-            var valueApplier = ValueApplier.Lambda<CameraPerspective>(newPerspective =>
-                camera.Perspective = newPerspective
-            );
-
-            gameObject.AddResource(
-                animator = new Animator<CameraPerspective>()
-                {
-                    Keyframes = keyframes,
-                    ValueApplier = valueApplier,
-                    Interpolation = ConstantInterpolation<CameraPerspective>.Instance
-                }
-            );
-        }
-
-        return SetKeyframes(
-            animator,
-            request.FromFrame,
-            request.Values.Select(perspectiveDto => perspectiveDto.ToCameraInfo())
-        );
-    }
-
-    private static IResponse SetKeyframes<T>(
-        Animator<T> animator,
-        int fromFrame,
-        IEnumerable<T> newValues
-    )
-    {
-        foreach (var (index, value) in newValues.Indexed())
-        {
-            var frame = fromFrame + index;
             animator.Keyframes.SetKeyframe(frame, value);
         }
 
         return Ok();
     }
 
-    private static IResponse SetTransformKeyframes(
-        SceneRecorder.Builder sceneRecorderBuilder,
-        SetTransformKeyframesRequest request,
-        Transform targetTransform,
-        Transform relativeTo
+    private static Animator<LocalTransform> GetTransformAnimator(
+        IntRange sceneFrameRange,
+        Transform targetTransform
     )
     {
-        var sceneFrameRange = sceneRecorderBuilder.FrameRange;
-        var requestFrameRange = IntRange.FromCount(request.FromFrame, request.Values.Length);
-
-        if (sceneFrameRange.Contains(requestFrameRange) is false)
-        {
-            return BadRequest("invalid frame range");
-        }
-
         var gameObject = targetTransform.gameObject;
 
         if (gameObject.GetResource<Animator<LocalTransform>>() is not { Value: var animator })
@@ -206,10 +176,34 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
             );
         }
 
-        return SetKeyframes(
-            animator,
-            request.FromFrame,
-            request.Values.Select(transformDto => transformDto.ToLocalTransform(relativeTo))
-        );
+        return animator;
+    }
+
+    private static Animator<CameraPerspective> GetPerspectiveAnimator(
+        IntRange sceneFrameRange,
+        PerspectiveSceneCamera camera
+    )
+    {
+        var gameObject = camera.gameObject;
+
+        if (gameObject.GetResource<Animator<CameraPerspective>>() is not { Value: var animator })
+        {
+            var keyframes = new KeyframeStorage<CameraPerspective>(sceneFrameRange);
+
+            var valueApplier = ValueApplier.Lambda<CameraPerspective>(newPerspective =>
+                camera.Perspective = newPerspective
+            );
+
+            gameObject.AddResource(
+                animator = new Animator<CameraPerspective>()
+                {
+                    Keyframes = keyframes,
+                    ValueApplier = valueApplier,
+                    Interpolation = ConstantInterpolation<CameraPerspective>.Instance
+                }
+            );
+        }
+
+        return animator;
     }
 }
