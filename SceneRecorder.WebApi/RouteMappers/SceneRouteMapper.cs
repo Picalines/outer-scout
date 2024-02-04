@@ -10,6 +10,7 @@ using SceneRecorder.WebApi.Http.Response;
 namespace SceneRecorder.WebApi.RouteMappers;
 
 using SceneRecorder.Application.Recording;
+using UnityEngine;
 using static ResponseFabric;
 
 internal sealed class SceneRouteMapper : IRouteMapper
@@ -22,7 +23,14 @@ internal sealed class SceneRouteMapper : IRouteMapper
     {
         using (serverBuilder.WithPlayableSceneFilter())
         {
-            serverBuilder.MapPost("scene", CreateNewScene);
+            using (serverBuilder.WithNotRecordingFilter())
+            {
+                serverBuilder.MapPost("scene", CreateNewScene);
+
+                serverBuilder.MapPost("scene/recording", StartRecording);
+            }
+
+            serverBuilder.MapGet("scene/recording/status", GetRecordingStatus);
         }
     }
 
@@ -53,5 +61,29 @@ internal sealed class SceneRouteMapper : IRouteMapper
         }
 
         return Ok();
+    }
+
+    private static IResponse StartRecording(SceneRecorder.Builder sceneRecorderBuilder)
+    {
+        var sceneRecorder = sceneRecorderBuilder.StartRecording();
+
+        new GameObject($"{nameof(SceneRecorder)}").AddResource(sceneRecorder);
+
+        return Ok();
+    }
+
+    private static IResponse GetRecordingStatus(SceneRecorder.Builder sceneRecorderBuilder)
+    {
+        var sceneRecorder = SceneResource.Find<SceneRecorder>().SingleOrDefault();
+
+        return Ok(
+            new
+            {
+                InProgress = sceneRecorder is not null,
+                CurrentFrame = sceneRecorder is { Value.CurrentFrame: var currentFrame }
+                    ? currentFrame
+                    : sceneRecorderBuilder.FrameRange.Start
+            }
+        );
     }
 }
