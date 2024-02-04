@@ -1,5 +1,6 @@
 using System.Reflection;
 using Newtonsoft.Json;
+using SceneRecorder.Infrastructure.Validation;
 using SceneRecorder.WebApi.Http.Response;
 
 namespace SceneRecorder.WebApi.Http;
@@ -17,7 +18,11 @@ internal sealed class SafeRequestHandler : IRequestHandler
     {
         try
         {
-            return _requestHandler.Handle(request);
+            var response = _requestHandler.Handle(request);
+
+            response.ThrowIfNull();
+
+            return response;
         }
         catch (JsonSerializationException jsonException)
         {
