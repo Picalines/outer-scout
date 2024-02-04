@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 using OWML.Common;
 using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.WebApi.Components;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.RouteMappers;
 
@@ -21,7 +20,6 @@ public sealed class WebApiServer : IDisposable
         CameraRouteMapper.Instance,
         GroundBodyRouteMapper.Instance,
         KeyframesRouteMapper.Instance,
-        RecorderRouteMapper.Instance,
         SceneRouteMapper.Instance,
         SectorsRouteMapper.Instance,
         TransformRouteMapper.Instance,
