@@ -21,21 +21,26 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
         using (serverBuilder.WithPlayableSceneFilter())
         using (serverBuilder.WithNotRecordingFilter())
         {
-            serverBuilder.MapGet("player/ground-body", GetPlayerGroundBody);
+            serverBuilder.MapGet("gameObjects/:name/ground-body", GetGroundBody);
 
             serverBuilder.MapGet("gameObjects/:name/mesh", GetGameObjectMesh);
         }
     }
 
-    private static IResponse GetPlayerGroundBody()
+    private static IResponse GetGroundBody(string name)
     {
+        if (name != Locator.GetPlayerBody().OrNull()?.name)
+        {
+            return BadRequest();
+        }
+
         return LocatorExtensions.GetCurrentGroundBody() switch
         {
-            { name: var name, transform: var transform }
+            { name: var groundBodyName, transform: var transform }
                 => Ok(
                     new GameObjectDTO
                     {
-                        Name = name,
+                        Name = groundBodyName,
                         Path = transform.GetPath(),
                         Transform = ToGlobalTransformDTO(transform)
                     }
