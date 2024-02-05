@@ -20,10 +20,9 @@ public sealed class WebApiServer : IDisposable
         CameraRouteMapper.Instance,
         GroundBodyRouteMapper.Instance,
         KeyframesRouteMapper.Instance,
+        PlayerRouteMapper.Instance,
         SceneRouteMapper.Instance,
-        SectorsRouteMapper.Instance,
         TransformRouteMapper.Instance,
-        WarpRouteMapper.Instance,
     };
 
     private readonly ServiceContainer _services;

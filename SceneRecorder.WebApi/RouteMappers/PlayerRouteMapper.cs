@@ -10,13 +10,13 @@ namespace SceneRecorder.WebApi.RouteMappers;
 
 using static ResponseFabric;
 
-internal sealed class WarpRouteMapper : IRouteMapper
+internal sealed class PlayerRouteMapper : IRouteMapper
 {
+    public static PlayerRouteMapper Instance { get; } = new();
+
     private const string ReusedSpawnPointName = $"{nameof(SceneRecorder)}.SpawnPoint";
 
-    public static WarpRouteMapper Instance { get; } = new();
-
-    private WarpRouteMapper() { }
+    private PlayerRouteMapper() { }
 
     private sealed class WarpRequest
     {
@@ -28,8 +28,30 @@ internal sealed class WarpRouteMapper : IRouteMapper
         using (serverBuilder.WithPlayableSceneFilter())
         using (serverBuilder.WithNotRecordingFilter())
         {
+            serverBuilder.MapGet("player/sectors", GetPlayerSectors);
+
             serverBuilder.MapPost("player/warp", WarpToGroundBody);
         }
+    }
+
+    private static IResponse GetPlayerSectors()
+    {
+        var sectorDetector = Locator.GetPlayerDetector().OrNull()?.GetComponent<SectorDetector>();
+
+        if (sectorDetector is null)
+        {
+            return ServiceUnavailable();
+        }
+
+        return Ok(
+            new
+            {
+                Current = sectorDetector.GetLastEnteredSector().transform.GetPath(),
+                Sectors = sectorDetector
+                    ._sectorList.Select(sector => sector.transform.GetPath())
+                    .ToArray(),
+            }
+        );
     }
 
     private static IResponse WarpToGroundBody([FromBody] WarpRequest request)
