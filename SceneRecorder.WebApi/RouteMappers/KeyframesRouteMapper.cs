@@ -60,11 +60,9 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
             return NotFound();
         }
 
-        var sceneFrameRange = sceneRecorderBuilder.FrameRange;
-
         return SetKeyframes(
-            sceneFrameRange,
-            animator: GetTransformAnimator(sceneFrameRange, targetTransform),
+            sceneRecorderBuilder.FrameRange,
+            animator: GetTransformAnimator(sceneRecorderBuilder, targetTransform),
             request,
             ConvertTransfromDTO
         );
@@ -81,11 +79,9 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
             return NotFound();
         }
 
-        var sceneFrameRange = sceneRecorderBuilder.FrameRange;
-
         return SetKeyframes(
-            sceneFrameRange,
-            animator: GetTransformAnimator(sceneFrameRange, targetTransform),
+            sceneRecorderBuilder.FrameRange,
+            animator: GetTransformAnimator(sceneRecorderBuilder, targetTransform),
             request,
             ConvertTransfromDTO
         );
@@ -102,11 +98,9 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
             return NotFound();
         }
 
-        var sceneFrameRange = sceneRecorderBuilder.FrameRange;
-
         return SetKeyframes(
-            sceneFrameRange,
-            animator: GetPerspectiveAnimator(sceneFrameRange, camera),
+            sceneRecorderBuilder.FrameRange,
+            animator: GetPerspectiveAnimator(sceneRecorderBuilder, camera),
             request,
             perspectiveDto => perspectiveDto.ToPerspective()
         );
@@ -152,7 +146,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     }
 
     private static Animator<LocalTransform> GetTransformAnimator(
-        IntRange sceneFrameRange,
+        SceneRecorder.Builder sceneRecorderBuilder,
         Transform targetTransform
     )
     {
@@ -160,7 +154,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
 
         if (gameObject.GetResource<Animator<LocalTransform>>() is not { Value: var animator })
         {
-            var keyframes = new KeyframeStorage<LocalTransform>(sceneFrameRange);
+            var keyframes = new KeyframeStorage<LocalTransform>(sceneRecorderBuilder.FrameRange);
 
             var valueApplier = ValueApplier.Lambda<LocalTransform>(newTransform =>
             {
@@ -176,13 +170,15 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
                     Interpolation = ConstantInterpolation<LocalTransform>.Instance
                 }
             );
+
+            sceneRecorderBuilder.WithAnimator(animator);
         }
 
         return animator;
     }
 
     private static Animator<CameraPerspective> GetPerspectiveAnimator(
-        IntRange sceneFrameRange,
+        SceneRecorder.Builder sceneRecorderBuilder,
         PerspectiveSceneCamera camera
     )
     {
@@ -190,7 +186,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
 
         if (gameObject.GetResource<Animator<CameraPerspective>>() is not { Value: var animator })
         {
-            var keyframes = new KeyframeStorage<CameraPerspective>(sceneFrameRange);
+            var keyframes = new KeyframeStorage<CameraPerspective>(sceneRecorderBuilder.FrameRange);
 
             var valueApplier = ValueApplier.Lambda<CameraPerspective>(newPerspective =>
                 camera.Perspective = newPerspective
@@ -204,6 +200,8 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
                     Interpolation = ConstantInterpolation<CameraPerspective>.Instance
                 }
             );
+
+            sceneRecorderBuilder.WithAnimator(animator);
         }
 
         return animator;
