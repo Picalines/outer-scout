@@ -23,10 +23,7 @@ public static class OWCameraExtensions
         };
     }
 
-    public static void ApplyPerspective(
-        this OWCamera owCamera,
-        CameraPerspective cameraInfo
-    )
+    public static void ApplyPerspective(this OWCamera owCamera, CameraPerspective cameraInfo)
     {
         owCamera.Throw().If(owCamera.mainCamera.usePhysicalProperties is false);
 

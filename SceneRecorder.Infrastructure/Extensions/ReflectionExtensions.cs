@@ -7,9 +7,12 @@ public static class ReflectionExtensions
 {
     public static bool IsNullable(this ParameterInfo parameter)
     {
-        var nullableAttribute = parameter.CustomAttributes.FirstOrDefault(attribute =>
-            attribute
-                is { AttributeType.FullName: "System.Runtime.CompilerServices.NullableAttribute" }
+        var nullableAttribute = parameter.CustomAttributes.FirstOrDefault(
+            attribute =>
+                attribute
+                    is {
+                        AttributeType.FullName: "System.Runtime.CompilerServices.NullableAttribute"
+                    }
         );
 
         if (nullableAttribute is not { ConstructorArguments.Count: 1 })

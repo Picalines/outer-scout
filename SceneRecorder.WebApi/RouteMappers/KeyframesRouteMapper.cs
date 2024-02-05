@@ -188,8 +188,8 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
         {
             var keyframes = new KeyframeStorage<CameraPerspective>(sceneRecorderBuilder.FrameRange);
 
-            var valueApplier = ValueApplier.Lambda<CameraPerspective>(newPerspective =>
-                camera.Perspective = newPerspective
+            var valueApplier = ValueApplier.Lambda<CameraPerspective>(
+                newPerspective => camera.Perspective = newPerspective
             );
 
             gameObject.AddResource(
