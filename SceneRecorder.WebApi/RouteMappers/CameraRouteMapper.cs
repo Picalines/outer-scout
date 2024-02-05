@@ -72,6 +72,8 @@ internal sealed class CameraRouteMapper : IRouteMapper
             return BadRequest($"unknown camera type '{cameraDTO.Type}'");
         }
 
+        newCamera.Transform.Apply(cameraDTO.Transform.ToLocalTransform(null));
+
         newCamera.gameObject.AddResource<ISceneCamera>(newCamera, uniqueId: cameraId);
 
         return Ok();
