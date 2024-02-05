@@ -53,7 +53,7 @@ internal sealed class TransformRouteMapper : IRouteMapper
             Scale = transform.lossyScale,
         };
 
-        return Ok(new { Global = globalTransform, Local = localTransform, });
+        return Ok(new { Global = globalTransform, Local = localTransform });
     }
 
     private static IResponse PutGameObjectTransform(
