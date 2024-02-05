@@ -50,6 +50,11 @@ internal sealed class SceneRouteMapper : IRouteMapper
             return BadRequest("invalid frame range");
         }
 
+        if (settings.Frames.Rate < 1)
+        {
+            return BadRequest("invalid frame rate");
+        }
+
         lazyBuilder.Reset();
 
         SceneResource.Find<IAnimator>().ForEach(resource => resource.Dispose());
@@ -57,9 +62,9 @@ internal sealed class SceneRouteMapper : IRouteMapper
 
         var sceneRecorderBuilder = lazyBuilder.Value;
 
-        sceneRecorderBuilder.WithFrameRange(
-            IntRange.FromValues(settings.Frames.Start, settings.Frames.End)
-        );
+        sceneRecorderBuilder
+            .WithCaptureFrameRate(settings.Frames.Rate)
+            .WithFrameRange(IntRange.FromValues(settings.Frames.Start, settings.Frames.End));
 
         if (settings.HidePlayerModel)
         {
