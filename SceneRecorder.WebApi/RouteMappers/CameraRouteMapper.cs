@@ -1,4 +1,5 @@
-﻿using SceneRecorder.Application.Extensions;
+﻿using System.Text.RegularExpressions;
+using SceneRecorder.Application.Extensions;
 using SceneRecorder.Application.SceneCameras;
 using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.Extensions;
@@ -17,6 +18,8 @@ internal sealed class CameraRouteMapper : IRouteMapper
     public static CameraRouteMapper Instance { get; } = new();
 
     private CameraRouteMapper() { }
+
+    private static Regex _validCameraIdRegex = new Regex(@"^[a-zA-Z_][a-zA-Z0-9_\-]*$");
 
     public void MapRoutes(HttpServer.Builder serverBuilder)
     {
@@ -42,6 +45,11 @@ internal sealed class CameraRouteMapper : IRouteMapper
     private static IResponse CreateSceneCamera([FromBody] ISceneCameraDTO cameraDTO)
     {
         var cameraId = cameraDTO.Id;
+
+        if (_validCameraIdRegex.IsMatch(cameraId) is false)
+        {
+            return BadRequest("invalid camera id");
+        }
 
         if (SceneResource.Find<ISceneCamera>(cameraId) is { })
         {
@@ -71,7 +79,7 @@ internal sealed class CameraRouteMapper : IRouteMapper
             _ => null,
         };
 
-        if (newCamera is not MonoBehaviour { gameObject: var gameObject })
+        if (newCamera is not { Transform.gameObject: var gameObject })
         {
             return BadRequest($"unknown camera type '{cameraDTO.Type}'");
         }
