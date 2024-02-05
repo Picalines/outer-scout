@@ -29,7 +29,7 @@ internal sealed class PerspectiveSceneCameraDTO : ISceneCameraDTO
     public required CameraPerspectiveDTO Perspective { get; init; }
 }
 
-internal sealed class EquirectangularSceneCameraDTO : ISceneCameraDTO
+internal sealed class EquirectSceneCameraDTO : ISceneCameraDTO
 {
     public required string Id { get; init; }
 

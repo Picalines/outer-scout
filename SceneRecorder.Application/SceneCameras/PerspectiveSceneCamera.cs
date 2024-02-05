@@ -21,8 +21,6 @@ public sealed class PerspectiveSceneCamera
         public required CameraPerspective Perspective { get; init; }
     }
 
-    public Transform Transform { get; private set; } = null!;
-
     private readonly Camera.GateFitMode _gateFit;
     private CameraPerspective _perspective;
 
@@ -68,25 +66,64 @@ public sealed class PerspectiveSceneCamera
         _colorCamera.mainCamera.gateFit = _gateFit;
         _colorCamera.targetTexture = _colorTexture;
 
-        Transform = transform;
-
         _depthCamera = CreateDepthCamera();
         _depthCamera.targetTexture = _depthTexture;
     }
 
-    public RenderTexture? ColorTexture => _colorTexture;
+    public Transform Transform
+    {
+        get
+        {
+            AssertNotDisposed();
+            return transform;
+        }
+    }
 
-    public RenderTexture? DepthTexture => _depthTexture;
+    public RenderTexture? ColorTexture
+    {
+        get
+        {
+            AssertNotDisposed();
+            return _colorTexture;
+        }
+    }
+
+    public RenderTexture? DepthTexture
+    {
+        get
+        {
+            AssertNotDisposed();
+            return _depthTexture;
+        }
+    }
 
     public CameraPerspective Perspective
     {
-        get => _perspective;
+        get
+        {
+            AssertNotDisposed();
+            return _perspective;
+        }
         set
         {
+            AssertNotDisposed();
+
             _perspective = value;
             _colorCamera.ApplyPerspective(value);
             _depthCamera.ApplyPerspective(value);
         }
+    }
+
+    public void Dispose()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
+        Destroy(gameObject);
     }
 
     public static PerspectiveSceneCamera? Create(Parameters parameters)
@@ -113,11 +150,8 @@ public sealed class PerspectiveSceneCamera
         );
 
         var depthTransform = depthCameraObject.transform;
-
         depthTransform.parent = Transform;
-        depthTransform.localPosition = Vector3.zero;
-        depthTransform.localRotation = Quaternion.identity;
-        depthTransform.localScale = Vector3.one;
+        depthTransform.ResetLocal();
 
         var depthCamera = _colorCamera.CopyTo(depthCameraObject, copyPostProcessing: false);
 
@@ -133,22 +167,18 @@ public sealed class PerspectiveSceneCamera
         return depthCamera;
     }
 
+    private void AssertNotDisposed()
+    {
+        if (_disposed)
+        {
+            throw new InvalidOperationException($"{nameof(PerspectiveSceneCamera)} is disposed");
+        }
+    }
+
     private void OnDestory()
     {
         Destroy(_colorTexture);
         Destroy(_depthTexture);
         Destroy(_depthCamera.gameObject);
-    }
-
-    public void Dispose()
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _disposed = true;
-
-        Destroy(gameObject);
     }
 }

@@ -48,7 +48,7 @@ internal sealed class CameraRouteMapper : IRouteMapper
             return BadRequest($"camera with id '{cameraId}' already exists");
         }
 
-        var newCamera = cameraDTO switch
+        ISceneCamera? newCamera = cameraDTO switch
         {
             PerspectiveSceneCameraDTO
             {
@@ -64,17 +64,21 @@ internal sealed class CameraRouteMapper : IRouteMapper
                         Perspective = perspectiveDTO.ToPerspective()
                     }
                 ),
+
+            EquirectSceneCameraDTO { Resolution: var resolution }
+                => EquirectSceneCamera.Create(new() { CubemapFaceSize = resolution }),
+
             _ => null,
         };
 
-        if (newCamera is null)
+        if (newCamera is not MonoBehaviour { gameObject: var gameObject })
         {
             return BadRequest($"unknown camera type '{cameraDTO.Type}'");
         }
 
         newCamera.Transform.Apply(cameraDTO.Transform.ToLocalTransform(null));
 
-        newCamera.gameObject.AddResource<ISceneCamera>(newCamera, uniqueId: cameraId);
+        gameObject.AddResource<ISceneCamera>(newCamera, uniqueId: cameraId);
 
         return Ok();
     }
