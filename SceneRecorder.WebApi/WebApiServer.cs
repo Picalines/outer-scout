@@ -21,6 +21,7 @@ public sealed class WebApiServer : IDisposable
         GroundBodyRouteMapper.Instance,
         KeyframesRouteMapper.Instance,
         PlayerRouteMapper.Instance,
+        RecorderRouteMapper.Instance,
         SceneRouteMapper.Instance,
         TransformRouteMapper.Instance,
     };
