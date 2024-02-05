@@ -61,7 +61,7 @@ public sealed partial class SceneRecorder
             _recorders.Capture();
         }
 
-        _scenePatches.ForEach(patch => patch.Reverse());
+        _scenePatches.Reverse().ForEach(patch => patch.Reverse());
 
         _recorders.Dispose();
 
