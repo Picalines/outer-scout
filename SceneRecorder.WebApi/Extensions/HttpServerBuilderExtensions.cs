@@ -1,5 +1,6 @@
 ﻿using SceneRecorder.Application.Extensions;
 using SceneRecorder.Domain;
+using SceneRecorder.Infrastructure.Validation;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
 
@@ -28,5 +29,23 @@ internal static class HttpServerBuilderExtensions
                 ? null
                 : ServiceUnavailable(new { Error = "not available while recording" });
         });
+    }
+
+    public static IDisposable WithSceneCreatedFilter(this HttpServer.Builder serverBuilder)
+    {
+        return serverBuilder.WithFilter(
+            (request, services) =>
+            {
+                var sceneRecorderBuilder = services.Resolve<
+                    ResettableLazy<SceneRecorder.Builder>
+                >();
+
+                sceneRecorderBuilder.ThrowIfNull();
+
+                return sceneRecorderBuilder.IsValueCreated
+                    ? null
+                    : ServiceUnavailable(new { Error = "not available, create a scene first" });
+            }
+        );
     }
 }

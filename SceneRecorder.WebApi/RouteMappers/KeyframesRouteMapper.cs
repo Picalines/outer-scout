@@ -32,6 +32,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     public void MapRoutes(HttpServer.Builder serverBuilder)
     {
         using (serverBuilder.WithPlayableSceneFilter())
+        using (serverBuilder.WithSceneCreatedFilter())
         using (serverBuilder.WithNotRecordingFilter())
         {
             serverBuilder.MapPut(

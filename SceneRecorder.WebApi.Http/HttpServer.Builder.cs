@@ -44,9 +44,14 @@ public sealed partial class HttpServer
             Map(HttpMethod.Delete, path, handler);
         }
 
-        public IDisposable WithFilter(Func<Request, IResponse?> filter)
+        public IDisposable WithFilter(Func<Request, ServiceContainer, IResponse?> filter)
         {
             return new RequestFiler(_filterStack, filter);
+        }
+
+        public IDisposable WithFilter(Func<Request, IResponse?> filter)
+        {
+            return WithFilter((request, _) => filter(request));
         }
 
         public HttpServer Build()
@@ -76,7 +81,7 @@ public sealed partial class HttpServer
                 {
                     foreach (var filter in filters)
                     {
-                        if (filter.RequestHandler(request) is { } response)
+                        if (filter.RequestHandler(request, _services) is { } response)
                         {
                             return response;
                         }
@@ -113,7 +118,7 @@ public sealed partial class HttpServer
 
         private sealed class RequestFiler : IDisposable
         {
-            public Func<Request, IResponse?> RequestHandler { get; }
+            public Func<Request, ServiceContainer, IResponse?> RequestHandler { get; }
 
             private readonly Stack<RequestFiler> _filterStack;
 
@@ -121,7 +126,7 @@ public sealed partial class HttpServer
 
             public RequestFiler(
                 Stack<RequestFiler> filterStack,
-                Func<Request, IResponse?> requestHandler
+                Func<Request, ServiceContainer, IResponse?> requestHandler
             )
             {
                 RequestHandler = requestHandler;

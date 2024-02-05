@@ -24,9 +24,12 @@ internal sealed class CameraRouteMapper : IRouteMapper
     public void MapRoutes(HttpServer.Builder serverBuilder)
     {
         using (serverBuilder.WithPlayableSceneFilter())
-        using (serverBuilder.WithNotRecordingFilter())
         {
-            serverBuilder.MapPost("cameras", CreateSceneCamera);
+            using (serverBuilder.WithSceneCreatedFilter())
+            using (serverBuilder.WithNotRecordingFilter())
+            {
+                serverBuilder.MapPost("cameras", CreateSceneCamera);
+            }
 
             serverBuilder.MapGet("active-camera", GetActiveGamera);
 

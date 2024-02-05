@@ -27,10 +27,16 @@ internal sealed class SceneRouteMapper : IRouteMapper
             {
                 serverBuilder.MapPost("scene", CreateNewScene);
 
-                serverBuilder.MapPost("scene/recording", StartRecording);
+                using (serverBuilder.WithSceneCreatedFilter())
+                {
+                    serverBuilder.MapPost("scene/recording", StartRecording);
+                }
             }
 
-            serverBuilder.MapGet("scene/recording/status", GetRecordingStatus);
+            using (serverBuilder.WithSceneCreatedFilter())
+            {
+                serverBuilder.MapGet("scene/recording/status", GetRecordingStatus);
+            }
         }
     }
 

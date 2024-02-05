@@ -19,7 +19,6 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
     public void MapRoutes(HttpServer.Builder serverBuilder)
     {
         using (serverBuilder.WithPlayableSceneFilter())
-        using (serverBuilder.WithNotRecordingFilter())
         {
             serverBuilder.MapGet("gameObjects/:name/ground-body", GetGroundBody);
 

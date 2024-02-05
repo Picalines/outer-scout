@@ -26,11 +26,13 @@ internal sealed class PlayerRouteMapper : IRouteMapper
     public void MapRoutes(HttpServer.Builder serverBuilder)
     {
         using (serverBuilder.WithPlayableSceneFilter())
-        using (serverBuilder.WithNotRecordingFilter())
         {
             serverBuilder.MapGet("player/sectors", GetPlayerSectors);
 
-            serverBuilder.MapPost("player/warp", WarpToGroundBody);
+            using (serverBuilder.WithNotRecordingFilter())
+            {
+                serverBuilder.MapPost("player/warp", WarpToGroundBody);
+            }
         }
     }
 
