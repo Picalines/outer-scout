@@ -1,3 +1,4 @@
+using SceneRecorder.Application.Extensions;
 using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.WebApi.DTOs;
 using SceneRecorder.WebApi.Extensions;
@@ -11,83 +12,87 @@ using static ResponseFabric;
 
 internal sealed class WarpRouteMapper : IRouteMapper
 {
-    private const string ModSpawnPointName = $"__{nameof(SceneRecorder)}_SpawnPoint";
+    private const string ReusedSpawnPointName = $"{nameof(SceneRecorder)}.SpawnPoint";
 
     public static WarpRouteMapper Instance { get; } = new();
 
     private WarpRouteMapper() { }
 
-    public void MapRoutes(HttpServerBuilder serverBuilder, IRouteMapper.IContext context)
+    private sealed class WarpRequest
     {
-        using var precondition = serverBuilder.UseInPlayableScenePrecondition();
+        public required TransformDTO Transform { get; init; }
+    }
 
-        serverBuilder.MapPost(
-            ":groundBodyName/warp",
-            (string groundBodyName, WarpRequest request) =>
-            {
-                var playerSpawner = LocatorExtensions.GetPlayerSpawner();
-                if (playerSpawner is null)
-                {
-                    return ServiceUnavailable();
-                }
+    public void MapRoutes(HttpServer.Builder serverBuilder)
+    {
+        using (serverBuilder.WithPlayableSceneFilter())
+        using (serverBuilder.WithNotRecordingFilter())
+        {
+            serverBuilder.MapPost("player/warp", WarpToGroundBody);
+        }
+    }
 
-                var groundBodyTransform = GameObject.Find(groundBodyName).OrNull()?.transform;
-                var groundBody = groundBodyTransform?.GetComponent<OWRigidbody>();
-                if ((groundBodyTransform, groundBody) is not ({ }, { }))
-                {
-                    return BadRequest($"ground body \"{groundBodyName}\" not found");
-                }
+    private static IResponse WarpToGroundBody([FromBody] WarpRequest request)
+    {
+        if (
+            LocatorExtensions.GetPlayerSpawner() is not { } playerSpawner
+            || Locator.GetPlayerBody().OrNull() is not { transform: var playerTransform }
+        )
+        {
+            return ServiceUnavailable();
+        }
 
-                var playerTransform = Locator.GetPlayerBody().transform;
+        if (
+            request.Transform
+            is not { Parent: { } groundBodyName, Position: { }, Rotation: { }, Scale: null }
+        )
+        {
+            return BadRequest("invalid warp transform");
+        }
 
-                var localTransform = new GameObject().transform;
-                localTransform.SetParent(groundBodyTransform, false);
-                request.LocalTransform.ApplyLocal(localTransform);
+        if (
+            GameObject.Find(groundBodyName).OrNull() is not { transform: var groundBodyTransform }
+            || groundBodyTransform.GetComponent<OWRigidbody>().OrNull() is not { } groundBody
+        )
+        {
+            return BadRequest($"'{groundBodyName}' is not a valid ground body");
+        }
 
-                var spawnPoint = groundBodyTransform
-                    .Find(ModSpawnPointName)
-                    .OrNull()
-                    ?.GetComponent<SpawnPoint>();
+        var localTransform = new GameObject().transform;
+        localTransform.parent = groundBodyTransform;
+        localTransform.Apply(request.Transform.ToLocalTransform(groundBodyTransform));
 
-                if (spawnPoint is null)
-                {
-                    var referenceSpawnPoint = groundBodyTransform
-                        .GetComponentsInChildren<SpawnPoint>()
-                        .MinByOrDefault(
-                            point => (point.transform.position - localTransform.position).magnitude
-                        );
+        var spawnPoint = groundBodyTransform
+            .Find(ReusedSpawnPointName)
+            .OrNull()
+            ?.GetComponent<SpawnPoint>();
 
-                    GameObject newSpawnPointGameObject;
+        if (spawnPoint is null)
+        {
+            var nearestSpawnPoint = groundBodyTransform
+                .GetComponentsInChildren<SpawnPoint>()
+                .OrderBy(point => (point.transform.position - localTransform.position).magnitude)
+                .FirstOrDefault();
 
-                    if (referenceSpawnPoint is null)
-                    {
-                        newSpawnPointGameObject = new GameObject(ModSpawnPointName);
-                        newSpawnPointGameObject.AddComponent<SpawnPoint>();
-                    }
-                    else
-                    {
-                        newSpawnPointGameObject = UnityEngine.Object.Instantiate(
-                            referenceSpawnPoint.gameObject
-                        );
-                    }
+            var newSpawnPointObject = nearestSpawnPoint is not null
+                ? UnityEngine.Object.Instantiate(nearestSpawnPoint.gameObject)
+                : new GameObject(ReusedSpawnPointName, typeof(SpawnPoint));
 
-                    newSpawnPointGameObject.transform.SetParent(groundBodyTransform);
-                    newSpawnPointGameObject.name = ModSpawnPointName;
+            newSpawnPointObject.name = ReusedSpawnPointName;
+            newSpawnPointObject.transform.parent = groundBodyTransform;
 
-                    spawnPoint = newSpawnPointGameObject.GetComponent<SpawnPoint>();
-                }
+            spawnPoint = newSpawnPointObject.GetComponent<SpawnPoint>();
+        }
 
-                spawnPoint._isShipSpawn = false;
-                spawnPoint._attachedBody = groundBody;
-                spawnPoint.transform.position = localTransform.position;
-                spawnPoint.transform.rotation = localTransform.rotation;
+        spawnPoint._isShipSpawn = false;
+        spawnPoint._attachedBody = groundBody;
+        spawnPoint.transform.position = localTransform.position;
+        spawnPoint.transform.rotation = localTransform.rotation;
 
-                playerSpawner.DebugWarp(spawnPoint);
+        UnityEngine.Object.Destroy(localTransform.gameObject);
 
-                UnityEngine.Object.Destroy(localTransform.gameObject);
+        playerSpawner.DebugWarp(spawnPoint);
 
-                return Ok();
-            }
-        );
+        return Ok();
     }
 }
