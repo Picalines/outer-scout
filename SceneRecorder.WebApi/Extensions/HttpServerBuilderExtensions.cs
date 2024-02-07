@@ -37,7 +37,7 @@ internal static class HttpServerBuilderExtensions
             {
                 return
                     services.Resolve<ResettableLazy<SceneRecorder.Builder>>()
-                        is { IsValueCreated: true }
+                        is not { IsValueCreated: true }
                     ? ServiceUnavailable(new { Error = "not available, create a scene first" })
                     : null;
             }
