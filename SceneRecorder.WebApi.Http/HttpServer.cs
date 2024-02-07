@@ -98,6 +98,8 @@ public sealed partial class HttpServer : IDisposable
                 unityThreadExecutor.EnqueueTask(
                     () => HandleRequest(context, route, request, requestHandler)
                 );
+
+                Log($"route '{route}' is queued for handling", MessageType.Info);
             }
             else
             {
@@ -105,7 +107,7 @@ public sealed partial class HttpServer : IDisposable
 
                 ((SyncResponse)ResponseFabric.NotFound()).Send(context.Response);
 
-                Log($"route '{context.Request.Url}' not found", MessageType.Warning);
+                Log($"route for '{context.Request.Url}' not found", MessageType.Warning);
             }
         }
 
@@ -127,6 +129,8 @@ public sealed partial class HttpServer : IDisposable
         using (request.BodyReader)
         using (_services.RegisterInstance(request))
         {
+            Log($"handling route '{route}'", MessageType.Info);
+
             response = handler.Handle(request);
         }
 
