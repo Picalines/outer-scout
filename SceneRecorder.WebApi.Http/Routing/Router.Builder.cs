@@ -28,29 +28,18 @@ internal sealed partial class Router
 
             foreach (var (routeSegment, isLast) in route.Segments.WithIsLast())
             {
-                switch (routeSegment.Type)
+                currentNode = routeSegment switch
                 {
-                    case Route.SegmentType.Constant:
-                        var plainSegment = routeSegment.Value;
+                    { Type: Route.SegmentType.Constant, Value: var pathPart }
+                        => currentNode.PlainChildren.ContainsKey(pathPart)
+                            ? currentNode.PlainChildren[pathPart]
+                            : (currentNode.PlainChildren[pathPart] = new RouteTreeNode()),
 
-                        currentNode = currentNode.PlainChildren.ContainsKey(plainSegment)
-                            ? currentNode.PlainChildren[plainSegment]
-                            : (currentNode.PlainChildren[plainSegment] = new RouteTreeNode());
-                        break;
+                    { Type: Route.SegmentType.Parameter }
+                        => currentNode.ParameterChild ??= new RouteTreeNode(),
 
-                    case Route.SegmentType.Parameter:
-                        if (currentNode.ParameterChild is not (_, { } childNode))
-                        {
-                            childNode = new RouteTreeNode();
-                            currentNode.ParameterChild = (routeSegment.Value, childNode);
-                        }
-
-                        currentNode = childNode;
-                        break;
-
-                    default:
-                        throw new NotImplementedException();
-                }
+                    _ => throw new NotImplementedException(),
+                };
 
                 if (isLast)
                 {

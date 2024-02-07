@@ -12,7 +12,7 @@ internal sealed partial class Router
 
         public Dictionary<string, RouteTreeNode> PlainChildren { get; } = [];
 
-        public (string ParameterName, RouteTreeNode ChildNode)? ParameterChild { get; set; }
+        public RouteTreeNode? ParameterChild { get; set; }
     }
 
     private readonly RouteTreeNode _routeTreeRoot;
@@ -22,28 +22,21 @@ internal sealed partial class Router
         _routeTreeRoot = routeTreeRoot;
     }
 
-    public (Route Route, IRequestHandler Handler)? Match(Request.Builder requestBuilder)
+    public (Route Route, IRequestHandler Handler)? Match(Request request)
     {
-        var httpMethod = requestBuilder.HttpMethod;
+        var httpMethod = request.HttpMethod;
 
         var currentNode = _routeTreeRoot;
 
-        var urlRouteSegments = requestBuilder.Uri.LocalPath.Trim('/').Split('/');
-
-        foreach (var (urlRouteSegment, isLast) in urlRouteSegments.WithIsLast())
+        foreach (var (pathPart, isLast) in request.Path.WithIsLast())
         {
-            if (currentNode.PlainChildren.ContainsKey(urlRouteSegment))
+            if (currentNode.PlainChildren.ContainsKey(pathPart))
             {
-                currentNode = currentNode.PlainChildren[urlRouteSegment];
+                currentNode = currentNode.PlainChildren[pathPart];
             }
-            else if (
-                urlRouteSegment.Length > 0
-                && currentNode.ParameterChild
-                    is { ChildNode: var parameterChild, ParameterName: var parameterName }
-            )
+            else if (currentNode.ParameterChild is { } parameterChild)
             {
                 currentNode = parameterChild;
-                requestBuilder.WithRouteParameter(parameterName, urlRouteSegment);
             }
 
             if (isLast)

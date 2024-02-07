@@ -1,4 +1,6 @@
 ﻿using System.Text.RegularExpressions;
+using SceneRecorder.Infrastructure.Extensions;
+using SceneRecorder.Infrastructure.Validation;
 
 namespace SceneRecorder.WebApi.Http.Routing;
 
@@ -27,20 +29,24 @@ internal sealed class Route
 
     public IReadOnlyList<Segment> Segments { get; }
 
+    public IReadOnlyDictionary<string, int> ParameterIndexes { get; }
+
     private static readonly Regex _StringSegmentRegex = new(@"^([a-zA-Z\-_]+)|(:[a-zA-Z_]+)$");
 
-    private Route(HttpMethod httpMethod, IReadOnlyList<Segment> segments)
+    private Route(
+        HttpMethod httpMethod,
+        IReadOnlyList<Segment> segments,
+        IReadOnlyDictionary<string, int> parameterIndexes
+    )
     {
         HttpMethod = httpMethod;
         Segments = segments;
+        ParameterIndexes = parameterIndexes;
     }
 
     public IEnumerable<string> Parameters
     {
-        get =>
-            Segments
-                .Where(segment => segment is { Type: SegmentType.Parameter })
-                .Select(segment => segment.Value);
+        get => ParameterIndexes.Keys;
     }
 
     public override string ToString()
@@ -54,9 +60,11 @@ internal sealed class Route
 
         private readonly List<Segment> _segments = [];
 
+        private readonly Dictionary<string, int> _parameterIndexes = [];
+
         public Route Build()
         {
-            return new Route(_httpMethod, _segments.ToArray());
+            return new Route(_httpMethod, _segments.ToArray(), _parameterIndexes.ToDictionary());
         }
 
         public Builder WithHttpMethod(HttpMethod httpMethod)
@@ -65,14 +73,17 @@ internal sealed class Route
             return this;
         }
 
-        public Builder AddConstantSegment(string value)
+        public Builder WithConstantSegment(string value)
         {
             _segments.Add(new Segment(SegmentType.Constant, value));
             return this;
         }
 
-        public Builder AddParameterSegment(string parameterName)
+        public Builder WithParameterSegment(string parameterName)
         {
+            parameterName.Throw().If(_parameterIndexes.ContainsKey(parameterName));
+
+            _parameterIndexes[parameterName] = _segments.Count;
             _segments.Add(new Segment(SegmentType.Parameter, parameterName));
             return this;
         }
@@ -105,11 +116,11 @@ internal sealed class Route
                     return null;
                 }
 
-                builder.AddParameterSegment(parameterName);
+                builder.WithParameterSegment(parameterName);
             }
             else
             {
-                builder.AddConstantSegment(pathPart);
+                builder.WithConstantSegment(pathPart);
             }
         }
 

@@ -7,26 +7,22 @@ public sealed class Request
 {
     public HttpMethod HttpMethod { get; }
 
-    public Uri Uri { get; }
-
     public TextReader BodyReader { get; }
 
-    public IReadOnlyDictionary<string, string> RouteParameters { get; }
+    public IReadOnlyList<string> Path { get; }
 
     public IReadOnlyDictionary<string, string> QueryParameters { get; }
 
     private Request(
         HttpMethod httpMethod,
-        Uri uri,
         TextReader bodyReader,
-        IReadOnlyDictionary<string, string> routeParameters,
+        IReadOnlyList<string> path,
         IReadOnlyDictionary<string, string> queryParameters
     )
     {
         HttpMethod = httpMethod;
-        Uri = uri;
         BodyReader = bodyReader;
-        RouteParameters = routeParameters;
+        Path = path;
         QueryParameters = queryParameters;
     }
 
@@ -34,25 +30,20 @@ public sealed class Request
     {
         private HttpMethod _httpMethod = HttpMethod.Get;
 
-        private Uri _uri = new("about:blank");
-
         private TextReader _bodyReader = new StringReader("");
 
-        private readonly Dictionary<string, string> _routeParameters = [];
+        private readonly List<string> _path = [];
 
         private readonly Dictionary<string, string> _queryParameters = [];
 
         public HttpMethod HttpMethod => _httpMethod;
 
-        public Uri Uri => _uri;
-
         public Request Build()
         {
             return new Request(
                 _httpMethod,
-                _uri,
                 _bodyReader,
-                _routeParameters.ToDictionary(),
+                _path.ToList(),
                 _queryParameters.ToDictionary()
             );
         }
@@ -60,12 +51,6 @@ public sealed class Request
         public Builder WithHttpMethod(HttpMethod httpMethod)
         {
             _httpMethod = httpMethod;
-            return this;
-        }
-
-        public Builder WithUri(Uri uri)
-        {
-            _uri = uri;
             return this;
         }
 
@@ -80,9 +65,9 @@ public sealed class Request
             return WithBodyReader(new StringReader(body));
         }
 
-        public Builder WithRouteParameter(string key, string value)
+        public Builder WithPathPart(string value)
         {
-            _routeParameters[key] = value;
+            _path.Add(value);
             return this;
         }
 
@@ -92,13 +77,15 @@ public sealed class Request
             return this;
         }
 
-        public Builder WithQueryParameters(Uri uri)
+        public Builder WithPathAndQuery(Uri uri)
         {
+            _path.AddRange(uri.LocalPath.Trim('/').Split('/'));
+
             var queryParameters = HttpUtility.ParseQueryString(uri.Query);
 
             queryParameters
                 .AllKeys.SelectMany(queryParameters.GetValues, (key, value) => new { key, value })
-                .ForEach(pair => WithQueryParameter(pair.key, pair.value));
+                .ForEach(pair => _queryParameters[pair.key] = pair.value);
 
             return this;
         }

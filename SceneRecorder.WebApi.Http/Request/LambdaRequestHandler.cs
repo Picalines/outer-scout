@@ -50,24 +50,19 @@ internal sealed class LambdaRequestHandler : IRequestHandler
 
         var returnsVoid = handlerMethod.ReturnType == typeof(void);
 
-        var routeParameters = new HashSet<string>(route.Parameters);
-
         var argumentBinders = handlerParameters
-            .Select<ParameterInfo, IBinder>(parameter =>
+            .Indexed()
+            .Select<(int, ParameterInfo), IBinder>(pair =>
             {
+                var (parameterIndex, parameter) = pair;
                 var parameterType = parameter.ParameterType;
-
                 var parameterName = parameter.Name;
 
                 if (parameterType.IsPrimitive || parameterType == typeof(string))
                 {
-                    return new UrlBinder(
-                        parameterName,
-                        parameterType,
-                        routeParameters.Contains(parameterName)
-                            ? UrlBinder.SourceType.Route
-                            : UrlBinder.SourceType.Query
-                    );
+                    return route.ParameterIndexes.TryGetValue(parameterName, out var pathIndex)
+                        ? new PathBinder(pathIndex, parameterType)
+                        : new QueryBinder(parameterName, parameterType);
                 }
 
                 if (parameter.GetCustomAttribute<FromBodyAttribute>() is { })
@@ -104,36 +99,30 @@ internal sealed class LambdaRequestHandler : IRequestHandler
         };
     }
 
-    private sealed class UrlBinder(string paramName, Type paramType, UrlBinder.SourceType source)
-        : IBinder
+    private sealed class PathBinder(int pathIndex, Type paramType) : IBinder
     {
-        public enum SourceType
-        {
-            Route,
-            Query,
-        }
-
         private readonly TypeConverter _typeConverter = TypeDescriptor.GetConverter(paramType);
-
-        private readonly string _badRequestMessage = source switch
-        {
-            SourceType.Route => $"missing route parameter '{paramName}' ({paramType.Name})",
-            SourceType.Query => $"missing query parameter '{paramName}' ({paramType.Name})",
-            _ => throw new NotImplementedException(),
-        };
 
         public object? Bind(Request request)
         {
-            var parameterSource = source switch
-            {
-                SourceType.Route => request.RouteParameters,
-                SourceType.Query => request.QueryParameters,
-                _ => throw new NotImplementedException(),
-            };
+            request.Path.Count.Throw().IfLessThan(pathIndex);
+            return _typeConverter.ConvertFromString(request.Path[pathIndex]);
+        }
+    }
 
-            return parameterSource.TryGetValue(paramName, out var paramValue)
+    private sealed class QueryBinder(string paramName, Type paramType) : IBinder
+    {
+        private readonly TypeConverter _typeConverter = TypeDescriptor.GetConverter(paramType);
+
+        private readonly IResponse _badRequest = ResponseFabric.BadRequest(
+            $"missing query parameter '{paramName}' ({paramType.Name})"
+        );
+
+        public object? Bind(Request request)
+        {
+            return request.QueryParameters.TryGetValue(paramName, out var paramValue)
                 ? _typeConverter.ConvertFromString(paramValue)
-                : ResponseFabric.BadRequest(_badRequestMessage);
+                : _badRequest;
         }
     }
 
