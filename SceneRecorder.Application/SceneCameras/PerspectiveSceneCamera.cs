@@ -35,9 +35,6 @@ public sealed class PerspectiveSceneCamera
     private PerspectiveSceneCamera()
         : base(out var parameters)
     {
-        parameters.Resolution.x.Throw().IfLessThan(1);
-        parameters.Resolution.y.Throw().IfLessThan(1);
-
         var resolution = parameters.Resolution;
 
         _colorTexture = new RenderTexture(
@@ -55,7 +52,7 @@ public sealed class PerspectiveSceneCamera
         );
 
         _gateFit = parameters.GateFit;
-        Perspective = parameters.Perspective;
+        _perspective = parameters.Perspective;
     }
 
     private void Awake()
@@ -68,6 +65,8 @@ public sealed class PerspectiveSceneCamera
 
         _depthCamera = CreateDepthCamera();
         _depthCamera.targetTexture = _depthTexture;
+
+        Perspective = _perspective; // apply params to both cameras
     }
 
     public Transform Transform
@@ -128,6 +127,9 @@ public sealed class PerspectiveSceneCamera
 
     public static PerspectiveSceneCamera? Create(Parameters parameters)
     {
+        parameters.Resolution.x.Throw().IfLessThan(1);
+        parameters.Resolution.y.Throw().IfLessThan(1);
+
         var playerCamera = Locator.GetPlayerCamera().OrNull();
         if (playerCamera is null)
         {

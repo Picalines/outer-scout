@@ -11,7 +11,7 @@ public sealed class EquirectSceneCamera
     : InitializedBehaviour<EquirectSceneCamera.Parameters>,
         ISceneCamera
 {
-    public sealed class Parameters
+    public readonly struct Parameters
     {
         public required int CubemapFaceSize { get; init; }
     }
@@ -41,7 +41,6 @@ public sealed class EquirectSceneCamera
     private EquirectSceneCamera()
         : base(out var parameters)
     {
-        parameters.CubemapFaceSize.Throw().IfLessThan(1);
         _faceSize = parameters.CubemapFaceSize;
 
         _colorTexture = new RenderTexture(_faceSize, _faceSize / 2, 0, _colorTextureFormat);
@@ -101,6 +100,8 @@ public sealed class EquirectSceneCamera
 
     public static EquirectSceneCamera Create(Parameters parameters)
     {
+        parameters.CubemapFaceSize.Throw().IfLessThan(1);
+
         var gameObject = new GameObject(
             $"{nameof(SceneRecorder)}.{nameof(PerspectiveSceneCamera)}"
         );
