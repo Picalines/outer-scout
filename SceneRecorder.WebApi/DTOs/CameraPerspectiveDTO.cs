@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace SceneRecorder.WebApi.DTOs;
 
-internal record struct CameraPerspectiveDTO
+internal sealed class CameraPerspectiveDTO
 {
     public required float FocalLength { get; init; }
 
