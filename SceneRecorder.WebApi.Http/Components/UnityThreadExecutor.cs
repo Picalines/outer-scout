@@ -11,6 +11,8 @@ internal sealed class UnityThreadExecutor : MonoBehaviour
     {
         var gameObject = new GameObject($"{nameof(SceneRecorder)}.{nameof(UnityThreadExecutor)}");
 
+        DontDestroyOnLoad(gameObject);
+
         return gameObject.AddComponent<UnityThreadExecutor>();
     }
 
