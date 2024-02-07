@@ -15,7 +15,7 @@ public sealed partial class SceneRecorder
 
         private readonly HashSet<IAnimator> _animators = [];
 
-        private readonly List<Func<IRecorder>> _recorderFactories = [];
+        private readonly List<IRecorder.IBuilder> _recorderBuilders = [];
 
         private readonly List<ReversableAction> _scenePatches = [];
 
@@ -39,7 +39,7 @@ public sealed partial class SceneRecorder
             return new(
                 _frameRange,
                 _animators.ToArray(),
-                _recorderFactories.Select(f => f()).ToArray(),
+                _recorderBuilders.Select(builder => builder.StartRecording()).ToArray(),
                 _scenePatches.ToArray()
             );
         }
@@ -63,9 +63,9 @@ public sealed partial class SceneRecorder
             return this;
         }
 
-        public Builder WithRecorder(Func<IRecorder> recorderFactory)
+        public Builder WithRecorder(IRecorder.IBuilder recorderBuilder)
         {
-            _recorderFactories.Add(recorderFactory);
+            _recorderBuilders.Add(recorderBuilder);
             return this;
         }
 

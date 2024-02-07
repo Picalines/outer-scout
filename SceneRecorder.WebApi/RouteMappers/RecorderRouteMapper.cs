@@ -79,15 +79,10 @@ internal sealed class RecorderRouteMapper : IRouteMapper
         }
 
         sceneRecorderBuilder.WithRecorder(
-            () =>
-                RenderTextureRecorder.StartRecording(
-                    new()
-                    {
-                        TargetFile = request.OutputPath,
-                        Texture = renderTexture,
-                        FrameRate = sceneRecorderBuilder.CaptureFrameRate,
-                    }
-                )
+            new RenderTextureRecorder.Builder(
+                targetFile: request.OutputPath,
+                renderTexture
+            ).WithFrameRate(sceneRecorderBuilder.CaptureFrameRate)
         );
 
         return Ok();
@@ -115,27 +110,25 @@ internal sealed class RecorderRouteMapper : IRouteMapper
             return BadRequest($"gameObject '{request.Parent}' not found");
         }
 
+        var transformGetter = () =>
+        {
+            if (targetTransform == null || parentTransform == null)
+            {
+                return null;
+            }
+
+            return new TransformDTO()
+            {
+                Position = parentTransform.InverseTransformPoint(targetTransform.position),
+                Rotation = parentTransform.InverseTransformRotation(targetTransform.rotation),
+                Scale = targetTransform.lossyScale,
+            };
+        };
+
         sceneRecorderBuilder.WithRecorder(
-            () =>
-                JsonRecorder.StartRecording(
-                    new()
-                    {
-                        TargetFile = request.OutputPath,
-                        JsonSerializer = jsonSerializer,
-                        AdditionalProperties = { ["parent"] = request.Parent },
-                        ValueGetter = () =>
-                            new TransformDTO()
-                            {
-                                Position = parentTransform.InverseTransformPoint(
-                                    targetTransform.position
-                                ),
-                                Rotation = parentTransform.InverseTransformRotation(
-                                    targetTransform.rotation
-                                ),
-                                Scale = targetTransform.lossyScale,
-                            },
-                    }
-                )
+            new JsonRecorder.Builder(targetFile: request.OutputPath, transformGetter)
+                .WithJsonSerializer(jsonSerializer)
+                .WithAdditionalProperty("parent", request.Parent)
         );
 
         return Ok();
