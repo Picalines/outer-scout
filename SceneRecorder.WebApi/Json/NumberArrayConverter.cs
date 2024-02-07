@@ -1,5 +1,4 @@
 using Newtonsoft.Json;
-using SceneRecorder.Infrastructure.Validation;
 
 namespace SceneRecorder.WebApi.DTOs.Json;
 
