@@ -8,6 +8,15 @@ public static class ServiceContainerExtensions
         return services.RegisterService(new SingletonService<T>(instance));
     }
 
+    public static IDisposable RegisterFallbackInstance<T>(
+        this ServiceContainer services,
+        T instance
+    )
+        where T : class
+    {
+        return services.RegisterServiceFallback(new SingletonService<T>(instance));
+    }
+
     public static IDisposable RegisterFactory<T>(
         this ServiceContainer services,
         Func<T> instanceFactory

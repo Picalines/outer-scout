@@ -89,7 +89,7 @@ public sealed class WebApiServer : IDisposable
                         .GetExecutingAssembly()
                         .GetTypes()
                         .Where(type => type.IsAbstract is false)
-                        .Where(type => type.IsSubclassOf(typeof(JsonConverter)))
+                        .Where((typeof(JsonConverter)).IsAssignableFrom)
                         .Select(type => (JsonConverter)Activator.CreateInstance(type))
                 },
             }

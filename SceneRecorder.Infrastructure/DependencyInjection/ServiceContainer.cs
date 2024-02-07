@@ -22,15 +22,18 @@ public sealed class ServiceContainer : IDisposable
     {
         AssertNotDisposed();
 
-        var serviceType = typeof(T);
-
-        if (_services.TryGetValue(serviceType, out var serviceList) is false)
-        {
-            _services[serviceType] = serviceList = [];
-        }
-
+        var serviceList = GetOrCreateServiceList<T>();
         serviceList.Add(service);
+        return new ServiceDisposer(serviceList, service);
+    }
 
+    public IDisposable RegisterServiceFallback<T>(IService<T> service)
+        where T : class
+    {
+        AssertNotDisposed();
+
+        var serviceList = GetOrCreateServiceList<T>();
+        serviceList.Insert(0, service);
         return new ServiceDisposer(serviceList, service);
     }
 
@@ -61,6 +64,17 @@ public sealed class ServiceContainer : IDisposable
         return _services.TryGetValue(type, out var serviceList)
             ? serviceList.LastOrDefault()
             : null;
+    }
+
+    private List<IService<object>> GetOrCreateServiceList<T>()
+    {
+        var serviceType = typeof(T);
+        if (_services.TryGetValue(serviceType, out var serviceList) is false)
+        {
+            _services[serviceType] = serviceList = [];
+        }
+
+        return serviceList;
     }
 
     private void AssertNotDisposed()

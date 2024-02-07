@@ -98,12 +98,9 @@ public sealed partial class HttpServer
 
         private void RegisterJsonServices()
         {
-            var jsonSerializer = new JsonSerializer()
-            {
-                MissingMemberHandling = MissingMemberHandling.Error,
-            };
-
-            _services.RegisterInstance(jsonSerializer);
+            _services.RegisterFallbackInstance(
+                new JsonSerializer() { MissingMemberHandling = MissingMemberHandling.Error, }
+            );
         }
 
         private static Route RouteFromString(HttpMethod httpMethod, string path)
