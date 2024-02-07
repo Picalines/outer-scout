@@ -1,15 +1,30 @@
-using SceneRecorder.Infrastructure.Validation;
+using System.Collections.Concurrent;
 using UnityEngine;
 
 namespace SceneRecorder.Infrastructure.DependencyInjection;
 
+// NOTE:
+// Unity creates MonoBehaviour instance in a separate thread, so it's
+// impossible to catch exceptions from AddComponent<T, TArgs>.
+// Also constructor might be called multiple times in the Editor,
+// but (at least now) i don't think that's a problem.
+
 public abstract class InitializedBehaviour<TArgs> : MonoBehaviour
 {
+    private static readonly ConcurrentStack<TArgs> _argsStack = new();
+
     private TArgs _args;
 
     private InitializedBehaviour()
     {
-        _args = InitArguments<TArgs>.LastInstance.Value;
+        if (_argsStack.TryPop(out var args) is false)
+        {
+            throw new InvalidOperationException(
+                $"{nameof(InitializedBehaviour<TArgs>)} created without specialized extension method"
+            );
+        }
+
+        _args = args;
     }
 
     protected InitializedBehaviour(out TArgs args)
@@ -19,6 +34,11 @@ public abstract class InitializedBehaviour<TArgs> : MonoBehaviour
 
         _args = default!;
     }
+
+    internal static void PushArgs(TArgs args)
+    {
+        _argsStack.Push(args);
+    }
 }
 
 public static partial class InitializedBehaviourExtensions
@@ -26,46 +46,8 @@ public static partial class InitializedBehaviourExtensions
     public static T AddComponent<T, TArgs>(this GameObject gameObject, TArgs args)
         where T : InitializedBehaviour<TArgs>
     {
-        using (new InitArguments<TArgs>(args))
-        {
-            return gameObject.AddComponent<T>();
-        }
-    }
-}
+        InitializedBehaviour<TArgs>.PushArgs(args);
 
-file struct InitArguments<TArgs> : IDisposable
-{
-    public TArgs Value { get; }
-
-    private bool _disposed = false;
-
-    private static readonly Stack<InitArguments<TArgs>> _stack = new();
-
-    public InitArguments(TArgs args)
-    {
-        _stack.Push(this);
-
-        Value = args;
-    }
-
-    public static InitArguments<TArgs> LastInstance
-    {
-        get
-        {
-            _stack.Throw().If(_stack.Count is 0);
-            return _stack.Peek();
-        }
-    }
-
-    public void Dispose()
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        _disposed = true;
-
-        _stack.Pop();
+        return gameObject.AddComponent<T>();
     }
 }
