@@ -1,6 +1,4 @@
 using Newtonsoft.Json;
-using OWML.Common;
-using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Validation;
 
 namespace SceneRecorder.WebApi.DTOs.Json;
@@ -55,7 +53,11 @@ internal abstract class NumberArrayConverter<T> : JsonConverter<T>
 
     public sealed override void WriteJson(JsonWriter writer, T? value, JsonSerializer serializer)
     {
-        value.ThrowIfNull();
+        if (value is null)
+        {
+            writer.WriteNull();
+            return;
+        }
 
         writer.WriteStartArray();
 
