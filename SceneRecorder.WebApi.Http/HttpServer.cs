@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Net;
+using System.Web;
 using OWML.Common;
 using SceneRecorder.Infrastructure.Components;
 using SceneRecorder.Infrastructure.DependencyInjection;
@@ -77,9 +78,10 @@ public sealed partial class HttpServer : IDisposable
                 break;
             }
 
+            var uri = context.Request.Url;
             var httpMethod = new HttpMethod(context.Request.HttpMethod);
 
-            Log($"received {httpMethod} request at '{context.Request.Url}'", MessageType.Info);
+            Log($"received {httpMethod} request at '{uri}'", MessageType.Info);
 
             var bodyReader = new StreamReader(
                 context.Request.InputStream,
@@ -88,12 +90,12 @@ public sealed partial class HttpServer : IDisposable
 
             var requestBuilder = new Request.Builder()
                 .WithHttpMethod(httpMethod)
-                .WithUri(context.Request.Url)
+                .WithUri(uri)
                 .WithBodyReader(bodyReader);
 
             if (_router.Match(requestBuilder) is (var route, var requestHandler))
             {
-                var request = requestBuilder.Build();
+                var request = requestBuilder.WithQueryParameters(uri).Build();
 
                 unityThreadExecutor.EnqueueTask(
                     () => HandleRequest(context, route, request, requestHandler)

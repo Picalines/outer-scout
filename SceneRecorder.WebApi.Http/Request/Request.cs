@@ -1,4 +1,5 @@
-﻿using SceneRecorder.Infrastructure.Extensions;
+﻿using System.Web;
+using SceneRecorder.Infrastructure.Extensions;
 
 namespace SceneRecorder.WebApi.Http;
 
@@ -88,6 +89,17 @@ public sealed class Request
         public Builder WithQueryParameter(string key, string value)
         {
             _queryParameters[key] = value;
+            return this;
+        }
+
+        public Builder WithQueryParameters(Uri uri)
+        {
+            var queryParameters = HttpUtility.ParseQueryString(uri.Query);
+
+            queryParameters
+                .AllKeys.SelectMany(queryParameters.GetValues, (key, value) => new { key, value })
+                .ForEach(pair => WithQueryParameter(pair.key, pair.value));
+
             return this;
         }
     }
