@@ -72,12 +72,12 @@ internal sealed class CameraRouteMapper : IRouteMapper
                     {
                         Resolution = new Vector2Int(resolution.Width, resolution.Height),
                         GateFit = gateFit,
-                        Perspective = perspectiveDTO.ToPerspective()
+                        Perspective = perspectiveDTO.ToPerspective(),
                     }
                 ),
 
-            EquirectSceneCameraDTO { Resolution: var resolution }
-                => EquirectSceneCamera.Create(new() { CubemapFaceSize = resolution }),
+            EquirectSceneCameraDTO { FaceResolution: var faceResolution }
+                => EquirectSceneCamera.Create(new() { CubemapFaceSize = faceResolution }),
 
             _ => null,
         };

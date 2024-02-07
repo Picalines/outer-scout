@@ -50,5 +50,5 @@ internal sealed class EquirectSceneCameraDTO : ISceneCameraDTO
 
     public required TransformDTO Transform { get; init; }
 
-    public required int Resolution { get; init; }
+    public required int FaceResolution { get; init; }
 }
