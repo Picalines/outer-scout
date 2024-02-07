@@ -1,3 +1,4 @@
+using OWML.Common;
 using SceneRecorder.Infrastructure.Extensions;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -6,6 +7,19 @@ namespace SceneRecorder.Application.Recording;
 
 public static class SceneRecorderExtensions
 {
+    public static SceneRecorder.Builder WithProgressLoggedToConsole(
+        this SceneRecorder.Builder builder,
+        IModConsole modConsole
+    )
+    {
+        return builder.WithScenePatch(
+            new(
+                () => modConsole.WriteLine("recording started", MessageType.Info),
+                () => modConsole.WriteLine("recording finished", MessageType.Success)
+            )
+        );
+    }
+
     public static SceneRecorder.Builder WithTimeScaleRestored(this SceneRecorder.Builder builder)
     {
         return builder.WithScenePatch(

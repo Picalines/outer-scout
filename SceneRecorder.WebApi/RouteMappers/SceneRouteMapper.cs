@@ -9,6 +9,7 @@ using UnityEngine;
 
 namespace SceneRecorder.WebApi.RouteMappers;
 
+using OWML.Common;
 using SceneRecorder.Application.Recording;
 using static ResponseFabric;
 
@@ -52,7 +53,8 @@ internal sealed class SceneRouteMapper : IRouteMapper
 
     private static IResponse CreateScene(
         [FromBody] CreateSceneRequest request,
-        ResettableLazy<SceneRecorder.Builder> lazySceneRecorderBuilder
+        ResettableLazy<SceneRecorder.Builder> lazySceneRecorderBuilder,
+        IModConsole modConsole
     )
     {
         if (request.StartFrame > request.EndFrame)
@@ -74,7 +76,8 @@ internal sealed class SceneRouteMapper : IRouteMapper
 
         sceneRecorderBuilder
             .WithCaptureFrameRate(request.FrameRate)
-            .WithFrameRange(IntRange.FromValues(request.StartFrame, request.EndFrame));
+            .WithFrameRange(IntRange.FromValues(request.StartFrame, request.EndFrame))
+            .WithProgressLoggedToConsole(modConsole);
 
         if (request.HidePlayerModel)
         {
