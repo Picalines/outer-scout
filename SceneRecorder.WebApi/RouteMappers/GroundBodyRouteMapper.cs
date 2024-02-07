@@ -57,7 +57,42 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
         };
     }
 
-    private static BodyMeshDTO GetBodyMeshDTO(GameObject body)
+    private sealed class GameObjectMeshDTO
+    {
+        public required GameObjectDTO Body { get; init; }
+
+        public required IReadOnlyList<SectorMeshDTO> Sectors { get; init; }
+    }
+
+    private sealed class GameObjectDTO
+    {
+        public required string Name { get; init; }
+
+        public required string Path { get; init; }
+
+        public required TransformDTO Transform { get; init; }
+    }
+
+    private sealed class SectorMeshDTO
+    {
+        public required string Path { get; init; }
+
+        public required IReadOnlyList<MeshDTO> PlainMeshes { get; init; }
+
+        public required IReadOnlyList<MeshDTO> StreamedMeshes { get; init; }
+    }
+
+    private sealed class MeshDTO
+    {
+        // GameObject path for "static" meshes, Asset path for streamed ones
+        public required string Path { get; init; }
+
+        public required TransformDTO GlobalTransform { get; init; }
+
+        public required TransformDTO LocalTransform { get; init; }
+    }
+
+    private static GameObjectMeshDTO GetBodyMeshDTO(GameObject body)
     {
         var bodyTransform = body.transform;
 
@@ -120,7 +155,7 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
 
         sectorMeshInfosList.AddRange(sectorMeshInfos.Values);
 
-        return new BodyMeshDTO()
+        return new GameObjectMeshDTO()
         {
             Body = new()
             {
