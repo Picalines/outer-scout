@@ -26,9 +26,10 @@ public static partial class InitializedBehaviourExtensions
     public static T AddComponent<T, TArgs>(this GameObject gameObject, TArgs args)
         where T : InitializedBehaviour<TArgs>
     {
-        using var _ = new InitArguments<TArgs>(args);
-
-        return gameObject.AddComponent<T>();
+        using (new InitArguments<TArgs>(args))
+        {
+            return gameObject.AddComponent<T>();
+        }
     }
 }
 
