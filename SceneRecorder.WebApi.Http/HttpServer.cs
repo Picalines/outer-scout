@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Net;
-using System.Web;
 using OWML.Common;
 using SceneRecorder.Infrastructure.Components;
 using SceneRecorder.Infrastructure.DependencyInjection;
@@ -47,24 +46,29 @@ public sealed partial class HttpServer : IDisposable
 
         _disposed = true;
 
-        _cancellationTokenSource!.Cancel();
-        _stoppedListening!.Task.Wait();
+        _cancellationTokenSource?.Cancel();
+        _stoppedListening?.Task.Wait();
 
         Log($"stopped listening", MessageType.Info);
     }
 
     private async Task ListenAsync()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         Log($"started listening at {_httpListener.Prefixes.Single()}", MessageType.Info);
 
         _stoppedListening = new();
+
+        _cancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = _cancellationTokenSource.Token;
+
         _httpListener.Start();
 
         var unityThreadExecutor = UnityThreadExecutor.Create();
-
-        using var cancellationTokenSource = new CancellationTokenSource();
-        _cancellationTokenSource = cancellationTokenSource;
-        var cancellationToken = _cancellationTokenSource.Token;
 
         while (_disposed is false)
         {
@@ -88,15 +92,14 @@ public sealed partial class HttpServer : IDisposable
                 context.Request.ContentEncoding
             );
 
-            var requestBuilder = new Request.Builder()
+            var request = new Request.Builder()
                 .WithHttpMethod(httpMethod)
-                .WithUri(uri)
-                .WithBodyReader(bodyReader);
+                .WithBodyReader(bodyReader)
+                .WithPathAndQuery(uri)
+                .Build();
 
-            if (_router.Match(requestBuilder) is (var route, var requestHandler))
+            if (_router.Match(request) is (var route, var requestHandler))
             {
-                var request = requestBuilder.WithQueryParameters(uri).Build();
-
                 unityThreadExecutor.EnqueueTask(
                     () => HandleRequest(context, route, request, requestHandler)
                 );
@@ -117,6 +120,9 @@ public sealed partial class HttpServer : IDisposable
 
         _httpListener.Stop();
         _stoppedListening.SetResult(null);
+
+        _cancellationTokenSource.Dispose();
+        _cancellationTokenSource = null;
     }
 
     private void HandleRequest(
