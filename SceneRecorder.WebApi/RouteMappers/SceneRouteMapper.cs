@@ -2,7 +2,6 @@ using SceneRecorder.Application.Animation;
 using SceneRecorder.Application.SceneCameras;
 using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.WebApi.DTOs;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
@@ -19,13 +18,24 @@ internal sealed class SceneRouteMapper : IRouteMapper
 
     private SceneRouteMapper() { }
 
+    private sealed class CreateSceneRequest
+    {
+        public required int StartFrame { get; init; }
+
+        public required int EndFrame { get; init; }
+
+        public required int FrameRate { get; init; }
+
+        public required bool HidePlayerModel { get; init; }
+    }
+
     public void MapRoutes(HttpServer.Builder serverBuilder)
     {
         using (serverBuilder.WithPlayableSceneFilter())
         {
             using (serverBuilder.WithNotRecordingFilter())
             {
-                serverBuilder.MapPost("scene", CreateNewScene);
+                serverBuilder.MapPost("scene", CreateScene);
 
                 using (serverBuilder.WithSceneCreatedFilter())
                 {
@@ -40,33 +50,33 @@ internal sealed class SceneRouteMapper : IRouteMapper
         }
     }
 
-    private static IResponse CreateNewScene(
-        [FromBody] SceneSettingsDTO settings,
-        ResettableLazy<SceneRecorder.Builder> lazyBuilder
+    private static IResponse CreateScene(
+        [FromBody] CreateSceneRequest request,
+        ResettableLazy<SceneRecorder.Builder> lazySceneRecorderBuilder
     )
     {
-        if (settings.Frames.Start > settings.Frames.End)
+        if (request.StartFrame > request.EndFrame)
         {
             return BadRequest("invalid frame range");
         }
 
-        if (settings.Frames.Rate < 1)
+        if (request.FrameRate < 1)
         {
             return BadRequest("invalid frame rate");
         }
 
-        lazyBuilder.Reset();
+        lazySceneRecorderBuilder.Reset();
 
         SceneResource.Find<IAnimator>().ForEach(resource => resource.Dispose());
         SceneResource.Find<ISceneCamera>().ForEach(resource => resource.Dispose());
 
-        var sceneRecorderBuilder = lazyBuilder.Value;
+        var sceneRecorderBuilder = lazySceneRecorderBuilder.Value;
 
         sceneRecorderBuilder
-            .WithCaptureFrameRate(settings.Frames.Rate)
-            .WithFrameRange(IntRange.FromValues(settings.Frames.Start, settings.Frames.End));
+            .WithCaptureFrameRate(request.FrameRate)
+            .WithFrameRange(IntRange.FromValues(request.StartFrame, request.EndFrame));
 
-        if (settings.HidePlayerModel)
+        if (request.HidePlayerModel)
         {
             sceneRecorderBuilder.WithHiddenPlayerModel();
         }
