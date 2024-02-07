@@ -14,6 +14,13 @@ internal interface ISceneCameraDTO
     public TransformDTO Transform { get; }
 }
 
+internal sealed class ResolutionDTO
+{
+    public required int Width { get; init; }
+
+    public required int Height { get; init; }
+}
+
 internal sealed class PerspectiveSceneCameraDTO : ISceneCameraDTO
 {
     public required string Id { get; init; }
