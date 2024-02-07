@@ -10,7 +10,7 @@ namespace SceneRecorder;
 
 internal sealed class SceneRecorderMod : ModBehaviour
 {
-    private WebApiServer? _WebApiServer = null;
+    private WebApiServer? _webApiServer = null;
 
     private SceneRecorderMod()
     {
@@ -20,7 +20,9 @@ internal sealed class SceneRecorderMod : ModBehaviour
 
     public override void Configure(IModConfig config)
     {
-        _WebApiServer?.Configure(config, ModHelper.Console);
+        _webApiServer?.Dispose();
+
+        _webApiServer = new WebApiServer();
     }
 
     private void Start()
@@ -34,8 +36,6 @@ internal sealed class SceneRecorderMod : ModBehaviour
 
         UnityEngine.Application.runInBackground = true;
         ModHelper.Console.WriteLine("Outer Wilds will run in background", MessageType.Warning);
-
-        _WebApiServer = gameObject.AddComponent<WebApiServer>();
 
         Configure(ModHelper.Config);
     }
