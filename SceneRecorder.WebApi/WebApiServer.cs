@@ -85,6 +85,7 @@ public sealed class WebApiServer : IDisposable
             {
                 MissingMemberHandling = MissingMemberHandling.Error,
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                NullValueHandling = NullValueHandling.Ignore,
                 ContractResolver = new DefaultContractResolver
                 {
                     NamingStrategy = new CamelCaseNamingStrategy { ProcessDictionaryKeys = false }
