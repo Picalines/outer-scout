@@ -6,7 +6,7 @@ namespace SceneRecorder.WebApi.DTOs;
 
 [JsonConverter(typeof(JsonSubtypes), nameof(ISceneCameraDTO.Type))]
 [JsonSubtypes.KnownSubType(typeof(PerspectiveSceneCameraDTO), PerspectiveSceneCameraDTO.TypeValue)]
-[JsonSubtypes.KnownSubType(typeof(PerspectiveSceneCameraDTO), EquirectSceneCameraDTO.TypeValue)]
+[JsonSubtypes.KnownSubType(typeof(EquirectSceneCameraDTO), EquirectSceneCameraDTO.TypeValue)]
 internal interface ISceneCameraDTO
 {
     public string Id { get; }
