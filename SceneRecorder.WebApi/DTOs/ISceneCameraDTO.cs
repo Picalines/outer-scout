@@ -5,6 +5,8 @@ using UnityEngine;
 namespace SceneRecorder.WebApi.DTOs;
 
 [JsonConverter(typeof(JsonSubtypes), nameof(ISceneCameraDTO.Type))]
+[JsonSubtypes.KnownSubType(typeof(PerspectiveSceneCameraDTO), PerspectiveSceneCameraDTO.TypeValue)]
+[JsonSubtypes.KnownSubType(typeof(PerspectiveSceneCameraDTO), EquirectSceneCameraDTO.TypeValue)]
 internal interface ISceneCameraDTO
 {
     public string Id { get; }
@@ -23,9 +25,11 @@ internal sealed class ResolutionDTO
 
 internal sealed class PerspectiveSceneCameraDTO : ISceneCameraDTO
 {
+    public const string TypeValue = "perspective";
+
     public required string Id { get; init; }
 
-    public string Type { get; } = "perspective";
+    public string Type { get; } = TypeValue;
 
     public required TransformDTO Transform { get; init; }
 
@@ -38,9 +42,11 @@ internal sealed class PerspectiveSceneCameraDTO : ISceneCameraDTO
 
 internal sealed class EquirectSceneCameraDTO : ISceneCameraDTO
 {
+    public const string TypeValue = "equirectangular";
+
     public required string Id { get; init; }
 
-    public string Type { get; } = "equirectangular";
+    public string Type { get; } = TypeValue;
 
     public required TransformDTO Transform { get; init; }
 
