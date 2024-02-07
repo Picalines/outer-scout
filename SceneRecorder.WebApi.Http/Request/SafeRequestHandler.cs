@@ -24,25 +24,25 @@ internal sealed class SafeRequestHandler : IRequestHandler
 
             return response;
         }
-        catch (JsonSerializationException jsonException)
-        {
-            return ResponseFabric.BadRequest(jsonException.Message);
-        }
-        catch (Exception internalException)
+        catch (Exception exception)
         {
             int depth = 0;
 
             while (
-                internalException
-                    is TargetInvocationException { InnerException: var innerException }
+                exception is TargetInvocationException { InnerException: var innerException }
                 && ++depth < 100
             )
             {
-                internalException = innerException;
+                exception = innerException;
+            }
+
+            if (exception is JsonSerializationException jsonException)
+            {
+                return ResponseFabric.BadRequest(jsonException.Message);
             }
 
             return ResponseFabric.InternalServerError(
-                $"{internalException.GetType()}: {internalException.Message}\n{internalException.StackTrace}"
+                $"{exception.GetType()}: {exception.Message}\n{exception.StackTrace}"
             );
         }
     }
