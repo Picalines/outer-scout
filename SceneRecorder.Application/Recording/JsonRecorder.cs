@@ -3,13 +3,13 @@ using SceneRecorder.Infrastructure.Validation;
 
 namespace SceneRecorder.Application.Recording;
 
-public sealed class JsonRecorder<T> : IRecorder
+public sealed class JsonRecorder : IRecorder
 {
     public sealed class Parameters
     {
         public required string TargetFile { get; init; }
 
-        public required Func<T> ValueGetter { get; init; }
+        public required Func<object> ValueGetter { get; init; }
 
         public JsonSerializer JsonSerializer { get; init; } = new();
 
@@ -19,7 +19,7 @@ public sealed class JsonRecorder<T> : IRecorder
             new Dictionary<string, object?>();
     }
 
-    private readonly Func<T> _valueGetter;
+    private readonly Func<object> _valueGetter;
 
     private readonly JsonSerializer _jsonSerializer;
 
@@ -27,14 +27,14 @@ public sealed class JsonRecorder<T> : IRecorder
 
     private bool _disposed = false;
 
-    private JsonRecorder(Func<T> valueGetter, JsonSerializer jsonSerializer, JsonWriter jsonWriter)
+    private JsonRecorder(Func<object> valueGetter, JsonSerializer jsonSerializer, JsonWriter jsonWriter)
     {
         _valueGetter = valueGetter;
         _jsonSerializer = jsonSerializer;
         _jsonWriter = jsonWriter;
     }
 
-    public static JsonRecorder<T> StartRecording(Parameters parameters)
+    public static JsonRecorder StartRecording(Parameters parameters)
     {
         parameters.ValuesArrayName.Throw().IfNullOrWhiteSpace();
 
@@ -61,14 +61,14 @@ public sealed class JsonRecorder<T> : IRecorder
         jsonWriter.WritePropertyName(parameters.ValuesArrayName);
         jsonWriter.WriteStartArray();
 
-        return new JsonRecorder<T>(parameters.ValueGetter, jsonSerializer, jsonWriter);
+        return new JsonRecorder(parameters.ValueGetter, jsonSerializer, jsonWriter);
     }
 
     public void Capture()
     {
         if (_disposed)
         {
-            throw new InvalidOperationException($"{nameof(JsonRecorder<T>)} is disposed");
+            throw new InvalidOperationException($"{nameof(JsonRecorder)} is disposed");
         }
 
         _jsonSerializer.Serialize(_jsonWriter, _valueGetter());

@@ -117,7 +117,7 @@ internal sealed class RecorderRouteMapper : IRouteMapper
 
         sceneRecorderBuilder.WithRecorder(
             () =>
-                JsonRecorder<TransformDTO>.StartRecording(
+                JsonRecorder.StartRecording(
                     new()
                     {
                         TargetFile = request.OutputPath,
