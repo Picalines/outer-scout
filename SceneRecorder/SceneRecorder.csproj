@@ -27,6 +27,7 @@
 	<ItemGroup>
 		<None Include="default-config.json" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
+		<None Include="..\lib\*.dll" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 	<ItemGroup>
 		<Content Include="SceneRecorder.csproj.user" />
