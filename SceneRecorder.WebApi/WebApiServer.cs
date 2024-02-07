@@ -8,6 +8,7 @@ using SceneRecorder.WebApi.RouteMappers;
 
 namespace SceneRecorder.WebApi;
 
+using Newtonsoft.Json.Serialization;
 using SceneRecorder.Application.Extensions;
 using SceneRecorder.Application.Recording;
 using SceneRecorder.Domain;
@@ -83,6 +84,11 @@ public sealed class WebApiServer : IDisposable
             new JsonSerializer()
             {
                 MissingMemberHandling = MissingMemberHandling.Error,
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                ContractResolver = new DefaultContractResolver
+                {
+                    NamingStrategy = new CamelCaseNamingStrategy { ProcessDictionaryKeys = false }
+                },
                 Converters =
                 {
                     Assembly
