@@ -1,4 +1,6 @@
 using Newtonsoft.Json;
+using OWML.Common;
+using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Validation;
 
 namespace SceneRecorder.WebApi.DTOs.Json;
@@ -40,7 +42,7 @@ internal abstract class NumberArrayConverter<T> : JsonConverter<T>
                 ThrowReaderException();
             }
 
-            array[arrayIndex] = (float)(reader.Value ?? 0);
+            array[arrayIndex++] = Convert.ToSingle(reader.Value);
         }
 
         if (arrayIndex != _arrayLength)
