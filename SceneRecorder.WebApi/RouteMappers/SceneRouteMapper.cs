@@ -86,9 +86,15 @@ internal sealed class SceneRouteMapper : IRouteMapper
 
     private static IResponse StartRecording(SceneRecorder.Builder sceneRecorderBuilder)
     {
+        var gameObject = new GameObject(nameof(SceneRecorder));
+
+        sceneRecorderBuilder.WithScenePatch(
+            new(() => { }, () => UnityEngine.Object.Destroy(gameObject))
+        );
+
         var sceneRecorder = sceneRecorderBuilder.StartRecording();
 
-        new GameObject($"{nameof(SceneRecorder)}").AddResource(sceneRecorder);
+        gameObject.AddResource(sceneRecorder);
 
         return Ok();
     }
