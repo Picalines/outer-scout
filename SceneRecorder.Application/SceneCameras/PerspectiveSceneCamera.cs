@@ -24,11 +24,12 @@ public sealed class PerspectiveSceneCamera
     private readonly Camera.GateFitMode _gateFit;
     private CameraPerspective _perspective;
 
-    private OWCamera _colorCamera = null!;
-    private OWCamera _depthCamera = null!;
+    private readonly RenderTexture _colorTexture;
+    private readonly RenderTexture _depthTexture;
+    private readonly RenderTexture _colorDepthTexture;
 
-    private RenderTexture _colorTexture = null!;
-    private RenderTexture _depthTexture = null!;
+    private OWCamera? _colorCamera;
+    private OWCamera? _depthCamera;
 
     private bool _disposed = false;
 
@@ -41,14 +42,21 @@ public sealed class PerspectiveSceneCamera
             resolution.x,
             resolution.y,
             0,
-            RenderTextureFormat.ARGB32 // respect FFmpegTextureRecorder pixel format!
+            RenderTextureFormat.ARGB32
         );
 
         _depthTexture = new RenderTexture(
             resolution.x,
             resolution.y,
-            32, // Unity supports 16, 24 or 32
+            32,
             RenderTextureFormat.Depth
+        );
+
+        _colorDepthTexture = new RenderTexture(
+            resolution.x,
+            resolution.y,
+            0,
+            RenderTextureFormat.ARGB32
         );
 
         _gateFit = parameters.GateFit;
@@ -59,12 +67,12 @@ public sealed class PerspectiveSceneCamera
     {
         _colorCamera = GetComponent<OWCamera>();
 
+        _colorCamera.mainCamera.forceIntoRenderTexture = true;
         _colorCamera.mainCamera.usePhysicalProperties = true;
         _colorCamera.mainCamera.gateFit = _gateFit;
         _colorCamera.targetTexture = _colorTexture;
 
         _depthCamera = CreateDepthCamera();
-        _depthCamera.targetTexture = _depthTexture;
 
         Perspective = _perspective; // apply params to both cameras
     }
@@ -92,7 +100,7 @@ public sealed class PerspectiveSceneCamera
         get
         {
             AssertNotDisposed();
-            return _depthTexture;
+            return _colorDepthTexture;
         }
     }
 
@@ -108,8 +116,8 @@ public sealed class PerspectiveSceneCamera
             AssertNotDisposed();
 
             _perspective = value;
-            _colorCamera.ApplyPerspective(value);
-            _depthCamera.ApplyPerspective(value);
+            _colorCamera?.ApplyPerspective(value);
+            _depthCamera?.ApplyPerspective(value);
         }
     }
 
@@ -145,8 +153,17 @@ public sealed class PerspectiveSceneCamera
         return gameObject.AddComponent<PerspectiveSceneCamera, Parameters>(parameters);
     }
 
+    private void Update()
+    {
+        // It's impossible move depth bits to colorBuffer without a shader
+        // so we blit Depth texture to RGBA32.
+        Graphics.Blit(_depthTexture, _colorDepthTexture);
+    }
+
     private OWCamera CreateDepthCamera()
     {
+        _colorCamera.ThrowIfNull();
+
         var depthCameraObject = new GameObject(
             $"{nameof(SceneRecorder)}.{nameof(PerspectiveSceneCamera)}.depth"
         );
@@ -162,9 +179,12 @@ public sealed class PerspectiveSceneCamera
         depthCamera.useViewmodels = false;
         depthCamera.targetTexture = null;
 
+        depthCamera.mainCamera.depthTextureMode = DepthTextureMode.Depth;
         depthCamera.mainCamera.usePhysicalProperties = true;
         depthCamera.mainCamera.eventMask = 0;
         depthCamera.mainCamera.forceIntoRenderTexture = true;
+
+        depthCamera.targetTexture = _depthTexture;
 
         return depthCamera;
     }
@@ -181,6 +201,7 @@ public sealed class PerspectiveSceneCamera
     {
         Destroy(_colorTexture);
         Destroy(_depthTexture);
-        Destroy(_depthCamera.gameObject);
+        Destroy(_colorDepthTexture);
+        Destroy(_depthCamera?.gameObject);
     }
 }
