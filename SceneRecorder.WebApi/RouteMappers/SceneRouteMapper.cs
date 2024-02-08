@@ -77,7 +77,12 @@ internal sealed class SceneRouteMapper : IRouteMapper
         sceneRecorderBuilder
             .WithCaptureFrameRate(request.FrameRate)
             .WithFrameRange(IntRange.FromValues(request.StartFrame, request.EndFrame))
-            .WithProgressLoggedToConsole(modConsole);
+            .WithProgressLoggedToConsole(modConsole)
+            .WithTimeScaleRestored()
+            .WithInvinciblePlayer()
+            .WithAllInputDevicesDisabled()
+            .WithPauseMenuDisabled()
+            .WithDisabledQuantumMoon();
 
         if (request.HidePlayerModel)
         {
