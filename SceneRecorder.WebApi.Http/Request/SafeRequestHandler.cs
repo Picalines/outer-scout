@@ -36,9 +36,9 @@ internal sealed class SafeRequestHandler : IRequestHandler
                 exception = innerException;
             }
 
-            if (exception is JsonSerializationException jsonException)
+            if (exception is JsonSerializationException or JsonReaderException)
             {
-                return ResponseFabric.BadRequest(jsonException.Message);
+                return ResponseFabric.BadRequest(exception.Message);
             }
 
             return ResponseFabric.InternalServerError(
