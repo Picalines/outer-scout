@@ -96,15 +96,17 @@ public sealed class EquirectSceneCamera
         {
             return;
         }
+
+        _disposed = true;
+
+        Destroy(gameObject);
     }
 
     public static EquirectSceneCamera Create(Parameters parameters)
     {
         parameters.CubemapFaceSize.Throw().IfLessThan(1);
 
-        var gameObject = new GameObject(
-            $"{nameof(SceneRecorder)}.{nameof(PerspectiveSceneCamera)}"
-        );
+        var gameObject = new GameObject($"{nameof(SceneRecorder)}.{nameof(EquirectSceneCamera)}");
 
         return gameObject.AddComponent<EquirectSceneCamera, Parameters>(parameters);
     }
