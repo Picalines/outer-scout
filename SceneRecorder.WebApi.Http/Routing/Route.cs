@@ -1,10 +1,8 @@
 ﻿using System.Text.RegularExpressions;
-using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.Infrastructure.Validation;
 
 namespace SceneRecorder.WebApi.Http.Routing;
 
-internal sealed class Route
+internal sealed partial class Route
 {
     public enum SegmentType
     {
@@ -31,7 +29,7 @@ internal sealed class Route
 
     public IReadOnlyDictionary<string, int> ParameterIndexes { get; }
 
-    private static readonly Regex _StringSegmentRegex = new(@"^([a-zA-Z\-_]+)|(:[a-zA-Z_]+)$");
+    private static readonly Regex _stringSegmentRegex = new(@"^([a-zA-Z\-_]+)|(:[a-zA-Z_]+)$");
 
     private Route(
         HttpMethod httpMethod,
@@ -54,41 +52,6 @@ internal sealed class Route
         return $"{HttpMethod.Method} {string.Join("/", Segments)}";
     }
 
-    public sealed class Builder
-    {
-        private HttpMethod _httpMethod = HttpMethod.Get;
-
-        private readonly List<Segment> _segments = [];
-
-        private readonly Dictionary<string, int> _parameterIndexes = [];
-
-        public Route Build()
-        {
-            return new Route(_httpMethod, _segments.ToArray(), _parameterIndexes.ToDictionary());
-        }
-
-        public Builder WithHttpMethod(HttpMethod httpMethod)
-        {
-            _httpMethod = httpMethod;
-            return this;
-        }
-
-        public Builder WithConstantSegment(string value)
-        {
-            _segments.Add(new Segment(SegmentType.Constant, value));
-            return this;
-        }
-
-        public Builder WithParameterSegment(string parameterName)
-        {
-            parameterName.Throw().If(_parameterIndexes.ContainsKey(parameterName));
-
-            _parameterIndexes[parameterName] = _segments.Count;
-            _segments.Add(new Segment(SegmentType.Parameter, parameterName));
-            return this;
-        }
-    }
-
     public static Route? FromString(HttpMethod method, string str)
     {
         var builder = new Builder().WithHttpMethod(method);
@@ -103,7 +66,7 @@ internal sealed class Route
 
         foreach (var pathPart in pathParts)
         {
-            if (!_StringSegmentRegex.IsMatch(pathPart))
+            if (!_stringSegmentRegex.IsMatch(pathPart))
             {
                 return null;
             }

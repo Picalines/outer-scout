@@ -40,10 +40,12 @@ public sealed class Request
 
         public Request Build()
         {
+            IEnumerable<string> path = _path.Count > 0 ? _path : [""];
+
             return new Request(
                 _httpMethod,
                 _bodyReader,
-                _path.ToList(),
+                path.ToArray(),
                 _queryParameters.ToDictionary()
             );
         }

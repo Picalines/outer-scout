@@ -51,22 +51,11 @@ internal sealed partial class Router
                     }
 
                     currentNode.Leaves[route.HttpMethod] = new(route, requestHandler);
+                    return this;
                 }
             }
 
-            if (route.Segments.Count is 0)
-            {
-                if (_root.Leaves.ContainsKey(route.HttpMethod))
-                {
-                    throw new InvalidOperationException(
-                        $"index {route.HttpMethod.Method} route is ambiguous"
-                    );
-                }
-
-                _root.Leaves[route.HttpMethod] = new(route, requestHandler);
-            }
-
-            return this;
+            throw new InvalidOperationException($"failed to add route {route} to {nameof(Router)}");
         }
     }
 }
