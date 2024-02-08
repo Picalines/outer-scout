@@ -22,6 +22,8 @@ internal sealed class RecorderRouteMapper : IRouteMapper
     private sealed class CreateTextureRecorderRequest
     {
         public required string OutputPath { get; init; }
+
+        public int ConstantRateFactor { get; init; } = 18;
     }
 
     private sealed class CreateTransformRecorderRequest
@@ -61,6 +63,11 @@ internal sealed class RecorderRouteMapper : IRouteMapper
             return BadRequest("only .mp4 video output is supported");
         }
 
+        if (request.ConstantRateFactor is < 0 or > 63)
+        {
+            return BadRequest("unsupported constant rate factor value");
+        }
+
         if (SceneResource.Find<ISceneCamera>(cameraId) is not { Value: var camera })
         {
             return NotFound($"camera '{cameraId}' not found");
@@ -79,10 +86,9 @@ internal sealed class RecorderRouteMapper : IRouteMapper
         }
 
         sceneRecorderBuilder.WithRecorder(
-            new RenderTextureRecorder.Builder(
-                targetFile: request.OutputPath,
-                renderTexture
-            ).WithFrameRate(sceneRecorderBuilder.CaptureFrameRate)
+            new RenderTextureRecorder.Builder(targetFile: request.OutputPath, renderTexture)
+                .WithFrameRate(sceneRecorderBuilder.CaptureFrameRate)
+                .WithConstantRateFactor(request.ConstantRateFactor)
         );
 
         return Ok();
