@@ -3,17 +3,28 @@ using System.Net;
 
 namespace SceneRecorder.WebApi.Http.Response;
 
-using static SyncResponse;
-
 public static class ResponseFabric
 {
-    private static SyncResponse FromValue<T>(HttpStatusCode httpStatusCode, T value)
+    private static IResponse Empty(HttpStatusCode statusCode)
+    {
+        return EmptyResponse.WithStatusCode(statusCode);
+    }
+
+    private static IResponse FromValue<T>(HttpStatusCode httpStatusCode, T value)
     {
         return value switch
         {
-            string stringValue => FromJson(httpStatusCode, new { Message = stringValue }),
-            _ => FromJson(httpStatusCode, value),
+            string stringValue => new StringResponse(httpStatusCode, stringValue),
+            _ => new JsonResponse(httpStatusCode, value),
         };
+    }
+
+    private static CoroutineResponse PlainTextCoroutine(
+        HttpStatusCode httpStatusCode,
+        IEnumerator coroutine
+    )
+    {
+        return new CoroutineResponse(httpStatusCode, "text/plain", coroutine);
     }
 
     public static IResponse Continue() => Empty(HttpStatusCode.Continue);
@@ -235,14 +246,6 @@ public static class ResponseFabric
 
     public static IResponse HttpVersionNotSupported<T>(T value) =>
         FromValue(HttpStatusCode.HttpVersionNotSupported, value);
-
-    private static CoroutineResponse PlainTextCoroutine(
-        HttpStatusCode httpStatusCode,
-        IEnumerator coroutine
-    )
-    {
-        return new CoroutineResponse(httpStatusCode, "text/plain", coroutine);
-    }
 
     public static IResponse Continue(IEnumerator coroutine) =>
         PlainTextCoroutine(HttpStatusCode.Continue, coroutine);

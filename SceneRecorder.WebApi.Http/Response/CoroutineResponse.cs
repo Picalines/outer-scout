@@ -3,13 +3,13 @@ using System.Net;
 
 namespace SceneRecorder.WebApi.Http.Response;
 
-public sealed class CoroutineResponse : IResponse
+internal sealed class CoroutineResponse : IResponse
 {
     public HttpStatusCode StatusCode { get; }
 
     public string ContentType { get; }
 
-    internal IEnumerator Coroutine { get; }
+    public IEnumerator Coroutine { get; }
 
     internal CoroutineResponse(HttpStatusCode statusCode, string contentType, IEnumerator coroutine)
     {
@@ -17,4 +17,6 @@ public sealed class CoroutineResponse : IResponse
         ContentType = contentType;
         Coroutine = coroutine;
     }
+
+    void IResponse.InternalOnly() { }
 }

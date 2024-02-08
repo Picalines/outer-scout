@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Net;
+using Newtonsoft.Json;
 using OWML.Common;
 using SceneRecorder.Infrastructure.Components;
 using SceneRecorder.Infrastructure.DependencyInjection;
@@ -110,7 +111,7 @@ public sealed partial class HttpServer : IDisposable
             {
                 bodyReader.Dispose();
 
-                ((SyncResponse)ResponseFabric.NotFound()).Send(context.Response);
+                SendSyncResponse(context, ResponseFabric.NotFound());
 
                 Log($"route for '{context.Request.Url}' not found", MessageType.Warning);
             }
@@ -142,56 +143,69 @@ public sealed partial class HttpServer : IDisposable
             response = handler.Handle(request);
         }
 
-        var isInternalError = response.StatusCode is HttpStatusCode.InternalServerError;
-
-        if (isInternalError)
+        if (response is CoroutineResponse coroutineResponse)
         {
-            var content = response is SyncResponse { Content: var syncContent }
-                ? syncContent
-                : "<cannot read async content>";
-
-            Log($"internal error: {content}", MessageType.Error);
+            GlobalCoroutine.Start(
+                HandleCoroutineResponse(context, request.HttpMethod, route, coroutineResponse)
+            );
         }
-
-        switch (response)
+        else
         {
-            case SyncResponse syncResponse:
-                syncResponse.Send(context.Response);
-
-                Log(
-                    $"sent response {response.StatusCode} to {request.HttpMethod} request at '{route}'",
-                    isInternalError ? MessageType.Error : MessageType.Info
-                );
-                break;
-
-            case CoroutineResponse coroutineResponse:
-                GlobalCoroutine.Start(
-                    CoroutineRequestHandler(
-                        request.HttpMethod,
-                        route,
-                        context.Response,
-                        coroutineResponse
-                    )
-                );
-                break;
-
-            default:
-                throw new NotSupportedException(
-                    $"{response.GetType().FullName} response type is not supported"
-                );
+            SendSyncResponse(context, response);
         }
     }
 
-    private IEnumerator CoroutineRequestHandler(
+    private void SendSyncResponse(HttpListenerContext context, IResponse response)
+    {
+        SetGenericHeaders(context, response);
+
+        var httpResponse = context.Response;
+
+        if (response is EmptyResponse)
+        {
+            httpResponse.ContentLength64 = 0;
+            httpResponse.Close();
+            return;
+        }
+
+        if (response is StringResponse { Content: var content })
+        {
+            using (var bodyWriter = new StreamWriter(httpResponse.OutputStream))
+            {
+                bodyWriter.Write(content);
+            }
+            httpResponse.Close();
+            return;
+        }
+
+        if (response is JsonResponse { Value: var value })
+        {
+            using (var bodyWriter = new StreamWriter(httpResponse.OutputStream))
+            {
+                var jsonSerializer = _services.Resolve<JsonSerializer>();
+                jsonSerializer.ThrowIfNull();
+                jsonSerializer.Serialize(bodyWriter, value);
+            }
+            httpResponse.Close();
+            return;
+        }
+
+        throw new NotImplementedException();
+    }
+
+    private IEnumerator HandleCoroutineResponse(
+        HttpListenerContext context,
         HttpMethod httpMethod,
         Route route,
-        HttpListenerResponse listenerResponse,
         CoroutineResponse coroutineResponse
     )
     {
+        SetGenericHeaders(context, coroutineResponse);
+
+        var httpResponse = context.Response;
         var coroutine = coroutineResponse.Coroutine;
 
-        using (var contentWriter = new StreamWriter(listenerResponse.OutputStream))
+        using (var contentWriter = new StreamWriter(httpResponse.OutputStream))
         {
             while (true)
             {
@@ -230,7 +244,7 @@ public sealed partial class HttpServer : IDisposable
             }
         }
 
-        listenerResponse.Close();
+        httpResponse.Close();
 
         Log(
             $"sent response {coroutineResponse.StatusCode} to {httpMethod} request at '{route}'",
@@ -238,6 +252,18 @@ public sealed partial class HttpServer : IDisposable
                 ? MessageType.Error
                 : MessageType.Info
         );
+    }
+
+    private static void SetGenericHeaders(HttpListenerContext context, IResponse response)
+    {
+        var httpResponse = context.Response;
+
+        httpResponse.StatusCode = (int)response.StatusCode;
+        httpResponse.ContentType = response.ContentType;
+        if (response.ContentType.Contains("charset") is false)
+        {
+            httpResponse.ContentType += "; charset=utf-8";
+        }
     }
 
     private void Log(string message, MessageType messageType)
