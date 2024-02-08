@@ -59,6 +59,15 @@ internal sealed class CameraRouteMapper : IRouteMapper
             return BadRequest($"camera with id '{cameraId}' already exists");
         }
 
+        var parentTransform = cameraDTO.Transform.Parent is { } parentName
+            ? GameObject.Find(parentName).OrNull()?.transform
+            : null;
+
+        if (cameraDTO.Transform.Parent is { } invalidParentName && parentTransform is null)
+        {
+            return BadRequest($"gameObject '{invalidParentName}' not found");
+        }
+
         ISceneCamera? newCamera = cameraDTO switch
         {
             PerspectiveSceneCameraDTO
@@ -87,7 +96,7 @@ internal sealed class CameraRouteMapper : IRouteMapper
             return BadRequest($"unknown camera type '{cameraDTO.Type}'");
         }
 
-        newCamera.Transform.Apply(cameraDTO.Transform.ToLocalTransform(null));
+        newCamera.Transform.ApplyWithParent(cameraDTO.Transform.ToLocalTransform(parentTransform));
 
         gameObject.AddResource<ISceneCamera>(newCamera, uniqueId: cameraId);
 

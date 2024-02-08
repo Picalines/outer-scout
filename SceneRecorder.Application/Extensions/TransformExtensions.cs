@@ -33,6 +33,12 @@ public static class TransformExtensions
         }
     }
 
+    public static void ApplyWithParent(this Transform transform, LocalTransform localTransform)
+    {
+        transform.parent = localTransform.Parent;
+        transform.Apply(localTransform);
+    }
+
     public static string GetPath(this Transform transform)
     {
         if (_pathCache.TryGetValue(transform, out var path) is true)
