@@ -21,6 +21,8 @@ public sealed class FFmpegTextureEncoder : IDisposable
         public required int FrameRate { get; init; }
 
         public required FFmpegPixelFormat PixelFormat { get; init; }
+
+        public required int ConstantRateFactor { get; init; }
     }
 
     public event Action<string>? FFmpegOutputReceived;
@@ -47,6 +49,7 @@ public sealed class FFmpegTextureEncoder : IDisposable
         inputOptions.Width.Throw().IfLessThan(1);
         inputOptions.Height.Throw().IfLessThan(1);
         outputOptions.FrameRate.Throw().IfLessThan(1);
+        outputOptions.ConstantRateFactor.Throw().IfLessThan(0).IfGreaterThan(63);
         outputOptions.FilePath.Throw().IfNullOrWhiteSpace();
 
         (_inputWidth, _inputHeight) = (inputOptions.Width, inputOptions.Height);
@@ -64,7 +67,7 @@ public sealed class FFmpegTextureEncoder : IDisposable
                 .Add("-an")
                 .Add("-c:v libx265")
                 .Add("-movflags +faststart")
-                .Add("-crf 18")
+                .Add($"-crf {outputOptions.ConstantRateFactor}")
                 .Add("-q:v 0")
                 .Add($"-pix_fmt {outputOptions.PixelFormat.ToCLIOption()}")
                 .Add($"\"{outputOptions.FilePath}\"")

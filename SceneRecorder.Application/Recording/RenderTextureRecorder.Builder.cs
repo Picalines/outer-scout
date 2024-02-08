@@ -17,6 +17,8 @@ public sealed partial class RenderTextureRecorder
 
         private int _frameRate = 30;
 
+        private int _constantRateFactor = 18;
+
         public Builder(string targetFile, RenderTexture renderTexture)
         {
             _targetFile = targetFile;
@@ -45,7 +47,8 @@ public sealed partial class RenderTextureRecorder
             {
                 FilePath = _targetFile,
                 FrameRate = _frameRate,
-                PixelFormat = FFmpegPixelFormat.YUV420P
+                PixelFormat = FFmpegPixelFormat.YUV420P,
+                ConstantRateFactor = _constantRateFactor,
             };
 
             var textureEncoder = new FFmpegTextureEncoder(
@@ -63,6 +66,13 @@ public sealed partial class RenderTextureRecorder
         {
             frameRate.Throw().IfLessThan(1);
             _frameRate = frameRate;
+            return this;
+        }
+
+        public Builder WithConstantRateFactor(int crf)
+        {
+            crf.Throw().IfLessThan(0).IfGreaterThan(63);
+            _constantRateFactor = crf;
             return this;
         }
     }
