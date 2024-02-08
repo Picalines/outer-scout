@@ -1,7 +1,7 @@
 using SceneRecorder.Infrastructure.Extensions;
 using UnityEngine;
 
-namespace SceneRecorder.WebApi.DTOs.Json;
+namespace SceneRecorder.WebApi.Json;
 
 internal sealed class Vector2Converter : NumberArrayConverter<Vector2>
 {

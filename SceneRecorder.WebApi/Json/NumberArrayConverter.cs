@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace SceneRecorder.WebApi.DTOs.Json;
+namespace SceneRecorder.WebApi.Json;
 
 internal abstract class NumberArrayConverter<T> : JsonConverter<T>
 {
