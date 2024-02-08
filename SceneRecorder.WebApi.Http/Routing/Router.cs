@@ -38,6 +38,10 @@ internal sealed partial class Router
             {
                 currentNode = parameterChild;
             }
+            else
+            {
+                return null;
+            }
 
             if (isLast)
             {
