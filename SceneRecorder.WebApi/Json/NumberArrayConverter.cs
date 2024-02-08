@@ -2,7 +2,8 @@ using Newtonsoft.Json;
 
 namespace SceneRecorder.WebApi.Json;
 
-internal abstract class NumberArrayConverter<T> : JsonConverter<T>
+internal abstract class NumberArrayConverter<T> : JsonConverter<T?>
+    where T : struct
 {
     private readonly int _arrayLength;
 
@@ -15,7 +16,7 @@ internal abstract class NumberArrayConverter<T> : JsonConverter<T>
 
     protected abstract void WriteJson(in T value, ref Span<float> array);
 
-    public sealed override T ReadJson(
+    public sealed override T? ReadJson(
         JsonReader reader,
         Type objectType,
         T? existingValue,
@@ -50,9 +51,13 @@ internal abstract class NumberArrayConverter<T> : JsonConverter<T>
         return ReadJson(array);
     }
 
-    public sealed override void WriteJson(JsonWriter writer, T? value, JsonSerializer serializer)
+    public sealed override void WriteJson(
+        JsonWriter writer,
+        T? nullableValue,
+        JsonSerializer serializer
+    )
     {
-        if (value is null)
+        if (nullableValue is not { } value)
         {
             writer.WriteNull();
             return;
