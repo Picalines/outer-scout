@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections;
+using System.ComponentModel;
 using System.Reflection;
 using Newtonsoft.Json;
 using SceneRecorder.Infrastructure.DependencyInjection;
@@ -94,7 +95,9 @@ internal sealed class LambdaRequestHandler : IRequestHandler
             {
                 _ when returnsVoid => ResponseFabric.Ok(),
                 IResponse response => response,
-                var value => ResponseFabric.Ok(value),
+                string @string => ResponseFabric.Ok(@string),
+                IEnumerator coroutine => ResponseFabric.Ok(coroutine),
+                var json => ResponseFabric.Ok(json),
             };
         };
     }
