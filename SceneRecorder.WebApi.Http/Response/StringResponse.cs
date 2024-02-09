@@ -2,7 +2,7 @@ using System.Net;
 
 namespace SceneRecorder.WebApi.Http.Response;
 
-internal sealed class StringResponse : IResponse
+public sealed record StringResponse : IResponse
 {
     public HttpStatusCode StatusCode { get; }
 

@@ -5,21 +5,22 @@ namespace SceneRecorder.WebApi.Http.Response;
 
 public static class ResponseFabric
 {
-    private static IResponse Empty(HttpStatusCode statusCode)
+    private static EmptyResponse Empty(HttpStatusCode statusCode)
     {
         return EmptyResponse.WithStatusCode(statusCode);
     }
 
-    private static IResponse FromValue<T>(HttpStatusCode httpStatusCode, T value)
+    private static StringResponse FromString(HttpStatusCode statusCode, string @string)
     {
-        return value switch
-        {
-            string stringValue => new StringResponse(httpStatusCode, stringValue),
-            _ => new JsonResponse(httpStatusCode, value),
-        };
+        return new StringResponse(statusCode, @string);
     }
 
-    private static CoroutineResponse PlainTextCoroutine(
+    private static JsonResponse FromJson<T>(HttpStatusCode httpStatusCode, T value)
+    {
+        return new JsonResponse(httpStatusCode, value);
+    }
+
+    private static CoroutineResponse FromCoroutine(
         HttpStatusCode httpStatusCode,
         IEnumerator coroutine
     )
@@ -27,364 +28,383 @@ public static class ResponseFabric
         return new CoroutineResponse(httpStatusCode, "text/plain", coroutine);
     }
 
-    public static IResponse Continue() => Empty(HttpStatusCode.Continue);
+    // csharpier-ignore-start
 
-    public static IResponse SwitchingProtocols() => Empty(HttpStatusCode.SwitchingProtocols);
+    public static EmptyResponse Continue() => Empty(HttpStatusCode.Continue);
 
-    public static IResponse Ok() => Empty(HttpStatusCode.OK);
+    public static EmptyResponse SwitchingProtocols() => Empty(HttpStatusCode.SwitchingProtocols);
 
-    public static IResponse Created() => Empty(HttpStatusCode.Created);
+    public static EmptyResponse Ok() => Empty(HttpStatusCode.OK);
 
-    public static IResponse Accepted() => Empty(HttpStatusCode.Accepted);
+    public static EmptyResponse Created() => Empty(HttpStatusCode.Created);
 
-    public static IResponse NonAuthoritativeInformation() =>
-        Empty(HttpStatusCode.NonAuthoritativeInformation);
+    public static EmptyResponse Accepted() => Empty(HttpStatusCode.Accepted);
 
-    public static IResponse NoContent() => Empty(HttpStatusCode.NoContent);
+    public static EmptyResponse NonAuthoritativeInformation() => Empty(HttpStatusCode.NonAuthoritativeInformation);
 
-    public static IResponse ResetContent() => Empty(HttpStatusCode.ResetContent);
+    public static EmptyResponse NoContent() => Empty(HttpStatusCode.NoContent);
 
-    public static IResponse PartialContent() => Empty(HttpStatusCode.PartialContent);
+    public static EmptyResponse ResetContent() => Empty(HttpStatusCode.ResetContent);
 
-    public static IResponse MultipleChoices() => Empty(HttpStatusCode.MultipleChoices);
+    public static EmptyResponse PartialContent() => Empty(HttpStatusCode.PartialContent);
 
-    public static IResponse Ambiguous() => Empty(HttpStatusCode.Ambiguous);
+    public static EmptyResponse MultipleChoices() => Empty(HttpStatusCode.MultipleChoices);
 
-    public static IResponse MovedPermanently() => Empty(HttpStatusCode.MovedPermanently);
+    public static EmptyResponse Ambiguous() => Empty(HttpStatusCode.Ambiguous);
 
-    public static IResponse Moved() => Empty(HttpStatusCode.Moved);
+    public static EmptyResponse MovedPermanently() => Empty(HttpStatusCode.MovedPermanently);
 
-    public static IResponse Found() => Empty(HttpStatusCode.Found);
+    public static EmptyResponse Moved() => Empty(HttpStatusCode.Moved);
 
-    public static IResponse Redirect() => Empty(HttpStatusCode.Redirect);
+    public static EmptyResponse Found() => Empty(HttpStatusCode.Found);
 
-    public static IResponse SeeOther() => Empty(HttpStatusCode.SeeOther);
+    public static EmptyResponse Redirect() => Empty(HttpStatusCode.Redirect);
 
-    public static IResponse RedirectMethod() => Empty(HttpStatusCode.RedirectMethod);
+    public static EmptyResponse SeeOther() => Empty(HttpStatusCode.SeeOther);
 
-    public static IResponse NotModified() => Empty(HttpStatusCode.NotModified);
+    public static EmptyResponse RedirectMethod() => Empty(HttpStatusCode.RedirectMethod);
 
-    public static IResponse UseProxy() => Empty(HttpStatusCode.UseProxy);
+    public static EmptyResponse NotModified() => Empty(HttpStatusCode.NotModified);
 
-    public static IResponse Unused() => Empty(HttpStatusCode.Unused);
+    public static EmptyResponse UseProxy() => Empty(HttpStatusCode.UseProxy);
 
-    public static IResponse TemporaryRedirect() => Empty(HttpStatusCode.TemporaryRedirect);
+    public static EmptyResponse Unused() => Empty(HttpStatusCode.Unused);
 
-    public static IResponse RedirectKeepVerb() => Empty(HttpStatusCode.RedirectKeepVerb);
+    public static EmptyResponse TemporaryRedirect() => Empty(HttpStatusCode.TemporaryRedirect);
 
-    public static IResponse BadRequest() => Empty(HttpStatusCode.BadRequest);
+    public static EmptyResponse RedirectKeepVerb() => Empty(HttpStatusCode.RedirectKeepVerb);
 
-    public static IResponse Unauthorized() => Empty(HttpStatusCode.Unauthorized);
+    public static EmptyResponse BadRequest() => Empty(HttpStatusCode.BadRequest);
 
-    public static IResponse PaymentRequired() => Empty(HttpStatusCode.PaymentRequired);
+    public static EmptyResponse Unauthorized() => Empty(HttpStatusCode.Unauthorized);
 
-    public static IResponse Forbidden() => Empty(HttpStatusCode.Forbidden);
+    public static EmptyResponse PaymentRequired() => Empty(HttpStatusCode.PaymentRequired);
 
-    public static IResponse NotFound() => Empty(HttpStatusCode.NotFound);
+    public static EmptyResponse Forbidden() => Empty(HttpStatusCode.Forbidden);
 
-    public static IResponse MethodNotAllowed() => Empty(HttpStatusCode.MethodNotAllowed);
+    public static EmptyResponse NotFound() => Empty(HttpStatusCode.NotFound);
 
-    public static IResponse NotAcceptable() => Empty(HttpStatusCode.NotAcceptable);
+    public static EmptyResponse MethodNotAllowed() => Empty(HttpStatusCode.MethodNotAllowed);
 
-    public static IResponse ProxyAuthenticationRequired() =>
-        Empty(HttpStatusCode.ProxyAuthenticationRequired);
+    public static EmptyResponse NotAcceptable() => Empty(HttpStatusCode.NotAcceptable);
 
-    public static IResponse RequestTimeout() => Empty(HttpStatusCode.RequestTimeout);
+    public static EmptyResponse ProxyAuthenticationRequired() => Empty(HttpStatusCode.ProxyAuthenticationRequired);
 
-    public static IResponse Conflict() => Empty(HttpStatusCode.Conflict);
+    public static EmptyResponse RequestTimeout() => Empty(HttpStatusCode.RequestTimeout);
 
-    public static IResponse Gone() => Empty(HttpStatusCode.Gone);
+    public static EmptyResponse Conflict() => Empty(HttpStatusCode.Conflict);
 
-    public static IResponse LengthRequired() => Empty(HttpStatusCode.LengthRequired);
+    public static EmptyResponse Gone() => Empty(HttpStatusCode.Gone);
 
-    public static IResponse PreconditionFailed() => Empty(HttpStatusCode.PreconditionFailed);
+    public static EmptyResponse LengthRequired() => Empty(HttpStatusCode.LengthRequired);
 
-    public static IResponse RequestEntityTooLarge() => Empty(HttpStatusCode.RequestEntityTooLarge);
+    public static EmptyResponse PreconditionFailed() => Empty(HttpStatusCode.PreconditionFailed);
 
-    public static IResponse RequestUriTooLong() => Empty(HttpStatusCode.RequestUriTooLong);
+    public static EmptyResponse RequestEntityTooLarge() => Empty(HttpStatusCode.RequestEntityTooLarge);
 
-    public static IResponse UnsupportedMediaType() => Empty(HttpStatusCode.UnsupportedMediaType);
+    public static EmptyResponse RequestUriTooLong() => Empty(HttpStatusCode.RequestUriTooLong);
 
-    public static IResponse RequestedRangeNotSatisfiable() =>
-        Empty(HttpStatusCode.RequestedRangeNotSatisfiable);
+    public static EmptyResponse UnsupportedMediaType() => Empty(HttpStatusCode.UnsupportedMediaType);
 
-    public static IResponse ExpectationFailed() => Empty(HttpStatusCode.ExpectationFailed);
+    public static EmptyResponse RequestedRangeNotSatisfiable() => Empty(HttpStatusCode.RequestedRangeNotSatisfiable);
 
-    public static IResponse UpgradeRequired() => Empty(HttpStatusCode.UpgradeRequired);
+    public static EmptyResponse ExpectationFailed() => Empty(HttpStatusCode.ExpectationFailed);
 
-    public static IResponse InternalServerError() => Empty(HttpStatusCode.InternalServerError);
+    public static EmptyResponse UpgradeRequired() => Empty(HttpStatusCode.UpgradeRequired);
 
-    public static IResponse NotImplemented() => Empty(HttpStatusCode.NotImplemented);
+    public static EmptyResponse InternalServerError() => Empty(HttpStatusCode.InternalServerError);
 
-    public static IResponse BadGateway() => Empty(HttpStatusCode.BadGateway);
+    public static EmptyResponse NotImplemented() => Empty(HttpStatusCode.NotImplemented);
 
-    public static IResponse ServiceUnavailable() => Empty(HttpStatusCode.ServiceUnavailable);
+    public static EmptyResponse BadGateway() => Empty(HttpStatusCode.BadGateway);
 
-    public static IResponse GatewayTimeout() => Empty(HttpStatusCode.GatewayTimeout);
+    public static EmptyResponse ServiceUnavailable() => Empty(HttpStatusCode.ServiceUnavailable);
 
-    public static IResponse HttpVersionNotSupported() =>
-        Empty(HttpStatusCode.HttpVersionNotSupported);
+    public static EmptyResponse GatewayTimeout() => Empty(HttpStatusCode.GatewayTimeout);
 
-    public static IResponse Continue<T>(T value) => FromValue(HttpStatusCode.Continue, value);
+    public static EmptyResponse HttpVersionNotSupported() => Empty(HttpStatusCode.HttpVersionNotSupported);
 
-    public static IResponse SwitchingProtocols<T>(T value) =>
-        FromValue(HttpStatusCode.SwitchingProtocols, value);
+    public static StringResponse Continue(string @string) => FromString(HttpStatusCode.Continue, @string);
 
-    public static IResponse Ok<T>(T value) => FromValue(HttpStatusCode.OK, value);
+    public static StringResponse SwitchingProtocols(string @string) => FromString(HttpStatusCode.SwitchingProtocols, @string);
 
-    public static IResponse Created<T>(T value) => FromValue(HttpStatusCode.Created, value);
+    public static StringResponse Ok(string @string) => FromString(HttpStatusCode.OK, @string);
 
-    public static IResponse Accepted<T>(T value) => FromValue(HttpStatusCode.Accepted, value);
+    public static StringResponse Created(string @string) => FromString(HttpStatusCode.Created, @string);
 
-    public static IResponse NonAuthoritativeInformation<T>(T value) =>
-        FromValue(HttpStatusCode.NonAuthoritativeInformation, value);
+    public static StringResponse Accepted(string @string) => FromString(HttpStatusCode.Accepted, @string);
 
-    public static IResponse NoContent<T>(T value) => FromValue(HttpStatusCode.NoContent, value);
+    public static StringResponse NonAuthoritativeInformation(string @string) => FromString(HttpStatusCode.NonAuthoritativeInformation, @string);
 
-    public static IResponse ResetContent<T>(T value) =>
-        FromValue(HttpStatusCode.ResetContent, value);
+    public static StringResponse NoContent(string @string) => FromString(HttpStatusCode.NoContent, @string);
 
-    public static IResponse PartialContent<T>(T value) =>
-        FromValue(HttpStatusCode.PartialContent, value);
+    public static StringResponse ResetContent(string @string) => FromString(HttpStatusCode.ResetContent, @string);
 
-    public static IResponse MultipleChoices<T>(T value) =>
-        FromValue(HttpStatusCode.MultipleChoices, value);
+    public static StringResponse PartialContent(string @string) => FromString(HttpStatusCode.PartialContent, @string);
 
-    public static IResponse Ambiguous<T>(T value) => FromValue(HttpStatusCode.Ambiguous, value);
+    public static StringResponse MultipleChoices(string @string) => FromString(HttpStatusCode.MultipleChoices, @string);
 
-    public static IResponse MovedPermanently<T>(T value) =>
-        FromValue(HttpStatusCode.MovedPermanently, value);
+    public static StringResponse Ambiguous(string @string) => FromString(HttpStatusCode.Ambiguous, @string);
 
-    public static IResponse Moved<T>(T value) => FromValue(HttpStatusCode.Moved, value);
+    public static StringResponse MovedPermanently(string @string) => FromString(HttpStatusCode.MovedPermanently, @string);
 
-    public static IResponse Found<T>(T value) => FromValue(HttpStatusCode.Found, value);
+    public static StringResponse Moved(string @string) => FromString(HttpStatusCode.Moved, @string);
 
-    public static IResponse Redirect<T>(T value) => FromValue(HttpStatusCode.Redirect, value);
+    public static StringResponse Found(string @string) => FromString(HttpStatusCode.Found, @string);
 
-    public static IResponse SeeOther<T>(T value) => FromValue(HttpStatusCode.SeeOther, value);
+    public static StringResponse Redirect(string @string) => FromString(HttpStatusCode.Redirect, @string);
 
-    public static IResponse RedirectMethod<T>(T value) =>
-        FromValue(HttpStatusCode.RedirectMethod, value);
+    public static StringResponse SeeOther(string @string) => FromString(HttpStatusCode.SeeOther, @string);
 
-    public static IResponse NotModified<T>(T value) => FromValue(HttpStatusCode.NotModified, value);
+    public static StringResponse RedirectMethod(string @string) => FromString(HttpStatusCode.RedirectMethod, @string);
 
-    public static IResponse UseProxy<T>(T value) => FromValue(HttpStatusCode.UseProxy, value);
+    public static StringResponse NotModified(string @string) => FromString(HttpStatusCode.NotModified, @string);
 
-    public static IResponse Unused<T>(T value) => FromValue(HttpStatusCode.Unused, value);
+    public static StringResponse UseProxy(string @string) => FromString(HttpStatusCode.UseProxy, @string);
 
-    public static IResponse TemporaryRedirect<T>(T value) =>
-        FromValue(HttpStatusCode.TemporaryRedirect, value);
+    public static StringResponse Unused(string @string) => FromString(HttpStatusCode.Unused, @string);
 
-    public static IResponse RedirectKeepVerb<T>(T value) =>
-        FromValue(HttpStatusCode.RedirectKeepVerb, value);
+    public static StringResponse TemporaryRedirect(string @string) => FromString(HttpStatusCode.TemporaryRedirect, @string);
 
-    public static IResponse BadRequest<T>(T value) => FromValue(HttpStatusCode.BadRequest, value);
+    public static StringResponse RedirectKeepVerb(string @string) => FromString(HttpStatusCode.RedirectKeepVerb, @string);
 
-    public static IResponse Unauthorized<T>(T value) =>
-        FromValue(HttpStatusCode.Unauthorized, value);
+    public static StringResponse BadRequest(string @string) => FromString(HttpStatusCode.BadRequest, @string);
 
-    public static IResponse PaymentRequired<T>(T value) =>
-        FromValue(HttpStatusCode.PaymentRequired, value);
+    public static StringResponse Unauthorized(string @string) => FromString(HttpStatusCode.Unauthorized, @string);
 
-    public static IResponse Forbidden<T>(T value) => FromValue(HttpStatusCode.Forbidden, value);
+    public static StringResponse PaymentRequired(string @string) => FromString(HttpStatusCode.PaymentRequired, @string);
 
-    public static IResponse NotFound<T>(T value) => FromValue(HttpStatusCode.NotFound, value);
+    public static StringResponse Forbidden(string @string) => FromString(HttpStatusCode.Forbidden, @string);
 
-    public static IResponse MethodNotAllowed<T>(T value) =>
-        FromValue(HttpStatusCode.MethodNotAllowed, value);
+    public static StringResponse NotFound(string @string) => FromString(HttpStatusCode.NotFound, @string);
 
-    public static IResponse NotAcceptable<T>(T value) =>
-        FromValue(HttpStatusCode.NotAcceptable, value);
+    public static StringResponse MethodNotAllowed(string @string) => FromString(HttpStatusCode.MethodNotAllowed, @string);
 
-    public static IResponse ProxyAuthenticationRequired<T>(T value) =>
-        FromValue(HttpStatusCode.ProxyAuthenticationRequired, value);
+    public static StringResponse NotAcceptable(string @string) => FromString(HttpStatusCode.NotAcceptable, @string);
 
-    public static IResponse RequestTimeout<T>(T value) =>
-        FromValue(HttpStatusCode.RequestTimeout, value);
+    public static StringResponse ProxyAuthenticationRequired(string @string) => FromString(HttpStatusCode.ProxyAuthenticationRequired, @string);
 
-    public static IResponse Conflict<T>(T value) => FromValue(HttpStatusCode.Conflict, value);
+    public static StringResponse RequestTimeout(string @string) => FromString(HttpStatusCode.RequestTimeout, @string);
 
-    public static IResponse Gone<T>(T value) => FromValue(HttpStatusCode.Gone, value);
+    public static StringResponse Conflict(string @string) => FromString(HttpStatusCode.Conflict, @string);
 
-    public static IResponse LengthRequired<T>(T value) =>
-        FromValue(HttpStatusCode.LengthRequired, value);
+    public static StringResponse Gone(string @string) => FromString(HttpStatusCode.Gone, @string);
 
-    public static IResponse PreconditionFailed<T>(T value) =>
-        FromValue(HttpStatusCode.PreconditionFailed, value);
+    public static StringResponse LengthRequired(string @string) => FromString(HttpStatusCode.LengthRequired, @string);
 
-    public static IResponse RequestEntityTooLarge<T>(T value) =>
-        FromValue(HttpStatusCode.RequestEntityTooLarge, value);
+    public static StringResponse PreconditionFailed(string @string) => FromString(HttpStatusCode.PreconditionFailed, @string);
 
-    public static IResponse RequestUriTooLong<T>(T value) =>
-        FromValue(HttpStatusCode.RequestUriTooLong, value);
+    public static StringResponse RequestEntityTooLarge(string @string) => FromString(HttpStatusCode.RequestEntityTooLarge, @string);
 
-    public static IResponse UnsupportedMediaType<T>(T value) =>
-        FromValue(HttpStatusCode.UnsupportedMediaType, value);
+    public static StringResponse RequestUriTooLong(string @string) => FromString(HttpStatusCode.RequestUriTooLong, @string);
 
-    public static IResponse RequestedRangeNotSatisfiable<T>(T value) =>
-        FromValue(HttpStatusCode.RequestedRangeNotSatisfiable, value);
+    public static StringResponse UnsupportedMediaType(string @string) => FromString(HttpStatusCode.UnsupportedMediaType, @string);
 
-    public static IResponse ExpectationFailed<T>(T value) =>
-        FromValue(HttpStatusCode.ExpectationFailed, value);
+    public static StringResponse RequestedRangeNotSatisfiable(string @string) => FromString(HttpStatusCode.RequestedRangeNotSatisfiable, @string);
 
-    public static IResponse UpgradeRequired<T>(T value) =>
-        FromValue(HttpStatusCode.UpgradeRequired, value);
+    public static StringResponse ExpectationFailed(string @string) => FromString(HttpStatusCode.ExpectationFailed, @string);
 
-    public static IResponse InternalServerError<T>(T value) =>
-        FromValue(HttpStatusCode.InternalServerError, value);
+    public static StringResponse UpgradeRequired(string @string) => FromString(HttpStatusCode.UpgradeRequired, @string);
 
-    public static IResponse NotImplemented<T>(T value) =>
-        FromValue(HttpStatusCode.NotImplemented, value);
+    public static StringResponse InternalServerError(string @string) => FromString(HttpStatusCode.InternalServerError, @string);
 
-    public static IResponse BadGateway<T>(T value) => FromValue(HttpStatusCode.BadGateway, value);
+    public static StringResponse NotImplemented(string @string) => FromString(HttpStatusCode.NotImplemented, @string);
 
-    public static IResponse ServiceUnavailable<T>(T value) =>
-        FromValue(HttpStatusCode.ServiceUnavailable, value);
+    public static StringResponse BadGateway(string @string) => FromString(HttpStatusCode.BadGateway, @string);
 
-    public static IResponse GatewayTimeout<T>(T value) =>
-        FromValue(HttpStatusCode.GatewayTimeout, value);
+    public static StringResponse ServiceUnavailable(string @string) => FromString(HttpStatusCode.ServiceUnavailable, @string);
 
-    public static IResponse HttpVersionNotSupported<T>(T value) =>
-        FromValue(HttpStatusCode.HttpVersionNotSupported, value);
+    public static StringResponse GatewayTimeout(string @string) => FromString(HttpStatusCode.GatewayTimeout, @string);
 
-    public static IResponse Continue(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.Continue, coroutine);
+    public static StringResponse HttpVersionNotSupported(string @string) => FromString(HttpStatusCode.HttpVersionNotSupported, @string);
 
-    public static IResponse SwitchingProtocols(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.SwitchingProtocols, coroutine);
+    public static JsonResponse Continue<T>(T value) => FromJson(HttpStatusCode.Continue, value);
 
-    public static IResponse Ok(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.OK, coroutine);
+    public static JsonResponse SwitchingProtocols<T>(T value) => FromJson(HttpStatusCode.SwitchingProtocols, value);
 
-    public static IResponse Created(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.Created, coroutine);
+    public static JsonResponse Ok<T>(T value) => FromJson(HttpStatusCode.OK, value);
 
-    public static IResponse Accepted(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.Accepted, coroutine);
+    public static JsonResponse Created<T>(T value) => FromJson(HttpStatusCode.Created, value);
 
-    public static IResponse NonAuthoritativeInformation(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.NonAuthoritativeInformation, coroutine);
+    public static JsonResponse Accepted<T>(T value) => FromJson(HttpStatusCode.Accepted, value);
 
-    public static IResponse NoContent(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.NoContent, coroutine);
+    public static JsonResponse NonAuthoritativeInformation<T>(T value) => FromJson(HttpStatusCode.NonAuthoritativeInformation, value);
 
-    public static IResponse ResetContent(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.ResetContent, coroutine);
+    public static JsonResponse NoContent<T>(T value) => FromJson(HttpStatusCode.NoContent, value);
 
-    public static IResponse PartialContent(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.PartialContent, coroutine);
+    public static JsonResponse ResetContent<T>(T value) => FromJson(HttpStatusCode.ResetContent, value);
 
-    public static IResponse MultipleChoices(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.MultipleChoices, coroutine);
+    public static JsonResponse PartialContent<T>(T value) => FromJson(HttpStatusCode.PartialContent, value);
 
-    public static IResponse Ambiguous(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.Ambiguous, coroutine);
+    public static JsonResponse MultipleChoices<T>(T value) => FromJson(HttpStatusCode.MultipleChoices, value);
 
-    public static IResponse MovedPermanently(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.MovedPermanently, coroutine);
+    public static JsonResponse Ambiguous<T>(T value) => FromJson(HttpStatusCode.Ambiguous, value);
 
-    public static IResponse Moved(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.Moved, coroutine);
+    public static JsonResponse MovedPermanently<T>(T value) => FromJson(HttpStatusCode.MovedPermanently, value);
 
-    public static IResponse Found(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.Found, coroutine);
+    public static JsonResponse Moved<T>(T value) => FromJson(HttpStatusCode.Moved, value);
 
-    public static IResponse Redirect(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.Redirect, coroutine);
+    public static JsonResponse Found<T>(T value) => FromJson(HttpStatusCode.Found, value);
 
-    public static IResponse SeeOther(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.SeeOther, coroutine);
+    public static JsonResponse Redirect<T>(T value) => FromJson(HttpStatusCode.Redirect, value);
 
-    public static IResponse RedirectMethod(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.RedirectMethod, coroutine);
+    public static JsonResponse SeeOther<T>(T value) => FromJson(HttpStatusCode.SeeOther, value);
 
-    public static IResponse NotModified(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.NotModified, coroutine);
+    public static JsonResponse RedirectMethod<T>(T value) => FromJson(HttpStatusCode.RedirectMethod, value);
 
-    public static IResponse UseProxy(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.UseProxy, coroutine);
+    public static JsonResponse NotModified<T>(T value) => FromJson(HttpStatusCode.NotModified, value);
 
-    public static IResponse Unused(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.Unused, coroutine);
+    public static JsonResponse UseProxy<T>(T value) => FromJson(HttpStatusCode.UseProxy, value);
 
-    public static IResponse TemporaryRedirect(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.TemporaryRedirect, coroutine);
+    public static JsonResponse Unused<T>(T value) => FromJson(HttpStatusCode.Unused, value);
 
-    public static IResponse RedirectKeepVerb(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.RedirectKeepVerb, coroutine);
+    public static JsonResponse TemporaryRedirect<T>(T value) => FromJson(HttpStatusCode.TemporaryRedirect, value);
 
-    public static IResponse BadRequest(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.BadRequest, coroutine);
+    public static JsonResponse RedirectKeepVerb<T>(T value) => FromJson(HttpStatusCode.RedirectKeepVerb, value);
 
-    public static IResponse Unauthorized(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.Unauthorized, coroutine);
+    public static JsonResponse BadRequest<T>(T value) => FromJson(HttpStatusCode.BadRequest, value);
 
-    public static IResponse PaymentRequired(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.PaymentRequired, coroutine);
+    public static JsonResponse Unauthorized<T>(T value) => FromJson(HttpStatusCode.Unauthorized, value);
 
-    public static IResponse Forbidden(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.Forbidden, coroutine);
+    public static JsonResponse PaymentRequired<T>(T value) => FromJson(HttpStatusCode.PaymentRequired, value);
 
-    public static IResponse NotFound(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.NotFound, coroutine);
+    public static JsonResponse Forbidden<T>(T value) => FromJson(HttpStatusCode.Forbidden, value);
 
-    public static IResponse MethodNotAllowed(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.MethodNotAllowed, coroutine);
+    public static JsonResponse NotFound<T>(T value) => FromJson(HttpStatusCode.NotFound, value);
 
-    public static IResponse NotAcceptable(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.NotAcceptable, coroutine);
+    public static JsonResponse MethodNotAllowed<T>(T value) => FromJson(HttpStatusCode.MethodNotAllowed, value);
 
-    public static IResponse ProxyAuthenticationRequired(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.ProxyAuthenticationRequired, coroutine);
+    public static JsonResponse NotAcceptable<T>(T value) => FromJson(HttpStatusCode.NotAcceptable, value);
 
-    public static IResponse RequestTimeout(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.RequestTimeout, coroutine);
+    public static JsonResponse ProxyAuthenticationRequired<T>(T value) => FromJson(HttpStatusCode.ProxyAuthenticationRequired, value);
 
-    public static IResponse Conflict(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.Conflict, coroutine);
+    public static JsonResponse RequestTimeout<T>(T value) => FromJson(HttpStatusCode.RequestTimeout, value);
 
-    public static IResponse Gone(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.Gone, coroutine);
+    public static JsonResponse Conflict<T>(T value) => FromJson(HttpStatusCode.Conflict, value);
 
-    public static IResponse LengthRequired(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.LengthRequired, coroutine);
+    public static JsonResponse Gone<T>(T value) => FromJson(HttpStatusCode.Gone, value);
 
-    public static IResponse PreconditionFailed(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.PreconditionFailed, coroutine);
+    public static JsonResponse LengthRequired<T>(T value) => FromJson(HttpStatusCode.LengthRequired, value);
 
-    public static IResponse RequestEntityTooLarge(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.RequestEntityTooLarge, coroutine);
+    public static JsonResponse PreconditionFailed<T>(T value) => FromJson(HttpStatusCode.PreconditionFailed, value);
 
-    public static IResponse RequestUriTooLong(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.RequestUriTooLong, coroutine);
+    public static JsonResponse RequestEntityTooLarge<T>(T value) => FromJson(HttpStatusCode.RequestEntityTooLarge, value);
 
-    public static IResponse UnsupportedMediaType(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.UnsupportedMediaType, coroutine);
+    public static JsonResponse RequestUriTooLong<T>(T value) => FromJson(HttpStatusCode.RequestUriTooLong, value);
 
-    public static IResponse RequestedRangeNotSatisfiable(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.RequestedRangeNotSatisfiable, coroutine);
+    public static JsonResponse UnsupportedMediaType<T>(T value) => FromJson(HttpStatusCode.UnsupportedMediaType, value);
 
-    public static IResponse ExpectationFailed(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.ExpectationFailed, coroutine);
+    public static JsonResponse RequestedRangeNotSatisfiable<T>(T value) => FromJson(HttpStatusCode.RequestedRangeNotSatisfiable, value);
 
-    public static IResponse UpgradeRequired(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.UpgradeRequired, coroutine);
+    public static JsonResponse ExpectationFailed<T>(T value) => FromJson(HttpStatusCode.ExpectationFailed, value);
 
-    public static IResponse InternalServerError(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.InternalServerError, coroutine);
+    public static JsonResponse UpgradeRequired<T>(T value) => FromJson(HttpStatusCode.UpgradeRequired, value);
 
-    public static IResponse NotImplemented(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.NotImplemented, coroutine);
+    public static JsonResponse InternalServerError<T>(T value) => FromJson(HttpStatusCode.InternalServerError, value);
 
-    public static IResponse BadGateway(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.BadGateway, coroutine);
+    public static JsonResponse NotImplemented<T>(T value) => FromJson(HttpStatusCode.NotImplemented, value);
 
-    public static IResponse ServiceUnavailable(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.ServiceUnavailable, coroutine);
+    public static JsonResponse BadGateway<T>(T value) => FromJson(HttpStatusCode.BadGateway, value);
 
-    public static IResponse GatewayTimeout(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.GatewayTimeout, coroutine);
+    public static JsonResponse ServiceUnavailable<T>(T value) => FromJson(HttpStatusCode.ServiceUnavailable, value);
 
-    public static IResponse HttpVersionNotSupported(IEnumerator coroutine) =>
-        PlainTextCoroutine(HttpStatusCode.HttpVersionNotSupported, coroutine);
+    public static JsonResponse GatewayTimeout<T>(T value) => FromJson(HttpStatusCode.GatewayTimeout, value);
+
+    public static JsonResponse HttpVersionNotSupported<T>(T value) => FromJson(HttpStatusCode.HttpVersionNotSupported, value);
+
+    public static CoroutineResponse Continue(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Continue, coroutine);
+
+    public static CoroutineResponse SwitchingProtocols(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.SwitchingProtocols, coroutine);
+
+    public static CoroutineResponse Ok(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.OK, coroutine);
+
+    public static CoroutineResponse Created(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Created, coroutine);
+
+    public static CoroutineResponse Accepted(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Accepted, coroutine);
+
+    public static CoroutineResponse NonAuthoritativeInformation(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.NonAuthoritativeInformation, coroutine);
+
+    public static CoroutineResponse NoContent(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.NoContent, coroutine);
+
+    public static CoroutineResponse ResetContent(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.ResetContent, coroutine);
+
+    public static CoroutineResponse PartialContent(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.PartialContent, coroutine);
+
+    public static CoroutineResponse MultipleChoices(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.MultipleChoices, coroutine);
+
+    public static CoroutineResponse Ambiguous(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Ambiguous, coroutine);
+
+    public static CoroutineResponse MovedPermanently(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.MovedPermanently, coroutine);
+
+    public static CoroutineResponse Moved(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Moved, coroutine);
+
+    public static CoroutineResponse Found(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Found, coroutine);
+
+    public static CoroutineResponse Redirect(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Redirect, coroutine);
+
+    public static CoroutineResponse SeeOther(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.SeeOther, coroutine);
+
+    public static CoroutineResponse RedirectMethod(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.RedirectMethod, coroutine);
+
+    public static CoroutineResponse NotModified(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.NotModified, coroutine);
+
+    public static CoroutineResponse UseProxy(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.UseProxy, coroutine);
+
+    public static CoroutineResponse Unused(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Unused, coroutine);
+
+    public static CoroutineResponse TemporaryRedirect(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.TemporaryRedirect, coroutine);
+
+    public static CoroutineResponse RedirectKeepVerb(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.RedirectKeepVerb, coroutine);
+
+    public static CoroutineResponse BadRequest(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.BadRequest, coroutine);
+
+    public static CoroutineResponse Unauthorized(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Unauthorized, coroutine);
+
+    public static CoroutineResponse PaymentRequired(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.PaymentRequired, coroutine);
+
+    public static CoroutineResponse Forbidden(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Forbidden, coroutine);
+
+    public static CoroutineResponse NotFound(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.NotFound, coroutine);
+
+    public static CoroutineResponse MethodNotAllowed(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.MethodNotAllowed, coroutine);
+
+    public static CoroutineResponse NotAcceptable(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.NotAcceptable, coroutine);
+
+    public static CoroutineResponse ProxyAuthenticationRequired(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.ProxyAuthenticationRequired, coroutine);
+
+    public static CoroutineResponse RequestTimeout(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.RequestTimeout, coroutine);
+
+    public static CoroutineResponse Conflict(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Conflict, coroutine);
+
+    public static CoroutineResponse Gone(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Gone, coroutine);
+
+    public static CoroutineResponse LengthRequired(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.LengthRequired, coroutine);
+
+    public static CoroutineResponse PreconditionFailed(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.PreconditionFailed, coroutine);
+
+    public static CoroutineResponse RequestEntityTooLarge(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.RequestEntityTooLarge, coroutine);
+
+    public static CoroutineResponse RequestUriTooLong(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.RequestUriTooLong, coroutine);
+
+    public static CoroutineResponse UnsupportedMediaType(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.UnsupportedMediaType, coroutine);
+
+    public static CoroutineResponse RequestedRangeNotSatisfiable(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.RequestedRangeNotSatisfiable, coroutine);
+
+    public static CoroutineResponse ExpectationFailed(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.ExpectationFailed, coroutine);
+
+    public static CoroutineResponse UpgradeRequired(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.UpgradeRequired, coroutine);
+
+    public static CoroutineResponse InternalServerError(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.InternalServerError, coroutine);
+
+    public static CoroutineResponse NotImplemented(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.NotImplemented, coroutine);
+
+    public static CoroutineResponse BadGateway(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.BadGateway, coroutine);
+
+    public static CoroutineResponse ServiceUnavailable(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.ServiceUnavailable, coroutine);
+
+    public static CoroutineResponse GatewayTimeout(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.GatewayTimeout, coroutine);
+
+    public static CoroutineResponse HttpVersionNotSupported(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.HttpVersionNotSupported, coroutine);
+
+    // csharpier-ignore-end
 }
