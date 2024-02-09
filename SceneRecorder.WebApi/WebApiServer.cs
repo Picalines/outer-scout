@@ -111,9 +111,7 @@ public sealed class WebApiServer : IDisposable
 
         services.RegisterFactory<SceneRecorder.Builder>(() =>
         {
-            var lazy = services.Resolve<ResettableLazy<SceneRecorder.Builder>>();
-            lazy.ThrowIfNull();
-            return lazy.Value;
+            return services.Resolve<ResettableLazy<SceneRecorder.Builder>>().Value;
         });
 
         return services;

@@ -136,7 +136,9 @@ public sealed partial class HttpServer : IDisposable
         IResponse response;
 
         using (request.BodyReader)
+        using (_services.RegisterInstance(context))
         using (_services.RegisterInstance(request))
+        using (_services.RegisterInstance(route))
         {
             Log($"handling route '{route}'", MessageType.Info);
 
@@ -183,7 +185,6 @@ public sealed partial class HttpServer : IDisposable
             using (var bodyWriter = new StreamWriter(httpResponse.OutputStream))
             {
                 var jsonSerializer = _services.Resolve<JsonSerializer>();
-                jsonSerializer.ThrowIfNull();
                 jsonSerializer.Serialize(bodyWriter, value);
             }
             httpResponse.Close();
@@ -268,8 +269,8 @@ public sealed partial class HttpServer : IDisposable
 
     private void Log(string message, MessageType messageType)
     {
-        var modConsole = _services.Resolve<IModConsole>();
-
-        modConsole?.WriteLine($"{nameof(SceneRecorder)} API: {message}", messageType);
+        _services
+            .ResolveOrNull<IModConsole>()
+            ?.WriteLine($"{nameof(SceneRecorder)} API: {message}", messageType);
     }
 }

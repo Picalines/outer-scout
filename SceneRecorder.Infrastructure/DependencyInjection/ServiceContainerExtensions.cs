@@ -14,7 +14,7 @@ public static class ServiceContainerExtensions
     )
         where T : class
     {
-        return services.RegisterServiceFallback(new SingletonService<T>(instance));
+        return services.RegisterFallback(new SingletonService<T>(instance));
     }
 
     public static IDisposable RegisterFactory<T>(

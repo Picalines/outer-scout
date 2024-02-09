@@ -2,19 +2,33 @@ namespace SceneRecorder.Infrastructure.DependencyInjection;
 
 public sealed class ServiceContainer : IDisposable
 {
-    private readonly Dictionary<Type, List<IService<object>>> _services = [];
+    private readonly Dictionary<Type, LinkedList<IService<object>>> _services = [];
 
     private bool _disposed = false;
 
-    public object? Resolve(Type serviceType)
+    public object? ResolveOrNull(Type serviceType)
     {
-        return ResolveLastService(serviceType)?.GetInstance();
+        return ResolveFirstService(serviceType)?.GetInstance();
     }
 
-    public T? Resolve<T>()
+    public object Resolve(Type serviceType)
+    {
+        return ResolveOrNull(serviceType)
+            ?? throw new InvalidOperationException(
+                $"{nameof(ServiceContainer)} does not contain service of type {serviceType}"
+            );
+    }
+
+    public T? ResolveOrNull<T>()
         where T : class
     {
-        return (ResolveLastService(typeof(T)) as IService<T>)?.GetInstance();
+        return ResolveOrNull(typeof(T)) as T;
+    }
+
+    public T Resolve<T>()
+        where T : class
+    {
+        return (Resolve(typeof(T)) as T)!;
     }
 
     public IDisposable RegisterService<T>(IService<T> service)
@@ -23,17 +37,17 @@ public sealed class ServiceContainer : IDisposable
         AssertNotDisposed();
 
         var serviceList = GetOrCreateServiceList<T>();
-        serviceList.Add(service);
+        serviceList.AddFirst(service);
         return new ServiceDisposer(serviceList, service);
     }
 
-    public IDisposable RegisterServiceFallback<T>(IService<T> service)
+    public IDisposable RegisterFallback<T>(IService<T> service)
         where T : class
     {
         AssertNotDisposed();
 
         var serviceList = GetOrCreateServiceList<T>();
-        serviceList.Insert(0, service);
+        serviceList.AddLast(service);
         return new ServiceDisposer(serviceList, service);
     }
 
@@ -57,16 +71,16 @@ public sealed class ServiceContainer : IDisposable
         }
     }
 
-    private IService<object>? ResolveLastService(Type type)
+    private IService<object>? ResolveFirstService(Type type)
     {
         AssertNotDisposed();
 
         return _services.TryGetValue(type, out var serviceList)
-            ? serviceList.LastOrDefault()
+            ? serviceList.FirstOrDefault()
             : null;
     }
 
-    private List<IService<object>> GetOrCreateServiceList<T>()
+    private LinkedList<IService<object>> GetOrCreateServiceList<T>()
     {
         var serviceType = typeof(T);
         if (_services.TryGetValue(serviceType, out var serviceList) is false)
@@ -86,7 +100,7 @@ public sealed class ServiceContainer : IDisposable
     }
 
     private sealed class ServiceDisposer(
-        IList<IService<object>> serviceList,
+        LinkedList<IService<object>> serviceList,
         IService<object> service
     ) : IDisposable
     {

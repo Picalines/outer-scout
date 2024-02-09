@@ -129,15 +129,17 @@ internal sealed class LambdaRequestHandler : IRequestHandler
     private sealed class ServiceBinder(ServiceContainer services, Type paramType, bool isNullable)
         : IBinder
     {
+        private readonly IResponse _internalError = ResponseFabric.InternalServerError(
+            $"missing service of type {paramType}"
+        );
+
         public object? Bind(Request request)
         {
-            var instance = services.Resolve(paramType);
+            var instance = services.ResolveOrNull(paramType);
 
             if ((instance, isNullable) is (null, false))
             {
-                throw new InvalidOperationException(
-                    $"failed to resolve service of type {paramType}"
-                );
+                return _internalError;
             }
 
             return instance;
@@ -149,7 +151,6 @@ internal sealed class LambdaRequestHandler : IRequestHandler
         public object? Bind(Request request)
         {
             var jsonSerializer = services.Resolve<JsonSerializer>();
-            jsonSerializer.ThrowIfNull();
 
             using var jsonReader = new JsonTextReader(request.BodyReader);
             return jsonSerializer.Deserialize(jsonReader, paramType);
