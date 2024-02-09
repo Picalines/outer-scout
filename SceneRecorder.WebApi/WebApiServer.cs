@@ -62,7 +62,7 @@ public sealed class WebApiServer : IDisposable
 
         serverBuilder.MapGet("", () => $"Welcome to Outer Wilds {nameof(SceneRecorder)} API!");
 
-        serverBuilder.MapGet("api-status", () => new { Available = true });
+        serverBuilder.MapGet("api/status", () => new { Available = true });
     }
 
     private static ServiceContainer CreateServiceContainer()
