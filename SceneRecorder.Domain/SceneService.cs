@@ -6,6 +6,8 @@ namespace SceneRecorder.Domain;
 public sealed class SceneService<T>(Func<T> instanceFactory) : IService<T>, IDisposable
     where T : class
 {
+    private GameObject? _gameObject = null;
+
     private ISceneResource<T>? _resource = null;
 
     public T GetInstance()
@@ -14,9 +16,9 @@ public sealed class SceneService<T>(Func<T> instanceFactory) : IService<T>, IDis
         {
             var resourceValue = instanceFactory();
 
-            var gameObject = new GameObject($"{nameof(SceneRecorder)}.{nameof(SceneService<T>)}");
+            _gameObject = new GameObject($"{nameof(SceneRecorder)}.{nameof(SceneService<T>)}");
 
-            _resource = gameObject.AddResource(resourceValue);
+            _resource = _gameObject.AddResource(resourceValue);
         }
 
         return _resource.Value;
@@ -24,10 +26,10 @@ public sealed class SceneService<T>(Func<T> instanceFactory) : IService<T>, IDis
 
     public void Dispose()
     {
-        if (_resource is { IsAccessable: true } and MonoBehaviour { gameObject: var gameObject })
+        if (_resource is { IsAccessable: true })
         {
             _resource.Dispose();
-            UnityEngine.Object.Destroy(gameObject);
+            UnityEngine.Object.Destroy(_gameObject);
         }
     }
 }
