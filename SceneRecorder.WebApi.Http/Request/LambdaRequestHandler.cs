@@ -24,13 +24,9 @@ internal sealed class LambdaRequestHandler : IRequestHandler
         return _handler.Invoke(request);
     }
 
-    public static LambdaRequestHandler Create(
-        ServiceContainer services,
-        Route route,
-        Delegate handler
-    )
+    public static LambdaRequestHandler Create(Delegate handler)
     {
-        return new(BindDelegate(services, route, handler));
+        return new(BindDelegate(handler));
     }
 
     private interface IBinder
@@ -52,10 +48,9 @@ internal sealed class LambdaRequestHandler : IRequestHandler
         var returnsVoid = handlerMethod.ReturnType == typeof(void);
 
         var argumentBinders = handlerParameters
-            .Indexed()
-            .Select<(int, ParameterInfo), IBinder>(pair =>
+            .Select<ParameterInfo, IBinder>(parameter =>
             {
-                var (parameterIndex, parameter) = pair;
+                var parameterIndex = parameter.Position;
                 var parameterType = parameter.ParameterType;
                 var parameterName = parameter.Name;
 

@@ -1,10 +1,17 @@
 namespace SceneRecorder.Infrastructure.DependencyInjection;
 
-public sealed class ServiceContainer : IDisposable
+public sealed partial class ServiceContainer : IDisposable
 {
-    private readonly Dictionary<Type, LinkedList<IService<object>>> _services = [];
+    private readonly IReadOnlyDictionary<Type, IEnumerable<ILifetimeManager<object>>> _services;
 
     private bool _disposed = false;
+
+    private ServiceContainer(
+        IReadOnlyDictionary<Type, IEnumerable<ILifetimeManager<object>>> services
+    )
+    {
+        _services = services;
+    }
 
     public object? ResolveOrNull(Type serviceType)
     {
@@ -31,26 +38,6 @@ public sealed class ServiceContainer : IDisposable
         return (Resolve(typeof(T)) as T)!;
     }
 
-    public IDisposable RegisterService<T>(IService<T> service)
-        where T : class
-    {
-        AssertNotDisposed();
-
-        var serviceList = GetOrCreateServiceList<T>();
-        serviceList.AddFirst(service);
-        return new ServiceDisposer(serviceList, service);
-    }
-
-    public IDisposable RegisterFallback<T>(IService<T> service)
-        where T : class
-    {
-        AssertNotDisposed();
-
-        var serviceList = GetOrCreateServiceList<T>();
-        serviceList.AddLast(service);
-        return new ServiceDisposer(serviceList, service);
-    }
-
     public void Dispose()
     {
         if (_disposed)
@@ -66,12 +53,10 @@ public sealed class ServiceContainer : IDisposable
             {
                 (service as IDisposable)?.Dispose();
             }
-
-            serviceList.Clear();
         }
     }
 
-    private IService<object>? ResolveFirstService(Type type)
+    private ILifetimeManager<object>? ResolveFirstService(Type type)
     {
         AssertNotDisposed();
 
@@ -80,44 +65,11 @@ public sealed class ServiceContainer : IDisposable
             : null;
     }
 
-    private LinkedList<IService<object>> GetOrCreateServiceList<T>()
-    {
-        var serviceType = typeof(T);
-        if (_services.TryGetValue(serviceType, out var serviceList) is false)
-        {
-            _services[serviceType] = serviceList = [];
-        }
-
-        return serviceList;
-    }
-
     private void AssertNotDisposed()
     {
         if (_disposed)
         {
             throw new InvalidOperationException($"{nameof(ServiceContainer)} is disposed");
-        }
-    }
-
-    private sealed class ServiceDisposer(
-        LinkedList<IService<object>> serviceList,
-        IService<object> service
-    ) : IDisposable
-    {
-        private bool _disposed = false;
-
-        public void Dispose()
-        {
-            if (_disposed)
-            {
-                return;
-            }
-
-            _disposed = true;
-
-            serviceList.Remove(service);
-
-            (service as IDisposable)?.Dispose();
         }
     }
 }
