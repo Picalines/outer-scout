@@ -75,15 +75,22 @@ public sealed partial class SceneRecorder
             return this;
         }
 
+        public Builder WithScenePatch(Action apply, Action restore)
+        {
+            return WithScenePatch(new(apply, restore));
+        }
+
         private Builder WithCaptureFrameRatePatch()
         {
+            int oldCaptureFrameRate = 0;
+
             return WithScenePatch(
-                new(() =>
+                () =>
                 {
-                    var oldCaptureFrameRate = Time.captureFramerate;
+                    oldCaptureFrameRate = Time.captureFramerate;
                     Time.captureFramerate = _captureFrameRate;
-                    return () => Time.captureFramerate = oldCaptureFrameRate;
-                })
+                },
+                () => Time.captureFramerate = oldCaptureFrameRate
             );
         }
     }

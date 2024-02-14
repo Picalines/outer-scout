@@ -1,5 +1,4 @@
 using OWML.Common;
-using SceneRecorder.Application.Components;
 using SceneRecorder.Infrastructure.Extensions;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -14,21 +13,18 @@ public static class SceneRecorderExtensions
     )
     {
         return builder.WithScenePatch(
-            new(
-                () => modConsole.WriteLine("recording started", MessageType.Info),
-                () => modConsole.WriteLine("recording finished", MessageType.Success)
-            )
+            () => modConsole.WriteLine("recording started", MessageType.Info),
+            () => modConsole.WriteLine("recording finished", MessageType.Success)
         );
     }
 
     public static SceneRecorder.Builder WithTimeScaleRestored(this SceneRecorder.Builder builder)
     {
+        float oldTimeScale = 1;
+
         return builder.WithScenePatch(
-            new(() =>
-            {
-                var timeScaleBeforeRecording = Time.timeScale;
-                return () => Time.timeScale = timeScaleBeforeRecording;
-            })
+            () => oldTimeScale = Time.timeScale,
+            () => Time.timeScale = oldTimeScale
         );
     }
 
@@ -40,25 +36,23 @@ public static class SceneRecorderExtensions
         int targetDisplay = -1;
 
         return builder.WithScenePatch(
-            new(
-                () =>
+            () =>
+            {
+                activeCamera = Locator.GetActiveCamera().OrNull();
+                if (activeCamera is not null)
                 {
-                    activeCamera = Locator.GetActiveCamera().OrNull();
-                    if (activeCamera is not null)
-                    {
-                        targetDisplay = activeCamera.mainCamera.targetDisplay;
-                        activeCamera.mainCamera.targetDisplay = -1;
-                    }
-                },
-                () =>
-                {
-                    if (activeCamera is not null)
-                    {
-                        activeCamera.mainCamera.targetDisplay = targetDisplay;
-                        activeCamera = null;
-                    }
+                    targetDisplay = activeCamera.mainCamera.targetDisplay;
+                    activeCamera.mainCamera.targetDisplay = -1;
                 }
-            )
+            },
+            () =>
+            {
+                if (activeCamera is not null)
+                {
+                    activeCamera.mainCamera.targetDisplay = targetDisplay;
+                    activeCamera = null;
+                }
+            }
         );
     }
 
@@ -66,89 +60,79 @@ public static class SceneRecorderExtensions
         this SceneRecorder.Builder builder
     )
     {
+        var inputDevicesToEnable = Array.Empty<InputDevice>();
+
         return builder.WithScenePatch(
-            new(() =>
-            {
-                var inputDevicesToEnable = InputSystem
+            () =>
+                inputDevicesToEnable = InputSystem
                     .devices.Where(device => device.enabled)
                     .ForEach(device => InputSystem.DisableDevice(device))
-                    .ToArray();
-
-                return () => inputDevicesToEnable.ForEach(InputSystem.EnableDevice);
-            })
+                    .ToArray(),
+            () => inputDevicesToEnable.ForEach(InputSystem.EnableDevice)
         );
     }
 
     public static SceneRecorder.Builder WithPauseMenuDisabled(this SceneRecorder.Builder builder)
     {
         return builder.WithScenePatch(
-            new(() =>
-            {
-                var pauseMenuManager = Locator.GetPauseCommandListener()._pauseMenu;
-                pauseMenuManager._pauseMenu.EnableMenu(false);
-
-                return () => pauseMenuManager.TryOpenPauseMenu();
-            })
+            () =>
+                Locator.GetPauseCommandListener().OrNull()?._pauseMenu._pauseMenu.EnableMenu(false),
+            () => Locator.GetPauseCommandListener().OrNull()?._pauseMenu.TryOpenPauseMenu()
         );
     }
 
     public static SceneRecorder.Builder WithInvinciblePlayer(this SceneRecorder.Builder builder)
     {
         return builder.WithScenePatch(
-            new(() =>
+            () => SetPlayerInvincibility(true),
+            () => SetPlayerInvincibility(false)
+        );
+
+        static void SetPlayerInvincibility(bool isInvincible)
+        {
+            if (Locator.GetDeathManager().OrNull() is { } deathManager)
             {
-                var deathManager = Locator.GetDeathManager().OrNull();
-                var playerResources = Locator
-                    .GetPlayerTransform()
-                    .OrNull()
-                    ?.GetComponent<PlayerResources>();
-
-                if (playerResources?.IsInvincible() is false)
-                {
-                    playerResources.ToggleInvincibility();
-                }
-
-                if (deathManager is { _invincible: false })
+                if (deathManager._invincible != isInvincible)
                 {
                     deathManager.ToggleInvincibility();
                 }
+            }
 
-                return () =>
+            if (
+                Locator.GetPlayerTransform().OrNull()?.GetComponent<PlayerResources>() is
+                { } playerResources
+            )
+            {
+                if (playerResources.IsInvincible() != isInvincible)
                 {
-                    playerResources?.ToggleInvincibility();
-                    deathManager?.ToggleInvincibility();
-                };
-            })
-        );
+                    playerResources.ToggleInvincibility();
+                }
+            }
+        }
     }
 
     public static SceneRecorder.Builder WithHiddenPlayerModel(this SceneRecorder.Builder builder)
     {
+        Renderer[]? playerRenderersToEnable = null;
+
         return builder.WithScenePatch(
-            new(() =>
-            {
-                var playerRenderersToEnable = Locator
+            () =>
+                playerRenderersToEnable = Locator
                     .GetPlayerBody()
                     .OrNull()
                     ?.GetComponentsInChildren<Renderer>()
                     .Where(renderer => renderer.enabled)
                     .ForEach(renderer => renderer.enabled = false)
-                    .ToArray();
-
-                return () => playerRenderersToEnable?.ForEach(renderer => renderer.enabled = true);
-            })
+                    .ToArray(),
+            () => playerRenderersToEnable?.ForEach(renderer => renderer.enabled = true)
         );
     }
 
     public static SceneRecorder.Builder WithDisabledQuantumMoon(this SceneRecorder.Builder builder)
     {
         return builder.WithScenePatch(
-            new(() =>
-            {
-                Locator.GetQuantumMoon().OrNull()?.SetActivation(false);
-
-                return () => Locator.GetQuantumMoon().OrNull()?.SetActivation(true);
-            })
+            () => Locator.GetQuantumMoon().OrNull()?.SetActivation(false),
+            () => Locator.GetQuantumMoon().OrNull()?.SetActivation(true)
         );
     }
 }
