@@ -14,14 +14,6 @@ public sealed class ReversableAction
         _reverse = reverse;
     }
 
-    public ReversableAction(Func<Action> performAndGetReverser)
-    {
-        _perform = () =>
-        {
-            _reverse = performAndGetReverser();
-        };
-    }
-
     public void Perform()
     {
         if (_performed)
