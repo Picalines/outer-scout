@@ -90,23 +90,21 @@ public static class SceneRecorderExtensions
 
         static void SetPlayerInvincibility(bool isInvincible)
         {
-            if (Locator.GetDeathManager().OrNull() is { } deathManager)
+            if (
+                Locator.GetDeathManager().OrNull() is { } deathManager
+                && deathManager._invincible != isInvincible
+            )
             {
-                if (deathManager._invincible != isInvincible)
-                {
-                    deathManager.ToggleInvincibility();
-                }
+                deathManager.ToggleInvincibility();
             }
 
             if (
-                Locator.GetPlayerTransform().OrNull()?.GetComponent<PlayerResources>() is
-                { } playerResources
+                Locator.GetPlayerTransform().OrNull()?.GetComponent<PlayerResources>()
+                    is { } playerResources
+                && playerResources.IsInvincible() != isInvincible
             )
             {
-                if (playerResources.IsInvincible() != isInvincible)
-                {
-                    playerResources.ToggleInvincibility();
-                }
+                playerResources.ToggleInvincibility();
             }
         }
     }
