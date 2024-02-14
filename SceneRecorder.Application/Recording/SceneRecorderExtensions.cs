@@ -1,4 +1,5 @@
 using OWML.Common;
+using SceneRecorder.Application.Components;
 using SceneRecorder.Infrastructure.Extensions;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -28,6 +29,36 @@ public static class SceneRecorderExtensions
                 var timeScaleBeforeRecording = Time.timeScale;
                 return () => Time.timeScale = timeScaleBeforeRecording;
             })
+        );
+    }
+
+    public static SceneRecorder.Builder WithDisplayRenderingDisabled(
+        this SceneRecorder.Builder builder
+    )
+    {
+        OWCamera? activeCamera = null;
+        int targetDisplay = -1;
+
+        return builder.WithScenePatch(
+            new(
+                () =>
+                {
+                    activeCamera = Locator.GetActiveCamera().OrNull();
+                    if (activeCamera is not null)
+                    {
+                        targetDisplay = activeCamera.mainCamera.targetDisplay;
+                        activeCamera.mainCamera.targetDisplay = -1;
+                    }
+                },
+                () =>
+                {
+                    if (activeCamera is not null)
+                    {
+                        activeCamera.mainCamera.targetDisplay = targetDisplay;
+                        activeCamera = null;
+                    }
+                }
+            )
         );
     }
 

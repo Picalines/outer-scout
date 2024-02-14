@@ -81,6 +81,7 @@ internal sealed class SceneRouteMapper : IRouteMapper
             .WithTimeScaleRestored()
             .WithInvinciblePlayer()
             .WithAllInputDevicesDisabled()
+            .WithDisplayRenderingDisabled()
             .WithPauseMenuDisabled()
             .WithDisabledQuantumMoon();
 
