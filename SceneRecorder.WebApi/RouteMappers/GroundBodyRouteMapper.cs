@@ -106,7 +106,7 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
         {
             var sectorMeshInfo = sector is null
                 ? noSectorMeshInfo
-                : GetOrCreate(sectorMeshInfos, sector, CreateEmptySectorDTO);
+                : sectorMeshInfos.GetOrCreate(sector, () => CreateEmptySectorDTO(sector));
 
             var (meshGameObject, meshTransform) = (meshFilter.gameObject, meshFilter.transform);
 
@@ -224,16 +224,5 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
                 yield return recursivePair;
             }
         }
-    }
-
-    private static V GetOrCreate<K, V>(IDictionary<K, V> dictionary, K key, Func<K, V> createValue)
-    {
-        if (dictionary.TryGetValue(key, out V value) is false)
-        {
-            value = createValue(key);
-            dictionary.Add(key, value);
-        }
-
-        return value;
     }
 }
