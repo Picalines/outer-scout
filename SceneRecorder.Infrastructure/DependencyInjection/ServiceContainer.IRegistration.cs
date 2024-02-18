@@ -10,49 +10,84 @@ public sealed partial class ServiceContainer
 
         public IRegistration<T> InstantiateBy(IInstantiator<T> instantiator);
 
-        public IRegistration<T> ManageBy(ILifetime lifetime);
+        public IRegistration<T> ManageBy(ILifetime<T> lifetime);
     }
 
     private interface IRegistration
     {
-        public IEnumerable<Type> Types { get; }
+        public Type InstanceType { get; }
 
-        public IInstantiator<object> Instantiator { get; }
+        public IEnumerable<Type> InterfaceTypes { get; }
 
-        public ILifetime Lifetime { get; }
+        public ILifetime<object> Lifetime { get; }
+
+        public void RegisterDependencies(ServiceContainer.Builder builder);
     }
 
     private sealed class Registration<T> : IRegistration<T>, IRegistration
         where T : class
     {
-        private readonly HashSet<Type> _types = [typeof(T)];
+        public Type InstanceType { get; } = typeof(T);
 
-        public IInstantiator<object> Instantiator { get; private set; } = null; // TODO
+        private IInstantiator<T>? _instantiator = null;
 
-        public ILifetime Lifetime { get; private set; } = null; // TODO
+        private ILifetime<T>? _lifetime = null;
+
+        private readonly HashSet<Type> _interfaceTypes = [];
 
         public IRegistration<T> As<U>()
             where U : class
         {
-            _types.Add(typeof(U));
+            if (typeof(U) is not { IsInterface: true } interfaceType)
+            {
+                throw new InvalidOperationException("interface was expected");
+            }
+
+            _interfaceTypes.Add(interfaceType);
             return this;
         }
 
         public IRegistration<T> InstantiateBy(IInstantiator<T> instantiator)
         {
-            Instantiator = instantiator;
+            if (_instantiator is not null)
+            {
+                throw new InvalidOperationException($"ambiguous instantiation of {InstanceType}");
+            }
+
+            _instantiator = instantiator;
             return this;
         }
 
-        public IRegistration<T> ManageBy(ILifetime lifetime)
+        public IRegistration<T> ManageBy(ILifetime<T> lifetime)
         {
-            Lifetime = lifetime;
+            if (_lifetime is not null)
+            {
+                throw new InvalidOperationException($"ambiguous lifetime of {InstanceType}");
+            }
+
+            _lifetime = lifetime;
             return this;
         }
 
-        public IEnumerable<Type> Types
+        public IEnumerable<Type> InterfaceTypes
         {
-            get => _types;
+            get => _interfaceTypes;
+        }
+
+        public ILifetime<object> Lifetime
+        {
+            get => _lifetime ?? new SingletonLifetime<T>();
+        }
+
+        public void RegisterDependencies(Builder builder)
+        {
+            builder
+                .Register<IInstantiator<T>>()
+                .ManageBy(
+                    new ReferenceLifetime<IInstantiator<T>>(
+                        _instantiator ?? new ConstructorInstantiator<T>()
+                    )
+                );
         }
     }
 }

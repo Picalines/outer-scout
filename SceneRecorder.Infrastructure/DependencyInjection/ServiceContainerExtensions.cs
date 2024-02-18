@@ -1,33 +1,72 @@
 namespace SceneRecorder.Infrastructure.DependencyInjection;
 
+using SceneRecorder.Infrastructure.Validation;
+using static ServiceContainer;
+
 public static class ServiceContainerExtensions
 {
-    public static void WithSingleton<T>(this ServiceContainer.Builder services, T instance)
+    public static IRegistration<T> AsSingleton<T>(this IRegistration<T> registration)
         where T : class
     {
-        return services.RegisterService(new SingletonService<T>(instance));
+        return registration.ManageBy(new SingletonLifetime<T>());
     }
 
-    
-
-    public static void WithFactory<T>(
-        this ServiceContainer services,
-        Func<T> instanceFactory
+    public static IRegistration<T> AsExternalReference<T>(
+        this IRegistration<T> registration,
+        T reference
     )
         where T : class
     {
-        return services.RegisterService(new FactoryService<T>(instanceFactory));
+        return registration.ManageBy(new ReferenceLifetime<T>(reference));
     }
 
-    private sealed class SingletonLifetimeManager<T> : ServiceContainer.LifetimeManager<T>
+    public static IRegistration<T> InstantiatePerResolve<T>(this IRegistration<T> registration)
         where T : class
     {
-        private 
-        public override T GetInstance()
+        return registration.ManageBy(new PerResolveLifetime<T>());
+    }
+
+    public static IRegistration<T> InstantiateBy<T>(
+        this IRegistration<T> registration,
+        Func<T> factory
+    )
+        where T : class
+    {
+        return registration.InstantiateBy(new LambdaInstantiator<T>(factory));
+    }
+
+    public static IRegistration<T> InstantiatePerResolve<T>(
+        this IRegistration<T> registration,
+        Func<T> factory
+    )
+        where T : class
+    {
+        return registration.InstantiatePerResolve().InstantiateBy(factory);
+    }
+
+    private sealed class PerResolveLifetime<T> : ILifetime<T>, IStartupHandler
+        where T : class
+    {
+        private IInstantiator<T>? _instantiator;
+
+        public T GetInstance()
         {
-            throw new NotImplementedException();
+            _instantiator.ThrowIfNull();
+            return _instantiator.Instantiate();
+        }
+
+        void IStartupHandler.OnContainerStartup(ServiceContainer container)
+        {
+            _instantiator = container.Resolve<IInstantiator<T>>();
         }
     }
 
-
+    private sealed class LambdaInstantiator<T>(Func<T> instantiate) : IInstantiator<T>
+        where T : class
+    {
+        public T Instantiate()
+        {
+            return instantiate.Invoke();
+        }
+    }
 }

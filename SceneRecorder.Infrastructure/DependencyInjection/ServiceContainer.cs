@@ -2,20 +2,44 @@ namespace SceneRecorder.Infrastructure.DependencyInjection;
 
 public sealed partial class ServiceContainer : IDisposable
 {
-    private readonly IReadOnlyDictionary<Type, IEnumerable<ILifetimeManager<object>>> _services;
+    private readonly IReadOnlyDictionary<Type, ILifetime<object>> _lifetimes;
+
+    private readonly IReadOnlyDictionary<Type, IEnumerable<Type>> _interfaces;
+
+    private readonly HashSet<IStartupHandler> _lifetimesToInitialize;
+
+    private readonly LinkedList<IDisposable> _lifetimesToDispose = [];
+
+    private readonly Stack<object?> _scopeStack = [];
 
     private bool _disposed = false;
 
     private ServiceContainer(
-        IReadOnlyDictionary<Type, IEnumerable<ILifetimeManager<object>>> services
+        IReadOnlyDictionary<Type, ILifetime<object>> services,
+        IReadOnlyDictionary<Type, IEnumerable<Type>> interfaces
     )
     {
-        _services = services;
+        _lifetimes = services;
+        _interfaces = interfaces;
+
+        _lifetimesToInitialize = new HashSet<IStartupHandler>(
+            _lifetimes.Values.OfType<IStartupHandler>()
+        );
+
+        InitializeServices();
+
+        foreach (var lifetime in _lifetimes.Values)
+        {
+            if (lifetime is not IStartupHandler and IDisposable disposable)
+            {
+                _lifetimesToDispose.AddLast(disposable);
+            }
+        }
     }
 
     public object? ResolveOrNull(Type serviceType)
     {
-        return ResolveFirstService(serviceType)?.GetInstance();
+        return GetInitializedLifetime(serviceType)?.GetInstance();
     }
 
     public object Resolve(Type serviceType)
@@ -38,6 +62,16 @@ public sealed partial class ServiceContainer : IDisposable
         return (Resolve(typeof(T)) as T)!;
     }
 
+    public bool Contains(Type type)
+    {
+        return _lifetimes.ContainsKey(type) || _interfaces.ContainsKey(type);
+    }
+
+    public bool Contains<T>()
+    {
+        return Contains(typeof(T));
+    }
+
     public void Dispose()
     {
         if (_disposed)
@@ -47,22 +81,76 @@ public sealed partial class ServiceContainer : IDisposable
 
         _disposed = true;
 
-        foreach (var serviceList in _services.Values)
+        while (_lifetimesToDispose.FirstOrDefault() is { } disposable)
         {
-            foreach (var service in serviceList.AsEnumerable().Reverse())
-            {
-                (service as IDisposable)?.Dispose();
-            }
+            _lifetimesToDispose.RemoveFirst();
+            disposable.Dispose();
         }
     }
 
-    private ILifetimeManager<object>? ResolveFirstService(Type type)
+    private ILifetime<object>? GetInitializedLifetime(Type type)
     {
         AssertNotDisposed();
 
-        return _services.TryGetValue(type, out var serviceList)
-            ? serviceList.FirstOrDefault()
-            : null;
+        if (GetLifetime(type) is not { } lifetime)
+        {
+            return null;
+        }
+
+        if (lifetime is IStartupHandler startupHandler)
+        {
+            InitializeService(startupHandler);
+        }
+
+        return lifetime;
+    }
+
+    private ILifetime<object>? GetLifetime(Type type)
+    {
+        AssertNotDisposed();
+
+        if (_lifetimes.TryGetValue(type, out var concreteLifetime))
+        {
+            return concreteLifetime;
+        }
+
+        if (_interfaces.TryGetValue(type, out var implementors))
+        {
+            return _lifetimes[
+                implementors.Last(t =>
+                    _lifetimes[t] is not IStartupHandler startupHandler
+                    || (_lifetimesToInitialize.Contains(startupHandler) is false)
+                )
+            ];
+        }
+
+        // TODO add IEnumerable<T> support
+
+        return null;
+    }
+
+    private void InitializeServices()
+    {
+        while (_lifetimesToInitialize.FirstOrDefault() is { } service)
+        {
+            InitializeService(service);
+        }
+    }
+
+    private void InitializeService(IStartupHandler service)
+    {
+        if (_lifetimesToInitialize.Contains(service) is false)
+        {
+            return;
+        }
+
+        _lifetimesToInitialize.Remove(service);
+        service.OnContainerStartup(this);
+
+        if (service is IDisposable disposable)
+        {
+            _lifetimesToDispose.AddFirst(disposable);
+        }
     }
 
     private void AssertNotDisposed()

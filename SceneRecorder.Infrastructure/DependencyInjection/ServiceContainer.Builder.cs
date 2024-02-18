@@ -1,46 +1,62 @@
+using SceneRecorder.Infrastructure.Extensions;
+
 namespace SceneRecorder.Infrastructure.DependencyInjection;
 
 public sealed partial class ServiceContainer
 {
     public sealed class Builder
     {
-        private readonly List<IRegistration>
+        private readonly Dictionary<Type, IRegistration> _registrations = [];
 
-        private bool _built = false;
+        private bool _dependenciesAreRegistered = false;
 
         public ServiceContainer Build()
         {
-            AssertNotBuilt();
-            _built = true;
+            if (_dependenciesAreRegistered is false)
+            {
+                _registrations
+                    .Values.ToArray()
+                    .ForEach(registration => registration.RegisterDependencies(this));
+
+                _dependenciesAreRegistered = true;
+            }
+
+            var lifetimes = new Dictionary<Type, ILifetime<object>>();
+
+            var interfaces = new Dictionary<Type, LinkedList<Type>>();
+
+            foreach (var registration in _registrations.Values)
+            {
+                var lifetime = registration.Lifetime;
+
+                lifetimes[registration.InstanceType] = lifetime;
+
+                foreach (var interfaceType in registration.InterfaceTypes)
+                {
+                    interfaces.GetOrCreate(interfaceType).AddLast(registration.InstanceType);
+                }
+            }
 
             return new ServiceContainer(
-                _services.ToDictionary(p => p.Key, p => p.Value.AsEnumerable())
+                lifetimes,
+                interfaces.ToDictionary(p => p.Key, p => p.Value.AsEnumerable())
             );
         }
 
         public IRegistration<T> Register<T>()
             where T : class
         {
-            AssertNotBuilt();
+            var instanceType = typeof(T);
 
-            var serviceType = typeof(T);
-
-            if (_services.TryGetValue(serviceType, out var serviceList) is false)
+            if (_registrations.ContainsKey(instanceType) is true)
             {
-                serviceList = _services[serviceType] = [];
+                throw new InvalidOperationException($"type {instanceType} is already registered");
             }
 
-            serviceList.AddFirst(lifetimeManager);
+            var registration = new Registration<T>();
+            _registrations.Add(instanceType, registration);
 
-            return this;
-        }
-
-        private void AssertNotBuilt()
-        {
-            if (_built)
-            {
-                throw new InvalidOperationException($"{nameof(Build)} mehtod called twice");
-            }
+            return registration;
         }
     }
 }
