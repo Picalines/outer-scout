@@ -2,7 +2,7 @@ namespace SceneRecorder.Infrastructure.DependencyInjection;
 
 public sealed partial class ServiceContainer
 {
-    public interface IScope : IDisposable
+    public interface IContainer : IDisposable
     {
         public bool Contains(Type type);
 
@@ -20,9 +20,16 @@ public sealed partial class ServiceContainer
             where T : class;
     }
 
+    public interface IScope : IContainer, IDisposable
+    {
+        public object? Info { get; }
+
+        public IScope StartScope();
+    }
+
     private sealed class ContainerScope : IScope
     {
-        public readonly IReadOnlyDictionary<Type, ILifetime<object>> Lifetimes;
+        private readonly IReadOnlyDictionary<Type, ILifetime<object>> _lifetimes;
 
         private readonly IReadOnlyDictionary<Type, IEnumerable<Type>> _interfaces;
 
@@ -32,21 +39,23 @@ public sealed partial class ServiceContainer
 
         private bool _disposed = false;
 
+        public object? Info { get; } = null;
+
         public ContainerScope(
             IReadOnlyDictionary<Type, ILifetime<object>> services,
             IReadOnlyDictionary<Type, IEnumerable<Type>> interfaces
         )
         {
-            Lifetimes = services;
+            _lifetimes = services;
             _interfaces = interfaces;
 
             _lifetimesToInitialize = new HashSet<IStartupHandler>(
-                Lifetimes.Values.OfType<IStartupHandler>()
+                _lifetimes.Values.OfType<IStartupHandler>()
             );
 
             InitializeServices();
 
-            foreach (var lifetime in Lifetimes.Values)
+            foreach (var lifetime in _lifetimes.Values)
             {
                 if (lifetime is not IStartupHandler and IDisposable disposable)
                 {
@@ -82,7 +91,7 @@ public sealed partial class ServiceContainer
 
         public bool Contains(Type type)
         {
-            return Lifetimes.ContainsKey(type) || _interfaces.ContainsKey(type);
+            return _lifetimes.ContainsKey(type) || _interfaces.ContainsKey(type);
         }
 
         public bool Contains<T>()
@@ -107,6 +116,12 @@ public sealed partial class ServiceContainer
             }
         }
 
+        public IScope StartScope()
+        {
+            // TODO
+            throw new NotImplementedException();
+        }
+
         private ILifetime<object>? GetInitializedLifetime(Type type)
         {
             AssertNotDisposed();
@@ -128,17 +143,18 @@ public sealed partial class ServiceContainer
         {
             AssertNotDisposed();
 
-            if (Lifetimes.TryGetValue(type, out var concreteLifetime))
+            if (_lifetimes.TryGetValue(type, out var concreteLifetime))
             {
                 return concreteLifetime;
             }
 
             if (_interfaces.TryGetValue(type, out var implementors))
             {
-                return Lifetimes[
-                    implementors.Last(t =>
-                        Lifetimes[t] is not IStartupHandler startupHandler
-                        || (_lifetimesToInitialize.Contains(startupHandler) is false)
+                return _lifetimes[
+                    implementors.Last(
+                        t =>
+                            _lifetimes[t] is not IStartupHandler startupHandler
+                            || (_lifetimesToInitialize.Contains(startupHandler) is false)
                     )
                 ];
             }

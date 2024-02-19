@@ -1,6 +1,6 @@
 namespace SceneRecorder.Infrastructure.DependencyInjection;
 
-public sealed partial class ServiceContainer : ServiceContainer.IScope
+public sealed partial class ServiceContainer : ServiceContainer.IContainer
 {
     private readonly ContainerScope _containerScope;
 
@@ -40,6 +40,11 @@ public sealed partial class ServiceContainer : ServiceContainer.IScope
         where T : class
     {
         return _containerScope.ResolveOrNull<T>();
+    }
+
+    public IContainer StartScope()
+    {
+        return _containerScope.StartScope();
     }
 
     public void Dispose()

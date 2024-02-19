@@ -12,7 +12,14 @@ public sealed partial class ServiceContainer
 
     public interface IStartupHandler
     {
-        public void OnContainerStartup(ServiceContainer container);
+        public void OnContainerStartup(IContainer container);
+    }
+
+    public interface IScopeHandler
+    {
+        public void OnScopeStarted(IScope scope);
+
+        public void OnScopeEnded(IScope scope);
     }
 
     public sealed class ReferenceLifetime<T> : ILifetime<T>, IStartupHandler, IDisposable
@@ -31,7 +38,7 @@ public sealed partial class ServiceContainer
             return _instance;
         }
 
-        void IStartupHandler.OnContainerStartup(ServiceContainer container)
+        void IStartupHandler.OnContainerStartup(IContainer container)
         {
             if (_instance is IStartupHandler startupHandler)
             {
@@ -56,7 +63,7 @@ public sealed partial class ServiceContainer
             return _instance;
         }
 
-        void IStartupHandler.OnContainerStartup(ServiceContainer container)
+        void IStartupHandler.OnContainerStartup(IContainer container)
         {
             _instance = container.Resolve<IInstantiator<T>>().Instantiate();
 

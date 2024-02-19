@@ -16,7 +16,7 @@ public sealed partial class ServiceContainer
     {
         private readonly Type _type;
 
-        private ServiceContainer? _container = null;
+        private IContainer? _container = null;
 
         private ConstructorInfo? _constructor = null;
 
@@ -50,7 +50,7 @@ public sealed partial class ServiceContainer
                 );
         }
 
-        void IStartupHandler.OnContainerStartup(ServiceContainer container)
+        void IStartupHandler.OnContainerStartup(IContainer container)
         {
             _container = container;
 
