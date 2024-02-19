@@ -38,8 +38,10 @@ public sealed partial class ServiceContainer
             }
 
             return new ServiceContainer(
-                lifetimes,
-                interfaces.ToDictionary(p => p.Key, p => p.Value.AsEnumerable())
+                new ContainerScope(
+                    lifetimes,
+                    interfaces.ToDictionary(p => p.Key, p => p.Value.AsEnumerable())
+                )
             );
         }
 
