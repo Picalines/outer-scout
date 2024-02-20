@@ -33,7 +33,7 @@ public sealed partial class ServiceContainer
 
         private readonly IReadOnlyDictionary<Type, IEnumerable<Type>> _interfaces;
 
-        private readonly HashSet<IStartupHandler> _lifetimesToInitialize;
+        private readonly HashSet<IStartupHandler> _lifetimesToInitialize = [];
 
         private readonly LinkedList<IDisposable> _lifetimesToDispose = [];
 
@@ -49,19 +49,7 @@ public sealed partial class ServiceContainer
             _lifetimes = services;
             _interfaces = interfaces;
 
-            _lifetimesToInitialize = new HashSet<IStartupHandler>(
-                _lifetimes.Values.OfType<IStartupHandler>()
-            );
-
             InitializeServices();
-
-            foreach (var lifetime in _lifetimes.Values)
-            {
-                if (lifetime is not IStartupHandler and IDisposable disposable)
-                {
-                    _lifetimesToDispose.AddLast(disposable);
-                }
-            }
         }
 
         public object? ResolveOrNull(Type serviceType)
@@ -122,6 +110,9 @@ public sealed partial class ServiceContainer
             throw new NotImplementedException();
         }
 
+        // Remember that one service with IStartupHandler can Resolve
+        // other service that also must be initialized - that's
+        // why we call InitializeService during the resolution
         private ILifetime<object>? GetInitializedLifetime(Type type)
         {
             AssertNotDisposed();
@@ -151,10 +142,9 @@ public sealed partial class ServiceContainer
             if (_interfaces.TryGetValue(type, out var implementors))
             {
                 return _lifetimes[
-                    implementors.Last(
-                        t =>
-                            _lifetimes[t] is not IStartupHandler startupHandler
-                            || (_lifetimesToInitialize.Contains(startupHandler) is false)
+                    implementors.Last(t =>
+                        _lifetimes[t] is not IStartupHandler startupHandler
+                        || (_lifetimesToInitialize.Contains(startupHandler) is false)
                     )
                 ];
             }
@@ -164,6 +154,21 @@ public sealed partial class ServiceContainer
 
         private void InitializeServices()
         {
+            foreach (var lifetime in _lifetimes.Values)
+            {
+                if (lifetime is IStartupHandler startupHandler)
+                {
+                    _lifetimesToInitialize.Add(startupHandler);
+                }
+                else if (lifetime is IDisposable disposable)
+                {
+                    // lifetimes with IStartupHandler also can implement IDisposable,
+                    // but then order of their disposal matters. They're added
+                    // to _lifetimesToDispose in InitializeService
+                    _lifetimesToDispose.AddLast(disposable);
+                }
+            }
+
             while (_lifetimesToInitialize.FirstOrDefault() is { } service)
             {
                 InitializeService(service);
