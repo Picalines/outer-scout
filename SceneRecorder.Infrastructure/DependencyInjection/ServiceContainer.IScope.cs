@@ -22,14 +22,12 @@ public sealed partial class ServiceContainer
 
     public interface IScope : IContainer, IDisposable
     {
-        public object? Info { get; }
-
         public IScope StartScope();
     }
 
     private sealed class ContainerScope : IScope
     {
-        private readonly IReadOnlyDictionary<Type, ILifetime<object>> _lifetimes;
+        private readonly ServiceRegistry _serviceRegistry;
 
         private readonly IReadOnlyDictionary<Type, IEnumerable<Type>> _interfaces;
 
@@ -39,14 +37,12 @@ public sealed partial class ServiceContainer
 
         private bool _disposed = false;
 
-        public object? Info { get; } = null;
-
         public ContainerScope(
-            IReadOnlyDictionary<Type, ILifetime<object>> services,
+            ServiceRegistry serviceRegistry,
             IReadOnlyDictionary<Type, IEnumerable<Type>> interfaces
         )
         {
-            _lifetimes = services;
+            _serviceRegistry = serviceRegistry;
             _interfaces = interfaces;
 
             InitializeServices();
@@ -79,7 +75,7 @@ public sealed partial class ServiceContainer
 
         public bool Contains(Type type)
         {
-            return _lifetimes.ContainsKey(type) || _interfaces.ContainsKey(type);
+            return _serviceRegistry.ContainsService(type) || _interfaces.ContainsKey(type);
         }
 
         public bool Contains<T>()
@@ -134,19 +130,20 @@ public sealed partial class ServiceContainer
         {
             AssertNotDisposed();
 
-            if (_lifetimes.TryGetValue(type, out var concreteLifetime))
+            if (_serviceRegistry.GetLifetime(type) is { } lifetime)
             {
-                return concreteLifetime;
+                return lifetime;
             }
 
-            if (_interfaces.TryGetValue(type, out var implementors))
+            if (_interfaces.TryGetValue(type, out var instanceTypes))
             {
-                return _lifetimes[
-                    implementors.Last(t =>
-                        _lifetimes[t] is not IStartupHandler startupHandler
-                        || (_lifetimesToInitialize.Contains(startupHandler) is false)
+                return instanceTypes
+                    .Select(_serviceRegistry.GetLifetime)
+                    .Where(lifetime =>
+                        lifetime is not IStartupHandler startupHandler
+                        || !_lifetimesToInitialize.Contains(startupHandler)
                     )
-                ];
+                    .LastOrDefault();
             }
 
             return null;
@@ -154,7 +151,7 @@ public sealed partial class ServiceContainer
 
         private void InitializeServices()
         {
-            foreach (var lifetime in _lifetimes.Values)
+            foreach (var lifetime in _serviceRegistry.Lifetimes)
             {
                 if (lifetime is IStartupHandler startupHandler)
                 {

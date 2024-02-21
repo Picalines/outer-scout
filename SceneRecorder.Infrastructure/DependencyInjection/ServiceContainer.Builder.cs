@@ -21,15 +21,13 @@ public sealed partial class ServiceContainer
                 _dependenciesAreRegistered = true;
             }
 
-            var lifetimes = new Dictionary<Type, ILifetime<object>>();
+            var serviceRegistry = new ServiceRegistry();
 
             var interfaces = new Dictionary<Type, LinkedList<Type>>();
 
             foreach (var registration in _registrations.Values)
             {
-                var lifetime = registration.Lifetime;
-
-                lifetimes[registration.InstanceType] = lifetime;
+                serviceRegistry.AddService(registration.InstanceType, registration.Lifetime);
 
                 foreach (var interfaceType in registration.InterfaceTypes)
                 {
@@ -39,7 +37,7 @@ public sealed partial class ServiceContainer
 
             return new ServiceContainer(
                 new ContainerScope(
-                    lifetimes,
+                    serviceRegistry,
                     interfaces.ToDictionary(p => p.Key, p => p.Value.AsEnumerable())
                 )
             );
