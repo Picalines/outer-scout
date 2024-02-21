@@ -23,24 +23,17 @@ public sealed partial class ServiceContainer
 
             var serviceRegistry = new ServiceRegistry();
 
-            var interfaces = new Dictionary<Type, LinkedList<Type>>();
-
             foreach (var registration in _registrations.Values)
             {
                 serviceRegistry.AddService(registration.InstanceType, registration.Lifetime);
 
                 foreach (var interfaceType in registration.InterfaceTypes)
                 {
-                    interfaces.GetOrCreate(interfaceType).AddLast(registration.InstanceType);
+                    serviceRegistry.AddInterface(registration.InstanceType, interfaceType);
                 }
             }
 
-            return new ServiceContainer(
-                new ContainerScope(
-                    serviceRegistry,
-                    interfaces.ToDictionary(p => p.Key, p => p.Value.AsEnumerable())
-                )
-            );
+            return new ServiceContainer(new Scope(null, serviceRegistry));
         }
 
         public IRegistration<T> Register<T>()

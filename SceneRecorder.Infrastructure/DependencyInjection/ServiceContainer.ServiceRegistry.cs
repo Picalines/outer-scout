@@ -8,6 +8,8 @@ public sealed partial class ServiceContainer
     {
         private readonly Dictionary<Type, ILifetime<object>> _lifetimes = [];
 
+        private readonly Dictionary<Type, LinkedList<Type>> _interfaces = [];
+
         private bool _disposed = false;
 
         public void AddService(Type instanceType, ILifetime<object> lifetime)
@@ -22,19 +24,45 @@ public sealed partial class ServiceContainer
             _lifetimes.Add(instanceType, lifetime);
         }
 
-        public bool ContainsService(Type instanceType)
-        {
-            return _lifetimes.ContainsKey(instanceType);
-        }
-
-        public ILifetime<object>? GetLifetime(Type instanceType)
+        public void AddInterface(Type instanceType, Type interfaceType)
         {
             AssertNotDisposed();
 
-            return _lifetimes.GetValueOrDefault(instanceType);
+            if (_lifetimes.ContainsKey(instanceType) is false)
+            {
+                throw new InvalidOperationException();
+            }
+
+            _interfaces.GetOrCreate(interfaceType).AddLast(instanceType);
         }
 
-        public IEnumerable<ILifetime<object>> Lifetimes
+        public bool ContainsService(Type type)
+        {
+            AssertNotDisposed();
+
+            return _lifetimes.ContainsKey(type) || _interfaces.ContainsKey(type);
+        }
+
+        public IEnumerable<ILifetime<object>> GetMatchingLifetimes(Type type)
+        {
+            AssertNotDisposed();
+
+            if (_lifetimes.TryGetValue(type, out var concreteLifetime))
+            {
+                yield return concreteLifetime;
+                yield break;
+            }
+
+            if (_interfaces.TryGetValue(type, out var instanceTypes))
+            {
+                foreach (var instanceType in instanceTypes)
+                {
+                    yield return _lifetimes[instanceType];
+                }
+            }
+        }
+
+        public IEnumerable<ILifetime<object>> AllLifetimes
         {
             get
             {
@@ -55,6 +83,7 @@ public sealed partial class ServiceContainer
             _lifetimes.Values.OfType<IDisposable>().ForEach(disposable => disposable.Dispose());
 
             _lifetimes.Clear();
+            _interfaces.Clear();
         }
 
         private void AssertNotDisposed()
