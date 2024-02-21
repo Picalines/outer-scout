@@ -35,7 +35,7 @@ public sealed partial class ServiceContainer
 
         private readonly HashSet<IStartupHandler> _lifetimesToInitialize = [];
 
-        private readonly LinkedList<IDisposable> _lifetimesToDispose = [];
+        private readonly LinkedList<ICleanupHandler> _lifetimesToDispose = [];
 
         private bool _disposed = false;
 
@@ -100,7 +100,7 @@ public sealed partial class ServiceContainer
             while (_lifetimesToDispose.FirstOrDefault() is { } disposable)
             {
                 _lifetimesToDispose.RemoveFirst();
-                disposable.Dispose();
+                disposable.CleanupService();
             }
         }
 
@@ -160,12 +160,12 @@ public sealed partial class ServiceContainer
                 {
                     _lifetimesToInitialize.Add(startupHandler);
                 }
-                else if (lifetime is IDisposable disposable)
+                else if (lifetime is ICleanupHandler cleanupHandler)
                 {
                     // lifetimes with IStartupHandler also can implement IDisposable,
                     // but then order of their disposal matters. They're added
                     // to _lifetimesToDispose in InitializeService
-                    _lifetimesToDispose.AddLast(disposable);
+                    _lifetimesToDispose.AddLast(cleanupHandler);
                 }
             }
 
@@ -183,11 +183,11 @@ public sealed partial class ServiceContainer
             }
 
             _lifetimesToInitialize.Remove(service);
-            service.OnContainerStartup(this);
+            service.InitializeService(this);
 
-            if (service is IDisposable disposable)
+            if (service is ICleanupHandler cleanupHandler)
             {
-                _lifetimesToDispose.AddFirst(disposable);
+                _lifetimesToDispose.AddFirst(cleanupHandler);
             }
         }
 

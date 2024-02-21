@@ -50,7 +50,7 @@ public sealed partial class ServiceContainer
                 );
         }
 
-        void IStartupHandler.OnContainerStartup(IContainer container)
+        void IStartupHandler.InitializeService(IContainer container)
         {
             _container = container;
 

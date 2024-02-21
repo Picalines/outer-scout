@@ -12,17 +12,15 @@ public sealed partial class ServiceContainer
 
     public interface IStartupHandler
     {
-        public void OnContainerStartup(IContainer container);
+        public void InitializeService(IContainer container);
     }
 
-    public interface IScopeHandler
+    public interface ICleanupHandler
     {
-        public void OnScopeStarted(IScope scope);
-
-        public void OnScopeEnded(IScope scope);
+        public void CleanupService();
     }
 
-    public sealed class ReferenceLifetime<T> : ILifetime<T>, IStartupHandler, IDisposable
+    public sealed class ReferenceLifetime<T> : ILifetime<T>, IStartupHandler, ICleanupHandler
         where T : class
     {
         private T? _instance;
@@ -38,42 +36,42 @@ public sealed partial class ServiceContainer
             return _instance;
         }
 
-        void IStartupHandler.OnContainerStartup(IContainer container)
+        void IStartupHandler.InitializeService(IContainer container)
         {
             if (_instance is IStartupHandler startupHandler)
             {
-                startupHandler.OnContainerStartup(container);
+                startupHandler.InitializeService(container);
             }
         }
 
-        void IDisposable.Dispose()
+        void ICleanupHandler.CleanupService()
         {
             _instance = null;
         }
     }
 
-    public sealed class SingletonLifetime<T> : ILifetime<T>, IStartupHandler, IDisposable
+    public sealed class SingletonLifetime<T> : ILifetime<T>, IStartupHandler, ICleanupHandler
         where T : class
     {
         private T? _instance;
 
-        public T GetInstance()
+        T ILifetime<T>.GetInstance()
         {
             _instance.ThrowIfNull();
             return _instance;
         }
 
-        void IStartupHandler.OnContainerStartup(IContainer container)
+        void IStartupHandler.InitializeService(IContainer container)
         {
             _instance = container.Resolve<IInstantiator<T>>().Instantiate();
 
             if (_instance is IStartupHandler startupHandler)
             {
-                startupHandler.OnContainerStartup(container);
+                startupHandler.InitializeService(container);
             }
         }
 
-        void IDisposable.Dispose()
+        void ICleanupHandler.CleanupService()
         {
             (_instance as IDisposable)?.Dispose();
             _instance = null;
