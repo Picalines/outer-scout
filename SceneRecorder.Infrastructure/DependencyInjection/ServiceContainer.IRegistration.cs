@@ -11,6 +11,8 @@ public sealed partial class ServiceContainer
         public IRegistration<T> InstantiateBy(IInstantiator<T> instantiator);
 
         public IRegistration<T> ManageBy(ILifetime<T> lifetime);
+
+        public IRegistration<T> InScope(string scope);
     }
 
     private interface IRegistration
@@ -20,6 +22,8 @@ public sealed partial class ServiceContainer
         public IEnumerable<Type> InterfaceTypes { get; }
 
         public ILifetime<object> Lifetime { get; }
+
+        public string? ScopeIdentifier { get; }
 
         public void RegisterDependencies(ServiceContainer.Builder builder);
     }
@@ -34,6 +38,8 @@ public sealed partial class ServiceContainer
         private ILifetime<T>? _lifetime = null;
 
         private readonly HashSet<Type> _interfaceTypes = [];
+
+        private string? _scopeIdentifier = null;
 
         public IRegistration<T> As<U>()
             where U : class
@@ -69,6 +75,17 @@ public sealed partial class ServiceContainer
             return this;
         }
 
+        public IRegistration<T> InScope(string scope)
+        {
+            if (_scopeIdentifier is not null)
+            {
+                throw new InvalidOperationException($"ambiguous scope of {InstanceType}");
+            }
+
+            _scopeIdentifier = scope;
+            return this;
+        }
+
         public IEnumerable<Type> InterfaceTypes
         {
             get => _interfaceTypes;
@@ -77,6 +94,11 @@ public sealed partial class ServiceContainer
         public ILifetime<object> Lifetime
         {
             get => _lifetime ?? new SingletonLifetime<T>();
+        }
+
+        public string? ScopeIdentifier
+        {
+            get => _scopeIdentifier;
         }
 
         public void RegisterDependencies(Builder builder)

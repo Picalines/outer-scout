@@ -21,10 +21,17 @@ public sealed partial class ServiceContainer
                 _dependenciesAreRegistered = true;
             }
 
-            var serviceRegistry = new ServiceRegistry();
+            var globalServiceRegistry = new ServiceRegistry();
+            var scopeRegistry = new ScopeRegistry();
 
             foreach (var registration in _registrations.Values)
             {
+                var serviceRegistry = registration.ScopeIdentifier switch
+                {
+                    { } scope => scopeRegistry.GetOrAddScope(scope),
+                    _ => globalServiceRegistry,
+                };
+
                 serviceRegistry.AddService(registration.InstanceType, registration.Lifetime);
 
                 foreach (var interfaceType in registration.InterfaceTypes)
@@ -33,7 +40,7 @@ public sealed partial class ServiceContainer
                 }
             }
 
-            return new ServiceContainer(new Scope(null, serviceRegistry));
+            return new ServiceContainer(scopeRegistry, globalServiceRegistry);
         }
 
         public IRegistration<T> Register<T>()

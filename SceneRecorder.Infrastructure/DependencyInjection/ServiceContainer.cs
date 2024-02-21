@@ -1,12 +1,12 @@
 namespace SceneRecorder.Infrastructure.DependencyInjection;
 
-public sealed partial class ServiceContainer : ServiceContainer.IContainer
+public sealed partial class ServiceContainer : ServiceContainer.IScope
 {
-    private readonly ContainerScope _containerScope;
+    private readonly Scope _containerScope;
 
-    private ServiceContainer(ContainerScope containerScope)
+    private ServiceContainer(ScopeRegistry scopeRegistry, ServiceRegistry globalServices)
     {
-        _containerScope = containerScope;
+        _containerScope = new Scope(scopeRegistry, globalServices);
     }
 
     public bool Contains(Type type)
@@ -42,9 +42,9 @@ public sealed partial class ServiceContainer : ServiceContainer.IContainer
         return _containerScope.ResolveOrNull<T>();
     }
 
-    public IContainer StartScope()
+    public IScope StartScope(string identifier)
     {
-        return _containerScope.StartScope();
+        return _containerScope.StartScope(identifier);
     }
 
     public void Dispose()

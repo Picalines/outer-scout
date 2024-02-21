@@ -1,3 +1,5 @@
+using SceneRecorder.Infrastructure.Validation;
+
 namespace SceneRecorder.Infrastructure.DependencyInjection;
 
 public sealed partial class ServiceContainer
@@ -27,19 +29,42 @@ public sealed partial class ServiceContainer
 
     private sealed class Scope : IScope
     {
+        private readonly string? _identifier;
+
         private readonly Scope? _parent;
 
-        private readonly ServiceRegistry _serviceRegistry;
+        private readonly IScopeRegistry _scopeRegistry;
+
+        private readonly IServiceRegistry _serviceRegistry;
 
         private readonly HashSet<IStartupHandler> _lifetimesToInitialize = [];
 
         private readonly LinkedList<ICleanupHandler> _lifetimesToCleanup = [];
 
+        private readonly HashSet<Scope> _childScopes = [];
+
         private bool _disposed = false;
 
-        public Scope(Scope? parent, ServiceRegistry serviceRegistry)
+        public Scope(IScopeRegistry scopeRegistry, IServiceRegistry globalServiceRegistry)
         {
+            _identifier = null;
+            _parent = null;
+            _scopeRegistry = scopeRegistry;
+            _serviceRegistry = globalServiceRegistry;
+
+            InitializeServices();
+        }
+
+        private Scope(
+            string identifier,
+            Scope parent,
+            IScopeRegistry scopeRegistry,
+            IServiceRegistry serviceRegistry
+        )
+        {
+            _identifier = identifier;
             _parent = parent;
+            _scopeRegistry = scopeRegistry;
             _serviceRegistry = serviceRegistry;
 
             InitializeServices();
@@ -90,19 +115,32 @@ public sealed partial class ServiceContainer
 
             _disposed = true;
 
+            foreach (var childScope in _childScopes)
+            {
+                childScope.Dispose();
+            }
+
             while (_lifetimesToCleanup.FirstOrDefault() is { } cleanupHandler)
             {
                 _lifetimesToCleanup.RemoveFirst();
                 cleanupHandler.CleanupService();
             }
 
-            _serviceRegistry.Dispose();
+            _identifier.ThrowIfNull();
+            _scopeRegistry.DeactivateScopeOrThrow(_identifier);
         }
 
         public IScope StartScope(string identifier)
         {
-            // TODO
-            throw new NotImplementedException();
+            AssertNotDisposed();
+
+            var childServiceRegistry = _scopeRegistry.ActivateScopeOrThrow(identifier);
+
+            var childScope = new Scope(identifier, this, _scopeRegistry, childServiceRegistry);
+
+            _childScopes.Add(childScope);
+
+            return childScope;
         }
 
         // Remember that one service with IStartupHandler can Resolve
