@@ -16,7 +16,7 @@ public sealed partial class ServiceContainer
             {
                 _registrations
                     .Values.ToArray()
-                    .ForEach(registration => registration.RegisterDependencies(this));
+                    .ForEach(registration => registration.RegisterDependencies());
 
                 _dependenciesAreRegistered = true;
             }
@@ -53,8 +53,22 @@ public sealed partial class ServiceContainer
                 throw new InvalidOperationException($"type {instanceType} is already registered");
             }
 
-            var registration = new Registration<T>();
+            var registration = new Registration<T>(this);
             _registrations.Add(instanceType, registration);
+
+            return registration;
+        }
+
+        public IRegistration<T> RegisterIfMissing<T>()
+            where T : class
+        {
+            var registration = new Registration<T>(this);
+
+            var instanceType = typeof(T);
+            if (_registrations.ContainsKey(instanceType) is false)
+            {
+                _registrations.Add(instanceType, registration);
+            }
 
             return registration;
         }

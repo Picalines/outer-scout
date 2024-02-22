@@ -41,12 +41,6 @@ public sealed class ResettableLazy<T>
 
 public static class ResettableLazy
 {
-    public static ResettableLazy<T> Of<T>()
-        where T : new()
-    {
-        return new ResettableLazy<T>(() => new T());
-    }
-
     public static ResettableLazy<T> Of<T>(Func<T> factory)
     {
         return new ResettableLazy<T>(factory);

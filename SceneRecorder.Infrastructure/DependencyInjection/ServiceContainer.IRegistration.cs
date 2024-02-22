@@ -5,6 +5,8 @@ public sealed partial class ServiceContainer
     public interface IRegistration<T>
         where T : class
     {
+        public ServiceContainer.Builder ContainerBuilder { get; }
+
         public IRegistration<T> As<U>()
             where U : class;
 
@@ -25,12 +27,14 @@ public sealed partial class ServiceContainer
 
         public string? ScopeIdentifier { get; }
 
-        public void RegisterDependencies(ServiceContainer.Builder builder);
+        public void RegisterDependencies();
     }
 
     private sealed class Registration<T> : IRegistration<T>, IRegistration
         where T : class
     {
+        public ServiceContainer.Builder ContainerBuilder { get; }
+
         public Type InstanceType { get; } = typeof(T);
 
         private IInstantiator<T>? _instantiator = null;
@@ -40,6 +44,11 @@ public sealed partial class ServiceContainer
         private readonly HashSet<Type> _interfaceTypes = [];
 
         private string? _scopeIdentifier = null;
+
+        public Registration(ServiceContainer.Builder containerBuilder)
+        {
+            ContainerBuilder = containerBuilder;
+        }
 
         public IRegistration<T> As<U>()
             where U : class
@@ -101,9 +110,9 @@ public sealed partial class ServiceContainer
             get => _scopeIdentifier;
         }
 
-        public void RegisterDependencies(Builder builder)
+        public void RegisterDependencies()
         {
-            builder
+            ContainerBuilder
                 .Register<IInstantiator<T>>()
                 .ManageBy(
                     new ReferenceLifetime<IInstantiator<T>>(

@@ -1,6 +1,7 @@
+using SceneRecorder.Infrastructure.Validation;
+
 namespace SceneRecorder.Infrastructure.DependencyInjection;
 
-using SceneRecorder.Infrastructure.Validation;
 using static ServiceContainer;
 
 public static class ServiceContainerExtensions
@@ -28,20 +29,20 @@ public static class ServiceContainerExtensions
 
     public static IRegistration<T> InstantiateBy<T>(
         this IRegistration<T> registration,
-        Func<T> factory
+        Func<IContainer, T> factory
     )
         where T : class
     {
         return registration.InstantiateBy(new LambdaInstantiator<T>(factory));
     }
 
-    public static IRegistration<T> InstantiatePerResolve<T>(
+    public static IRegistration<T> InstantiateBy<T>(
         this IRegistration<T> registration,
         Func<T> factory
     )
         where T : class
     {
-        return registration.InstantiatePerResolve().InstantiateBy(factory);
+        return registration.InstantiateBy(_ => factory());
     }
 
     private sealed class PerResolveLifetime<T> : ILifetime<T>, IStartupHandler
@@ -61,12 +62,22 @@ public static class ServiceContainerExtensions
         }
     }
 
-    private sealed class LambdaInstantiator<T>(Func<T> instantiate) : IInstantiator<T>
+    private sealed class LambdaInstantiator<T>(Func<IContainer, T> instantiate)
+        : IInstantiator<T>,
+            IStartupHandler
         where T : class
     {
+        private IContainer? _container;
+
         public T Instantiate()
         {
-            return instantiate.Invoke();
+            _container.ThrowIfNull();
+            return instantiate.Invoke(_container);
+        }
+
+        void IStartupHandler.InitializeService(IContainer container)
+        {
+            _container = container;
         }
     }
 }
