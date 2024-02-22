@@ -49,7 +49,20 @@ public sealed partial class ServiceContainer
 
         public IEnumerable<object> ResolveAll(Type type)
         {
-            return GetLifetimes(type).Select(lifetime => lifetime.GetInstance());
+            if (
+                type == typeof(ServiceContainer)
+                || type == typeof(IServiceContainer)
+                || type == typeof(IServiceScope)
+            )
+            {
+                yield return this;
+                yield break;
+            }
+
+            foreach (var lifetime in GetLifetimes(type))
+            {
+                yield return lifetime.GetInstance();
+            }
         }
 
         public object? ResolveOrNull(Type type)

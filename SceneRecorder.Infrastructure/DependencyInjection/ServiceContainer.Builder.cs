@@ -48,9 +48,11 @@ public sealed partial class ServiceContainer
         {
             var instanceType = typeof(T);
 
+            AssertServiceType(instanceType);
+
             if (_registrations.ContainsKey(instanceType) is true)
             {
-                throw new InvalidOperationException($"type {instanceType} is already registered");
+                ThrowAlreadyRegistered(instanceType);
             }
 
             var registration = new Registration<T>(this);
@@ -62,9 +64,12 @@ public sealed partial class ServiceContainer
         public IRegistration<T> RegisterIfMissing<T>()
             where T : class
         {
+            var instanceType = typeof(T);
+
+            AssertServiceType(instanceType);
+
             var registration = new Registration<T>(this);
 
-            var instanceType = typeof(T);
             if (_registrations.ContainsKey(instanceType) is false)
             {
                 _registrations.Add(instanceType, registration);
@@ -76,9 +81,30 @@ public sealed partial class ServiceContainer
         public IRegistration<T> Override<T>()
             where T : class
         {
-            _registrations.Remove(typeof(T));
+            var instanceType = typeof(T);
+
+            AssertServiceType(instanceType);
+
+            _registrations.Remove(instanceType);
 
             return Register<T>();
+        }
+
+        private void AssertServiceType(Type type)
+        {
+            if (
+                type == typeof(ServiceContainer)
+                || type == typeof(IServiceContainer)
+                || type == typeof(IServiceScope)
+            )
+            {
+                ThrowAlreadyRegistered(type);
+            }
+        }
+
+        private void ThrowAlreadyRegistered(Type type)
+        {
+            throw new InvalidOperationException($"type {type} is already registered");
         }
     }
 }
