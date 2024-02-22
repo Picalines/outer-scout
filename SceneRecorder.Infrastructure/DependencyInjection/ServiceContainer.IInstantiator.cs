@@ -54,20 +54,22 @@ public sealed partial class ServiceContainer
         {
             _container = container;
 
-            _constructor = _type
-                .GetConstructors()
-                .Select(c => new { Constructor = c, Parameters = c.GetParameters() })
-                .OrderBy(c => c.Parameters.Length)
-                .Where(c => c.Parameters.All(p => container.Contains(p.ParameterType)))
-                .Select(c => c.Constructor)
-                .LastOrDefault();
-
-            if (_constructor is null)
+            if (_constructor is not null)
             {
-                throw new InvalidOperationException(
+                return;
+            }
+
+            _constructor =
+                _type
+                    .GetConstructors()
+                    .Select(c => new { Constructor = c, Parameters = c.GetParameters() })
+                    .OrderBy(c => c.Parameters.Length)
+                    .Where(c => c.Parameters.All(p => container.Contains(p.ParameterType)))
+                    .Select(c => c.Constructor)
+                    .LastOrDefault()
+                ?? throw new InvalidOperationException(
                     $"{nameof(ServiceContainer)} can't construct an instance of type {_type.Name}"
                 );
-            }
         }
     }
 }
