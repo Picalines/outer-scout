@@ -107,11 +107,14 @@ public sealed class WebApiServer : IDisposable
         services
             .Register<ResettableLazy<SceneRecorder.Builder>>()
             .InstantiatePerUnityScene()
-            .InstantiateBy(() =>
-            {
-                LocatorExtensions.IsInPlayableScene().Throw().IfFalse();
-                return ResettableLazy.Of(() => new SceneRecorder.Builder());
-            });
+            .InstantiateBy(
+                () =>
+                    ResettableLazy.Of(() =>
+                    {
+                        LocatorExtensions.IsInPlayableScene().Throw().IfFalse();
+                        return new SceneRecorder.Builder();
+                    })
+            );
 
         services
             .Register<SceneRecorder.Builder>()
