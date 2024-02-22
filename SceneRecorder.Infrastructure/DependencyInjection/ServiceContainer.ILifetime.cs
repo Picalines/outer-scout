@@ -12,7 +12,7 @@ public sealed partial class ServiceContainer
 
     public interface IStartupHandler
     {
-        public void InitializeService(IContainer container);
+        public void InitializeService(IServiceContainer container);
     }
 
     public interface ICleanupHandler
@@ -36,7 +36,7 @@ public sealed partial class ServiceContainer
             return _instance;
         }
 
-        void IStartupHandler.InitializeService(IContainer container)
+        void IStartupHandler.InitializeService(IServiceContainer container)
         {
             if (_instance is IStartupHandler startupHandler)
             {
@@ -61,7 +61,7 @@ public sealed partial class ServiceContainer
             return _instance;
         }
 
-        void IStartupHandler.InitializeService(IContainer container)
+        void IStartupHandler.InitializeService(IServiceContainer container)
         {
             _instance = container.Resolve<IInstantiator<T>>().Instantiate();
 

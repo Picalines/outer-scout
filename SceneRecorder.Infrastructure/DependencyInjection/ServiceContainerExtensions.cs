@@ -29,7 +29,7 @@ public static class ServiceContainerExtensions
 
     public static IRegistration<T> InstantiateBy<T>(
         this IRegistration<T> registration,
-        Func<IContainer, T> factory
+        Func<IServiceContainer, T> factory
     )
         where T : class
     {
@@ -56,18 +56,18 @@ public static class ServiceContainerExtensions
             return _instantiator.Instantiate();
         }
 
-        void IStartupHandler.InitializeService(IContainer container)
+        void IStartupHandler.InitializeService(IServiceContainer container)
         {
             _instantiator = container.Resolve<IInstantiator<T>>();
         }
     }
 
-    private sealed class LambdaInstantiator<T>(Func<IContainer, T> instantiate)
+    private sealed class LambdaInstantiator<T>(Func<IServiceContainer, T> instantiate)
         : IInstantiator<T>,
             IStartupHandler
         where T : class
     {
-        private IContainer? _container;
+        private IServiceContainer? _container;
 
         public T Instantiate()
         {
@@ -75,7 +75,7 @@ public static class ServiceContainerExtensions
             return instantiate.Invoke(_container);
         }
 
-        void IStartupHandler.InitializeService(IContainer container)
+        void IStartupHandler.InitializeService(IServiceContainer container)
         {
             _container = container;
         }

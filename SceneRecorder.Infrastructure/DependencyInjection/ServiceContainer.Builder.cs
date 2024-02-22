@@ -72,5 +72,13 @@ public sealed partial class ServiceContainer
 
             return registration;
         }
+
+        public IRegistration<T> Override<T>()
+            where T : class
+        {
+            _registrations.Remove(typeof(T));
+
+            return Register<T>();
+        }
     }
 }
