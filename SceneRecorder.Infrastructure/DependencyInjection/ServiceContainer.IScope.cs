@@ -52,9 +52,14 @@ public sealed partial class ServiceContainer
             InitializeServices();
         }
 
-        public object? ResolveOrNull(Type serviceType)
+        public IEnumerable<object> ResolveAll(Type type)
         {
-            return ResolveLifetime(serviceType)?.GetInstance();
+            return GetLifetimes(type).Select(lifetime => lifetime.GetInstance());
+        }
+
+        public object? ResolveOrNull(Type type)
+        {
+            return ResolveAll(type).FirstOrDefault();
         }
 
         public object Resolve(Type serviceType)
@@ -75,6 +80,12 @@ public sealed partial class ServiceContainer
             where T : class
         {
             return (Resolve(typeof(T)) as T)!;
+        }
+
+        public IEnumerable<T> ResolveAll<T>()
+            where T : class
+        {
+            return ResolveAll(typeof(T)).Cast<T>();
         }
 
         public bool Contains(Type type)
@@ -125,37 +136,32 @@ public sealed partial class ServiceContainer
             return childScope;
         }
 
-        // Remember that one service with IStartupHandler can Resolve
-        // other service that also must be initialized - that's
-        // why we call InitializeService during the resolution
-        private ILifetime<object>? ResolveLifetime(Type type)
+        private IEnumerable<ILifetime<object>> GetLifetimes(Type type)
         {
             AssertNotDisposed();
 
-            if (GetLocalServiceLifetime(type) is not { } lifetime)
+            foreach (var lifetime in _serviceRegistry.GetMatchingLifetimes(type))
             {
-                return _parent?.ResolveLifetime(type);
+                if (lifetime is IStartupHandler startupHandler)
+                {
+                    // Remember that one service with IStartupHandler can Resolve
+                    // other service that also must be initialized - that's
+                    // why we call InitializeService during the resolution
+                    InitializeService(startupHandler);
+                }
+
+                yield return lifetime;
             }
 
-            if (lifetime is IStartupHandler startupHandler)
+            if (_parent is null)
             {
-                InitializeService(startupHandler);
+                yield break;
             }
 
-            return lifetime;
-        }
-
-        private ILifetime<object>? GetLocalServiceLifetime(Type type)
-        {
-            AssertNotDisposed();
-
-            return _serviceRegistry
-                .GetMatchingLifetimes(type)
-                .Where(lifetime =>
-                    lifetime is not IStartupHandler startupHandler
-                    || !_lifetimesToInitialize.Contains(startupHandler)
-                )
-                .LastOrDefault();
+            foreach (var lifetime in _parent.GetLifetimes(type))
+            {
+                yield return lifetime;
+            }
         }
 
         private void InitializeServices()
@@ -183,12 +189,12 @@ public sealed partial class ServiceContainer
 
         private void InitializeService(IStartupHandler service)
         {
-            if (_lifetimesToInitialize.Contains(service) is false)
+            var isInitialized = _lifetimesToInitialize.Remove(service) is false;
+            if (isInitialized)
             {
                 return;
             }
 
-            _lifetimesToInitialize.Remove(service);
             service.InitializeService(this);
 
             if (service is ICleanupHandler cleanupHandler)

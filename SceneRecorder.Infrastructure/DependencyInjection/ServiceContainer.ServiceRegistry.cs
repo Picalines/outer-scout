@@ -36,7 +36,7 @@ public sealed partial class ServiceContainer
                 throw new InvalidOperationException();
             }
 
-            _interfaces.GetOrCreate(interfaceType).AddLast(instanceType);
+            _interfaces.GetOrCreate(interfaceType).AddFirst(instanceType);
         }
 
         public bool ContainsService(Type type)
