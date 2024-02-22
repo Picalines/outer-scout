@@ -33,11 +33,14 @@ public sealed class WebApiServer : IDisposable
     {
         var modConfig = Singleton<IModConfig>.Instance;
 
+        var services = new ServiceContainer.Builder();
+
         var httpServerBuilder = new HttpServer.Builder(
-            $"http://localhost:{modConfig.GetApiPortSetting()}/"
+            $"http://localhost:{modConfig.GetApiPortSetting()}/",
+            services
         );
 
-        RegisterServices(httpServerBuilder.ServiceContainerBuilder);
+        RegisterServices(services);
 
         MapRoutes(httpServerBuilder);
 
@@ -75,7 +78,7 @@ public sealed class WebApiServer : IDisposable
             });
 
         services
-            .Register<JsonSerializer>()
+            .Override<JsonSerializer>()
             .AsExternalReference(
                 new JsonSerializer()
                 {

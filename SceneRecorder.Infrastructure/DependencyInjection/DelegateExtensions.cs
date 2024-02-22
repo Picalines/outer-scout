@@ -4,7 +4,7 @@ namespace SceneRecorder.Infrastructure.DependencyInjection;
 
 public static class DelegateExtensions
 {
-    public static Func<IServiceContainer, object?> Bind(this Delegate @delegate)
+    public static Func<IServiceContainer, object?> BindByContainer(this Delegate @delegate)
     {
         var method = @delegate.Method;
         var target = @delegate.Target;

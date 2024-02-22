@@ -12,7 +12,7 @@ internal static class HttpServerBuilderExtensions
 {
     public static IDisposable WithPlayableSceneFilter(this HttpServer.Builder serverBuilder)
     {
-        return serverBuilder.WithFilter(request =>
+        return serverBuilder.WithFilter(() =>
         {
             return LocatorExtensions.IsInPlayableScene() is false
                 ? ServiceUnavailable(new { Error = "not in playable scene" })
@@ -22,7 +22,7 @@ internal static class HttpServerBuilderExtensions
 
     public static IDisposable WithNotRecordingFilter(this HttpServer.Builder serverBuilder)
     {
-        return serverBuilder.WithFilter(request =>
+        return serverBuilder.WithFilter(() =>
         {
             return SceneResource.Find<SceneRecorder>().Any()
                 ? ServiceUnavailable(new { Error = "not available while recording" })
@@ -33,11 +33,9 @@ internal static class HttpServerBuilderExtensions
     public static IDisposable WithSceneCreatedFilter(this HttpServer.Builder serverBuilder)
     {
         return serverBuilder.WithFilter(
-            (request, services) =>
+            (ResettableLazy<SceneRecorder.Builder>? lazyBuilder = null) =>
             {
-                return
-                    services.ResolveOrNull<ResettableLazy<SceneRecorder.Builder>>()
-                        is not { IsValueCreated: true }
+                return lazyBuilder is not { IsValueCreated: true }
                     ? ServiceUnavailable(new { Error = "not available, create a scene first" })
                     : null;
             }

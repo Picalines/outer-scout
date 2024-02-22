@@ -36,7 +36,7 @@ public static class ServiceContainerExtensions
             return _instance;
         }
 
-        void IStartupHandler.InitializeService(IContainer container)
+        void IStartupHandler.InitializeService(IServiceContainer container)
         {
             _instantiator = container.Resolve<IInstantiator<T>>();
 
