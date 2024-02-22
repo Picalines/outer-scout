@@ -41,10 +41,11 @@ public sealed partial class ServiceContainer
                 _constructor.Invoke(
                     _constructor
                         .GetParameters()
-                        .Select(p =>
-                            p.HasDefaultValue
-                                ? _container.ResolveOrNull(p.ParameterType) ?? p.DefaultValue
-                                : _container.Resolve(p.ParameterType)
+                        .Select(
+                            p =>
+                                p.HasDefaultValue
+                                    ? _container.ResolveOrNull(p.ParameterType) ?? p.DefaultValue
+                                    : _container.Resolve(p.ParameterType)
                         )
                         .ToArray()
                 );
