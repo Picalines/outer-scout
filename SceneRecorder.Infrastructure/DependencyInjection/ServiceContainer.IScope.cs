@@ -4,12 +4,7 @@ namespace SceneRecorder.Infrastructure.DependencyInjection;
 
 public sealed partial class ServiceContainer
 {
-    public interface IScope : IServiceContainer, IDisposable
-    {
-        public IScope StartScope(string identifier);
-    }
-
-    private sealed class Scope : IScope
+    private sealed class Scope : IServiceScope
     {
         private readonly string? _identifier;
 
@@ -123,7 +118,7 @@ public sealed partial class ServiceContainer
             _scopeRegistry.DeactivateScopeOrThrow(_identifier);
         }
 
-        public IScope StartScope(string identifier)
+        public IServiceScope StartScope(string identifier)
         {
             AssertNotDisposed();
 
