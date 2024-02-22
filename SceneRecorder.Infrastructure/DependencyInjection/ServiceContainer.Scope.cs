@@ -1,5 +1,3 @@
-using SceneRecorder.Infrastructure.Validation;
-
 namespace SceneRecorder.Infrastructure.DependencyInjection;
 
 public sealed partial class ServiceContainer
@@ -130,8 +128,16 @@ public sealed partial class ServiceContainer
                 cleanupHandler.CleanupService();
             }
 
-            _identifier.ThrowIfNull();
-            _scopeRegistry.DeactivateScopeOrThrow(_identifier);
+            if (_identifier is not null)
+            {
+                _scopeRegistry.DeactivateScopeOrThrow(_identifier);
+            }
+
+            if (_parent is null)
+            {
+                _serviceRegistry.Dispose();
+                _scopeRegistry.Dispose();
+            }
         }
 
         public IServiceScope StartScope(string identifier)

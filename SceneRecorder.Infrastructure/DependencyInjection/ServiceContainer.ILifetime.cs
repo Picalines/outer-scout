@@ -20,7 +20,7 @@ public sealed partial class ServiceContainer
         public void CleanupService();
     }
 
-    public sealed class ReferenceLifetime<T> : ILifetime<T>, IStartupHandler, ICleanupHandler
+    internal sealed class ReferenceLifetime<T> : ILifetime<T>, IStartupHandler, IDisposable
         where T : class
     {
         private T? _instance;
@@ -44,13 +44,13 @@ public sealed partial class ServiceContainer
             }
         }
 
-        void ICleanupHandler.CleanupService()
+        void IDisposable.Dispose()
         {
             _instance = null;
         }
     }
 
-    public sealed class SingletonLifetime<T> : ILifetime<T>, IStartupHandler, ICleanupHandler
+    internal sealed class SingletonLifetime<T> : ILifetime<T>, IStartupHandler, ICleanupHandler
         where T : class
     {
         private T? _instance;

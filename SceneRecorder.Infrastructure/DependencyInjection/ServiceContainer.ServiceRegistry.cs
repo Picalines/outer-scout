@@ -4,7 +4,7 @@ namespace SceneRecorder.Infrastructure.DependencyInjection;
 
 public sealed partial class ServiceContainer
 {
-    private interface IServiceRegistry
+    private interface IServiceRegistry : IDisposable
     {
         public bool ContainsService(Type type);
 
@@ -18,6 +18,8 @@ public sealed partial class ServiceContainer
         private readonly Dictionary<Type, ILifetime<object>> _lifetimes = [];
 
         private readonly Dictionary<Type, LinkedList<Type>> _interfaces = [];
+
+        private bool _disposed = false;
 
         public void AddService(Type instanceType, ILifetime<object> lifetime)
         {
@@ -61,9 +63,32 @@ public sealed partial class ServiceContainer
             }
         }
 
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+
+            foreach (var lifetime in _lifetimes.Values)
+            {
+                (lifetime as IDisposable)?.Dispose();
+            }
+        }
+
         public IEnumerable<ILifetime<object>> AllLifetimes
         {
             get => _lifetimes.Values;
+        }
+
+        private void AssertNotDisposed()
+        {
+            if (_disposed)
+            {
+                throw new InvalidOperationException($"{nameof(ServiceRegistry)} is disposed");
+            }
         }
     }
 }
