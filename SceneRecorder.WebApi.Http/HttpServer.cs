@@ -12,19 +12,31 @@ using SceneRecorder.WebApi.Http.Routing;
 
 namespace SceneRecorder.WebApi.Http;
 
+using RequestHandler = Func<IServiceContainer, IResponse>;
+
 public sealed partial class HttpServer : IDisposable
 {
+    private const string RequestScopeName = "request";
+
     private readonly string _baseUrl;
+
     private readonly ServiceContainer _services;
-    private readonly Router _router;
+
+    private readonly Router<RequestHandler> _router;
+
     private readonly HttpListener _httpListener;
 
     private CancellationTokenSource? _cancellationTokenSource = null;
-    private TaskCompletionSource<object?>? _stoppedListening;
+
+    private TaskCompletionSource<object?>? _stoppedListening = null;
+
+    private Route? _currentRoute = null;
+
+    private Request? _currentRequest = null;
 
     private bool _disposed = false;
 
-    private HttpServer(string baseUrl, ServiceContainer services, Router router)
+    private HttpServer(string baseUrl, ServiceContainer services, Router<RequestHandler> router)
     {
         baseUrl.Throw().If(baseUrl.EndsWith("/") is false);
 
@@ -32,7 +44,7 @@ public sealed partial class HttpServer : IDisposable
         _services = services;
         _router = router;
 
-        _httpListener = new();
+        _httpListener = new HttpListener();
         _httpListener.Prefixes.Add(_baseUrl);
 
         Task.Run(ListenAsync);
@@ -130,19 +142,20 @@ public sealed partial class HttpServer : IDisposable
         HttpListenerContext context,
         Route route,
         Request request,
-        IRequestHandler handler
+        RequestHandler handler
     )
     {
         IResponse response;
 
+        _currentRoute = route;
+        _currentRequest = request;
+
         using (request.BodyReader)
-        using (_services.RegisterInstance(context))
-        using (_services.RegisterInstance(request))
-        using (_services.RegisterInstance(route))
+        using (var scope = _services.StartScope(RequestScopeName))
         {
             Log($"handling route '{route}'", MessageType.Info);
 
-            response = handler.Handle(request);
+            response = handler(scope);
         }
 
         if (response is CoroutineResponse coroutineResponse)

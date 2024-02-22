@@ -38,4 +38,25 @@ public static class IEnumerableExtensions
     {
         return dictonary.ToDictionary(p => p.Key, p => p.Value);
     }
+
+    public static V GetOrCreate<K, V>(this IDictionary<K, V> dictionary, K key)
+        where V : new()
+    {
+        if (dictionary.TryGetValue(key, out var value) is false)
+        {
+            value = dictionary[key] = new();
+        }
+
+        return value;
+    }
+
+    public static V GetOrCreate<K, V>(this IDictionary<K, V> dictionary, K key, Func<V> create)
+    {
+        if (dictionary.TryGetValue(key, out var value) is false)
+        {
+            value = dictionary[key] = create();
+        }
+
+        return value;
+    }
 }

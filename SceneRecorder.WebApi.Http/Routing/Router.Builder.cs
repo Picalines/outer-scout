@@ -2,7 +2,7 @@ using SceneRecorder.Infrastructure.Extensions;
 
 namespace SceneRecorder.WebApi.Http.Routing;
 
-internal sealed partial class Router
+internal sealed partial class Router<T>
 {
     public sealed class Builder
     {
@@ -10,7 +10,7 @@ internal sealed partial class Router
 
         private bool _built = false;
 
-        public Router Build()
+        public Router<T> Build()
         {
             if (_built)
             {
@@ -19,10 +19,10 @@ internal sealed partial class Router
 
             _built = true;
 
-            return new Router(_root);
+            return new Router<T>(_root);
         }
 
-        public Builder WithRoute(Route route, IRequestHandler requestHandler)
+        public Builder WithRoute(Route route, T value)
         {
             var currentNode = _root;
 
@@ -50,12 +50,14 @@ internal sealed partial class Router
                         );
                     }
 
-                    currentNode.Leaves[route.HttpMethod] = new(route, requestHandler);
+                    currentNode.Leaves[route.HttpMethod] = new(route, value);
                     return this;
                 }
             }
 
-            throw new InvalidOperationException($"failed to add route {route} to {nameof(Router)}");
+            throw new InvalidOperationException(
+                $"failed to add route {route} to {nameof(Router<T>)}"
+            );
         }
     }
 }

@@ -1,43 +1,83 @@
+using SceneRecorder.Infrastructure.Validation;
+
 namespace SceneRecorder.Infrastructure.DependencyInjection;
+
+using static ServiceContainer;
 
 public static class ServiceContainerExtensions
 {
-    public static IDisposable RegisterInstance<T>(this ServiceContainer services, T instance)
+    public static IRegistration<T> AsSingleton<T>(this IRegistration<T> registration)
         where T : class
     {
-        return services.RegisterService(new SingletonService<T>(instance));
+        return registration.ManageBy(new SingletonLifetime<T>());
     }
 
-    public static IDisposable RegisterFallbackInstance<T>(
-        this ServiceContainer services,
-        T instance
+    public static IRegistration<T> AsExternalReference<T>(
+        this IRegistration<T> registration,
+        T reference
     )
         where T : class
     {
-        return services.RegisterFallback(new SingletonService<T>(instance));
+        return registration.ManageBy(new ReferenceLifetime<T>(reference));
     }
 
-    public static IDisposable RegisterFactory<T>(
-        this ServiceContainer services,
-        Func<T> instanceFactory
+    public static IRegistration<T> InstantiatePerResolve<T>(this IRegistration<T> registration)
+        where T : class
+    {
+        return registration.ManageBy(new PerResolveLifetime<T>());
+    }
+
+    public static IRegistration<T> InstantiateBy<T>(
+        this IRegistration<T> registration,
+        Func<IServiceContainer, T> factory
     )
         where T : class
     {
-        return services.RegisterService(new FactoryService<T>(instanceFactory));
+        return registration.InstantiateBy(new LambdaInstantiator<T>(factory));
     }
 
-    public static IDisposable RegisterLazy<T>(this ServiceContainer services, Lazy<T> lazyInstance)
-        where T : class
-    {
-        return services.RegisterService(new LazyService<T>(lazyInstance));
-    }
-
-    public static IDisposable RegisterLazy<T>(
-        this ServiceContainer services,
-        Func<T> instanceFactory
+    public static IRegistration<T> InstantiateBy<T>(
+        this IRegistration<T> registration,
+        Func<T> factory
     )
         where T : class
     {
-        return services.RegisterLazy(new Lazy<T>(instanceFactory));
+        return registration.InstantiateBy(_ => factory());
+    }
+
+    private sealed class PerResolveLifetime<T> : ILifetime<T>, IStartupHandler
+        where T : class
+    {
+        private IInstantiator<T>? _instantiator;
+
+        public T GetInstance()
+        {
+            _instantiator.ThrowIfNull();
+            return _instantiator.Instantiate();
+        }
+
+        void IStartupHandler.InitializeService(IServiceContainer container)
+        {
+            _instantiator = container.Resolve<IInstantiator<T>>();
+        }
+    }
+
+    private sealed class LambdaInstantiator<T>(Func<IServiceContainer, T> instantiate)
+        : IInstantiator<T>,
+            IStartupHandler
+        where T : class
+    {
+        private IServiceContainer? _container;
+
+        public T Instantiate()
+        {
+            _container.ThrowIfNull();
+            return instantiate.Invoke(_container);
+        }
+
+        void IStartupHandler.InitializeService(IServiceContainer container)
+        {
+            _container = container;
+        }
     }
 }

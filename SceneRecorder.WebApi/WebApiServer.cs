@@ -1,18 +1,18 @@
 ﻿using System.Reflection;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using OWML.Common;
+using SceneRecorder.Application.Extensions;
+using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Extensions;
+using SceneRecorder.Infrastructure.Validation;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.RouteMappers;
 
 namespace SceneRecorder.WebApi;
 
-using Newtonsoft.Json.Serialization;
-using SceneRecorder.Application.Extensions;
 using SceneRecorder.Application.Recording;
-using SceneRecorder.Domain;
-using SceneRecorder.Infrastructure.Validation;
 
 public sealed class WebApiServer : IDisposable
 {
@@ -27,20 +27,20 @@ public sealed class WebApiServer : IDisposable
         TransformRouteMapper.Instance,
     };
 
-    private readonly ServiceContainer _services;
-
     private readonly HttpServer _httpServer;
 
     public WebApiServer()
     {
         var modConfig = Singleton<IModConfig>.Instance;
 
-        _services = CreateServiceContainer();
+        var services = new ServiceContainer.Builder();
 
         var httpServerBuilder = new HttpServer.Builder(
             $"http://localhost:{modConfig.GetApiPortSetting()}/",
-            _services
+            services
         );
+
+        RegisterServices(services);
 
         MapRoutes(httpServerBuilder);
 
@@ -50,7 +50,6 @@ public sealed class WebApiServer : IDisposable
     public void Dispose()
     {
         _httpServer.Dispose();
-        _services.Dispose();
     }
 
     private void MapRoutes(HttpServer.Builder serverBuilder)
@@ -65,55 +64,64 @@ public sealed class WebApiServer : IDisposable
         serverBuilder.MapGet("api/status", () => new { Available = true });
     }
 
-    private static ServiceContainer CreateServiceContainer()
+    private static void RegisterServices(ServiceContainer.Builder services)
     {
-        var modConfig = Singleton<IModConfig>.Instance;
-        var modConsole = Singleton<IModConsole>.Instance;
-
-        var services = new ServiceContainer();
-
-        services.RegisterInstance(services);
-
-        services.RegisterInstance<IModConsole>(
-            modConfig.GetEnableApiInfoLogsSetting()
-                ? modConsole
-                : modConsole.WithOnlyMessagesOfType(MessageType.Warning, MessageType.Error)
-        );
-
-        services.RegisterInstance(
-            new JsonSerializer()
+        services
+            .Register<IModConsole>()
+            .AsSingleton()
+            .InstantiateBy(() =>
             {
-                MissingMemberHandling = MissingMemberHandling.Error,
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                NullValueHandling = NullValueHandling.Ignore,
-                ContractResolver = new DefaultContractResolver
+                var modConsole = Singleton<IModConsole>.Instance;
+                return Singleton<IModConfig>.Instance.GetEnableApiInfoLogsSetting()
+                    ? modConsole
+                    : modConsole.WithOnlyMessagesOfType(MessageType.Warning, MessageType.Error);
+            });
+
+        services
+            .Override<JsonSerializer>()
+            .AsExternalReference(
+                new JsonSerializer()
                 {
-                    NamingStrategy = new CamelCaseNamingStrategy { ProcessDictionaryKeys = false }
-                },
-                Converters =
-                {
-                    Assembly
-                        .GetExecutingAssembly()
-                        .GetTypes()
-                        .Where(type => type.IsAbstract is false)
-                        .Where((typeof(JsonConverter)).IsAssignableFrom)
-                        .Select(type => (JsonConverter)Activator.CreateInstance(type))
-                },
-            }
-        );
+                    MissingMemberHandling = MissingMemberHandling.Error,
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                    NullValueHandling = NullValueHandling.Ignore,
+                    ContractResolver = new DefaultContractResolver
+                    {
+                        NamingStrategy = new CamelCaseNamingStrategy
+                        {
+                            ProcessDictionaryKeys = false
+                        }
+                    },
+                    Converters =
+                    {
+                        Assembly
+                            .GetExecutingAssembly()
+                            .GetTypes()
+                            .Where(type => type.IsAbstract is false)
+                            .Where((typeof(JsonConverter)).IsAssignableFrom)
+                            .Select(type => (JsonConverter)Activator.CreateInstance(type))
+                    },
+                }
+            );
 
-        services.RegisterSceneInstance<ResettableLazy<SceneRecorder.Builder>>(() =>
-        {
-            LocatorExtensions.IsInPlayableScene().Throw().IfFalse();
+        services
+            .Register<ResettableLazy<SceneRecorder.Builder>>()
+            .InstantiatePerUnityScene()
+            .InstantiateBy(
+                () =>
+                    ResettableLazy.Of(() =>
+                    {
+                        LocatorExtensions.IsInPlayableScene().Throw().IfFalse();
+                        return new SceneRecorder.Builder();
+                    })
+            );
 
-            return ResettableLazy.Of<SceneRecorder.Builder>();
-        });
-
-        services.RegisterFactory<SceneRecorder.Builder>(() =>
-        {
-            return services.Resolve<ResettableLazy<SceneRecorder.Builder>>().Value;
-        });
-
-        return services;
+        services
+            .Register<SceneRecorder.Builder>()
+            .InstantiatePerResolve()
+            .InstantiateBy(container =>
+            {
+                return container.Resolve<ResettableLazy<SceneRecorder.Builder>>().Value;
+            });
     }
 }

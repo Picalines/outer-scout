@@ -1,4 +1,3 @@
-using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Extensions;
 using UnityEngine;
 

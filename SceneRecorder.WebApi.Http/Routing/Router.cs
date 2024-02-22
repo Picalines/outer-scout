@@ -2,9 +2,9 @@ using SceneRecorder.Infrastructure.Extensions;
 
 namespace SceneRecorder.WebApi.Http.Routing;
 
-internal sealed partial class Router
+internal sealed partial class Router<T>
 {
-    private sealed record RouteTreeLeaf(Route Route, IRequestHandler Handler);
+    private sealed record RouteTreeLeaf(Route Route, T Value);
 
     private sealed class RouteTreeNode
     {
@@ -22,7 +22,7 @@ internal sealed partial class Router
         _routeTreeRoot = routeTreeRoot;
     }
 
-    public (Route Route, IRequestHandler Handler)? Match(Request request)
+    public (Route Route, T Value)? Match(Request request)
     {
         var httpMethod = request.HttpMethod;
 
