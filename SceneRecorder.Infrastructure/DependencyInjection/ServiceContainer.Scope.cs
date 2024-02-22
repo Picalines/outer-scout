@@ -98,7 +98,10 @@ public sealed partial class ServiceContainer
 
         public bool Contains(Type type)
         {
-            return _serviceRegistry.ContainsService(type) || (_parent?.Contains(type) is true);
+            return type == typeof(IServiceContainer)
+                || type == typeof(IServiceScope)
+                || _serviceRegistry.ContainsService(type)
+                || (_parent?.Contains(type) is true);
         }
 
         public bool Contains<T>()
