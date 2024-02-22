@@ -112,13 +112,18 @@ public sealed partial class ServiceContainer
 
         public void RegisterDependencies()
         {
-            ContainerBuilder
+            var instantiatorRegistration = ContainerBuilder
                 .Register<IInstantiator<T>>()
                 .ManageBy(
                     new ReferenceLifetime<IInstantiator<T>>(
                         _instantiator ?? new ConstructorInstantiator<T>()
                     )
                 );
+
+            if (_scopeIdentifier is not null)
+            {
+                instantiatorRegistration.InScope(_scopeIdentifier);
+            }
         }
     }
 }
