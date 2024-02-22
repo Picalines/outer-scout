@@ -1,9 +1,9 @@
-﻿using SceneRecorder.Shared.Extensions;
-using SceneRecorder.Shared.Models;
+﻿using SceneRecorder.Application.Extensions;
+using SceneRecorder.Infrastructure.Extensions;
+using SceneRecorder.WebApi.DTOs;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
-using SceneRecorder.WebApi.RouteMappers.DTOs;
 using UnityEngine;
 
 namespace SceneRecorder.WebApi.RouteMappers;
@@ -16,40 +16,83 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
 
     private GroundBodyRouteMapper() { }
 
-    public void MapRoutes(HttpServerBuilder serverBuilder, IRouteMapper.IContext context)
+    public void MapRoutes(HttpServer.Builder serverBuilder)
     {
-        using var precondition = serverBuilder.UseInPlayableScenePrecondition();
+        using (serverBuilder.WithPlayableSceneFilter())
+        {
+            serverBuilder.MapGet("gameObjects/:name/ground-body", GetGroundBody);
 
-        serverBuilder.MapGet(
-            "player/ground-body",
-            () =>
-                LocatorExtensions.GetCurrentGroundBody() switch
-                {
-                    { name: var name, transform: var transform }
-                        => Ok(
-                            new GameObjectDTO
-                            {
-                                Name = name,
-                                Path = transform.GetPath(),
-                                Transform = TransformDTO.FromGlobal(transform)
-                            }
-                        ),
-                    _ => NotFound(),
-                }
-        );
-
-        serverBuilder.MapGet(
-            "player/ground-body/meshes",
-            () =>
-                LocatorExtensions.GetCurrentGroundBody() switch
-                {
-                    { } groundBody => Ok(GetBodyMeshDTO(groundBody)),
-                    _ => NotFound(),
-                }
-        );
+            serverBuilder.MapGet("gameObjects/:name/mesh", GetGameObjectMesh);
+        }
     }
 
-    private static BodyMeshDTO GetBodyMeshDTO(GameObject body)
+    private static IResponse GetGroundBody(string name)
+    {
+        if (name != Locator.GetPlayerBody().OrNull()?.name)
+        {
+            return BadRequest();
+        }
+
+        return LocatorExtensions.GetCurrentGroundBody() switch
+        {
+            { name: var groundBodyName, transform: var transform }
+                => Ok(
+                    new GameObjectDTO
+                    {
+                        Name = groundBodyName,
+                        Path = transform.GetPath(),
+                        Transform = ToGlobalTransformDTO(transform)
+                    }
+                ),
+            _ => NotFound(),
+        };
+    }
+
+    private static IResponse GetGameObjectMesh(string name)
+    {
+        return GameObject.Find(name).OrNull() switch
+        {
+            { } gameObject => Ok(GetBodyMeshDTO(gameObject)),
+            _ => NotFound(),
+        };
+    }
+
+    private sealed class GameObjectMeshDTO
+    {
+        public required GameObjectDTO Body { get; init; }
+
+        public required IReadOnlyList<SectorMeshDTO> Sectors { get; init; }
+    }
+
+    private sealed class GameObjectDTO
+    {
+        public required string Name { get; init; }
+
+        public required string Path { get; init; }
+
+        public required TransformDTO Transform { get; init; }
+    }
+
+    private sealed class SectorMeshDTO
+    {
+        public required string Path { get; init; }
+
+        public required IReadOnlyList<MeshDTO> PlainMeshes { get; init; }
+
+        public required IReadOnlyList<MeshDTO> StreamedMeshes { get; init; }
+    }
+
+    private sealed class MeshDTO
+    {
+        // GameObject path for "static" meshes, Asset path for streamed ones
+        public required string Path { get; init; }
+
+        public required TransformDTO GlobalTransform { get; init; }
+
+        public required TransformDTO LocalTransform { get; init; }
+    }
+
+    private static GameObjectMeshDTO GetBodyMeshDTO(GameObject body)
     {
         var bodyTransform = body.transform;
 
@@ -63,12 +106,12 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
         {
             var sectorMeshInfo = sector is null
                 ? noSectorMeshInfo
-                : GetOrCreate(sectorMeshInfos, sector, CreateEmptySectorDTO);
+                : sectorMeshInfos.GetOrCreate(sector, () => CreateEmptySectorDTO(sector));
 
             var (meshGameObject, meshTransform) = (meshFilter.gameObject, meshFilter.transform);
 
-            var globalMeshTransform = TransformDTO.FromGlobal(meshTransform);
-            var localMeshTrasnform = TransformDTO.FromInverse(bodyTransform, meshTransform);
+            var globalMeshTransform = ToGlobalTransformDTO(meshTransform);
+            var localMeshTrasnform = ToLocalTransformDTO(bodyTransform, meshTransform);
 
             if (
                 StreamingManager.s_tableLoaded
@@ -112,13 +155,13 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
 
         sectorMeshInfosList.AddRange(sectorMeshInfos.Values);
 
-        return new BodyMeshDTO()
+        return new GameObjectMeshDTO()
         {
             Body = new()
             {
                 Name = body.name,
                 Path = bodyTransform.GetPath(),
-                Transform = TransformDTO.FromGlobal(bodyTransform),
+                Transform = ToGlobalTransformDTO(bodyTransform),
             },
             Sectors = sectorMeshInfosList,
         };
@@ -138,6 +181,26 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
     {
         return CreateEmptySectorDTO(sector.transform.GetPath());
     }
+
+    private static TransformDTO ToGlobalTransformDTO(Transform transform) =>
+        new()
+        {
+            Position = transform.position,
+            Rotation = transform.rotation,
+            Scale = transform.lossyScale,
+        };
+
+    private static TransformDTO ToLocalTransformDTO(
+        Transform parentTransform,
+        Transform childTransform
+    ) =>
+        new()
+        {
+            Parent = parentTransform.name,
+            Position = parentTransform.InverseTransformPoint(childTransform.position),
+            Rotation = parentTransform.InverseTransformRotation(childTransform.rotation),
+            Scale = childTransform.lossyScale,
+        };
 
     private static IEnumerable<(Sector? Sector, T Component)> GetComponentsInChildrenWithSector<T>(
         GameObject gameObject,
@@ -161,16 +224,5 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
                 yield return recursivePair;
             }
         }
-    }
-
-    private static V GetOrCreate<K, V>(IDictionary<K, V> dictionary, K key, Func<K, V> createValue)
-    {
-        if (dictionary.TryGetValue(key, out V value) is false)
-        {
-            value = createValue(key);
-            dictionary.Add(key, value);
-        }
-
-        return value;
     }
 }

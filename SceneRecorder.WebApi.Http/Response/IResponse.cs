@@ -7,4 +7,6 @@ public interface IResponse
     public HttpStatusCode StatusCode { get; }
 
     public string ContentType { get; }
+
+    internal void InternalOnly();
 }

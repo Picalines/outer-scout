@@ -10,7 +10,7 @@
     },
     "enableProgressUI": {
       "title": "Enable recording progress UI",
-      "tooltip": "Enable this to see last recorded frame in the game window. Can affect performance",
+      "tooltip": "Enable this to see information while recording",
       "type": "toggle",
       "value": true
     },

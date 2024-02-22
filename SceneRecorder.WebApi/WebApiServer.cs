@@ -1,64 +1,127 @@
-﻿using OWML.Common;
+﻿using System.Reflection;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using OWML.Common;
+using SceneRecorder.Application.Extensions;
+using SceneRecorder.Domain;
+using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.Recording.Recorders;
-using SceneRecorder.Shared.Extensions;
+using SceneRecorder.Infrastructure.Validation;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.RouteMappers;
-using UnityEngine;
 
 namespace SceneRecorder.WebApi;
 
-[RequireComponent(typeof(OutputRecorder))]
-public sealed class WebApiServer : HttpServer
-{
-    private sealed record RouteDefinitionContext(OutputRecorder OutputRecorder)
-        : IRouteMapper.IContext;
+using SceneRecorder.Application.Recording;
 
+public sealed class WebApiServer : IDisposable
+{
     private static readonly IRouteMapper[] _RouteMappers = new IRouteMapper[]
     {
-        CameraInfoRouteMapper.Instance,
+        CameraRouteMapper.Instance,
         GroundBodyRouteMapper.Instance,
         KeyframesRouteMapper.Instance,
+        PlayerRouteMapper.Instance,
         RecorderRouteMapper.Instance,
-        SectorsRouteMapper.Instance,
+        SceneRouteMapper.Instance,
         TransformRouteMapper.Instance,
-        WarpRouteMapper.Instance,
     };
 
-    public void Configure(IModConfig modConfig, IModConsole modConsole)
-    {
-        ModConsole = modConfig.GetEnableApiInfoLogsSetting()
-            ? modConsole
-            : modConsole.WithOnlyMessagesOfType(MessageType.Warning, MessageType.Error);
+    private readonly HttpServer _httpServer;
 
-        var listenUrl = $"http://localhost:{modConfig.GetApiPortSetting()}/";
-        var httpServerBuilder = new HttpServerBuilder(listenUrl);
+    public WebApiServer()
+    {
+        var modConfig = Singleton<IModConfig>.Instance;
+
+        var services = new ServiceContainer.Builder();
+
+        var httpServerBuilder = new HttpServer.Builder(
+            $"http://localhost:{modConfig.GetApiPortSetting()}/",
+            services
+        );
+
+        RegisterServices(services);
 
         MapRoutes(httpServerBuilder);
 
-        if (Listening is true)
-        {
-            StopListening();
-        }
-
-        httpServerBuilder.Build(this);
-        StartListening();
+        _httpServer = httpServerBuilder.Build();
     }
 
-    private void MapRoutes(HttpServerBuilder serverBuilder)
+    public void Dispose()
     {
-        var context = new RouteDefinitionContext(GetComponent<OutputRecorder>());
+        _httpServer.Dispose();
+    }
 
+    private void MapRoutes(HttpServer.Builder serverBuilder)
+    {
         foreach (var mapper in _RouteMappers)
         {
-            mapper.MapRoutes(serverBuilder, context);
+            mapper.MapRoutes(serverBuilder);
         }
 
-        serverBuilder.MapGet(
-            "",
-            () => new { Message = $"Welcome to Outer Wilds {nameof(SceneRecorder)} API!" }
-        );
+        serverBuilder.MapGet("", () => $"Welcome to Outer Wilds {nameof(SceneRecorder)} API!");
 
-        serverBuilder.MapGet("api-status", () => new { Available = true });
+        serverBuilder.MapGet("api/status", () => new { Available = true });
+    }
+
+    private static void RegisterServices(ServiceContainer.Builder services)
+    {
+        services
+            .Register<IModConsole>()
+            .AsSingleton()
+            .InstantiateBy(() =>
+            {
+                var modConsole = Singleton<IModConsole>.Instance;
+                return Singleton<IModConfig>.Instance.GetEnableApiInfoLogsSetting()
+                    ? modConsole
+                    : modConsole.WithOnlyMessagesOfType(MessageType.Warning, MessageType.Error);
+            });
+
+        services
+            .Override<JsonSerializer>()
+            .AsExternalReference(
+                new JsonSerializer()
+                {
+                    MissingMemberHandling = MissingMemberHandling.Error,
+                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                    NullValueHandling = NullValueHandling.Ignore,
+                    ContractResolver = new DefaultContractResolver
+                    {
+                        NamingStrategy = new CamelCaseNamingStrategy
+                        {
+                            ProcessDictionaryKeys = false
+                        }
+                    },
+                    Converters =
+                    {
+                        Assembly
+                            .GetExecutingAssembly()
+                            .GetTypes()
+                            .Where(type => type.IsAbstract is false)
+                            .Where((typeof(JsonConverter)).IsAssignableFrom)
+                            .Select(type => (JsonConverter)Activator.CreateInstance(type))
+                    },
+                }
+            );
+
+        services
+            .Register<ResettableLazy<SceneRecorder.Builder>>()
+            .InstantiatePerUnityScene()
+            .InstantiateBy(
+                () =>
+                    ResettableLazy.Of(() =>
+                    {
+                        LocatorExtensions.IsInPlayableScene().Throw().IfFalse();
+                        return new SceneRecorder.Builder();
+                    })
+            );
+
+        services
+            .Register<SceneRecorder.Builder>()
+            .InstantiatePerResolve()
+            .InstantiateBy(container =>
+            {
+                return container.Resolve<ResettableLazy<SceneRecorder.Builder>>().Value;
+            });
     }
 }

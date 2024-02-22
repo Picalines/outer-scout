@@ -1,13 +1,16 @@
-﻿using System.Collections;
-using SceneRecorder.Recording.Recorders;
-using SceneRecorder.Shared.Models;
+using SceneRecorder.Application.SceneCameras;
+using SceneRecorder.Domain;
+using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
-using SceneRecorder.WebApi.RouteMappers.DTOs;
 
 namespace SceneRecorder.WebApi.RouteMappers;
 
+using Newtonsoft.Json;
+using SceneRecorder.Application.Recording;
+using SceneRecorder.WebApi.DTOs;
+using UnityEngine;
 using static ResponseFabric;
 
 internal sealed class RecorderRouteMapper : IRouteMapper
@@ -16,82 +19,124 @@ internal sealed class RecorderRouteMapper : IRouteMapper
 
     private RecorderRouteMapper() { }
 
-    public void MapRoutes(HttpServerBuilder serverBuilder, IRouteMapper.IContext context)
+    private sealed class CreateTextureRecorderRequest
     {
-        using var precondition = serverBuilder.UseInPlayableScenePrecondition();
+        public required string OutputPath { get; init; }
 
-        var outputRecorder = context.OutputRecorder;
-
-        serverBuilder.MapGet(
-            "recorder/settings",
-            () => outputRecorder.Settings is { } sceneSettings ? Ok(sceneSettings) : NotFound()
-        );
-
-        serverBuilder.MapPut(
-            "recorder/settings",
-            (RecorderSettingsDTO newSettings) =>
-            {
-                if (outputRecorder.IsRecording)
-                {
-                    return ServiceUnavailable();
-                }
-
-                outputRecorder.Settings = newSettings;
-
-                return Ok();
-            }
-        );
-
-        serverBuilder.MapGet(
-            "recorder/status",
-            () =>
-                new RecorderStatusResponse
-                {
-                    Enabled = outputRecorder.enabled,
-                    IsAbleToRecord = outputRecorder.IsAbleToRecord,
-                    FramesRecorded = outputRecorder.FramesRecorded,
-                }
-        );
-
-        serverBuilder.MapGet(
-            "recorder/frames-recorded-async",
-            () =>
-                outputRecorder.IsAbleToRecord
-                    ? Ok(FramesRecordedCoroutine(outputRecorder))
-                    : ServiceUnavailable()
-        );
-
-        serverBuilder.MapPut(
-            "recorder/enabled",
-            (bool value) =>
-            {
-                if ((value, outputRecorder.IsAbleToRecord) is (true, false))
-                {
-                    return ServiceUnavailable();
-                }
-
-                if (value != outputRecorder.IsRecording)
-                {
-                    outputRecorder.enabled = value;
-                }
-
-                return Ok();
-            }
-        );
+        public int ConstantRateFactor { get; init; } = 18;
     }
 
-    private static IEnumerator FramesRecordedCoroutine(OutputRecorder outputRecorder)
+    private sealed class CreateTransformRecorderRequest
     {
-        while (true)
-        {
-            yield return $"{outputRecorder.FramesRecorded}\n";
+        public required string OutputPath { get; init; }
 
-            if (outputRecorder.IsRecording is false)
+        public required string Parent { get; init; }
+    }
+
+    public void MapRoutes(HttpServer.Builder serverBuilder)
+    {
+        using (serverBuilder.WithPlayableSceneFilter())
+        using (serverBuilder.WithSceneCreatedFilter())
+        using (serverBuilder.WithNotRecordingFilter())
+        {
+            serverBuilder.MapPost(
+                "cameras/:cameraId/textures/:textureType/recorder",
+                CreateCameraTextureRecorder
+            );
+
+            serverBuilder.MapPost(
+                "gameObjects/:gameObjectName/transform/recorder",
+                CreateTransformRecorder
+            );
+        }
+    }
+
+    private static IResponse CreateCameraTextureRecorder(
+        string cameraId,
+        string textureType,
+        [FromBody] CreateTextureRecorderRequest request,
+        SceneRecorder.Builder sceneRecorderBuilder
+    )
+    {
+        if (request.OutputPath.EndsWith(".mp4") is false)
+        {
+            return BadRequest("only .mp4 video output is supported");
+        }
+
+        if (request.ConstantRateFactor is < 0 or > 63)
+        {
+            return BadRequest("unsupported constant rate factor value");
+        }
+
+        if (SceneResource.Find<ISceneCamera>(cameraId) is not { Value: var camera })
+        {
+            return NotFound($"camera '{cameraId}' not found");
+        }
+
+        var renderTexture = textureType switch
+        {
+            "color" => camera.ColorTexture,
+            "depth" => camera.DepthTexture,
+            _ => null,
+        };
+
+        if (renderTexture is null)
+        {
+            return NotFound($"camera '{cameraId}' cannot record {textureType} texture");
+        }
+
+        sceneRecorderBuilder.WithRecorder(
+            new RenderTextureRecorder.Builder(targetFile: request.OutputPath, renderTexture)
+                .WithFrameRate(sceneRecorderBuilder.CaptureFrameRate)
+                .WithConstantRateFactor(request.ConstantRateFactor)
+        );
+
+        return Ok();
+    }
+
+    private static IResponse CreateTransformRecorder(
+        string gameObjectName,
+        [FromBody] CreateTransformRecorderRequest request,
+        SceneRecorder.Builder sceneRecorderBuilder,
+        JsonSerializer jsonSerializer
+    )
+    {
+        if (request.OutputPath.EndsWith(".json") is false)
+        {
+            return BadRequest("only .json output is supported");
+        }
+
+        if (GameObject.Find(gameObjectName).OrNull() is not { transform: var targetTransform })
+        {
+            return NotFound($"gameObject '{gameObjectName}' not found");
+        }
+
+        if (GameObject.Find(request.Parent).OrNull() is not { transform: var parentTransform })
+        {
+            return BadRequest($"gameObject '{request.Parent}' not found");
+        }
+
+        var transformGetter = () =>
+        {
+            if (targetTransform == null || parentTransform == null)
             {
-                break;
+                return null;
             }
 
-            yield return null;
-        }
+            return new TransformDTO()
+            {
+                Position = parentTransform.InverseTransformPoint(targetTransform.position),
+                Rotation = parentTransform.InverseTransformRotation(targetTransform.rotation),
+                Scale = targetTransform.lossyScale,
+            };
+        };
+
+        sceneRecorderBuilder.WithRecorder(
+            new JsonRecorder.Builder(targetFile: request.OutputPath, transformGetter)
+                .WithJsonSerializer(jsonSerializer)
+                .WithAdditionalProperty("parent", request.Parent)
+        );
+
+        return Ok();
     }
 }

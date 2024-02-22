@@ -1,9 +1,8 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace SceneRecorder.WebApi.Http.Routing;
 
-internal sealed record Route(HttpMethod HttpMethod, IReadOnlyList<Route.Segment> Segments)
+internal sealed partial class Route
 {
     public enum SegmentType
     {
@@ -24,65 +23,70 @@ internal sealed record Route(HttpMethod HttpMethod, IReadOnlyList<Route.Segment>
         }
     }
 
-    private static readonly Regex _StringSegmentRegex = new(@"^:?[a-zA-Z_\-]+$");
+    public HttpMethod HttpMethod { get; }
 
-    public static bool TryFromString(
-        HttpMethod method,
-        string str,
-        [NotNullWhen(true)] out Route? route
+    public IReadOnlyList<Segment> Segments { get; }
+
+    public IReadOnlyDictionary<string, int> ParameterIndexes { get; }
+
+    private static readonly Regex _stringSegmentRegex = new(@"^([a-zA-Z\-_]+)|(:[a-zA-Z_]+)$");
+
+    private Route(
+        HttpMethod httpMethod,
+        IReadOnlyList<Segment> segments,
+        IReadOnlyDictionary<string, int> parameterIndexes
     )
     {
-        if (str == "")
-        {
-            route = new Route(method, Array.Empty<Segment>());
-            return true;
-        }
-
-        route = null;
-
-        var strSegments = str.Split('/');
-        var segments = new List<Segment>();
-        var parameterNames = new HashSet<string>();
-
-        foreach (var strSegment in strSegments)
-        {
-            if (!_StringSegmentRegex.IsMatch(strSegment))
-            {
-                return false;
-            }
-
-            Segment segment;
-
-            bool isParameter = strSegment.StartsWith(":");
-            if (isParameter)
-            {
-                var parameterName = strSegment.Substring(1);
-                if (parameterNames.Add(parameterName) is false)
-                {
-                    return false;
-                }
-
-                segment = new(SegmentType.Parameter, parameterName);
-            }
-            else
-            {
-                segment = new(SegmentType.Constant, strSegment);
-            }
-
-            segments.Add(segment);
-        }
-
-        route = new Route(method, segments.ToArray());
-        return true;
+        HttpMethod = httpMethod;
+        Segments = segments;
+        ParameterIndexes = parameterIndexes;
     }
 
-    public IEnumerable<string> Parameters =>
-        Segments
-            .Where(segment => segment is { Type: SegmentType.Parameter })
-            .Select(segment => segment.Value);
+    public IEnumerable<string> Parameters
+    {
+        get => ParameterIndexes.Keys;
+    }
 
     public override string ToString()
     {
         return $"{HttpMethod.Method} {string.Join("/", Segments)}";
+    }
+
+    public static Route? FromString(HttpMethod method, string str)
+    {
+        var builder = new Builder().WithHttpMethod(method);
+
+        if (str is "")
+        {
+            return builder.Build();
+        }
+
+        var pathParts = str.Split('/');
+        var parameterNames = new HashSet<string>();
+
+        foreach (var pathPart in pathParts)
+        {
+            if (!_stringSegmentRegex.IsMatch(pathPart))
+            {
+                return null;
+            }
+
+            if (pathPart.StartsWith(":"))
+            {
+                var parameterName = pathPart.Substring(1);
+                if (parameterNames.Add(parameterName) is false)
+                {
+                    return null;
+                }
+
+                builder.WithParameterSegment(parameterName);
+            }
+            else
+            {
+                builder.WithConstantSegment(pathPart);
+            }
+        }
+
+        return builder.Build();
     }
 }

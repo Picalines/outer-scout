@@ -1,135 +1,61 @@
+using SceneRecorder.Infrastructure.Extensions;
+
 namespace SceneRecorder.WebApi.Http.Routing;
 
-internal sealed class Router
+internal sealed partial class Router<T>
 {
-    private sealed class RouteNode
+    private sealed record RouteTreeLeaf(Route Route, T Value);
+
+    private sealed class RouteTreeNode
     {
-        public Dictionary<HttpMethod, RequestHandler> Handlers { get; } = new();
+        public Dictionary<HttpMethod, RouteTreeLeaf> Leaves { get; } = [];
 
-        public Dictionary<string, RouteNode> PlainChildren { get; } = new();
+        public Dictionary<string, RouteTreeNode> PlainChildren { get; } = [];
 
-        public (string ParameterName, RouteNode ChildNode)? ParameterChild { get; set; }
+        public RouteTreeNode? ParameterChild { get; set; }
     }
 
-    private readonly RouteNode _RouteTreeRoot;
+    private readonly RouteTreeNode _routeTreeRoot;
 
-    public Router(IReadOnlyList<RequestHandler> requestHandlers)
+    private Router(RouteTreeNode routeTreeRoot)
     {
-        _RouteTreeRoot = CreateRouteTree(requestHandlers);
+        _routeTreeRoot = routeTreeRoot;
     }
 
-    public RequestHandler? Match(Request request)
+    public (Route Route, T Value)? Match(Request request)
     {
         var httpMethod = request.HttpMethod;
 
-        request.MutableRouteParameters.Clear();
+        var currentNode = _routeTreeRoot;
 
-        var urlRouteSegments = request.Uri.LocalPath.Trim('/').Split('/');
-
-        var currentNode = _RouteTreeRoot;
-
-        foreach (var (urlRouteSegment, isLast) in EnumerateWithLastFlag(urlRouteSegments))
+        foreach (var (pathPart, isLast) in request.Path.WithIsLast())
         {
-            if (currentNode.PlainChildren.ContainsKey(urlRouteSegment))
+            if (currentNode.PlainChildren.ContainsKey(pathPart))
             {
-                currentNode = currentNode.PlainChildren[urlRouteSegment];
+                currentNode = currentNode.PlainChildren[pathPart];
             }
-            else if (
-                urlRouteSegment.Length > 0
-                && currentNode.ParameterChild
-                    is { ChildNode: var parameterChild, ParameterName: var parameterName }
-            )
+            else if (currentNode.ParameterChild is { } parameterChild)
             {
                 currentNode = parameterChild;
-                request.MutableRouteParameters[parameterName] = urlRouteSegment;
+            }
+            else
+            {
+                return null;
             }
 
             if (isLast)
             {
-                if (currentNode.Handlers.TryGetValue(httpMethod, out var requestHandler) is false)
+                if (currentNode.Leaves.TryGetValue(httpMethod, out var leaf) is false)
                 {
                     return null;
                 }
 
-                return requestHandler;
+                var (route, requestHandler) = leaf;
+
+                return (route, requestHandler);
             }
         }
 
         return null;
-    }
-
-    private RouteNode CreateRouteTree(IReadOnlyList<RequestHandler> requestHandlers)
-    {
-        var root = new RouteNode();
-
-        foreach (var requestHandler in requestHandlers)
-        {
-            var route = requestHandler.Route;
-            var currentNode = root;
-
-            foreach (var (routeSegment, isLast) in EnumerateWithLastFlag(route.Segments))
-            {
-                switch (routeSegment.Type)
-                {
-                    case Route.SegmentType.Constant:
-                        var plainSegment = routeSegment.Value;
-
-                        currentNode = currentNode.PlainChildren.ContainsKey(plainSegment)
-                            ? currentNode.PlainChildren[plainSegment]
-                            : (currentNode.PlainChildren[plainSegment] = new RouteNode());
-                        break;
-
-                    case Route.SegmentType.Parameter:
-                        if (currentNode.ParameterChild is not (_, { } childNode))
-                        {
-                            childNode = new RouteNode();
-                            currentNode.ParameterChild = (routeSegment.Value, childNode);
-                        }
-
-                        currentNode = childNode;
-                        break;
-
-                    default:
-                        throw new NotImplementedException();
-                }
-
-                if (isLast)
-                {
-                    if (currentNode.Handlers.ContainsKey(route.HttpMethod))
-                    {
-                        throw new InvalidOperationException(
-                            $"{route.HttpMethod.Method} {route} route is ambiguous"
-                        );
-                    }
-
-                    currentNode.Handlers[route.HttpMethod] = requestHandler;
-                }
-            }
-
-            if (route.Segments.Count is 0)
-            {
-                if (root.Handlers.ContainsKey(route.HttpMethod))
-                {
-                    throw new InvalidOperationException(
-                        $"index {route.HttpMethod.Method} route is ambiguous"
-                    );
-                }
-
-                root.Handlers[route.HttpMethod] = requestHandler;
-            }
-        }
-
-        return root;
-    }
-
-    private IEnumerable<(T Element, bool IsLast)> EnumerateWithLastFlag<T>(IReadOnlyList<T> list)
-    {
-        int index = 0;
-        var lastIndex = list.Count - 1;
-
-        foreach (var element in list)
-        {
-            yield return (element, index++ == lastIndex);
-        }
     }
 }

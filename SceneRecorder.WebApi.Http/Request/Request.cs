@@ -1,5 +1,5 @@
 ﻿using System.Web;
-using Newtonsoft.Json;
+using SceneRecorder.Infrastructure.Extensions;
 
 namespace SceneRecorder.WebApi.Http;
 
@@ -7,43 +7,89 @@ public sealed class Request
 {
     public HttpMethod HttpMethod { get; }
 
-    public Uri Uri { get; }
+    public TextReader BodyReader { get; }
 
-    public string Body { get; }
-
-    internal Dictionary<string, string> MutableRouteParameters { get; } = new();
-
-    private static readonly JsonSerializerSettings _JsonSettings =
-        new() { MissingMemberHandling = MissingMemberHandling.Error };
-
-    internal Request(HttpMethod httpMethod, Uri uri, string body)
-    {
-        HttpMethod = httpMethod;
-        Uri = uri;
-        Body = body;
-
-        var queryDictionary = new Dictionary<string, string>();
-
-        var query = HttpUtility.ParseQueryString(uri.Query);
-        var queryPairs = query.AllKeys.SelectMany(
-            query.GetValues,
-            (key, value) => new { key, value }
-        );
-
-        foreach (var pair in queryPairs)
-        {
-            queryDictionary[pair.key] = pair.value;
-        }
-
-        QueryParameters = queryDictionary;
-    }
-
-    public IReadOnlyDictionary<string, string> RouteParameters => MutableRouteParameters;
+    public IReadOnlyList<string> Path { get; }
 
     public IReadOnlyDictionary<string, string> QueryParameters { get; }
 
-    public T JsonBody<T>()
+    private Request(
+        HttpMethod httpMethod,
+        TextReader bodyReader,
+        IReadOnlyList<string> path,
+        IReadOnlyDictionary<string, string> queryParameters
+    )
     {
-        return JsonConvert.DeserializeObject<T>(Body, _JsonSettings)!;
+        HttpMethod = httpMethod;
+        BodyReader = bodyReader;
+        Path = path;
+        QueryParameters = queryParameters;
+    }
+
+    public sealed class Builder
+    {
+        private HttpMethod _httpMethod = HttpMethod.Get;
+
+        private TextReader _bodyReader = new StringReader("");
+
+        private readonly List<string> _path = [];
+
+        private readonly Dictionary<string, string> _queryParameters = [];
+
+        public HttpMethod HttpMethod => _httpMethod;
+
+        public Request Build()
+        {
+            IEnumerable<string> path = _path.Count > 0 ? _path : [""];
+
+            return new Request(
+                _httpMethod,
+                _bodyReader,
+                path.ToArray(),
+                _queryParameters.ToDictionary()
+            );
+        }
+
+        public Builder WithHttpMethod(HttpMethod httpMethod)
+        {
+            _httpMethod = httpMethod;
+            return this;
+        }
+
+        public Builder WithBodyReader(TextReader bodyReader)
+        {
+            _bodyReader = bodyReader;
+            return this;
+        }
+
+        public Builder WithBody(string body)
+        {
+            return WithBodyReader(new StringReader(body));
+        }
+
+        public Builder WithPathPart(string value)
+        {
+            _path.Add(value);
+            return this;
+        }
+
+        public Builder WithQueryParameter(string key, string value)
+        {
+            _queryParameters[key] = value;
+            return this;
+        }
+
+        public Builder WithPathAndQuery(Uri uri)
+        {
+            _path.AddRange(uri.LocalPath.Trim('/').Split('/'));
+
+            var queryParameters = HttpUtility.ParseQueryString(uri.Query);
+
+            queryParameters
+                .AllKeys.SelectMany(queryParameters.GetValues, (key, value) => new { key, value })
+                .ForEach(pair => _queryParameters[pair.key] = pair.value);
+
+            return this;
+        }
     }
 }

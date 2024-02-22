@@ -5,21 +5,16 @@
 		<RootNamespace>SceneRecorder.Infrastructure</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup>
-		<AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
-		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-		<CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
-	</PropertyGroup>
-	<PropertyGroup>
-		<LangVersion>11.0</LangVersion>
+		<LangVersion>12.0</LangVersion>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<NoWarn>MSB3270</NoWarn>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Hafner.Compatibility.NullableReferenceTypeAttributes" Version="1.0.0" />
-		<PackageReference Include="OWML" Version="2.9.8" />
-		<PackageReference Include="OuterWildsGameLibs" Version="1.1.14.768" />
-		<PackageReference Include="HarmonyX" Version="2.10.1" />
+		<PackageReference Include="Hafner.Compatibility.NullableReferenceTypeAttributes" Version="1.0.0" IncludeAssets="compile" />
+		<PackageReference Include="OWML" Version="2.9.8" IncludeAssets="compile" />
+		<PackageReference Include="OuterWildsGameLibs" Version="1.1.14.768" IncludeAssets="compile" />
+		<PackageReference Include="HarmonyX" Version="2.10.1" IncludeAssets="compile" />
 	</ItemGroup>
 </Project>

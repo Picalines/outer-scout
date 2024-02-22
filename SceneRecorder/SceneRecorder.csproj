@@ -7,10 +7,10 @@
 	<PropertyGroup>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-		<CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
 	<PropertyGroup>
-		<LangVersion>11.0</LangVersion>
+		<LangVersion>12.0</LangVersion>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
@@ -21,7 +21,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\SceneRecorder.Infrastructure\SceneRecorder.Infrastructure.csproj" />
-		<ProjectReference Include="..\SceneRecorder.Recording\SceneRecorder.Recording.csproj" />
+		<ProjectReference Include="..\SceneRecorder.Application\SceneRecorder.Application.csproj" />
 		<ProjectReference Include="..\SceneRecorder.WebApi\SceneRecorder.WebApi.csproj" />
 	</ItemGroup>
 	<ItemGroup>
