@@ -12,12 +12,8 @@ public static class ValidatableExtensions
     {
         if (condition)
         {
-            throw validatable.CreateException(
-                paramName =>
-                    throw new ArgumentException(
-                        $"condition {conditionExpression} is true",
-                        paramName
-                    )
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentException($"condition {conditionExpression} is true", expression)
             );
         }
 
@@ -53,9 +49,8 @@ public static class ValidatableExtensions
 
         if (equalityComparer.Equals(validatable.Value, value) is true)
         {
-            throw validatable.CreateException(
-                paramName =>
-                    throw new ArgumentException($"{paramName} equals {valueExpression}", paramName)
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentException($"{expression} equals {valueExpression}", expression)
             );
         }
 
@@ -73,9 +68,8 @@ public static class ValidatableExtensions
 
         if (equalityComparer.Equals(validatable.Value, value) is false)
         {
-            throw validatable.CreateException(
-                paramName =>
-                    throw new ArgumentException($"{paramName} equals {valueExpression}", paramName)
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentException($"{expression} equals {valueExpression}", expression)
             );
         }
 
@@ -86,8 +80,8 @@ public static class ValidatableExtensions
     {
         if (validatable.Value == null)
         {
-            throw validatable.CreateException(
-                paramName => throw new ArgumentNullException(paramName)
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentNullException(expression)
             );
         }
 
@@ -98,8 +92,8 @@ public static class ValidatableExtensions
     {
         if (validatable.Value is true)
         {
-            throw validatable.CreateException(
-                paramName => throw new ArgumentException($"{paramName} is true", paramName)
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentException($"{expression} is true", expression)
             );
         }
 
@@ -110,8 +104,8 @@ public static class ValidatableExtensions
     {
         if (validatable.Value is false)
         {
-            throw validatable.CreateException(
-                paramName => throw new ArgumentException($"{paramName} is false", paramName)
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentException($"{expression} is false", expression)
             );
         }
 
@@ -122,8 +116,8 @@ public static class ValidatableExtensions
     {
         if (validatable.Value is "")
         {
-            throw validatable.CreateException(
-                paramName => throw new ArgumentException($"string {paramName} is empty", paramName)
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentException($"string {expression} is empty", expression)
             );
         }
 
@@ -134,12 +128,11 @@ public static class ValidatableExtensions
     {
         if (string.IsNullOrWhiteSpace(validatable.Value))
         {
-            throw validatable.CreateException(
-                paramName =>
-                    throw new ArgumentException(
-                        $"string {paramName} is null or whitespace",
-                        paramName
-                    )
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentException(
+                    $"string {expression} is null or whitespace",
+                    expression
+                )
             );
         }
 
@@ -150,12 +143,11 @@ public static class ValidatableExtensions
     {
         if (validatable.Value < threshold)
         {
-            throw validatable.CreateException(
-                paramName =>
-                    throw new ArgumentOutOfRangeException(
-                        paramName,
-                        $"{paramName} is less than {threshold}"
-                    )
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentOutOfRangeException(
+                    expression,
+                    $"{expression} is less than {threshold}"
+                )
             );
         }
 
@@ -166,12 +158,11 @@ public static class ValidatableExtensions
     {
         if (validatable.Value > threshold)
         {
-            throw validatable.CreateException(
-                paramName =>
-                    throw new ArgumentOutOfRangeException(
-                        paramName,
-                        $"{paramName} is greater than {threshold}"
-                    )
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentOutOfRangeException(
+                    expression,
+                    $"{expression} is greater than {threshold}"
+                )
             );
         }
 

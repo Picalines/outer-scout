@@ -2,7 +2,7 @@ namespace SceneRecorder.Infrastructure.Validation;
 
 public readonly ref struct Validatable<T>
 {
-    public delegate Exception ExceptionFactory(string paramName);
+    public delegate Exception ExceptionFactory(string expression);
 
     internal T Value { get; }
 
@@ -17,8 +17,8 @@ public readonly ref struct Validatable<T>
         _exceptionFactory = exceptionFactory;
     }
 
-    internal Exception CreateException(ExceptionFactory fallback)
+    internal Exception CustomExceptionOr(ExceptionFactory standard)
     {
-        return _exceptionFactory?.Invoke(_valueExpression) ?? fallback(_valueExpression);
+        return _exceptionFactory?.Invoke(_valueExpression) ?? standard(_valueExpression);
     }
 }
