@@ -1,11 +1,12 @@
 using OWML.Common;
-using SceneRecorder.Application.FFmpeg;
 using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.Infrastructure.Validation;
 using UnityEngine;
 
 namespace SceneRecorder.Application.Recording;
+
+using Application.FFmpeg;
 
 public sealed partial class RenderTextureRecorder
 {
@@ -21,6 +22,11 @@ public sealed partial class RenderTextureRecorder
 
         public Builder(string targetFile, RenderTexture renderTexture)
         {
+            FFmpeg.ThrowIfNotAvailable();
+            SystemInfo
+                .supportsAsyncGPUReadback.Throw(e => new InvalidOperationException(e))
+                .IfFalse();
+
             _targetFile = targetFile;
             _texture = renderTexture;
         }
@@ -38,7 +44,7 @@ public sealed partial class RenderTextureRecorder
                     RenderTextureFormat.ARGB32 => FFmpegPixelFormat.RGBA,
                     _
                         => throw new NotImplementedException(
-                            $"{_texture.format.ToStringWithType()} input is not supported"
+                            $"{_texture.format.ToStringWithType()} input is not implemented"
                         ),
                 },
             };

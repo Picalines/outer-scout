@@ -1,16 +1,17 @@
+using Newtonsoft.Json;
+using SceneRecorder.Application.FFmpeg;
 using SceneRecorder.Application.SceneCameras;
 using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.Extensions;
+using SceneRecorder.WebApi.DTOs;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
+using UnityEngine;
 
 namespace SceneRecorder.WebApi.RouteMappers;
 
-using Newtonsoft.Json;
 using SceneRecorder.Application.Recording;
-using SceneRecorder.WebApi.DTOs;
-using UnityEngine;
 using static ResponseFabric;
 
 internal sealed class RecorderRouteMapper : IRouteMapper
@@ -58,6 +59,13 @@ internal sealed class RecorderRouteMapper : IRouteMapper
         SceneRecorder.Builder sceneRecorderBuilder
     )
     {
+        if (FFmpeg.CheckInstallation() is { } exception)
+        {
+            return ServiceUnavailable(
+                new { Error = "ffmpeg is not available", Exception = exception }
+            );
+        }
+
         if (request.OutputPath.EndsWith(".mp4") is false)
         {
             return BadRequest("only .mp4 video output is supported");

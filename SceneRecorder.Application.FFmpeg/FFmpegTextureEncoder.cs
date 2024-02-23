@@ -45,6 +45,9 @@ public sealed class FFmpegTextureEncoder : IDisposable
         OutputOptions outputOptions
     )
     {
+        FFmpeg.ThrowIfNotAvailable();
+        SystemInfo.supportsAsyncGPUReadback.Throw(e => new InvalidOperationException(e)).IfFalse();
+
         ffmpegPath.Throw().IfNullOrWhiteSpace();
         inputOptions.Width.Throw().IfLessThan(1);
         inputOptions.Height.Throw().IfLessThan(1);

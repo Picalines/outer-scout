@@ -67,12 +67,17 @@ public sealed class WebApiServer : IDisposable
     private static void RegisterServices(ServiceContainer.Builder services)
     {
         services
+            .Register<IModConfig>()
+            .AsSingleton()
+            .InstantiateBy(() => Singleton<IModConfig>.Instance);
+
+        services
             .Register<IModConsole>()
             .AsSingleton()
-            .InstantiateBy(() =>
+            .InstantiateBy(services =>
             {
                 var modConsole = Singleton<IModConsole>.Instance;
-                return Singleton<IModConfig>.Instance.GetEnableApiInfoLogsSetting()
+                return services.Resolve<IModConfig>().GetEnableApiInfoLogsSetting()
                     ? modConsole
                     : modConsole.WithOnlyMessagesOfType(MessageType.Warning, MessageType.Error);
             });

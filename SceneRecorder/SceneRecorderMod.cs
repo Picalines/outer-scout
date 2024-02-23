@@ -29,10 +29,7 @@ internal sealed class SceneRecorderMod : ModBehaviour
     {
         ModHelper.Console.WriteLine($"{nameof(SceneRecorder)} is loaded!", MessageType.Success);
 
-        if (CheckCompatibility() is false)
-        {
-            return;
-        }
+        ShowCompatabilityWarnings();
 
         UnityEngine.Application.runInBackground = true;
         ModHelper.Console.WriteLine("Outer Wilds will run in background", MessageType.Warning);
@@ -40,38 +37,32 @@ internal sealed class SceneRecorderMod : ModBehaviour
         Configure(ModHelper.Config);
     }
 
-    private bool CheckCompatibility()
+    private void ShowCompatabilityWarnings()
     {
         if (SystemInfo.supportsAsyncGPUReadback is false)
         {
             ModHelper.Console.WriteLine(
-                $"async gpu readback is not supported, {nameof(SceneRecorder)} is not available",
-                MessageType.Error
+                $"async gpu readback is not supported, texture recording is not available",
+                MessageType.Warning
             );
-            return false;
         }
 
         if (SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.Depth) is false)
         {
             ModHelper.Console.WriteLine(
-                $"{RenderTextureFormat.Depth.ToStringWithType()} is not supported, {nameof(SceneRecorder)} is not available",
-                MessageType.Error
+                $"{RenderTextureFormat.Depth.ToStringWithType()} is not supported, depth recording is not available",
+                MessageType.Warning
             );
-            return false;
         }
 
-        // TODO: should only block RenderTextureRecorders
-        if (FFmpeg.CheckInstallation(ModHelper.Config) is { } checkException)
+        if (FFmpeg.CheckInstallation() is { } exception)
         {
             ModHelper.Console.WriteLine(
-                $"ffmpeg executable not found, {nameof(SceneRecorder)} is not available. See exception below:",
-                MessageType.Error
+                $"ffmpeg executable not found, texture recording is not available. See exception below:",
+                MessageType.Warning
             );
 
-            ModHelper.Console.WriteLine(checkException.ToString(), MessageType.Warning);
-            return false;
+            ModHelper.Console.WriteLine(exception.ToString(), MessageType.Warning);
         }
-
-        return true;
     }
 }
