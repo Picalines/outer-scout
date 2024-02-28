@@ -74,7 +74,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
         SceneRecorder.Builder sceneRecorderBuilder
     )
     {
-        if (SceneResource.Find<ISceneCamera>(id) is not { Value.Transform: var targetTransform })
+        if (ApiResource.Find<ISceneCamera>(id) is not { Value.Transform: var targetTransform })
         {
             return NotFound();
         }
@@ -93,7 +93,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
         SceneRecorder.Builder sceneRecorderBuilder
     )
     {
-        if (SceneResource.Find<ISceneCamera>(id) is not { Value: PerspectiveSceneCamera camera })
+        if (ApiResource.Find<ISceneCamera>(id) is not { Value: PerspectiveSceneCamera camera })
         {
             return NotFound();
         }
@@ -152,7 +152,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     {
         var gameObject = targetTransform.gameObject;
 
-        if (gameObject.GetResource<Animator<LocalTransform>>() is not { Value: var animator })
+        if (gameObject.GetApiResource<Animator<LocalTransform>>() is not { Value: var animator })
         {
             var keyframes = new KeyframeStorage<LocalTransform>(sceneRecorderBuilder.FrameRange);
 
@@ -162,7 +162,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
                     targetTransform.Apply(newTransform);
             });
 
-            gameObject.AddResource(
+            gameObject.AddApiResource(
                 animator = new Animator<LocalTransform>()
                 {
                     Keyframes = keyframes,
@@ -184,7 +184,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     {
         var gameObject = camera.gameObject;
 
-        if (gameObject.GetResource<Animator<CameraPerspective>>() is not { Value: var animator })
+        if (gameObject.GetApiResource<Animator<CameraPerspective>>() is not { Value: var animator })
         {
             var keyframes = new KeyframeStorage<CameraPerspective>(sceneRecorderBuilder.FrameRange);
 
@@ -192,7 +192,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
                 newPerspective => camera.Perspective = newPerspective
             );
 
-            gameObject.AddResource(
+            gameObject.AddApiResource(
                 animator = new Animator<CameraPerspective>()
                 {
                     Keyframes = keyframes,

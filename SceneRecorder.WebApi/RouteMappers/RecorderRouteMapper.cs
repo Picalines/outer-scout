@@ -1,7 +1,6 @@
 using Newtonsoft.Json;
 using SceneRecorder.Application.FFmpeg;
 using SceneRecorder.Application.SceneCameras;
-using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.WebApi.DTOs;
 using SceneRecorder.WebApi.Extensions;
@@ -76,7 +75,7 @@ internal sealed class RecorderRouteMapper : IRouteMapper
             return BadRequest("unsupported constant rate factor value");
         }
 
-        if (SceneResource.Find<ISceneCamera>(cameraId) is not { Value: var camera })
+        if (ApiResource.Find<ISceneCamera>(cameraId) is not { Value: var camera })
         {
             return NotFound($"camera '{cameraId}' not found");
         }

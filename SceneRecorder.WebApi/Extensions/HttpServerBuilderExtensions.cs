@@ -24,7 +24,7 @@ internal static class HttpServerBuilderExtensions
     {
         return serverBuilder.WithFilter(() =>
         {
-            return SceneResource.Find<SceneRecorder>().Any()
+            return ApiResource.Find<SceneRecorder>().Any()
                 ? ServiceUnavailable(new { Error = "not available while recording" })
                 : null;
         });

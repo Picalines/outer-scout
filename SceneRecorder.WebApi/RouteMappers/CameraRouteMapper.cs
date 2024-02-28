@@ -1,7 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using SceneRecorder.Application.Extensions;
 using SceneRecorder.Application.SceneCameras;
-using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.WebApi.DTOs;
 using SceneRecorder.WebApi.Extensions;
@@ -54,7 +53,7 @@ internal sealed class CameraRouteMapper : IRouteMapper
             return BadRequest("invalid camera id");
         }
 
-        if (SceneResource.Find<ISceneCamera>(cameraId) is { })
+        if (ApiResource.Find<ISceneCamera>(cameraId) is { })
         {
             return BadRequest($"camera with id '{cameraId}' already exists");
         }
@@ -98,7 +97,7 @@ internal sealed class CameraRouteMapper : IRouteMapper
 
         newCamera.Transform.ApplyWithParent(cameraDTO.Transform.ToLocalTransform(parentTransform));
 
-        gameObject.AddResource<ISceneCamera>(newCamera, uniqueId: cameraId);
+        gameObject.AddApiResource<ISceneCamera>(newCamera, uniqueId: cameraId);
 
         return Ok();
     }
