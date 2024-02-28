@@ -56,7 +56,10 @@ internal sealed class PlayerRouteMapper : IRouteMapper
         );
     }
 
-    private static IResponse WarpToGroundBody([FromBody] WarpRequest request)
+    private static IResponse WarpToGroundBody(
+        [FromBody] WarpRequest request,
+        GameObjectRepository gameObjects
+    )
     {
         if (
             LocatorExtensions.GetPlayerSpawner() is not { } playerSpawner
@@ -75,8 +78,8 @@ internal sealed class PlayerRouteMapper : IRouteMapper
         }
 
         if (
-            GameObject.Find(groundBodyName).OrNull() is not { transform: var groundBodyTransform }
-            || groundBodyTransform.GetComponent<OWRigidbody>().OrNull() is not { } groundBody
+            gameObjects.FindOrNull(groundBodyName) is not { transform: var groundBodyTransform }
+            || groundBodyTransform.GetComponentOrNull<OWRigidbody>() is not { } groundBody
         )
         {
             return BadRequest($"'{groundBodyName}' is not a valid ground body");

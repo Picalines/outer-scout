@@ -43,7 +43,7 @@ internal static class ApiResource
     public static IApiResource<T>? GetApiResource<T>(this GameObject gameObject)
         where T : class
     {
-        return gameObject.GetComponent<ResourceContainer>().OrNull()?.GetResource<T>();
+        return gameObject.GetComponentOrNull<ResourceContainer>()?.GetResource<T>();
     }
 
     public static IEnumerable<IApiResource<T>> Find<T>()

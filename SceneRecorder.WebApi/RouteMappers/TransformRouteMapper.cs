@@ -3,7 +3,6 @@ using SceneRecorder.WebApi.DTOs;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
-using UnityEngine;
 
 namespace SceneRecorder.WebApi.RouteMappers;
 
@@ -26,14 +25,18 @@ internal sealed class TransformRouteMapper : IRouteMapper
         }
     }
 
-    private static IResponse GetGameObjectTransform(string name, string parent)
+    private static IResponse GetGameObjectTransform(
+        string name,
+        string parent,
+        GameObjectRepository gameObjects
+    )
     {
-        if (GameObject.Find(name).OrNull() is not { transform: var transform })
+        if (gameObjects.FindOrNull(name) is not { transform: var transform })
         {
             return BadRequest();
         }
 
-        if (GameObject.Find(parent).OrNull() is not { transform: var parentTransform })
+        if (gameObjects.FindOrNull(parent) is not { transform: var parentTransform })
         {
             return BadRequest();
         }
@@ -58,10 +61,11 @@ internal sealed class TransformRouteMapper : IRouteMapper
 
     private static IResponse PutGameObjectTransform(
         string name,
-        [FromBody] TransformDTO transformDTO
+        [FromBody] TransformDTO transformDTO,
+        GameObjectRepository gameObjects
     )
     {
-        if (GameObject.Find(name).OrNull() is not { transform: var transform })
+        if (gameObjects.FindOrNull(name) is not { transform: var transform })
         {
             return BadRequest();
         }
@@ -72,7 +76,7 @@ internal sealed class TransformRouteMapper : IRouteMapper
         }
 
         var parentTransform = transformDTO.Parent is { } parentName
-            ? GameObject.Find(parentName).OrNull()?.transform
+            ? gameObjects.FindOrNull(parentName)?.transform
             : null;
 
         if ((transformDTO.Parent, parentTransform) is (not null, null))

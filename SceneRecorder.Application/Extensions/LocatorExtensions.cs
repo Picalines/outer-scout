@@ -12,11 +12,6 @@ public static class LocatorExtensions
         return LoadManager.GetCurrentScene() is OWScene.SolarSystem or OWScene.EyeOfTheUniverse;
     }
 
-    public static OWCamera? GetFreeCamera()
-    {
-        return GameObject.Find("FREECAM").OrNull()?.GetComponent<OWCamera>();
-    }
-
     public static GameObject? GetCurrentGroundBody()
     {
         return Locator.GetPlayerController().OrNull()?.GetLastGroundBody().OrNull()?.gameObject

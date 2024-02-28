@@ -48,13 +48,11 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
         };
     }
 
-    private static IResponse GetGameObjectMesh(string name)
+    private static IResponse GetGameObjectMesh(string name, GameObjectRepository gameObjects)
     {
-        return GameObject.Find(name).OrNull() switch
-        {
-            { } gameObject => Ok(GetBodyMeshDTO(gameObject)),
-            _ => NotFound(),
-        };
+        return gameObjects.FindOrNull(name) is { } gameObject
+            ? Ok(GetBodyMeshDTO(gameObject))
+            : NotFound();
     }
 
     private sealed class GameObjectMeshDTO
@@ -97,7 +95,7 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
         var bodyTransform = body.transform;
 
         var renderedMeshFilters = GetComponentsInChildrenWithSector<MeshFilter>(body)
-            .Where(pair => pair.Component.TryGetComponent<Renderer>(out _) is true);
+            .Where(pair => pair.Component.HasComponent<Renderer>() is true);
 
         var noSectorMeshInfo = CreateEmptySectorDTO(bodyTransform.GetPath());
         var sectorMeshInfos = new Dictionary<Sector, SectorMeshDTO>();
@@ -115,7 +113,7 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
 
             if (
                 StreamingManager.s_tableLoaded
-                && meshFilter.TryGetComponent<StreamingMeshHandle>(out var streamingHandle)
+                && meshFilter.GetComponentOrNull<StreamingMeshHandle>() is { } streamingHandle
                 && StreamingManager.s_streamingAssetBundleMap.TryGetValue(
                     streamingHandle.assetBundle,
                     out var assetBundle

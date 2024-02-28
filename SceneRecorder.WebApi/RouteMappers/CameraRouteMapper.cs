@@ -44,7 +44,10 @@ internal sealed class CameraRouteMapper : IRouteMapper
         }
     }
 
-    private static IResponse CreateSceneCamera([FromBody] ISceneCameraDTO cameraDTO)
+    private static IResponse CreateSceneCamera(
+        [FromBody] ISceneCameraDTO cameraDTO,
+        GameObjectRepository gameObjects
+    )
     {
         var cameraId = cameraDTO.Id;
 
@@ -59,7 +62,7 @@ internal sealed class CameraRouteMapper : IRouteMapper
         }
 
         var parentTransform = cameraDTO.Transform.Parent is { } parentName
-            ? GameObject.Find(parentName).OrNull()?.transform
+            ? gameObjects.FindOrNull(parentName)?.transform
             : null;
 
         if (cameraDTO.Transform.Parent is { } invalidParentName && parentTransform is null)
@@ -112,9 +115,12 @@ internal sealed class CameraRouteMapper : IRouteMapper
         return Ok(new { Name = camera.name, Perspective = camera.GetPerspective() });
     }
 
-    private static IResponse GetGameObjectCameraPerspective(string name)
+    private static IResponse GetGameObjectCameraPerspective(
+        string name,
+        GameObjectRepository gameObjects
+    )
     {
-        if (GameObject.Find(name).OrNull()?.GetComponent<OWCamera>().OrNull() is not { } camera)
+        if (gameObjects.FindOrNull(name)?.GetComponentOrNull<OWCamera>() is not { } camera)
         {
             return NotFound();
         }
@@ -124,10 +130,11 @@ internal sealed class CameraRouteMapper : IRouteMapper
 
     private static IResponse PutGameObjectCameraPerspective(
         string name,
-        [FromBody] CameraPerspectiveDTO perspectiveDTO
+        [FromBody] CameraPerspectiveDTO perspectiveDTO,
+        GameObjectRepository gameObjects
     )
     {
-        if (GameObject.Find(name).OrNull()?.GetComponent<OWCamera>().OrNull() is not { } camera)
+        if (gameObjects.FindOrNull(name)?.GetComponentOrNull<OWCamera>() is not { } camera)
         {
             return NotFound();
         }

@@ -52,10 +52,11 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     private static IResponse PutGameObjectTransformKeyframes(
         string name,
         [FromBody] SetKeyframesRequest<TransformDTO> request,
-        SceneRecorder.Builder sceneRecorderBuilder
+        SceneRecorder.Builder sceneRecorderBuilder,
+        GameObjectRepository gameObjects
     )
     {
-        if (GameObject.Find(name).OrNull() is not { transform: var targetTransform })
+        if (gameObjects.FindOrNull(name) is not { transform: var targetTransform })
         {
             return NotFound();
         }
@@ -64,14 +65,15 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
             sceneRecorderBuilder.FrameRange,
             animator: GetTransformAnimator(sceneRecorderBuilder, targetTransform),
             request,
-            ConvertTransfromDTO
+            t => ConvertTransfromDTO(gameObjects, t)
         );
     }
 
     private static IResponse PutCameraTransformKeyframes(
         string id,
         [FromBody] SetKeyframesRequest<TransformDTO> request,
-        SceneRecorder.Builder sceneRecorderBuilder
+        SceneRecorder.Builder sceneRecorderBuilder,
+        GameObjectRepository gameObjects
     )
     {
         if (ApiResource.Find<ISceneCamera>(id) is not { Value.Transform: var targetTransform })
@@ -83,7 +85,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
             sceneRecorderBuilder.FrameRange,
             animator: GetTransformAnimator(sceneRecorderBuilder, targetTransform),
             request,
-            ConvertTransfromDTO
+            t => ConvertTransfromDTO(gameObjects, t)
         );
     }
 
@@ -106,11 +108,14 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
         );
     }
 
-    private static LocalTransform ConvertTransfromDTO(TransformDTO transformDTO)
+    private static LocalTransform ConvertTransfromDTO(
+        GameObjectRepository gameObjects,
+        TransformDTO transformDTO
+    )
     {
         return transformDTO.ToLocalTransform(
-            parent: transformDTO.Parent is { } parentName
-            && GameObject.Find(parentName).OrNull() is { transform: var parent }
+            transformDTO.Parent is { } parentName
+            && gameObjects.FindOrNull(parentName) is { transform: var parent }
                 ? parent
                 : null
         );
@@ -188,8 +193,8 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
         {
             var keyframes = new KeyframeStorage<CameraPerspective>(sceneRecorderBuilder.FrameRange);
 
-            var valueApplier = ValueApplier.Lambda<CameraPerspective>(
-                newPerspective => camera.Perspective = newPerspective
+            var valueApplier = ValueApplier.Lambda<CameraPerspective>(newPerspective =>
+                camera.Perspective = newPerspective
             );
 
             gameObject.AddApiResource(

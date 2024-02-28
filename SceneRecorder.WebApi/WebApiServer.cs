@@ -109,6 +109,8 @@ public sealed class WebApiServer : IDisposable
                 }
             );
 
+        services.Register<GameObjectRepository>().InstantiatePerUnityScene();
+
         services
             .Register<ResettableLazy<SceneRecorder.Builder>>()
             .InstantiatePerUnityScene()

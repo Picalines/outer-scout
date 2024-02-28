@@ -1,12 +1,10 @@
 using Newtonsoft.Json;
 using SceneRecorder.Application.FFmpeg;
 using SceneRecorder.Application.SceneCameras;
-using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.WebApi.DTOs;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
-using UnityEngine;
 
 namespace SceneRecorder.WebApi.RouteMappers;
 
@@ -105,7 +103,8 @@ internal sealed class RecorderRouteMapper : IRouteMapper
         string gameObjectName,
         [FromBody] CreateTransformRecorderRequest request,
         SceneRecorder.Builder sceneRecorderBuilder,
-        JsonSerializer jsonSerializer
+        JsonSerializer jsonSerializer,
+        GameObjectRepository gameObjects
     )
     {
         if (request.OutputPath.EndsWith(".json") is false)
@@ -113,12 +112,12 @@ internal sealed class RecorderRouteMapper : IRouteMapper
             return BadRequest("only .json output is supported");
         }
 
-        if (GameObject.Find(gameObjectName).OrNull() is not { transform: var targetTransform })
+        if (gameObjects.FindOrNull(gameObjectName) is not { transform: var targetTransform })
         {
             return NotFound($"gameObject '{gameObjectName}' not found");
         }
 
-        if (GameObject.Find(request.Parent).OrNull() is not { transform: var parentTransform })
+        if (gameObjects.FindOrNull(request.Parent) is not { transform: var parentTransform })
         {
             return BadRequest($"gameObject '{request.Parent}' not found");
         }
