@@ -9,7 +9,7 @@ public static class OWCameraExtensions
 {
     public static CameraPerspective GetPerspective(this OWCamera owCamera)
     {
-        owCamera.Throw().If(owCamera.mainCamera.usePhysicalProperties is false);
+        owCamera.mainCamera.usePhysicalProperties.Throw().IfFalse();
 
         var camera = owCamera.mainCamera;
 

@@ -6,6 +6,7 @@ using SceneRecorder.WebApi.DTOs;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
+using SceneRecorder.WebApi.Services;
 using UnityEngine;
 
 namespace SceneRecorder.WebApi.RouteMappers;
@@ -112,7 +113,7 @@ internal sealed class CameraRouteMapper : IRouteMapper
             return ServiceUnavailable();
         }
 
-        return Ok(new { Name = camera.name, Perspective = camera.GetPerspective() });
+        return Ok(new { Name = camera.name });
     }
 
     private static IResponse GetGameObjectCameraPerspective(
@@ -123,6 +124,11 @@ internal sealed class CameraRouteMapper : IRouteMapper
         if (gameObjects.FindOrNull(name)?.GetComponentOrNull<OWCamera>() is not { } camera)
         {
             return NotFound();
+        }
+
+        if (camera.mainCamera.usePhysicalProperties is false)
+        {
+            return BadRequest($"camera '{name}' does not use physical properties");
         }
 
         return Ok(new { Perspective = camera.GetPerspective() });
@@ -143,6 +149,8 @@ internal sealed class CameraRouteMapper : IRouteMapper
         {
             return ServiceUnavailable($"can't modify player camera");
         }
+
+        camera.mainCamera.usePhysicalProperties = true;
 
         camera.ApplyPerspective(perspectiveDTO.ToPerspective());
 

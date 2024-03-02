@@ -1,4 +1,5 @@
 using SceneRecorder.Infrastructure.Validation;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace SceneRecorder.Infrastructure.DependencyInjection;
@@ -11,6 +12,16 @@ public static class ServiceContainerExtensions
         where T : class
     {
         return registration.ManageBy(new SceneLifetime<T>());
+    }
+
+    public static IRegistration<T> AsGlobalComponent<T>(this IRegistration<T> registration)
+        where T : Component
+    {
+        return registration
+            .InstantiatePerUnityScene()
+            .InstantiateBy(
+                () => new GameObject($"{nameof(SceneRecorder)}.{typeof(T).Name}").AddComponent<T>()
+            );
     }
 
     private sealed class SceneLifetime<T> : ILifetime<T>, IStartupHandler, ICleanupHandler
@@ -29,9 +40,9 @@ public static class ServiceContainerExtensions
                 _instance = _instantiator?.Instantiate();
             }
 
-            _instance.ThrowIfNull(
-                _ => new InvalidOperationException($"{typeof(T)} is not created yet")
-            );
+            _instance.ThrowIfNull(_ => new InvalidOperationException(
+                $"{typeof(T)} is not created yet"
+            ));
 
             return _instance;
         }

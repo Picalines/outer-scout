@@ -9,6 +9,7 @@ using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.Infrastructure.Validation;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.RouteMappers;
+using SceneRecorder.WebApi.Services;
 
 namespace SceneRecorder.WebApi;
 

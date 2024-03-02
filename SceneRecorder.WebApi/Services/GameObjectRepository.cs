@@ -1,7 +1,7 @@
 using SceneRecorder.Infrastructure.Validation;
 using UnityEngine;
 
-namespace SceneRecorder.WebApi;
+namespace SceneRecorder.WebApi.Services;
 
 internal sealed class GameObjectRepository
 {

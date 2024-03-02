@@ -67,6 +67,7 @@ public sealed class PerspectiveSceneCamera
     {
         _colorCamera = GetComponent<OWCamera>();
 
+        _colorCamera.mainCamera.usePhysicalProperties = true;
         _colorCamera.mainCamera.forceIntoRenderTexture = true;
         _colorCamera.mainCamera.usePhysicalProperties = true;
         _colorCamera.mainCamera.gateFit = _gateFit;
@@ -188,6 +189,7 @@ public sealed class PerspectiveSceneCamera
         depthCamera.useViewmodels = false;
         depthCamera.targetTexture = null;
 
+        depthCamera.mainCamera.usePhysicalProperties = true;
         depthCamera.mainCamera.depthTextureMode = DepthTextureMode.Depth;
         depthCamera.mainCamera.usePhysicalProperties = true;
         depthCamera.mainCamera.eventMask = 0;
