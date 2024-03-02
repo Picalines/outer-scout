@@ -51,7 +51,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     }
 
     private static IResponse PutGameObjectTransformKeyframes(
-        string name,
+        [FromUrl] string name,
         [FromBody] SetKeyframesRequest<TransformDTO> request,
         GameObjectRepository gameObjects,
         ApiResourceRepository resources
@@ -79,7 +79,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     }
 
     private static IResponse PutCameraTransformKeyframes(
-        string id,
+        [FromUrl] string id,
         [FromBody] SetKeyframesRequest<TransformDTO> request,
         GameObjectRepository gameObjects,
         ApiResourceRepository resources
@@ -110,7 +110,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     }
 
     private static IResponse PutCameraPerspectiveKeyframes(
-        string id,
+        [FromUrl] string id,
         [FromBody] SetKeyframesRequest<CameraPerspectiveDTO> request,
         ApiResourceRepository resources
     )

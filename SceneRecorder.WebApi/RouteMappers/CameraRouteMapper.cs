@@ -118,7 +118,7 @@ internal sealed class CameraRouteMapper : IRouteMapper
     }
 
     private static IResponse GetGameObjectCameraPerspective(
-        string name,
+        [FromUrl] string name,
         GameObjectRepository gameObjects
     )
     {
@@ -136,7 +136,7 @@ internal sealed class CameraRouteMapper : IRouteMapper
     }
 
     private static IResponse PutGameObjectCameraPerspective(
-        string name,
+        [FromUrl] string name,
         [FromBody] CameraPerspectiveDTO perspectiveDTO,
         GameObjectRepository gameObjects
     )

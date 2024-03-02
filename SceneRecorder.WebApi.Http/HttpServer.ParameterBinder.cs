@@ -23,7 +23,7 @@ public sealed partial class HttpServer
 
         public bool CanBind(ParameterInfo parameter)
         {
-            return parameter.ParameterType.IsPrimitive || parameter.ParameterType == typeof(string);
+            return parameter.GetCustomAttribute<FromUrlAttribute>(false) is not null;
         }
 
         public object? Bind(ParameterInfo parameter)

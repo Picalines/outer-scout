@@ -27,7 +27,7 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
         }
     }
 
-    private static IResponse GetGroundBody(string name)
+    private static IResponse GetGroundBody([FromUrl] string name)
     {
         if (name != Locator.GetPlayerBody().OrNull()?.name)
         {
@@ -49,7 +49,10 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
         };
     }
 
-    private static IResponse GetGameObjectMesh(string name, GameObjectRepository gameObjects)
+    private static IResponse GetGameObjectMesh(
+        [FromUrl] string name,
+        GameObjectRepository gameObjects
+    )
     {
         return gameObjects.FindOrNull(name) is { } gameObject
             ? Ok(GetBodyMeshDTO(gameObject))

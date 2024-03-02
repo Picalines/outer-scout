@@ -53,8 +53,8 @@ internal sealed class RecorderRouteMapper : IRouteMapper
     }
 
     private static IResponse CreateCameraTextureRecorder(
-        string cameraId,
-        string textureType,
+        [FromUrl] string cameraId,
+        [FromUrl] string textureType,
         [FromBody] CreateTextureRecorderRequest request,
         ApiResourceRepository resources
     )
@@ -111,7 +111,7 @@ internal sealed class RecorderRouteMapper : IRouteMapper
     }
 
     private static IResponse CreateTransformRecorder(
-        string gameObjectName,
+        [FromUrl] string gameObjectName,
         [FromBody] CreateTransformRecorderRequest request,
         JsonSerializer jsonSerializer,
         GameObjectRepository gameObjects,

@@ -27,8 +27,8 @@ internal sealed class TransformRouteMapper : IRouteMapper
     }
 
     private static IResponse GetGameObjectTransform(
-        string name,
-        string parent,
+        [FromUrl] string name,
+        [FromUrl] string parent,
         GameObjectRepository gameObjects
     )
     {
@@ -61,7 +61,7 @@ internal sealed class TransformRouteMapper : IRouteMapper
     }
 
     private static IResponse PutGameObjectTransform(
-        string name,
+        [FromUrl] string name,
         [FromBody] TransformDTO transformDTO,
         GameObjectRepository gameObjects
     )
