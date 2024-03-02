@@ -56,7 +56,7 @@ internal sealed class RecorderRouteMapper : IRouteMapper
         string cameraId,
         string textureType,
         [FromBody] CreateTextureRecorderRequest request,
-        SceneRecorder.Builder sceneRecorderBuilder
+        ApiResourceRepository resources
     )
     {
         if (FFmpeg.CheckInstallation() is { } exception)
@@ -76,7 +76,15 @@ internal sealed class RecorderRouteMapper : IRouteMapper
             return BadRequest("unsupported constant rate factor value");
         }
 
-        if (ApiResource.GetSceneResource<ISceneCamera>(cameraId) is not { Value: var camera })
+        if (
+            resources.GlobalContainer.GetResource<SceneRecorder.Builder>()
+            is not { } sceneRecorderBuilder
+        )
+        {
+            return ServiceUnavailable();
+        }
+
+        if (resources.GlobalContainer.GetResource<ISceneCamera>(cameraId) is not { } camera)
         {
             return NotFound($"camera '{cameraId}' not found");
         }
@@ -105,14 +113,22 @@ internal sealed class RecorderRouteMapper : IRouteMapper
     private static IResponse CreateTransformRecorder(
         string gameObjectName,
         [FromBody] CreateTransformRecorderRequest request,
-        SceneRecorder.Builder sceneRecorderBuilder,
         JsonSerializer jsonSerializer,
-        GameObjectRepository gameObjects
+        GameObjectRepository gameObjects,
+        ApiResourceRepository resources
     )
     {
         if (request.Format is not "json")
         {
             return BadRequest("only .json output is supported");
+        }
+
+        if (
+            resources.GlobalContainer.GetResource<SceneRecorder.Builder>()
+            is not { } sceneRecorderBuilder
+        )
+        {
+            return ServiceUnavailable();
         }
 
         if (gameObjects.FindOrNull(gameObjectName) is not { transform: var targetTransform })

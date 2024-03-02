@@ -2,11 +2,8 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using OWML.Common;
-using SceneRecorder.Application.Extensions;
-using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.DependencyInjection;
 using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.Infrastructure.Validation;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.RouteMappers;
 using SceneRecorder.WebApi.Services;
@@ -112,24 +109,6 @@ public sealed class WebApiServer : IDisposable
 
         services.Register<GameObjectRepository>().InstantiatePerUnityScene();
 
-        services
-            .Register<ResettableLazy<SceneRecorder.Builder>>()
-            .InstantiatePerUnityScene()
-            .InstantiateBy(
-                () =>
-                    ResettableLazy.Of(() =>
-                    {
-                        LocatorExtensions.IsInPlayableScene().Throw().IfFalse();
-                        return new SceneRecorder.Builder();
-                    })
-            );
-
-        services
-            .Register<SceneRecorder.Builder>()
-            .InstantiatePerResolve()
-            .InstantiateBy(container =>
-            {
-                return container.Resolve<ResettableLazy<SceneRecorder.Builder>>().Value;
-            });
+        services.Register<ApiResourceRepository>().InstantiatePerUnityScene();
     }
 }

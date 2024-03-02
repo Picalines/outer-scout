@@ -47,7 +47,8 @@ internal sealed class CameraRouteMapper : IRouteMapper
 
     private static IResponse CreateSceneCamera(
         [FromBody] ISceneCameraDTO cameraDTO,
-        GameObjectRepository gameObjects
+        GameObjectRepository gameObjects,
+        ApiResourceRepository resources
     )
     {
         var cameraId = cameraDTO.Id;
@@ -57,7 +58,7 @@ internal sealed class CameraRouteMapper : IRouteMapper
             return BadRequest("invalid camera id");
         }
 
-        if (ApiResource.GetSceneResource<ISceneCamera>(cameraId) is { })
+        if (resources.GlobalContainer.GetResource<ISceneCamera>(cameraId) is { })
         {
             return BadRequest($"camera with id '{cameraId}' already exists");
         }
@@ -101,7 +102,7 @@ internal sealed class CameraRouteMapper : IRouteMapper
 
         newCamera.Transform.ApplyWithParent(cameraDTO.Transform.ToLocalTransform(parentTransform));
 
-        gameObject.AddApiResource<ISceneCamera>(newCamera, cameraId);
+        resources.GlobalContainer.AddResource<ISceneCamera>(cameraId, newCamera);
 
         return Ok();
     }

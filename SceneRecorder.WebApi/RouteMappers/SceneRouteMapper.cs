@@ -1,7 +1,6 @@
 using SceneRecorder.Application.Animation;
 using SceneRecorder.Application.SceneCameras;
 using SceneRecorder.Domain;
-using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
@@ -11,6 +10,7 @@ namespace SceneRecorder.WebApi.RouteMappers;
 
 using OWML.Common;
 using SceneRecorder.Application.Recording;
+using SceneRecorder.WebApi.Services;
 using static ResponseFabric;
 
 internal sealed class SceneRouteMapper : IRouteMapper
@@ -53,8 +53,8 @@ internal sealed class SceneRouteMapper : IRouteMapper
 
     private static IResponse CreateScene(
         [FromBody] CreateSceneRequest request,
-        ResettableLazy<SceneRecorder.Builder> lazySceneRecorderBuilder,
-        IModConsole modConsole
+        IModConsole modConsole,
+        ApiResourceRepository resources
     )
     {
         if (request.StartFrame > request.EndFrame)
@@ -67,12 +67,13 @@ internal sealed class SceneRouteMapper : IRouteMapper
             return BadRequest("invalid frame rate");
         }
 
-        lazySceneRecorderBuilder.Reset();
+        resources.DisposeResources<IAnimator>();
+        resources.DisposeResources<ISceneCamera>();
 
-        ApiResource.OfType<IAnimator>().ForEach(resource => resource.Dispose());
-        ApiResource.OfType<ISceneCamera>().ForEach(resource => resource.Dispose());
+        resources.GlobalContainer.DisposeResource<SceneRecorder.Builder>();
 
-        var sceneRecorderBuilder = lazySceneRecorderBuilder.Value;
+        var sceneRecorderBuilder = new SceneRecorder.Builder();
+        resources.GlobalContainer.AddResource(nameof(SceneRecorder), sceneRecorderBuilder);
 
         sceneRecorderBuilder
             .WithCaptureFrameRate(request.FrameRate)
@@ -93,30 +94,47 @@ internal sealed class SceneRouteMapper : IRouteMapper
         return Ok();
     }
 
-    private static IResponse StartRecording(SceneRecorder.Builder sceneRecorderBuilder)
+    private static IResponse StartRecording(ApiResourceRepository resources)
     {
+        if (
+            resources.GlobalContainer.GetResource<SceneRecorder.Builder>()
+            is not { } sceneRecorderBuilder
+        )
+        {
+            return ServiceUnavailable();
+        }
+
         var gameObject = new GameObject(nameof(SceneRecorder));
 
         sceneRecorderBuilder.WithScenePatch(
-            new(() => { }, () => UnityEngine.Object.Destroy(gameObject))
+            () => { },
+            () => UnityEngine.Object.Destroy(gameObject)
         );
 
         var sceneRecorder = sceneRecorderBuilder.StartRecording();
 
-        gameObject.AddApiResource(sceneRecorder, nameof(SceneRecorder));
+        resources.GlobalContainer.AddResource(nameof(SceneRecorder), sceneRecorder);
 
         return Ok();
     }
 
-    private static IResponse GetRecordingStatus(SceneRecorder.Builder sceneRecorderBuilder)
+    private static IResponse GetRecordingStatus(ApiResourceRepository resources)
     {
-        var sceneRecorder = ApiResource.GetSceneResource<SceneRecorder>(nameof(SceneRecorder));
+        if (
+            resources.GlobalContainer.GetResource<SceneRecorder.Builder>()
+            is not { } sceneRecorderBuilder
+        )
+        {
+            return ServiceUnavailable();
+        }
+
+        var sceneRecorder = resources.GlobalContainer.GetResource<SceneRecorder>();
 
         return Ok(
             new
             {
                 InProgress = sceneRecorder is not null,
-                CurrentFrame = sceneRecorder is { Value.CurrentFrame: var currentFrame }
+                CurrentFrame = sceneRecorder is { CurrentFrame: var currentFrame }
                     ? currentFrame
                     : sceneRecorderBuilder.FrameRange.Start
             }

@@ -53,10 +53,18 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     private static IResponse PutGameObjectTransformKeyframes(
         string name,
         [FromBody] SetKeyframesRequest<TransformDTO> request,
-        SceneRecorder.Builder sceneRecorderBuilder,
-        GameObjectRepository gameObjects
+        GameObjectRepository gameObjects,
+        ApiResourceRepository resources
     )
     {
+        if (
+            resources.GlobalContainer.GetResource<SceneRecorder.Builder>()
+            is not { } sceneRecorderBuilder
+        )
+        {
+            return ServiceUnavailable();
+        }
+
         if (gameObjects.FindOrNull(name) is not { transform: var targetTransform })
         {
             return NotFound();
@@ -64,7 +72,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
 
         return SetKeyframes(
             sceneRecorderBuilder.FrameRange,
-            animator: GetTransformAnimator(sceneRecorderBuilder, targetTransform),
+            animator: GetTransformAnimator(resources, sceneRecorderBuilder, targetTransform),
             request,
             t => ConvertTransfromDTO(gameObjects, t)
         );
@@ -73,13 +81,21 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     private static IResponse PutCameraTransformKeyframes(
         string id,
         [FromBody] SetKeyframesRequest<TransformDTO> request,
-        SceneRecorder.Builder sceneRecorderBuilder,
-        GameObjectRepository gameObjects
+        GameObjectRepository gameObjects,
+        ApiResourceRepository resources
     )
     {
         if (
-            ApiResource.GetSceneResource<ISceneCamera>(id)
-            is not { Value.Transform: var targetTransform }
+            resources.GlobalContainer.GetResource<SceneRecorder.Builder>()
+            is not { } sceneRecorderBuilder
+        )
+        {
+            return ServiceUnavailable();
+        }
+
+        if (
+            resources.GlobalContainer.GetResource<ISceneCamera>(id)
+            is not { Transform: var targetTransform }
         )
         {
             return NotFound();
@@ -87,7 +103,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
 
         return SetKeyframes(
             sceneRecorderBuilder.FrameRange,
-            animator: GetTransformAnimator(sceneRecorderBuilder, targetTransform),
+            animator: GetTransformAnimator(resources, sceneRecorderBuilder, targetTransform),
             request,
             t => ConvertTransfromDTO(gameObjects, t)
         );
@@ -96,12 +112,20 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     private static IResponse PutCameraPerspectiveKeyframes(
         string id,
         [FromBody] SetKeyframesRequest<CameraPerspectiveDTO> request,
-        SceneRecorder.Builder sceneRecorderBuilder
+        ApiResourceRepository resources
     )
     {
         if (
-            ApiResource.GetSceneResource<ISceneCamera>(id)
-            is not { Value: PerspectiveSceneCamera camera }
+            resources.GlobalContainer.GetResource<SceneRecorder.Builder>()
+            is not { } sceneRecorderBuilder
+        )
+        {
+            return ServiceUnavailable();
+        }
+
+        if (
+            resources.GlobalContainer.GetResource<ISceneCamera>(id)
+            is not PerspectiveSceneCamera camera
         )
         {
             return NotFound();
@@ -109,7 +133,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
 
         return SetKeyframes(
             sceneRecorderBuilder.FrameRange,
-            animator: GetPerspectiveAnimator(sceneRecorderBuilder, camera),
+            animator: GetPerspectiveAnimator(resources, sceneRecorderBuilder, camera),
             request,
             perspectiveDto => perspectiveDto.ToPerspective()
         );
@@ -158,6 +182,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     }
 
     private static Animator<LocalTransform> GetTransformAnimator(
+        ApiResourceRepository resources,
         SceneRecorder.Builder sceneRecorderBuilder,
         Transform targetTransform
     )
@@ -165,8 +190,8 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
         var gameObject = targetTransform.gameObject;
 
         if (
-            gameObject.GetApiResource<Animator<LocalTransform>>("transform")
-            is not { Value: var animator }
+            resources.ContainerOf(gameObject).GetResource<Animator<LocalTransform>>("transform")
+            is not { } animator
         )
         {
             var keyframes = new KeyframeStorage<LocalTransform>(sceneRecorderBuilder.FrameRange);
@@ -184,7 +209,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
                 Interpolation = ConstantInterpolation<LocalTransform>.Instance
             };
 
-            gameObject.AddApiResource(animator, "transform");
+            resources.ContainerOf(gameObject).AddResource("transform", animator);
 
             sceneRecorderBuilder.WithAnimator(animator);
         }
@@ -193,6 +218,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     }
 
     private static Animator<CameraPerspective> GetPerspectiveAnimator(
+        ApiResourceRepository resources,
         SceneRecorder.Builder sceneRecorderBuilder,
         PerspectiveSceneCamera camera
     )
@@ -200,8 +226,10 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
         var gameObject = camera.gameObject;
 
         if (
-            gameObject.GetApiResource<Animator<CameraPerspective>>("perspective")
-            is not { Value: var animator }
+            resources
+                .ContainerOf(gameObject)
+                .GetResource<Animator<CameraPerspective>>("perspective")
+            is not { } animator
         )
         {
             var keyframes = new KeyframeStorage<CameraPerspective>(sceneRecorderBuilder.FrameRange);
@@ -217,7 +245,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
                 Interpolation = ConstantInterpolation<CameraPerspective>.Instance
             };
 
-            gameObject.AddApiResource(animator, "perspective");
+            resources.ContainerOf(gameObject).AddResource("perspective", animator);
 
             sceneRecorderBuilder.WithAnimator(animator);
         }
