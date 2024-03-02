@@ -69,8 +69,8 @@ internal sealed class SceneRouteMapper : IRouteMapper
 
         lazySceneRecorderBuilder.Reset();
 
-        ApiResource.Find<IAnimator>().ForEach(resource => resource.Dispose());
-        ApiResource.Find<ISceneCamera>().ForEach(resource => resource.Dispose());
+        ApiResource.OfType<IAnimator>().ForEach(resource => resource.Dispose());
+        ApiResource.OfType<ISceneCamera>().ForEach(resource => resource.Dispose());
 
         var sceneRecorderBuilder = lazySceneRecorderBuilder.Value;
 
@@ -103,14 +103,14 @@ internal sealed class SceneRouteMapper : IRouteMapper
 
         var sceneRecorder = sceneRecorderBuilder.StartRecording();
 
-        gameObject.AddApiResource(sceneRecorder);
+        gameObject.AddApiResource(sceneRecorder, nameof(SceneRecorder));
 
         return Ok();
     }
 
     private static IResponse GetRecordingStatus(SceneRecorder.Builder sceneRecorderBuilder)
     {
-        var sceneRecorder = ApiResource.Find<SceneRecorder>().SingleOrDefault();
+        var sceneRecorder = ApiResource.GetSceneResource<SceneRecorder>(nameof(SceneRecorder));
 
         return Ok(
             new

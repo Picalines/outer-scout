@@ -57,7 +57,7 @@ internal sealed class CameraRouteMapper : IRouteMapper
             return BadRequest("invalid camera id");
         }
 
-        if (ApiResource.Find<ISceneCamera>(cameraId) is { })
+        if (ApiResource.GetSceneResource<ISceneCamera>(cameraId) is { })
         {
             return BadRequest($"camera with id '{cameraId}' already exists");
         }
@@ -101,7 +101,7 @@ internal sealed class CameraRouteMapper : IRouteMapper
 
         newCamera.Transform.ApplyWithParent(cameraDTO.Transform.ToLocalTransform(parentTransform));
 
-        gameObject.AddApiResource<ISceneCamera>(newCamera, uniqueId: cameraId);
+        gameObject.AddApiResource<ISceneCamera>(newCamera, cameraId);
 
         return Ok();
     }

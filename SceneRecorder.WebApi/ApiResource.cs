@@ -9,80 +9,104 @@ internal interface IApiResource<out T> : IDisposable
 {
     public T Value { get; }
 
+    public string Name { get; }
+
     public bool IsAccessable { get; }
 }
 
 internal static class ApiResource
 {
-    private static HashSet<IApiResource<object>> _resouces { get; } = [];
+    private static HashSet<ResourceContainer> _containers = [];
 
-    private static Dictionary<string, IApiResource<object>> _resourcesWithId = [];
+    private static GameObject? _sceneStore = null;
 
     public static IApiResource<T> AddApiResource<T>(
         this GameObject gameObject,
         T value,
-        string? uniqueId = null
+        string name
     )
         where T : class
     {
-        uniqueId.Throw().If(uniqueId is not null && _resourcesWithId.ContainsKey(uniqueId));
+        var container = gameObject.GetOrAddComponent<ResourceContainer>();
 
-        var resource = gameObject
-            .GetOrAddComponent<ResourceContainer>()
-            .AddResource(value, uniqueId);
+        _containers.Add(container);
 
-        _resouces.Add(resource);
-        if (uniqueId is not null)
+        return container.AddResource(value, name);
+    }
+
+    public static IApiResource<T>? GetApiResource<T>(this GameObject gameObject, string name)
+        where T : class
+    {
+        return gameObject.GetComponentOrNull<ResourceContainer>()?.GetResource<T>(name);
+    }
+
+    public static IApiResource<T> AddSceneResource<T>(T value, string name)
+        where T : class
+    {
+        return SceneStore.AddApiResource(value, name);
+    }
+
+    public static IApiResource<T>? GetSceneResource<T>(string name)
+        where T : class
+    {
+        return SceneStore.GetApiResource<T>(name);
+    }
+
+    public static IEnumerable<IApiResource<T>> OfType<T>()
+        where T : class
+    {
+        return _containers.SelectMany(c => c.OfType<T>());
+    }
+
+    private static GameObject SceneStore
+    {
+        get
         {
-            _resourcesWithId.Add(uniqueId, resource);
+            if (_sceneStore == null)
+            {
+                _sceneStore = new GameObject(
+                    $"{nameof(SceneRecorder)}.{nameof(ApiResource)}.{nameof(SceneStore)}"
+                );
+            }
+
+            return _sceneStore;
         }
-
-        return resource;
-    }
-
-    public static IApiResource<T>? GetApiResource<T>(this GameObject gameObject)
-        where T : class
-    {
-        return gameObject.GetComponentOrNull<ResourceContainer>()?.GetResource<T>();
-    }
-
-    public static IEnumerable<IApiResource<T>> Find<T>()
-        where T : class
-    {
-        return _resouces.OfType<IApiResource<T>>().ToArray();
-    }
-
-    public static IApiResource<T>? Find<T>(string id)
-        where T : class
-    {
-        return _resourcesWithId.TryGetValue(id, out var resource)
-            ? resource as IApiResource<T>
-            : null;
     }
 
     private sealed class ResourceContainer : MonoBehaviour
     {
-        private readonly HashSet<IApiResource<object>> _resources = [];
+        private readonly Dictionary<string, IApiResource<object>> _resources = [];
 
-        public IApiResource<T> AddResource<T>(T value, string? uniqueId)
+        public IApiResource<T> AddResource<T>(T value, string name)
             where T : class
         {
-            var resource = new Resource<T>(this, value, uniqueId);
+            name.Throw().If(_resources.ContainsKey(name));
 
-            _resources.Add(resource);
+            var resource = new Resource<T>(this, value, name);
+
+            _resources[name] = resource;
 
             return resource;
         }
 
-        public IApiResource<T>? GetResource<T>()
+        public IEnumerable<IApiResource<T>> OfType<T>()
             where T : class
         {
-            return _resources.OfType<IApiResource<T>>().FirstOrDefault();
+            return _resources.Values.OfType<IApiResource<T>>();
+        }
+
+        public IApiResource<T>? GetResource<T>(string name)
+            where T : class
+        {
+            return _resources.TryGetValue(name, out var resource)
+                ? resource as IApiResource<T>
+                : null;
         }
 
         private void OnDestroy()
         {
-            _resources.ToArray().ForEach(resource => resource.Dispose());
+            ApiResource._containers.Remove(this);
+            _resources.Values.ToArray().ForEach(resource => resource.Dispose());
             _resources.Clear();
         }
 
@@ -93,15 +117,15 @@ internal static class ApiResource
 
             private T? _value;
 
-            private readonly string? _id;
+            private readonly string _name;
 
             private bool _disposed = false;
 
-            public Resource(ResourceContainer container, T value, string? uniqueId)
+            public Resource(ResourceContainer container, T value, string name)
             {
                 _container = container;
                 _value = value;
-                _id = uniqueId;
+                _name = name;
             }
 
             public bool IsAccessable
@@ -118,6 +142,11 @@ internal static class ApiResource
                 }
             }
 
+            public string Name
+            {
+                get => _name;
+            }
+
             public void Dispose()
             {
                 if (_disposed)
@@ -127,14 +156,8 @@ internal static class ApiResource
 
                 _disposed = true;
 
-                _container.OrNull()?._resources.Remove(this);
+                _container.OrNull()?._resources.Remove(_name);
                 _container = null;
-
-                ApiResource._resouces.Remove(this);
-                if (_id is not null)
-                {
-                    ApiResource._resourcesWithId.Remove(_id);
-                }
 
                 (_value as IDisposable)?.Dispose();
                 _value = null;

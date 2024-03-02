@@ -77,7 +77,10 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
         GameObjectRepository gameObjects
     )
     {
-        if (ApiResource.Find<ISceneCamera>(id) is not { Value.Transform: var targetTransform })
+        if (
+            ApiResource.GetSceneResource<ISceneCamera>(id)
+            is not { Value.Transform: var targetTransform }
+        )
         {
             return NotFound();
         }
@@ -96,7 +99,10 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
         SceneRecorder.Builder sceneRecorderBuilder
     )
     {
-        if (ApiResource.Find<ISceneCamera>(id) is not { Value: PerspectiveSceneCamera camera })
+        if (
+            ApiResource.GetSceneResource<ISceneCamera>(id)
+            is not { Value: PerspectiveSceneCamera camera }
+        )
         {
             return NotFound();
         }
@@ -158,7 +164,10 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     {
         var gameObject = targetTransform.gameObject;
 
-        if (gameObject.GetApiResource<Animator<LocalTransform>>() is not { Value: var animator })
+        if (
+            gameObject.GetApiResource<Animator<LocalTransform>>("transform")
+            is not { Value: var animator }
+        )
         {
             var keyframes = new KeyframeStorage<LocalTransform>(sceneRecorderBuilder.FrameRange);
 
@@ -168,14 +177,14 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
                     targetTransform.Apply(newTransform);
             });
 
-            gameObject.AddApiResource(
-                animator = new Animator<LocalTransform>()
-                {
-                    Keyframes = keyframes,
-                    ValueApplier = valueApplier,
-                    Interpolation = ConstantInterpolation<LocalTransform>.Instance
-                }
-            );
+            animator = new Animator<LocalTransform>()
+            {
+                Keyframes = keyframes,
+                ValueApplier = valueApplier,
+                Interpolation = ConstantInterpolation<LocalTransform>.Instance
+            };
+
+            gameObject.AddApiResource(animator, "transform");
 
             sceneRecorderBuilder.WithAnimator(animator);
         }
@@ -190,7 +199,10 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     {
         var gameObject = camera.gameObject;
 
-        if (gameObject.GetApiResource<Animator<CameraPerspective>>() is not { Value: var animator })
+        if (
+            gameObject.GetApiResource<Animator<CameraPerspective>>("perspective")
+            is not { Value: var animator }
+        )
         {
             var keyframes = new KeyframeStorage<CameraPerspective>(sceneRecorderBuilder.FrameRange);
 
@@ -198,14 +210,14 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
                 camera.Perspective = newPerspective
             );
 
-            gameObject.AddApiResource(
-                animator = new Animator<CameraPerspective>()
-                {
-                    Keyframes = keyframes,
-                    ValueApplier = valueApplier,
-                    Interpolation = ConstantInterpolation<CameraPerspective>.Instance
-                }
-            );
+            animator = new Animator<CameraPerspective>()
+            {
+                Keyframes = keyframes,
+                ValueApplier = valueApplier,
+                Interpolation = ConstantInterpolation<CameraPerspective>.Instance
+            };
+
+            gameObject.AddApiResource(animator, "perspective");
 
             sceneRecorderBuilder.WithAnimator(animator);
         }

@@ -29,6 +29,8 @@ internal sealed class RecorderRouteMapper : IRouteMapper
     {
         public required string OutputPath { get; init; }
 
+        public required string Format { get; init; }
+
         public required string Parent { get; init; }
     }
 
@@ -74,7 +76,7 @@ internal sealed class RecorderRouteMapper : IRouteMapper
             return BadRequest("unsupported constant rate factor value");
         }
 
-        if (ApiResource.Find<ISceneCamera>(cameraId) is not { Value: var camera })
+        if (ApiResource.GetSceneResource<ISceneCamera>(cameraId) is not { Value: var camera })
         {
             return NotFound($"camera '{cameraId}' not found");
         }
@@ -108,7 +110,7 @@ internal sealed class RecorderRouteMapper : IRouteMapper
         GameObjectRepository gameObjects
     )
     {
-        if (request.OutputPath.EndsWith(".json") is false)
+        if (request.Format is not "json")
         {
             return BadRequest("only .json output is supported");
         }
