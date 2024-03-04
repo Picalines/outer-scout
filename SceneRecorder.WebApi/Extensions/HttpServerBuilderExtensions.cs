@@ -37,7 +37,7 @@ internal static class HttpServerBuilderExtensions
         return serverBuilder.WithFilter(
             (ApiResourceRepository resources) =>
             {
-                return resources.GlobalContainer.GetResource<SceneRecorder.Builder>() is not { }
+                return resources.GlobalContainer.GetResource<SceneRecorder.Builder>() is null
                     ? ServiceUnavailable(new { Error = "not available, create a scene first" })
                     : null;
             }
