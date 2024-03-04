@@ -35,7 +35,10 @@ internal abstract class NumberArrayConverter<T> : JsonConverter<T?>
                 break;
             }
 
-            if (reader.TokenType is not (JsonToken.Float or JsonToken.Integer))
+            if (
+                reader.TokenType is not (JsonToken.Float or JsonToken.Integer)
+                || arrayIndex >= _arrayLength
+            )
             {
                 ThrowReaderException();
             }
