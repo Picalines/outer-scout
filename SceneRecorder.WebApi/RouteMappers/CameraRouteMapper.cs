@@ -1,6 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using SceneRecorder.Application.Extensions;
 using SceneRecorder.Application.SceneCameras;
+using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.WebApi.DTOs;
 using SceneRecorder.WebApi.Extensions;
@@ -78,14 +79,14 @@ internal sealed class CameraRouteMapper : IRouteMapper
             {
                 Resolution: var resolution,
                 GateFit: var gateFit,
-                Perspective: var perspectiveDTO
+                Perspective: var perspective
             }
                 => PerspectiveSceneCamera.Create(
                     new()
                     {
                         Resolution = new Vector2Int(resolution.Width, resolution.Height),
                         GateFit = gateFit,
-                        Perspective = perspectiveDTO.ToPerspective(),
+                        Perspective = perspective,
                     }
                 ),
 
@@ -137,7 +138,7 @@ internal sealed class CameraRouteMapper : IRouteMapper
 
     private static IResponse PutGameObjectCameraPerspective(
         [FromUrl] string name,
-        [FromBody] CameraPerspectiveDTO perspectiveDTO,
+        [FromBody] CameraPerspective perspective,
         GameObjectRepository gameObjects
     )
     {
@@ -153,7 +154,7 @@ internal sealed class CameraRouteMapper : IRouteMapper
 
         camera.mainCamera.usePhysicalProperties = true;
 
-        camera.ApplyPerspective(perspectiveDTO.ToPerspective());
+        camera.ApplyPerspective(perspective);
 
         return Ok();
     }

@@ -1,5 +1,6 @@
 using JsonSubTypes;
 using Newtonsoft.Json;
+using SceneRecorder.Domain;
 using UnityEngine;
 
 namespace SceneRecorder.WebApi.DTOs;
@@ -37,7 +38,7 @@ internal sealed class PerspectiveSceneCameraDTO : ISceneCameraDTO
 
     public required ResolutionDTO Resolution { get; init; }
 
-    public required CameraPerspectiveDTO Perspective { get; init; }
+    public required CameraPerspective Perspective { get; init; }
 }
 
 internal sealed class EquirectSceneCameraDTO : ISceneCameraDTO
