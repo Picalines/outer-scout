@@ -1,16 +1,15 @@
+using OWML.Common;
 using SceneRecorder.Application.Animation;
 using SceneRecorder.Application.SceneCameras;
 using SceneRecorder.Domain;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
-using UnityEngine;
+using SceneRecorder.WebApi.Services;
 
 namespace SceneRecorder.WebApi.RouteMappers;
 
-using OWML.Common;
 using SceneRecorder.Application.Recording;
-using SceneRecorder.WebApi.Services;
 using static ResponseFabric;
 
 internal sealed class SceneRouteMapper : IRouteMapper
@@ -104,16 +103,15 @@ internal sealed class SceneRouteMapper : IRouteMapper
             return ServiceUnavailable();
         }
 
-        var gameObject = new GameObject(nameof(SceneRecorder));
-
         sceneRecorderBuilder.WithScenePatch(
             () => { },
-            () => UnityEngine.Object.Destroy(gameObject)
+            () => resources.GlobalContainer.DisposeResource<SceneRecorder>()
         );
 
-        var sceneRecorder = sceneRecorderBuilder.StartRecording();
-
-        resources.GlobalContainer.AddResource(nameof(SceneRecorder), sceneRecorder);
+        resources.GlobalContainer.AddResource(
+            nameof(SceneRecorder),
+            sceneRecorderBuilder.StartRecording()
+        );
 
         return Ok();
     }
