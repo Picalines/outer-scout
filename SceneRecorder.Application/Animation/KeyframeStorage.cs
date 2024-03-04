@@ -59,11 +59,6 @@ public sealed class KeyframeStorage<T>
 
         _keyframeCount--;
 
-        if (IsEmpty)
-        {
-            throw new Exception();
-        }
-
         return true;
     }
 

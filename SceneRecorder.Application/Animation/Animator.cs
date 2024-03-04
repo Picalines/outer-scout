@@ -16,8 +16,12 @@ public sealed class Animator<T> : IAnimator
 
     public void ApplyFrame(int frame)
     {
-        this.Throw().If(Keyframes.IsEmpty);
         frame.Throw().If(!Keyframes.FrameRange.Contains(frame));
+
+        if (Keyframes.IsEmpty)
+        {
+            return;
+        }
 
         var (range, left, right) = Keyframes.GetRightSpan(frame).GetValueOrDefault();
 
