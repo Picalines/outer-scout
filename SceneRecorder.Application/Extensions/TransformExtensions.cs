@@ -15,7 +15,7 @@ public static class TransformExtensions
         transform.localScale = Vector3.one;
     }
 
-    public static void Apply(this Transform transform, LocalTransform localTransform)
+    public static void ApplyKeepParent(this Transform transform, LocalTransform localTransform)
     {
         var (position, rotation, scale, parent) = localTransform;
 
@@ -36,7 +36,7 @@ public static class TransformExtensions
     public static void ApplyWithParent(this Transform transform, LocalTransform localTransform)
     {
         transform.parent = localTransform.Parent;
-        transform.Apply(localTransform);
+        transform.ApplyKeepParent(localTransform);
     }
 
     public static string GetPath(this Transform transform)

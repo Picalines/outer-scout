@@ -31,7 +31,7 @@ internal sealed class GroundBodyRouteMapper : IRouteMapper
     {
         if (name != Locator.GetPlayerBody().OrNull()?.name)
         {
-            return BadRequest();
+            return BadRequest($"gameObject '{name}' does not have a ground body");
         }
 
         return LocatorExtensions.GetCurrentGroundBody() switch

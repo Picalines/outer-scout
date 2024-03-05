@@ -88,7 +88,7 @@ internal sealed class PlayerRouteMapper : IRouteMapper
 
         var localTransform = new GameObject().transform;
         localTransform.parent = groundBodyTransform;
-        localTransform.Apply(request.Transform.ToLocalTransform(groundBodyTransform));
+        localTransform.ApplyKeepParent(request.Transform.ToLocalTransform(groundBodyTransform));
 
         var spawnPoint = groundBodyTransform
             .Find(ReusedSpawnPointName)
