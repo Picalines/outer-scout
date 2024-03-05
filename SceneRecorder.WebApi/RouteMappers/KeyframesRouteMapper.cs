@@ -27,6 +27,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     }
 
     [JsonConverter(typeof(JsonSubtypes), nameof(ISetKeyframesRequest.Property))]
+    [KnownSubType(typeof(SetTimeScaleKeyframesRequest), "time.scale")]
     [KnownSubType(typeof(SetPositionKeyframesRequest), "transform.position")]
     [KnownSubType(typeof(SetRotationKeyframesRequest), "transform.rotation")]
     [KnownSubType(typeof(SetScaleKeyframesRequest), "transform.scale")]
@@ -53,6 +54,8 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
             serverBuilder.MapPut("gameObjects/:name/keyframes", PutGameObjectKeyframes);
 
             serverBuilder.MapPut("cameras/:id/keyframes", PutCameraKeyframes);
+
+            serverBuilder.MapPut("scene/keyframes", PutSceneKeyframes);
         }
     }
 
@@ -85,14 +88,14 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
             animator = request switch
             {
                 IAnimatorFactory<GameObject> f => f.CreateAnimator(gameObject, frameRange),
-
                 IAnimatorFactory<Transform> f => f.CreateAnimator(gameObject.transform, frameRange),
-
-                _
-                    => throw new ResponseException(
-                        BadRequest($"property '{property}' can't be animated")
-                    )
+                _ => null,
             };
+
+            if (animator is null)
+            {
+                return BadRequest($"property '{property}' can't be animated");
+            }
 
             resources.AddResource(property, animator);
 
@@ -144,14 +147,14 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
                     => f.CreateAnimator(perspectiveCamera, frameRange),
 
                 IAnimatorFactory<ISceneCamera> f => f.CreateAnimator(camera, frameRange),
-
                 IAnimatorFactory<Transform> f => f.CreateAnimator(transform, frameRange),
-
-                _
-                    => throw new ResponseException(
-                        BadRequest($"property '{property}' can't be animated")
-                    )
+                _ => null,
             };
+
+            if (animator is null)
+            {
+                return BadRequest($"property '{property}' can't be animated");
+            }
 
             resources.AddResource(property, animator);
 
@@ -166,6 +169,54 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
         request.StoreKeyframes(animator);
 
         return Ok();
+    }
+
+    private static IResponse PutSceneKeyframes(
+        [FromBody] ISetKeyframesRequest request,
+        ApiResourceRepository apiResources
+    )
+    {
+        var resources = apiResources.GlobalContainer;
+
+        if (resources.GetResource<SceneRecorder.Builder>() is not { } sceneRecorderBuilder)
+        {
+            return ServiceUnavailable();
+        }
+
+        var property = request.Property;
+        var frameRange = sceneRecorderBuilder.FrameRange;
+
+        if (resources.GetResource<IAnimator>(property) is not { } animator)
+        {
+            animator = request switch
+            {
+                IAnimatorFactory f => f.CreateAnimator(frameRange),
+                _ => null,
+            };
+
+            if (animator is null)
+            {
+                return BadRequest($"property '{property}' can't be animated");
+            }
+
+            resources.AddResource(property, animator);
+
+            sceneRecorderBuilder.WithAnimator(animator);
+        }
+
+        if (request.GetInvalidFrameNumbers(frameRange).ToArray() is { Length: > 0 } invalidFrames)
+        {
+            return BadRequest(new { invalidFrames });
+        }
+
+        request.StoreKeyframes(animator);
+
+        return Ok();
+    }
+
+    private interface IAnimatorFactory
+    {
+        public IAnimator CreateAnimator(IntRange frameRange);
     }
 
     private interface IAnimatorFactory<E>
@@ -198,7 +249,26 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
         }
     }
 
-    private abstract class SetKeyframesRequest<E, T> : SetKeyframesRequest<T>, IAnimatorFactory<E>
+    private abstract class SetSceneKeyframesRequest<T> : SetKeyframesRequest<T>, IAnimatorFactory
+    {
+        protected abstract ValueApplier<T> ValueApplier { get; }
+
+        protected abstract Interpolation<T> Interpolation { get; }
+
+        public IAnimator CreateAnimator(IntRange frameRange)
+        {
+            return new Animator<T>()
+            {
+                Keyframes = new KeyframeStorage<T>(frameRange),
+                ValueApplier = ValueApplier,
+                Interpolation = Interpolation
+            };
+        }
+    }
+
+    private abstract class SetEntityKeyframesRequest<E, T>
+        : SetKeyframesRequest<T>,
+            IAnimatorFactory<E>
     {
         protected abstract ValueApplier<T> CreateApplier(E entity);
 
@@ -215,7 +285,16 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
         }
     }
 
-    private sealed class SetPositionKeyframesRequest : SetKeyframesRequest<Transform, Vector3>
+    private sealed class SetTimeScaleKeyframesRequest : SetSceneKeyframesRequest<float>
+    {
+        public override string Property { get; } = "time.scale";
+
+        protected override ValueApplier<float> ValueApplier { get; } = s => Time.timeScale = s;
+
+        protected override Interpolation<float> Interpolation { get; } = Mathf.Lerp;
+    }
+
+    private sealed class SetPositionKeyframesRequest : SetEntityKeyframesRequest<Transform, Vector3>
     {
         public override string Property { get; } = "transform.position";
 
@@ -225,7 +304,8 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
             p => transform.localPosition = p;
     }
 
-    private sealed class SetRotationKeyframesRequest : SetKeyframesRequest<Transform, Quaternion>
+    private sealed class SetRotationKeyframesRequest
+        : SetEntityKeyframesRequest<Transform, Quaternion>
     {
         public override string Property { get; } = "transform.rotation";
 
@@ -235,7 +315,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
             r => transform.localRotation = r;
     }
 
-    private sealed class SetScaleKeyframesRequest : SetKeyframesRequest<Transform, Vector3>
+    private sealed class SetScaleKeyframesRequest : SetEntityKeyframesRequest<Transform, Vector3>
     {
         public override string Property { get; } = "transform.scale";
 
@@ -246,7 +326,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     }
 
     private sealed class SetFocalLengthKeyframesRequest
-        : SetKeyframesRequest<PerspectiveSceneCamera, float>
+        : SetEntityKeyframesRequest<PerspectiveSceneCamera, float>
     {
         public override string Property { get; } = "perspective.focalLength";
 
@@ -257,7 +337,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     }
 
     private sealed class SetSensorSizeKeyframesRequest
-        : SetKeyframesRequest<PerspectiveSceneCamera, Vector2>
+        : SetEntityKeyframesRequest<PerspectiveSceneCamera, Vector2>
     {
         public override string Property { get; } = "perspective.sensorSize";
 
@@ -268,7 +348,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     }
 
     private sealed class SetLensShiftKeyframesRequest
-        : SetKeyframesRequest<PerspectiveSceneCamera, Vector2>
+        : SetEntityKeyframesRequest<PerspectiveSceneCamera, Vector2>
     {
         public override string Property { get; } = "perspective.lensShift";
 
@@ -279,7 +359,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     }
 
     private sealed class SetNearClipPlaneKeyframesRequest
-        : SetKeyframesRequest<PerspectiveSceneCamera, float>
+        : SetEntityKeyframesRequest<PerspectiveSceneCamera, float>
     {
         public override string Property { get; } = "perspective.nearClipPlane";
 
@@ -290,7 +370,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     }
 
     private sealed class SetFarClipPlaneKeyframesRequest
-        : SetKeyframesRequest<PerspectiveSceneCamera, float>
+        : SetEntityKeyframesRequest<PerspectiveSceneCamera, float>
     {
         public override string Property { get; } = "perspective.farClipPlane";
 
