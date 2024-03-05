@@ -32,7 +32,7 @@ internal sealed class CameraRouteMapper : IRouteMapper
                 serverBuilder.MapPost("cameras", CreateSceneCamera);
             }
 
-            serverBuilder.MapGet("active-camera", GetActiveGamera);
+            serverBuilder.MapGet("scene/active-camera", GetActiveGamera);
 
             serverBuilder.MapGet(
                 "gameObjects/:name/camera/perspective",
