@@ -1,8 +1,7 @@
+using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.Validation;
 
 namespace SceneRecorder.Application.Animation;
-
-public delegate T Interpolation<T>(T left, T right, float progress);
 
 public delegate void ValueApplier<T>(T value);
 
@@ -10,9 +9,7 @@ public sealed class Animator<T> : IAnimator
 {
     public required KeyframeStorage<T> Keyframes { get; init; }
 
-    public required Interpolation<T> Interpolation { get; init; }
-
-    public required ValueApplier<T> ValueApplier { get; init; }
+    public required ValueApplier<T> Applier { get; init; }
 
     public void ApplyFrame(int frame)
     {
@@ -23,12 +20,13 @@ public sealed class Animator<T> : IAnimator
             return;
         }
 
-        var (range, left, right) = Keyframes.GetRightSpan(frame).GetValueOrDefault();
+        var (left, right) = Keyframes.GetRightSpan(frame).GetValueOrDefault();
 
+        var range = IntRange.FromValues(left.Frame, right.Frame);
         var progress = range.Length is 0 ? 1f : ((float)frame - range.Start) / range.Length;
 
-        var valueToApply = Interpolation(left, right, progress);
+        var valueToApply = left.Interpolation(left, right, progress);
 
-        ValueApplier(valueToApply);
+        Applier(valueToApply);
     }
 }

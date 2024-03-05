@@ -1,4 +1,3 @@
-using System.Collections;
 using SceneRecorder.Domain;
 using SceneRecorder.Infrastructure.Validation;
 
@@ -6,15 +5,9 @@ namespace SceneRecorder.Application.Animation;
 
 public sealed class KeyframeStorage<T>
 {
-    public readonly record struct Keyframe(T Value, int Frame);
-
-    public readonly record struct ValueSpan(IntRange FrameRange, T Left, T Right);
-
     public IntRange FrameRange { get; }
 
-    private readonly T[] _keyframes;
-
-    private readonly BitArray _keyframeFlags;
+    private readonly Keyframe<T>?[] _keyframes;
 
     private int _keyframeCount = 0;
 
@@ -24,8 +17,7 @@ public sealed class KeyframeStorage<T>
 
         var arrayLength = FrameRange.Length + 1;
 
-        _keyframes = new T[arrayLength];
-        _keyframeFlags = new BitArray(arrayLength, false);
+        _keyframes = new Keyframe<T>?[arrayLength];
     }
 
     public bool IsEmpty
@@ -33,30 +25,27 @@ public sealed class KeyframeStorage<T>
         get => _keyframeCount is 0;
     }
 
-    public void SetKeyframe(int frame, in T value)
+    public void StoreKeyframe(Keyframe<T> keyframe)
     {
-        var index = FrameRange.ValueToIndex(frame);
+        var index = FrameRange.ValueToIndex(keyframe.Frame);
 
-        if (!_keyframeFlags[index])
+        if (_keyframes[index].HasValue is false)
         {
             _keyframeCount++;
         }
 
-        _keyframes[index] = value;
-        _keyframeFlags[index] = true;
+        _keyframes[index] = keyframe;
     }
 
     public bool RemoveKeyframe(int frame)
     {
         var index = FrameRange.ValueToIndex(frame);
-        if (!_keyframeFlags[index])
+        if (_keyframes[index].HasValue is false)
         {
             return false;
         }
 
-        _keyframes[index] = default!;
-        _keyframeFlags[index] = false;
-
+        _keyframes[index] = null;
         _keyframeCount--;
 
         return true;
@@ -64,42 +53,35 @@ public sealed class KeyframeStorage<T>
 
     public bool HasKeyframe(int frame)
     {
-        return _keyframeFlags[FrameRange.ValueToIndex(frame)];
+        return _keyframes[FrameRange.ValueToIndex(frame)].HasValue;
     }
 
-    public Keyframe? GetKeyframeAt(int frame)
+    public Keyframe<T>? GetKeyframeAt(int frame)
     {
-        if (!HasKeyframe(frame))
-        {
-            return null;
-        }
-
-        var index = FrameRange.ValueToIndex(frame);
-
-        return new(_keyframes[index], frame);
+        return _keyframes[FrameRange.ValueToIndex(frame)];
     }
 
-    public Keyframe? GetNextKeyframe(int frame)
+    public Keyframe<T>? GetNextKeyframe(int frame)
     {
         return FindKeyframe(frame, 1);
     }
 
-    public Keyframe? GetPreviousKeyframe(int frame)
+    public Keyframe<T>? GetPreviousKeyframe(int frame)
     {
         return FindKeyframe(frame, -1);
     }
 
-    public Keyframe? GetFirstKeyframe()
+    public Keyframe<T>? GetFirstKeyframe()
     {
         return FindKeyframe(FrameRange.Start, 1);
     }
 
-    public Keyframe? GetLastKeyframe()
+    public Keyframe<T>? GetLastKeyframe()
     {
         return FindKeyframe(FrameRange.End, -1);
     }
 
-    public ValueSpan? GetRightSpan(int frame)
+    public (Keyframe<T> Left, Keyframe<T> Right)? GetRightSpan(int frame)
     {
         frame.Throw().If(!FrameRange.Contains(frame));
 
@@ -111,45 +93,34 @@ public sealed class KeyframeStorage<T>
         var leftKeyframe = FindKeyframe(frame, -1);
         var rightKeyframe = FindKeyframe(frame, 1, 1) ?? GetKeyframeAt(frame);
 
-        // storage is not empty => only one frame can be null
-
-        if (leftKeyframe is null)
+        return (leftKeyframe, rightKeyframe) switch
         {
-            leftKeyframe = rightKeyframe.GetValueOrDefault() with { Frame = FrameRange.Start };
-        }
-        else if (rightKeyframe is null)
-        {
-            rightKeyframe = leftKeyframe.GetValueOrDefault() with { Frame = FrameRange.End };
-        }
-
-        var (spanLeft, spanStart) = leftKeyframe.GetValueOrDefault();
-        var (spanRight, spanEnd) = rightKeyframe.GetValueOrDefault();
-
-        return new(IntRange.FromValues(spanStart, spanEnd), spanLeft, spanRight);
+            ({ } left, { } right) => (left, right),
+            (null, { } right) => (new Keyframe<T>(FrameRange.Start, right.Value), right),
+            ({ } left, null) => (left, new Keyframe<T>(FrameRange.End, left.Value)),
+            _ => throw new NotImplementedException(),
+        };
     }
 
-    private Keyframe? FindKeyframe(int frame, int searchStep, int safeOffset = 0)
+    private Keyframe<T>? FindKeyframe(int frame, int searchStep, int safeOffset = 0)
     {
+        searchStep.Throw().IfEquals(0);
+
         if (IsEmpty)
         {
             return null;
         }
 
-        searchStep.Throw().IfEquals(0);
-
-        int index = FrameRange.ValueToIndex(frame);
-
-        index += safeOffset;
+        int index = FrameRange.ValueToIndex(frame) + safeOffset;
 
         while (index >= 0 && index < _keyframes.Length)
         {
-            if (_keyframeFlags[index])
+            if (_keyframes[index] is { } keyframe)
             {
-                return new(_keyframes[index], frame);
+                return keyframe;
             }
 
             index += searchStep;
-            frame += searchStep;
         }
 
         return null;

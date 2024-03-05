@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using SceneRecorder.Application.Animation;
 using SceneRecorder.Application.SceneCameras;
 using SceneRecorder.Domain;
+using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
@@ -228,6 +229,9 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     {
         public abstract string Property { get; }
 
+        [JsonIgnore]
+        protected abstract ValueInterpolation<T> DefaultInterpolation { get; }
+
         public required IReadOnlyDictionary<int, KeyframeDTO<T>> Keyframes { get; init; }
 
         public IEnumerable<int> GetInvalidFrameNumbers(IntRange frameRange)
@@ -242,26 +246,23 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
                 throw new NotImplementedException();
             }
 
-            foreach (var (frame, keyframe) in Keyframes)
-            {
-                keyframeStorage.SetKeyframe(frame, keyframe.Value);
-            }
+            Keyframes
+                .Select(p => new { Frame = p.Key, Dto = p.Value })
+                .Select(f => new Keyframe<T>(f.Frame, f.Dto.Value, DefaultInterpolation))
+                .ForEach(keyframeStorage.StoreKeyframe);
         }
     }
 
     private abstract class SetSceneKeyframesRequest<T> : SetKeyframesRequest<T>, IAnimatorFactory
     {
-        protected abstract ValueApplier<T> ValueApplier { get; }
-
-        protected abstract Interpolation<T> Interpolation { get; }
+        protected abstract ValueApplier<T> Applier { get; }
 
         public IAnimator CreateAnimator(IntRange frameRange)
         {
             return new Animator<T>()
             {
                 Keyframes = new KeyframeStorage<T>(frameRange),
-                ValueApplier = ValueApplier,
-                Interpolation = Interpolation
+                Applier = Applier,
             };
         }
     }
@@ -272,15 +273,12 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     {
         protected abstract ValueApplier<T> CreateApplier(E entity);
 
-        protected abstract Interpolation<T> Interpolation { get; }
-
         public IAnimator CreateAnimator(E entity, IntRange frameRange)
         {
             return new Animator<T>()
             {
                 Keyframes = new KeyframeStorage<T>(frameRange),
-                ValueApplier = CreateApplier(entity),
-                Interpolation = Interpolation
+                Applier = CreateApplier(entity),
             };
         }
     }
@@ -289,16 +287,16 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     {
         public override string Property { get; } = "time.scale";
 
-        protected override ValueApplier<float> ValueApplier { get; } = s => Time.timeScale = s;
+        protected override ValueApplier<float> Applier { get; } = s => Time.timeScale = s;
 
-        protected override Interpolation<float> Interpolation { get; } = Mathf.Lerp;
+        protected override ValueInterpolation<float> DefaultInterpolation { get; } = Mathf.Lerp;
     }
 
     private sealed class SetPositionKeyframesRequest : SetEntityKeyframesRequest<Transform, Vector3>
     {
         public override string Property { get; } = "transform.position";
 
-        protected override Interpolation<Vector3> Interpolation { get; } = Vector3.Lerp;
+        protected override ValueInterpolation<Vector3> DefaultInterpolation { get; } = Vector3.Lerp;
 
         protected override ValueApplier<Vector3> CreateApplier(Transform transform) =>
             p => transform.localPosition = p;
@@ -309,7 +307,8 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     {
         public override string Property { get; } = "transform.rotation";
 
-        protected override Interpolation<Quaternion> Interpolation { get; } = Quaternion.Lerp;
+        protected override ValueInterpolation<Quaternion> DefaultInterpolation { get; } =
+            Quaternion.Lerp;
 
         protected override ValueApplier<Quaternion> CreateApplier(Transform transform) =>
             r => transform.localRotation = r;
@@ -319,7 +318,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     {
         public override string Property { get; } = "transform.scale";
 
-        protected override Interpolation<Vector3> Interpolation { get; } = Vector3.Lerp;
+        protected override ValueInterpolation<Vector3> DefaultInterpolation { get; } = Vector3.Lerp;
 
         protected override ValueApplier<Vector3> CreateApplier(Transform transform) =>
             p => transform.localScale = p;
@@ -330,7 +329,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     {
         public override string Property { get; } = "perspective.focalLength";
 
-        protected override Interpolation<float> Interpolation { get; } = Mathf.Lerp;
+        protected override ValueInterpolation<float> DefaultInterpolation { get; } = Mathf.Lerp;
 
         protected override ValueApplier<float> CreateApplier(PerspectiveSceneCamera camera) =>
             f => camera.Perspective = camera.Perspective with { FocalLength = f };
@@ -341,7 +340,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     {
         public override string Property { get; } = "perspective.sensorSize";
 
-        protected override Interpolation<Vector2> Interpolation { get; } = Vector2.Lerp;
+        protected override ValueInterpolation<Vector2> DefaultInterpolation { get; } = Vector2.Lerp;
 
         protected override ValueApplier<Vector2> CreateApplier(PerspectiveSceneCamera camera) =>
             s => camera.Perspective = camera.Perspective with { SensorSize = s };
@@ -352,7 +351,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     {
         public override string Property { get; } = "perspective.lensShift";
 
-        protected override Interpolation<Vector2> Interpolation { get; } = Vector2.Lerp;
+        protected override ValueInterpolation<Vector2> DefaultInterpolation { get; } = Vector2.Lerp;
 
         protected override ValueApplier<Vector2> CreateApplier(PerspectiveSceneCamera camera) =>
             s => camera.Perspective = camera.Perspective with { LensShift = s };
@@ -363,7 +362,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     {
         public override string Property { get; } = "perspective.nearClipPlane";
 
-        protected override Interpolation<float> Interpolation { get; } = Mathf.Lerp;
+        protected override ValueInterpolation<float> DefaultInterpolation { get; } = Mathf.Lerp;
 
         protected override ValueApplier<float> CreateApplier(PerspectiveSceneCamera camera) =>
             n => camera.Perspective = camera.Perspective with { NearClipPlane = n };
@@ -374,7 +373,7 @@ internal sealed class KeyframesRouteMapper : IRouteMapper
     {
         public override string Property { get; } = "perspective.farClipPlane";
 
-        protected override Interpolation<float> Interpolation { get; } = Mathf.Lerp;
+        protected override ValueInterpolation<float> DefaultInterpolation { get; } = Mathf.Lerp;
 
         protected override ValueApplier<float> CreateApplier(PerspectiveSceneCamera camera) =>
             f => camera.Perspective = camera.Perspective with { FarClipPlane = f };
