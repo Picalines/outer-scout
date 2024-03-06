@@ -1,9 +1,12 @@
-﻿using SceneRecorder.Infrastructure.Extensions;
+﻿using System.Text.RegularExpressions;
+using SceneRecorder.Application.Extensions;
+using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.WebApi.DTOs;
 using SceneRecorder.WebApi.Extensions;
 using SceneRecorder.WebApi.Http;
 using SceneRecorder.WebApi.Http.Response;
 using SceneRecorder.WebApi.Services;
+using UnityEngine;
 
 namespace SceneRecorder.WebApi.RouteMappers;
 
@@ -15,15 +18,63 @@ internal sealed class TransformRouteMapper : IRouteMapper
 
     private TransformRouteMapper() { }
 
+    private sealed class CreateApiGameObjectRequest
+    {
+        public required string Name { get; init; }
+
+        public required TransformDTO Transform { get; init; }
+    }
+
+    private static readonly Regex _validApiGameObjectNameRegex = new Regex(
+        @"^[a-zA-Z_][a-zA-Z0-9_\-]*$"
+    );
+
     public void MapRoutes(HttpServer.Builder serverBuilder)
     {
         using (serverBuilder.WithPlayableSceneFilter())
         using (serverBuilder.WithNotRecordingFilter())
         {
+            using (serverBuilder.WithSceneCreatedFilter())
+            {
+                serverBuilder.MapPost("gameObjects", PostApiGameObject);
+            }
+
             serverBuilder.MapGet("gameObjects/:name/transform", GetGameObjectTransform);
 
             serverBuilder.MapPut("gameObjects/:name/transform", PutGameObjectTransform);
         }
+    }
+
+    private static IResponse PostApiGameObject(
+        [FromBody] CreateApiGameObjectRequest request,
+        GameObjectRepository gameObjects
+    )
+    {
+        if (_validApiGameObjectNameRegex.IsMatch(request.Name) is false)
+        {
+            return BadRequest($"invalid custom gameObject name");
+        }
+
+        if (gameObjects.FindOrNull(request.Name) is not null)
+        {
+            return BadRequest($"gameObject '{request.Name}' already exists");
+        }
+
+        var parent = request.Transform.Parent is { } parentName
+            ? gameObjects.FindOrNull(parentName)?.transform
+            : null;
+
+        if ((request.Transform.Parent, parent) is (not null, null))
+        {
+            return BadRequest($"parent gameObject '{request.Transform.Parent}' not found");
+        }
+
+        var gameObject = new GameObject($"{nameof(SceneRecorder)} '{request.Name}'");
+        gameObject.transform.ApplyWithParent(request.Transform.ToLocalTransform(parent));
+
+        gameObjects.AddOwned(request.Name, gameObject);
+
+        return Created();
     }
 
     private static IResponse GetGameObjectTransform(
