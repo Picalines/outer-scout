@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net48</TargetFramework>
-		<Copyright>Copyright © 2023 Picalines</Copyright>
+		<Copyright>Copyright © 2023 picalines</Copyright>
 		<RootNamespace>SceneRecorder</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup>

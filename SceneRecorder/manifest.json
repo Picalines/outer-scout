@@ -1,9 +1,9 @@
 {
   "$schema": "https://raw.githubusercontent.com/ow-mods/owml/master/schemas/manifest_schema.json",
   "filename": "SceneRecorder.dll",
-  "author": "Picalines",
+  "author": "picalines",
   "name": "Scene Recorder",
-  "uniqueName": "Picalines.SceneRecorder",
+  "uniqueName": "picalines.SceneRecorder",
   "version": "0.1.0",
   "owmlVersion": "2.9.8",
   "dependencies": [],

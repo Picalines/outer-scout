@@ -1,5 +1,5 @@
 ﻿<Project>
   <PropertyGroup>
-    <OutputPath>$(AppData)\OuterWildsModManager\OWML\Mods\Picalines.SceneRecorder</OutputPath>
+    <OutputPath>$(AppData)\OuterWildsModManager\OWML\Mods\picalines.SceneRecorder</OutputPath>
   </PropertyGroup>
 </Project>
