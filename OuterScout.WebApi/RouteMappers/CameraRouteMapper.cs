@@ -105,7 +105,7 @@ internal sealed class CameraRouteMapper : IRouteMapper
 
         resources.GlobalContainer.AddResource<ISceneCamera>(cameraId, newCamera);
 
-        return Ok();
+        return Created();
     }
 
     private static IResponse GetActiveGamera()

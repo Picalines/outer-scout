@@ -42,17 +42,17 @@ internal sealed class RecorderRouteMapper : IRouteMapper
         {
             serverBuilder.MapPost(
                 "cameras/:cameraId/textures/:textureType/recorder",
-                CreateCameraTextureRecorder
+                PostCameraTextureRecorder
             );
 
             serverBuilder.MapPost(
                 "gameObjects/:gameObjectName/transform/recorder",
-                CreateTransformRecorder
+                PostTransformRecorder
             );
         }
     }
 
-    private static IResponse CreateCameraTextureRecorder(
+    private static IResponse PostCameraTextureRecorder(
         [FromUrl] string cameraId,
         [FromUrl] string textureType,
         [FromBody] CreateTextureRecorderRequest request,
@@ -107,10 +107,10 @@ internal sealed class RecorderRouteMapper : IRouteMapper
                 .WithConstantRateFactor(request.ConstantRateFactor)
         );
 
-        return Ok();
+        return Created();
     }
 
-    private static IResponse CreateTransformRecorder(
+    private static IResponse PostTransformRecorder(
         [FromUrl] string gameObjectName,
         [FromBody] CreateTransformRecorderRequest request,
         JsonSerializer jsonSerializer,
@@ -162,6 +162,6 @@ internal sealed class RecorderRouteMapper : IRouteMapper
                 .WithAdditionalProperty("parent", request.Parent)
         );
 
-        return Ok();
+        return Created();
     }
 }

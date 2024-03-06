@@ -35,11 +35,11 @@ internal sealed class SceneRouteMapper : IRouteMapper
         {
             using (serverBuilder.WithNotRecordingFilter())
             {
-                serverBuilder.MapPost("scene", CreateScene);
+                serverBuilder.MapPost("scene", PostScene);
 
                 using (serverBuilder.WithSceneCreatedFilter())
                 {
-                    serverBuilder.MapPost("scene/recording", StartRecording);
+                    serverBuilder.MapPost("scene/recording", PostRecording);
                 }
             }
 
@@ -50,7 +50,7 @@ internal sealed class SceneRouteMapper : IRouteMapper
         }
     }
 
-    private static IResponse CreateScene(
+    private static IResponse PostScene(
         [FromBody] CreateSceneRequest request,
         IModConsole modConsole,
         ApiResourceRepository resources
@@ -91,10 +91,10 @@ internal sealed class SceneRouteMapper : IRouteMapper
             sceneRecorderBuilder.WithHiddenPlayerModel();
         }
 
-        return Ok();
+        return Created();
     }
 
-    private static IResponse StartRecording(
+    private static IResponse PostRecording(
         ApiResourceRepository resources,
         RecordingProgressGUI progressGUI
     )
@@ -119,7 +119,7 @@ internal sealed class SceneRouteMapper : IRouteMapper
             sceneRecorderBuilder.StartRecording()
         );
 
-        return Ok();
+        return Created();
     }
 
     private static IResponse GetRecordingStatus(ApiResourceRepository resources)
