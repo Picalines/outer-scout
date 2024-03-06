@@ -35,6 +35,11 @@ public sealed partial class SceneRecorder
         GlobalCoroutine.Start(RecordScene());
     }
 
+    public IntRange FrameRange
+    {
+        get => _frameRange;
+    }
+
     public int FramesRecorded
     {
         get => CurrentFrame - _frameRange.Start;
