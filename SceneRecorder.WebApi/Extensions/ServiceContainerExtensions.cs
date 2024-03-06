@@ -40,9 +40,9 @@ public static class ServiceContainerExtensions
                 _instance = _instantiator?.Instantiate();
             }
 
-            _instance.ThrowIfNull(_ => new InvalidOperationException(
-                $"{typeof(T)} is not created yet"
-            ));
+            _instance.ThrowIfNull(
+                _ => new InvalidOperationException($"{typeof(T)} is not created yet")
+            );
 
             return _instance;
         }
