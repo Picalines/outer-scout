@@ -4,8 +4,8 @@ on:
     workflow_dispatch:
 
 env:
-    PROJ_USERNAME: Picalines
-    PROJ_NAME: OuterWildsFSpyExporter
+    PROJ_USERNAME: picalines
+    PROJ_NAME: SceneRecorder
 
 jobs:
     pre_job:
@@ -32,7 +32,7 @@ jobs:
 
             - name: Output Version Info
               id: out
-              run: | 
+              run: |
                 echo "::set-output name=version::${{fromJson(steps.read-manifest.outputs.manifest).version}}"
                 echo "::set-output name=exists::${{steps.check-tag.outputs.exists}}"
 
