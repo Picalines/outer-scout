@@ -68,6 +68,7 @@ internal sealed class SceneRouteMapper : IRouteMapper
 
         resources.DisposeResources<IAnimator>();
         resources.DisposeResources<ISceneCamera>();
+        resources.DisposeResources<ApiOwnedGameObject>();
 
         resources.GlobalContainer.DisposeResource<SceneRecorder.Builder>();
 

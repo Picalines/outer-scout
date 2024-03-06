@@ -1,3 +1,4 @@
+using SceneRecorder.Infrastructure.Extensions;
 using SceneRecorder.Infrastructure.Validation;
 using UnityEngine;
 
@@ -5,34 +6,99 @@ namespace SceneRecorder.WebApi.Services;
 
 internal sealed class GameObjectRepository
 {
-    private readonly Dictionary<string, GameObject> _gameObjects = [];
+    private readonly ApiResourceRepository _apiResources;
+
+    public GameObjectRepository(ApiResourceRepository apiResources)
+    {
+        _apiResources = apiResources;
+    }
+
+    public bool Contains(string name)
+    {
+        return _apiResources.GlobalContainer.GetResource<GameObject>(name) is not null;
+    }
+
+    public void AddOwned(string name, GameObject gameObject)
+    {
+        gameObject.OrNull().ThrowIfNull();
+
+        name.Throw()
+            .IfNullOrWhiteSpace()
+            .If(name.Contains('/'))
+            .If(FindOrNull(name) is not null)
+            .If(Contains(name));
+
+        bool added = AddExternal(name, gameObject);
+
+        if (added)
+        {
+            _apiResources.GlobalContainer.AddResource(
+                name,
+                gameObject.GetOrAddComponent<ApiOwnedGameObject>()
+            );
+        }
+    }
 
     public GameObject? FindOrNull(string name)
     {
         name.Throw().IfNullOrWhiteSpace().If(name.Contains('/'));
 
-        if (_gameObjects.TryGetValue(name, out var gameObject) is true)
+        if (_apiResources.GlobalContainer.GetResource<GameObject>(name) is { } gameObjectInRepo)
         {
+            return gameObjectInRepo.OrNull();
+        }
+
+        if (GameObject.Find(name).OrNull() is { } gameObject)
+        {
+            AddExternal(name, gameObject);
+
             return gameObject;
         }
 
-        gameObject = GameObject.Find(name);
+        return null;
+    }
 
-        _gameObjects.Add(name, gameObject);
+    private bool AddExternal(string name, GameObject gameObject)
+    {
+        bool added = _apiResources.GlobalContainer.AddResource(name, gameObject);
 
-        gameObject.AddComponent<DestructionNotifier>().Destroyed += () => _gameObjects.Remove(name);
+        if (added)
+        {
+            gameObject.GetOrAddComponent<DestructionNotifier>().Destroyed += () =>
+            {
+                _apiResources.GlobalContainer.DisposeResource<GameObject>(name);
+            };
+        }
 
-        return gameObject;
+        return added;
+    }
+
+    private sealed class DestructionNotifier : MonoBehaviour
+    {
+        public Action? Destroyed;
+
+        private void OnDestroy()
+        {
+            Destroyed?.Invoke();
+            Destroyed = null;
+        }
     }
 }
 
-internal sealed class DestructionNotifier : MonoBehaviour
+internal sealed class ApiOwnedGameObject : MonoBehaviour, IDisposable
 {
-    public Action? Destroyed;
+    private GameObject? _gameObject;
 
-    private void OnDestroy()
+    private void Start()
     {
-        Destroyed?.Invoke();
-        Destroyed = null;
+        _gameObject = gameObject;
+    }
+
+    void IDisposable.Dispose()
+    {
+        if (_gameObject != null)
+        {
+            UnityEngine.Object.Destroy(_gameObject);
+        }
     }
 }

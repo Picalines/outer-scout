@@ -6,7 +6,7 @@ namespace SceneRecorder.WebApi.Services;
 
 internal interface IApiResourceContainer
 {
-    public void AddResource<T>(string name, T value);
+    public bool AddResource<T>(string name, T value);
 
     public T? GetResource<T>(string name)
         where T : class;
@@ -87,9 +87,9 @@ internal sealed class ApiResourceRepository : IDisposable
             _repository = repository;
         }
 
-        public void AddResource<T>(string name, T? value)
+        public bool AddResource<T>(string name, T? value)
         {
-            _resources.GetOrCreate(name).Add(value);
+            return _resources.GetOrCreate(name).Add(value);
         }
 
         public IEnumerable<T> GetResources<T>()
@@ -119,7 +119,7 @@ internal sealed class ApiResourceRepository : IDisposable
             )
             {
                 s.Remove(resource);
-                (resource as IDisposable)?.Dispose();
+                DisposeResource(resource);
             }
         }
 
@@ -130,7 +130,7 @@ internal sealed class ApiResourceRepository : IDisposable
                 if (s.OfType<T>().FirstOrDefault() is { } resource)
                 {
                     s.Remove(resource);
-                    (resource as IDisposable)?.Dispose();
+                    DisposeResource(resource);
                 }
             }
         }
@@ -139,16 +139,24 @@ internal sealed class ApiResourceRepository : IDisposable
         {
             foreach (var s in _resources.Values)
             {
-                foreach (var r in s.ToArray())
+                foreach (var resource in s.ToArray())
                 {
-                    if (r is not T)
+                    if (resource is not T resourceT)
                     {
                         continue;
                     }
 
-                    s.Remove(r);
-                    (r as IDisposable)?.Dispose();
+                    s.Remove(resource);
+                    DisposeResource(resourceT);
                 }
+            }
+        }
+
+        private void DisposeResource<T>(T resource)
+        {
+            if (resource is IDisposable disposable)
+            {
+                disposable.Dispose();
             }
         }
 
