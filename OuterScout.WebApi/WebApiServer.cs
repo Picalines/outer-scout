@@ -108,5 +108,10 @@ public sealed class WebApiServer : IDisposable
         services.Register<ApiResourceRepository>().InstantiatePerUnityScene();
 
         services.Register<GameObjectRepository>().InstantiatePerUnityScene();
+
+        services
+            .Register<RecordingProgressGUI>()
+            .InstantiatePerUnityScene()
+            .InstantiateAsComponentWithServices();
     }
 }

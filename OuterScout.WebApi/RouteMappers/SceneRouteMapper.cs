@@ -94,7 +94,10 @@ internal sealed class SceneRouteMapper : IRouteMapper
         return Ok();
     }
 
-    private static IResponse StartRecording(ApiResourceRepository resources)
+    private static IResponse StartRecording(
+        ApiResourceRepository resources,
+        RecordingProgressGUI progressGUI
+    )
     {
         if (
             resources.GlobalContainer.GetResource<SceneRecorder.Builder>()
@@ -104,9 +107,11 @@ internal sealed class SceneRouteMapper : IRouteMapper
             return ServiceUnavailable();
         }
 
+        resources.GlobalContainer.DisposeResources<SceneRecorder>();
+
         sceneRecorderBuilder.WithScenePatch(
-            () => { },
-            () => resources.GlobalContainer.DisposeResource<SceneRecorder>()
+            () => progressGUI.enabled = true,
+            () => progressGUI.enabled = false
         );
 
         resources.GlobalContainer.AddResource(
@@ -119,23 +124,19 @@ internal sealed class SceneRouteMapper : IRouteMapper
 
     private static IResponse GetRecordingStatus(ApiResourceRepository resources)
     {
-        if (
-            resources.GlobalContainer.GetResource<SceneRecorder.Builder>()
-            is not { } sceneRecorderBuilder
-        )
+        if (resources.GlobalContainer.GetResource<SceneRecorder>() is not { } sceneRecorder)
         {
             return ServiceUnavailable();
         }
 
-        var sceneRecorder = resources.GlobalContainer.GetResource<SceneRecorder>();
-
         return Ok(
             new
             {
-                InProgress = sceneRecorder is not null,
-                CurrentFrame = sceneRecorder is { CurrentFrame: var currentFrame }
-                    ? currentFrame
-                    : sceneRecorderBuilder.FrameRange.Start
+                InProgress = sceneRecorder.IsRecording,
+                StartFrame = sceneRecorder.FrameRange.Start,
+                EndFrame = sceneRecorder.FrameRange.End,
+                CurrentFrame = sceneRecorder.CurrentFrame,
+                FramesRecorded = sceneRecorder.FramesRecorded,
             }
         );
     }

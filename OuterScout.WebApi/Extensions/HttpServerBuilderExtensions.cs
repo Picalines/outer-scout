@@ -25,7 +25,8 @@ internal static class HttpServerBuilderExtensions
         return serverBuilder.WithFilter(
             (ApiResourceRepository resources) =>
             {
-                return resources.GlobalContainer.GetResource<SceneRecorder>() is not null
+                return
+                    resources.GlobalContainer.GetResource<SceneRecorder>() is { IsRecording: true }
                     ? ServiceUnavailable(new { Error = "not available while recording" })
                     : null;
             }
