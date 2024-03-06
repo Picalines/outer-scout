@@ -1,14 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/ow-mods/owml/master/schemas/manifest_schema.json",
-  "filename": "SceneRecorder.dll",
+  "filename": "OuterScout.dll",
   "author": "picalines",
-  "name": "Scene Recorder",
-  "uniqueName": "picalines.SceneRecorder",
+  "name": "Outer Scout",
+  "uniqueName": "picalines.OuterScout",
   "version": "0.1.0",
   "owmlVersion": "2.9.8",
   "dependencies": [],
   "warning": {
-    "title": "Scene Recorder warning",
+    "title": "OuterScout warning",
     "body": "FFmpeg is required to save mp4 videos from cameras\n\nYou can change location of FFmpeg's executable in the mod settings"
   }
 }
