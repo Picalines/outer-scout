@@ -14,14 +14,26 @@ public static class ServiceContainerExtensions
         return registration.ManageBy(new SceneLifetime<T>());
     }
 
-    public static IRegistration<T> AsGlobalComponent<T>(this IRegistration<T> registration)
+    public static IRegistration<T> InstantiateAsComponent<T>(this IRegistration<T> registration)
         where T : Component
     {
-        return registration
-            .InstantiatePerUnityScene()
-            .InstantiateBy(
-                () => new GameObject($"{nameof(OuterScout)}.{typeof(T).Name}").AddComponent<T>()
-            );
+        return registration.InstantiateBy(
+            () => new GameObject($"{nameof(OuterScout)}.{typeof(T).Name}").AddComponent<T>()
+        );
+    }
+
+    public static IRegistration<T> InstantiateAsComponentWithServices<T>(
+        this IRegistration<T> registration
+    )
+        where T : InitializedBehaviour<IServiceContainer>
+    {
+        return registration.InstantiateBy(
+            (services) =>
+            {
+                var gameObject = new GameObject($"{nameof(OuterScout)}.{typeof(T).Name}");
+                return gameObject.AddComponent<T, IServiceContainer>(services);
+            }
+        );
     }
 
     private sealed class SceneLifetime<T> : ILifetime<T>, IStartupHandler, ICleanupHandler
@@ -40,9 +52,9 @@ public static class ServiceContainerExtensions
                 _instance = _instantiator?.Instantiate();
             }
 
-            _instance.ThrowIfNull(
-                _ => new InvalidOperationException($"{typeof(T)} is not created yet")
-            );
+            _instance.ThrowIfNull(_ => new InvalidOperationException(
+                $"{typeof(T)} is not created yet"
+            ));
 
             return _instance;
         }
