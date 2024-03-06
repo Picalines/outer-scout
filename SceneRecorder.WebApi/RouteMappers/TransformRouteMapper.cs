@@ -53,7 +53,7 @@ internal sealed class TransformRouteMapper : IRouteMapper
         {
             Parent = parentTransform.name,
             Position = parentTransform.InverseTransformPoint(transform.position),
-            Rotation = transform.InverseTransformRotation(transform.rotation),
+            Rotation = parentTransform.InverseTransformRotation(transform.rotation),
             Scale = transform.lossyScale,
         };
 
