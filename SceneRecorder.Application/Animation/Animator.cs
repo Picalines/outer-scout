@@ -1,7 +1,7 @@
-using SceneRecorder.Domain;
-using SceneRecorder.Infrastructure.Validation;
+using OuterScout.Domain;
+using OuterScout.Infrastructure.Validation;
 
-namespace SceneRecorder.Application.Animation;
+namespace OuterScout.Application.Animation;
 
 public delegate void ValueApplier<T>(T value);
 

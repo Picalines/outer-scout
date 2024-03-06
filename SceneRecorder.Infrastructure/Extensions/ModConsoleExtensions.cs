@@ -1,7 +1,7 @@
-﻿using OWML.Common;
-using SceneRecorder.Infrastructure.Logging;
+﻿using OuterScout.Infrastructure.Logging;
+using OWML.Common;
 
-namespace SceneRecorder.Infrastructure.Extensions;
+namespace OuterScout.Infrastructure.Extensions;
 
 public static class ModConsoleExtensions
 {

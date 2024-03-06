@@ -1,6 +1,6 @@
-using SceneRecorder.Infrastructure.Validation;
+using OuterScout.Infrastructure.Validation;
 
-namespace SceneRecorder.Infrastructure.DependencyInjection;
+namespace OuterScout.Infrastructure.DependencyInjection;
 
 using static ServiceContainer;
 

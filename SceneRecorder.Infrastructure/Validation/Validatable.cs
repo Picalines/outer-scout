@@ -1,4 +1,4 @@
-namespace SceneRecorder.Infrastructure.Validation;
+namespace OuterScout.Infrastructure.Validation;
 
 public readonly ref struct Validatable<T>
 {

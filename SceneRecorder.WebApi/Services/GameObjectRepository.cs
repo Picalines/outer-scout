@@ -1,8 +1,8 @@
-using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.Infrastructure.Validation;
+using OuterScout.Infrastructure.Extensions;
+using OuterScout.Infrastructure.Validation;
 using UnityEngine;
 
-namespace SceneRecorder.WebApi.Services;
+namespace OuterScout.WebApi.Services;
 
 internal sealed class GameObjectRepository
 {

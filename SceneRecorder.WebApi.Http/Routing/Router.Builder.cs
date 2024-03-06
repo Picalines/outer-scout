@@ -1,6 +1,6 @@
-using SceneRecorder.Infrastructure.Extensions;
+using OuterScout.Infrastructure.Extensions;
 
-namespace SceneRecorder.WebApi.Http.Routing;
+namespace OuterScout.WebApi.Http.Routing;
 
 internal sealed partial class Router<T>
 {

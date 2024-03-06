@@ -1,6 +1,6 @@
-﻿using SceneRecorder.Infrastructure.Extensions;
+﻿using OuterScout.Infrastructure.Extensions;
 
-namespace SceneRecorder.Application.Recording;
+namespace OuterScout.Application.Recording;
 
 internal sealed class ComposedRecorder : IRecorder
 {

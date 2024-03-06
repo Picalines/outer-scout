@@ -1,12 +1,12 @@
-﻿using OWML.Common;
+﻿using OuterScout.Application.FFmpeg;
+using OuterScout.Infrastructure.DependencyInjection;
+using OuterScout.Infrastructure.Extensions;
+using OuterScout.WebApi;
+using OWML.Common;
 using OWML.ModHelper;
-using SceneRecorder.Application.FFmpeg;
-using SceneRecorder.Infrastructure.DependencyInjection;
-using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.WebApi;
 using UnityEngine;
 
-namespace SceneRecorder;
+namespace OuterScout;
 
 internal sealed class SceneRecorderMod : ModBehaviour
 {
@@ -27,7 +27,7 @@ internal sealed class SceneRecorderMod : ModBehaviour
 
     private void Start()
     {
-        ModHelper.Console.WriteLine($"{nameof(SceneRecorder)} is loaded!", MessageType.Success);
+        ModHelper.Console.WriteLine($"{nameof(OuterScout)} is loaded!", MessageType.Success);
 
         ShowCompatabilityWarnings();
 

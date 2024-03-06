@@ -1,9 +1,9 @@
+using OuterScout.Infrastructure.Extensions;
 using OWML.Common;
-using SceneRecorder.Infrastructure.Extensions;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace SceneRecorder.Application.Recording;
+namespace OuterScout.Application.Recording;
 
 public static class SceneRecorderExtensions
 {

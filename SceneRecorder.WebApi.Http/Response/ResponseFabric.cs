@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Net;
 
-namespace SceneRecorder.WebApi.Http.Response;
+namespace OuterScout.WebApi.Http.Response;
 
 public static class ResponseFabric
 {

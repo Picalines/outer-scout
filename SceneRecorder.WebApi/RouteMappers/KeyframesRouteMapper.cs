@@ -1,18 +1,18 @@
 ﻿using JsonSubTypes;
 using Newtonsoft.Json;
-using SceneRecorder.Application.Animation;
-using SceneRecorder.Application.SceneCameras;
-using SceneRecorder.Domain;
-using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.WebApi.Extensions;
-using SceneRecorder.WebApi.Http;
-using SceneRecorder.WebApi.Http.Response;
-using SceneRecorder.WebApi.Services;
+using OuterScout.Application.Animation;
+using OuterScout.Application.Recording;
+using OuterScout.Application.SceneCameras;
+using OuterScout.Domain;
+using OuterScout.Infrastructure.Extensions;
+using OuterScout.WebApi.Extensions;
+using OuterScout.WebApi.Http;
+using OuterScout.WebApi.Http.Response;
+using OuterScout.WebApi.Services;
 using UnityEngine;
 
-namespace SceneRecorder.WebApi.RouteMappers;
+namespace OuterScout.WebApi.RouteMappers;
 
-using SceneRecorder.Application.Recording;
 using static JsonSubTypes.JsonSubtypes;
 using static ResponseFabric;
 

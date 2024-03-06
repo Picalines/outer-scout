@@ -1,10 +1,10 @@
+using OuterScout.Infrastructure.DependencyInjection;
+using OuterScout.Infrastructure.Extensions;
+using OuterScout.Infrastructure.Validation;
 using OWML.Common;
-using SceneRecorder.Infrastructure.DependencyInjection;
-using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.Infrastructure.Validation;
 using UnityEngine;
 
-namespace SceneRecorder.Application.Recording;
+namespace OuterScout.Application.Recording;
 
 using Application.FFmpeg;
 

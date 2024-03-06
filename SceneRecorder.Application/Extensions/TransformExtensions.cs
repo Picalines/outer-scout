@@ -1,8 +1,8 @@
 ﻿using System.Runtime.CompilerServices;
-using SceneRecorder.Domain;
+using OuterScout.Domain;
 using UnityEngine;
 
-namespace SceneRecorder.Application.Extensions;
+namespace OuterScout.Application.Extensions;
 
 public static class TransformExtensions
 {

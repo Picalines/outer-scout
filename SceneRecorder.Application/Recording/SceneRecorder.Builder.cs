@@ -1,9 +1,9 @@
-using SceneRecorder.Application.Animation;
-using SceneRecorder.Domain;
-using SceneRecorder.Infrastructure.Validation;
+using OuterScout.Application.Animation;
+using OuterScout.Domain;
+using OuterScout.Infrastructure.Validation;
 using UnityEngine;
 
-namespace SceneRecorder.Application.Recording;
+namespace OuterScout.Application.Recording;
 
 public sealed partial class SceneRecorder
 {

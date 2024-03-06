@@ -1,7 +1,7 @@
 using System.Reflection;
-using SceneRecorder.Infrastructure.Validation;
+using OuterScout.Infrastructure.Validation;
 
-namespace SceneRecorder.Infrastructure.DependencyInjection;
+namespace OuterScout.Infrastructure.DependencyInjection;
 
 public sealed partial class ServiceContainer
 {

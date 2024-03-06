@@ -1,9 +1,9 @@
 using System.Diagnostics;
+using OuterScout.Infrastructure.DependencyInjection;
+using OuterScout.Infrastructure.Extensions;
 using OWML.Common;
-using SceneRecorder.Infrastructure.DependencyInjection;
-using SceneRecorder.Infrastructure.Extensions;
 
-namespace SceneRecorder.Application.FFmpeg;
+namespace OuterScout.Application.FFmpeg;
 
 public static class FFmpeg
 {

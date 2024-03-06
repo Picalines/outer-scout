@@ -1,9 +1,9 @@
-﻿using SceneRecorder.Domain;
-using SceneRecorder.Infrastructure.Validation;
+﻿using OuterScout.Domain;
+using OuterScout.Infrastructure.Validation;
 using UnityEngine;
 using UnityEngine.PostProcessing;
 
-namespace SceneRecorder.Application.Extensions;
+namespace OuterScout.Application.Extensions;
 
 public static class OWCameraExtensions
 {

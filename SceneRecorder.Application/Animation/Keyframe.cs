@@ -1,4 +1,4 @@
-namespace SceneRecorder.Application.Animation;
+namespace OuterScout.Application.Animation;
 
 public delegate T KeyframeInterpolation<T>(Keyframe<T> left, Keyframe<T> right, float progress);
 

@@ -1,4 +1,4 @@
-namespace SceneRecorder.WebApi.Http.Response;
+namespace OuterScout.WebApi.Http.Response;
 
 public sealed class ResponseException : Exception
 {

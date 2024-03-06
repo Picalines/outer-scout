@@ -1,6 +1,6 @@
 ﻿using OWML.Common;
 
-namespace SceneRecorder.Infrastructure.Logging;
+namespace OuterScout.Infrastructure.Logging;
 
 internal sealed class SilentModConsole : IModConsole
 {

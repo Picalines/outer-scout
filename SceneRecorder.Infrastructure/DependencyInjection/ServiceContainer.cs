@@ -1,4 +1,4 @@
-namespace SceneRecorder.Infrastructure.DependencyInjection;
+namespace OuterScout.Infrastructure.DependencyInjection;
 
 public sealed partial class ServiceContainer : IServiceScope
 {

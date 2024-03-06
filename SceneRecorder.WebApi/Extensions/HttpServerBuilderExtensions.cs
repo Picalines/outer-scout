@@ -1,11 +1,11 @@
-﻿using SceneRecorder.Application.Extensions;
-using SceneRecorder.WebApi.Http;
-using SceneRecorder.WebApi.Http.Response;
+﻿using OuterScout.Application.Extensions;
+using OuterScout.Application.Recording;
+using OuterScout.WebApi.Http;
+using OuterScout.WebApi.Http.Response;
+using OuterScout.WebApi.Services;
 
-namespace SceneRecorder.WebApi.Extensions;
+namespace OuterScout.WebApi.Extensions;
 
-using SceneRecorder.Application.Recording;
-using SceneRecorder.WebApi.Services;
 using static ResponseFabric;
 
 internal static class HttpServerBuilderExtensions

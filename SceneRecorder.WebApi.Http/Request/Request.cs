@@ -1,7 +1,7 @@
 ﻿using System.Web;
-using SceneRecorder.Infrastructure.Extensions;
+using OuterScout.Infrastructure.Extensions;
 
-namespace SceneRecorder.WebApi.Http;
+namespace OuterScout.WebApi.Http;
 
 public sealed class Request
 {

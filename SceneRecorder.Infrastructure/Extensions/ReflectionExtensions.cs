@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Reflection;
 
-namespace SceneRecorder.Infrastructure.Extensions;
+namespace OuterScout.Infrastructure.Extensions;
 
 public static class ReflectionExtensions
 {

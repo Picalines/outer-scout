@@ -1,7 +1,7 @@
-using SceneRecorder.Infrastructure.Extensions;
+using OuterScout.Infrastructure.Extensions;
 using UnityEngine;
 
-namespace SceneRecorder.WebApi.Json;
+namespace OuterScout.WebApi.Json;
 
 internal sealed class QuaternionConverter : NumberArrayConverter<Quaternion>
 {

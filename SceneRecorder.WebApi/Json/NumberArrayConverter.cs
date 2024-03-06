@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace SceneRecorder.WebApi.Json;
+namespace OuterScout.WebApi.Json;
 
 internal abstract class NumberArrayConverter<T> : JsonConverter<T?>
     where T : struct

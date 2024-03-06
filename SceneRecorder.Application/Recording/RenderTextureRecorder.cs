@@ -1,7 +1,7 @@
-﻿using SceneRecorder.Application.FFmpeg;
+﻿using OuterScout.Application.FFmpeg;
 using UnityEngine;
 
-namespace SceneRecorder.Application.Recording;
+namespace OuterScout.Application.Recording;
 
 public sealed partial class RenderTextureRecorder : IRecorder
 {

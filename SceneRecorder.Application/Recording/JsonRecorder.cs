@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace SceneRecorder.Application.Recording;
+namespace OuterScout.Application.Recording;
 
 public sealed partial class JsonRecorder : IRecorder
 {

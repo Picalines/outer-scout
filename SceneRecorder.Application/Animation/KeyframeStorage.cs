@@ -1,7 +1,7 @@
-using SceneRecorder.Domain;
-using SceneRecorder.Infrastructure.Validation;
+using OuterScout.Domain;
+using OuterScout.Infrastructure.Validation;
 
-namespace SceneRecorder.Application.Animation;
+namespace OuterScout.Application.Animation;
 
 public sealed class KeyframeStorage<T>
 {

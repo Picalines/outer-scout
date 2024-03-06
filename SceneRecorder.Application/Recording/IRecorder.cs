@@ -1,4 +1,4 @@
-﻿namespace SceneRecorder.Application.Recording;
+﻿namespace OuterScout.Application.Recording;
 
 public interface IRecorder : IDisposable
 {

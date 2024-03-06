@@ -1,16 +1,15 @@
 ﻿using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using OuterScout.Application.Recording;
+using OuterScout.Infrastructure.DependencyInjection;
+using OuterScout.Infrastructure.Extensions;
+using OuterScout.WebApi.Http;
+using OuterScout.WebApi.RouteMappers;
+using OuterScout.WebApi.Services;
 using OWML.Common;
-using SceneRecorder.Infrastructure.DependencyInjection;
-using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.WebApi.Http;
-using SceneRecorder.WebApi.RouteMappers;
-using SceneRecorder.WebApi.Services;
 
-namespace SceneRecorder.WebApi;
-
-using SceneRecorder.Application.Recording;
+namespace OuterScout.WebApi;
 
 public sealed class WebApiServer : IDisposable
 {

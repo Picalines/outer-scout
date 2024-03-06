@@ -1,8 +1,8 @@
-using SceneRecorder.Infrastructure.Validation;
+using OuterScout.Infrastructure.Validation;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace SceneRecorder.Infrastructure.DependencyInjection;
+namespace OuterScout.Infrastructure.DependencyInjection;
 
 using static ServiceContainer;
 
@@ -20,7 +20,7 @@ public static class ServiceContainerExtensions
         return registration
             .InstantiatePerUnityScene()
             .InstantiateBy(
-                () => new GameObject($"{nameof(SceneRecorder)}.{typeof(T).Name}").AddComponent<T>()
+                () => new GameObject($"{nameof(OuterScout)}.{typeof(T).Name}").AddComponent<T>()
             );
     }
 

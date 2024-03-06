@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace SceneRecorder.Application.SceneCameras;
+namespace OuterScout.Application.SceneCameras;
 
 public interface ISceneCamera : IDisposable
 {

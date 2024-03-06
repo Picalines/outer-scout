@@ -1,8 +1,8 @@
 using System.Collections;
-using SceneRecorder.Infrastructure.Validation;
+using OuterScout.Infrastructure.Validation;
 using UnityEngine;
 
-namespace SceneRecorder.Infrastructure.Components;
+namespace OuterScout.Infrastructure.Components;
 
 public sealed class GlobalCoroutine : MonoBehaviour
 {
@@ -19,7 +19,7 @@ public sealed class GlobalCoroutine : MonoBehaviour
 
     public static void Start(IEnumerator coroutine)
     {
-        var gameObject = new GameObject($"{nameof(SceneRecorder)}.{nameof(GlobalCoroutine)}");
+        var gameObject = new GameObject($"{nameof(OuterScout)}.{nameof(GlobalCoroutine)}");
 
         gameObject.SetActive(false);
 

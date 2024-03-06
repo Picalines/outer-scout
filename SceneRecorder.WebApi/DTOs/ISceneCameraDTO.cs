@@ -1,9 +1,9 @@
 using JsonSubTypes;
 using Newtonsoft.Json;
-using SceneRecorder.Domain;
+using OuterScout.Domain;
 using UnityEngine;
 
-namespace SceneRecorder.WebApi.DTOs;
+namespace OuterScout.WebApi.DTOs;
 
 [JsonConverter(typeof(JsonSubtypes), nameof(ISceneCameraDTO.Type))]
 [JsonSubtypes.KnownSubType(typeof(PerspectiveSceneCameraDTO), PerspectiveSceneCameraDTO.TypeValue)]

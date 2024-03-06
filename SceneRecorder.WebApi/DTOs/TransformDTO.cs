@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace SceneRecorder.WebApi.DTOs;
+namespace OuterScout.WebApi.DTOs;
 
 internal sealed class TransformDTO
 {

@@ -1,6 +1,6 @@
 using Newtonsoft.Json;
 
-namespace SceneRecorder.Infrastructure.Extensions;
+namespace OuterScout.Infrastructure.Extensions;
 
 public static class JsonExtensions
 {

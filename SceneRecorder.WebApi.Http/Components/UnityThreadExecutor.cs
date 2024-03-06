@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using UnityEngine;
 
-namespace SceneRecorder.WebApi.Http.Components;
+namespace OuterScout.WebApi.Http.Components;
 
 internal sealed class UnityThreadExecutor : MonoBehaviour
 {
@@ -9,7 +9,7 @@ internal sealed class UnityThreadExecutor : MonoBehaviour
 
     public static UnityThreadExecutor Create()
     {
-        var gameObject = new GameObject($"{nameof(SceneRecorder)}.{nameof(UnityThreadExecutor)}");
+        var gameObject = new GameObject($"{nameof(OuterScout)}.{nameof(UnityThreadExecutor)}");
 
         DontDestroyOnLoad(gameObject);
 

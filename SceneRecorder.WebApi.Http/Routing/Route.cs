@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace SceneRecorder.WebApi.Http.Routing;
+namespace OuterScout.WebApi.Http.Routing;
 
 internal sealed partial class Route
 {

@@ -1,15 +1,15 @@
 using Newtonsoft.Json;
-using SceneRecorder.Application.FFmpeg;
-using SceneRecorder.Application.SceneCameras;
-using SceneRecorder.WebApi.DTOs;
-using SceneRecorder.WebApi.Extensions;
-using SceneRecorder.WebApi.Http;
-using SceneRecorder.WebApi.Http.Response;
-using SceneRecorder.WebApi.Services;
+using OuterScout.Application.FFmpeg;
+using OuterScout.Application.Recording;
+using OuterScout.Application.SceneCameras;
+using OuterScout.WebApi.DTOs;
+using OuterScout.WebApi.Extensions;
+using OuterScout.WebApi.Http;
+using OuterScout.WebApi.Http.Response;
+using OuterScout.WebApi.Services;
 
-namespace SceneRecorder.WebApi.RouteMappers;
+namespace OuterScout.WebApi.RouteMappers;
 
-using SceneRecorder.Application.Recording;
 using static ResponseFabric;
 
 internal sealed class RecorderRouteMapper : IRouteMapper

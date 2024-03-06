@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
-using SceneRecorder.Infrastructure.Validation;
+using OuterScout.Infrastructure.Validation;
 
-namespace SceneRecorder.Application.Recording;
+namespace OuterScout.Application.Recording;
 
 public sealed partial class JsonRecorder
 {

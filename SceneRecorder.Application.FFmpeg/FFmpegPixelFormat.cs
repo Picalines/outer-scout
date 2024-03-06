@@ -1,4 +1,4 @@
-namespace SceneRecorder.Application.FFmpeg;
+namespace OuterScout.Application.FFmpeg;
 
 public static class FFmpegPixelFormatExtensions
 {

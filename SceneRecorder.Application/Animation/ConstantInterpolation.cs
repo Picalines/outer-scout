@@ -1,4 +1,4 @@
-namespace SceneRecorder.Application.Animation;
+namespace OuterScout.Application.Animation;
 
 public static class ConstantInterpolation<T>
 {

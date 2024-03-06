@@ -1,11 +1,11 @@
-using SceneRecorder.Application.Extensions;
-using SceneRecorder.Domain;
-using SceneRecorder.Infrastructure.DependencyInjection;
-using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.Infrastructure.Validation;
+using OuterScout.Application.Extensions;
+using OuterScout.Domain;
+using OuterScout.Infrastructure.DependencyInjection;
+using OuterScout.Infrastructure.Extensions;
+using OuterScout.Infrastructure.Validation;
 using UnityEngine;
 
-namespace SceneRecorder.Application.SceneCameras;
+namespace OuterScout.Application.SceneCameras;
 
 [RequireComponent(typeof(OWCamera))]
 public sealed class PerspectiveSceneCamera
@@ -146,9 +146,7 @@ public sealed class PerspectiveSceneCamera
             return null;
         }
 
-        var gameObject = new GameObject(
-            $"{nameof(SceneRecorder)}.{nameof(PerspectiveSceneCamera)}"
-        );
+        var gameObject = new GameObject($"{nameof(OuterScout)}.{nameof(PerspectiveSceneCamera)}");
 
         playerCamera.CopyTo(gameObject, copyPostProcessing: true);
 
@@ -175,7 +173,7 @@ public sealed class PerspectiveSceneCamera
         _colorCamera.ThrowIfNull();
 
         var depthCameraObject = new GameObject(
-            $"{nameof(SceneRecorder)}.{nameof(PerspectiveSceneCamera)}.depth"
+            $"{nameof(OuterScout)}.{nameof(PerspectiveSceneCamera)}.depth"
         );
 
         var depthTransform = depthCameraObject.transform;

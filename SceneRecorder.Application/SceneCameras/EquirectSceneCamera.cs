@@ -1,11 +1,11 @@
-using SceneRecorder.Application.Extensions;
-using SceneRecorder.Infrastructure.DependencyInjection;
-using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.Infrastructure.Validation;
+using OuterScout.Application.Extensions;
+using OuterScout.Infrastructure.DependencyInjection;
+using OuterScout.Infrastructure.Extensions;
+using OuterScout.Infrastructure.Validation;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace SceneRecorder.Application.SceneCameras;
+namespace OuterScout.Application.SceneCameras;
 
 public sealed class EquirectSceneCamera
     : InitializedBehaviour<EquirectSceneCamera.Parameters>,
@@ -106,7 +106,7 @@ public sealed class EquirectSceneCamera
     {
         parameters.CubemapFaceSize.Throw().IfLessThan(1);
 
-        var gameObject = new GameObject($"{nameof(SceneRecorder)}.{nameof(EquirectSceneCamera)}");
+        var gameObject = new GameObject($"{nameof(OuterScout)}.{nameof(EquirectSceneCamera)}");
 
         return gameObject.AddComponent<EquirectSceneCamera, Parameters>(parameters);
     }
@@ -133,7 +133,7 @@ public sealed class EquirectSceneCamera
         playerCamera.ThrowIfNull();
 
         var cameraObject = new GameObject(
-            $"{nameof(SceneRecorder)}.{nameof(EquirectSceneCamera)}.face"
+            $"{nameof(OuterScout)}.{nameof(EquirectSceneCamera)}.face"
         );
 
         var cameraTransfrom = cameraObject.transform;

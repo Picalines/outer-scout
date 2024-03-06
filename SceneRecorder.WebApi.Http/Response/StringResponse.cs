@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace SceneRecorder.WebApi.Http.Response;
+namespace OuterScout.WebApi.Http.Response;
 
 public sealed record StringResponse : IResponse
 {

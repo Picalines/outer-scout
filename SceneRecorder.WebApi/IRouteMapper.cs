@@ -1,6 +1,6 @@
-﻿using SceneRecorder.WebApi.Http;
+﻿using OuterScout.WebApi.Http;
 
-namespace SceneRecorder.WebApi;
+namespace OuterScout.WebApi;
 
 internal interface IRouteMapper
 {

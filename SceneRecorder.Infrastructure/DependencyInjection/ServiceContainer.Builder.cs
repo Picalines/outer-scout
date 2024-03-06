@@ -1,6 +1,6 @@
-using SceneRecorder.Infrastructure.Extensions;
+using OuterScout.Infrastructure.Extensions;
 
-namespace SceneRecorder.Infrastructure.DependencyInjection;
+namespace OuterScout.Infrastructure.DependencyInjection;
 
 public sealed partial class ServiceContainer
 {

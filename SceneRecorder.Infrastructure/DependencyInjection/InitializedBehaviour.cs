@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using UnityEngine;
 
-namespace SceneRecorder.Infrastructure.DependencyInjection;
+namespace OuterScout.Infrastructure.DependencyInjection;
 
 // NOTE:
 // Unity creates MonoBehaviour instance in a separate thread, so it's

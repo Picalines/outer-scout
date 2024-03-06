@@ -1,6 +1,6 @@
 using OWML.Common;
 
-namespace SceneRecorder.Infrastructure.Extensions;
+namespace OuterScout.Infrastructure.Extensions;
 
 public static class IModConfigExtensions
 {

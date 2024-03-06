@@ -1,13 +1,13 @@
-﻿using SceneRecorder.Application.Extensions;
-using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.WebApi.DTOs;
-using SceneRecorder.WebApi.Extensions;
-using SceneRecorder.WebApi.Http;
-using SceneRecorder.WebApi.Http.Response;
-using SceneRecorder.WebApi.Services;
+﻿using OuterScout.Application.Extensions;
+using OuterScout.Infrastructure.Extensions;
+using OuterScout.WebApi.DTOs;
+using OuterScout.WebApi.Extensions;
+using OuterScout.WebApi.Http;
+using OuterScout.WebApi.Http.Response;
+using OuterScout.WebApi.Services;
 using UnityEngine;
 
-namespace SceneRecorder.WebApi.RouteMappers;
+namespace OuterScout.WebApi.RouteMappers;
 
 using static ResponseFabric;
 

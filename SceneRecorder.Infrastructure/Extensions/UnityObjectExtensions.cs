@@ -1,4 +1,4 @@
-﻿namespace SceneRecorder.Infrastructure.Extensions;
+﻿namespace OuterScout.Infrastructure.Extensions;
 
 public static class UnityObjectExtensions
 {

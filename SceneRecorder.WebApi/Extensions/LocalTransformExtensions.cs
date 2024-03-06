@@ -1,8 +1,8 @@
-using SceneRecorder.Domain;
-using SceneRecorder.WebApi.DTOs;
+using OuterScout.Domain;
+using OuterScout.WebApi.DTOs;
 using UnityEngine;
 
-namespace SceneRecorder.WebApi.Extensions;
+namespace OuterScout.WebApi.Extensions;
 
 internal static class LocalTransformExtensions
 {

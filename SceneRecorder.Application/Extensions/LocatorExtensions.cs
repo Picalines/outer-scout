@@ -1,7 +1,7 @@
-﻿using SceneRecorder.Infrastructure.Extensions;
+﻿using OuterScout.Infrastructure.Extensions;
 using UnityEngine;
 
-namespace SceneRecorder.Application.Extensions;
+namespace OuterScout.Application.Extensions;
 
 public static class LocatorExtensions
 {

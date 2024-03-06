@@ -1,6 +1,6 @@
-using SceneRecorder.Infrastructure.Extensions;
+using OuterScout.Infrastructure.Extensions;
 
-namespace SceneRecorder.Application.Animation;
+namespace OuterScout.Application.Animation;
 
 internal sealed class ComposedAnimator : IAnimator
 {

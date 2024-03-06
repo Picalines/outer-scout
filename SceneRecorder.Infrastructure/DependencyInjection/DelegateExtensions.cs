@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace SceneRecorder.Infrastructure.DependencyInjection;
+namespace OuterScout.Infrastructure.DependencyInjection;
 
 public static class DelegateExtensions
 {

@@ -1,11 +1,11 @@
 using System.ComponentModel;
 using System.Reflection;
 using Newtonsoft.Json;
-using SceneRecorder.Infrastructure.DependencyInjection;
-using SceneRecorder.WebApi.Http.Response;
-using SceneRecorder.WebApi.Http.Routing;
+using OuterScout.Infrastructure.DependencyInjection;
+using OuterScout.WebApi.Http.Response;
+using OuterScout.WebApi.Http.Routing;
 
-namespace SceneRecorder.WebApi.Http;
+namespace OuterScout.WebApi.Http;
 
 public sealed partial class HttpServer
 {

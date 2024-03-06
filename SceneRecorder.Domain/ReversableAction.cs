@@ -1,4 +1,4 @@
-namespace SceneRecorder.Domain;
+namespace OuterScout.Domain;
 
 public sealed class ReversableAction
 {

@@ -1,11 +1,11 @@
 using System.Collections;
-using SceneRecorder.Application.Animation;
-using SceneRecorder.Domain;
-using SceneRecorder.Infrastructure.Components;
-using SceneRecorder.Infrastructure.Extensions;
+using OuterScout.Application.Animation;
+using OuterScout.Domain;
+using OuterScout.Infrastructure.Components;
+using OuterScout.Infrastructure.Extensions;
 using UnityEngine;
 
-namespace SceneRecorder.Application.Recording;
+namespace OuterScout.Application.Recording;
 
 public sealed partial class SceneRecorder
 {

@@ -1,7 +1,7 @@
-﻿using SceneRecorder.Infrastructure.Validation;
+﻿using OuterScout.Infrastructure.Validation;
 using UnityEngine;
 
-namespace SceneRecorder.Application.FFmpeg;
+namespace OuterScout.Application.FFmpeg;
 
 public sealed class FFmpegTextureEncoder : IDisposable
 {

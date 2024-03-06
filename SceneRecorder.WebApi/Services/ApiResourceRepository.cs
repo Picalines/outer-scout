@@ -1,8 +1,8 @@
-using SceneRecorder.Infrastructure.DependencyInjection;
-using SceneRecorder.Infrastructure.Extensions;
+using OuterScout.Infrastructure.DependencyInjection;
+using OuterScout.Infrastructure.Extensions;
 using UnityEngine;
 
-namespace SceneRecorder.WebApi.Services;
+namespace OuterScout.WebApi.Services;
 
 internal interface IApiResourceContainer
 {
@@ -48,7 +48,7 @@ internal sealed class ApiResourceRepository : IDisposable
             if (_globalContainerHost == null)
             {
                 _globalContainerHost = new GameObject(
-                    $"{nameof(SceneRecorder)}.{nameof(ApiResourceRepository)}"
+                    $"{nameof(OuterScout)}.{nameof(ApiResourceRepository)}"
                 );
             }
 

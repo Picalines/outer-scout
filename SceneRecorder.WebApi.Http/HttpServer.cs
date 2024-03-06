@@ -1,16 +1,16 @@
 ﻿using System.Collections;
 using System.Net;
 using Newtonsoft.Json;
+using OuterScout.Infrastructure.Components;
+using OuterScout.Infrastructure.DependencyInjection;
+using OuterScout.Infrastructure.Extensions;
+using OuterScout.Infrastructure.Validation;
+using OuterScout.WebApi.Http.Components;
+using OuterScout.WebApi.Http.Response;
+using OuterScout.WebApi.Http.Routing;
 using OWML.Common;
-using SceneRecorder.Infrastructure.Components;
-using SceneRecorder.Infrastructure.DependencyInjection;
-using SceneRecorder.Infrastructure.Extensions;
-using SceneRecorder.Infrastructure.Validation;
-using SceneRecorder.WebApi.Http.Components;
-using SceneRecorder.WebApi.Http.Response;
-using SceneRecorder.WebApi.Http.Routing;
 
-namespace SceneRecorder.WebApi.Http;
+namespace OuterScout.WebApi.Http;
 
 using RequestHandler = Func<IServiceContainer, IResponse>;
 
@@ -286,6 +286,6 @@ public sealed partial class HttpServer : IDisposable
     {
         _services
             .ResolveOrNull<IModConsole>()
-            ?.WriteLine($"{nameof(SceneRecorder)} API: {message}", messageType);
+            ?.WriteLine($"{nameof(OuterScout)} API: {message}", messageType);
     }
 }
