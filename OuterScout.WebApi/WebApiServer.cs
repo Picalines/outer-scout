@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using OuterScout.Application.Recording;
 using OuterScout.Infrastructure.DependencyInjection;
 using OuterScout.Infrastructure.Extensions;
 using OuterScout.WebApi.Http;
@@ -56,7 +55,7 @@ public sealed class WebApiServer : IDisposable
             mapper.MapRoutes(serverBuilder);
         }
 
-        serverBuilder.MapGet("", () => $"Welcome to Outer Wilds {nameof(SceneRecorder)} API!");
+        serverBuilder.MapGet("", () => $"Welcome to {nameof(OuterScout)} API!");
 
         serverBuilder.MapGet("api/status", () => new { Available = true });
     }
