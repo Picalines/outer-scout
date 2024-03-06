@@ -8,11 +8,11 @@ using UnityEngine;
 
 namespace OuterScout;
 
-internal sealed class SceneRecorderMod : ModBehaviour
+internal sealed class OuterScoutMod : ModBehaviour
 {
     private WebApiServer? _webApiServer = null;
 
-    private SceneRecorderMod()
+    private OuterScoutMod()
     {
         Singleton<IModConfig>.ProvideInstance(() => ModHelper.Config);
         Singleton<IModConsole>.ProvideInstance(() => ModHelper.Console);
