@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFramework>net48</TargetFramework>
 		<Copyright>Copyright © 2023 picalines</Copyright>
-		<RootNamespace>SceneRecorder</RootNamespace>
+		<RootNamespace>OuterScout</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
@@ -20,15 +20,15 @@
 		<DebugType>none</DebugType>
 	</PropertyGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\SceneRecorder.Infrastructure\SceneRecorder.Infrastructure.csproj" />
-		<ProjectReference Include="..\SceneRecorder.Application\SceneRecorder.Application.csproj" />
-		<ProjectReference Include="..\SceneRecorder.WebApi\SceneRecorder.WebApi.csproj" />
+		<ProjectReference Include="..\OuterScout.Infrastructure\OuterScout.Infrastructure.csproj" />
+		<ProjectReference Include="..\OuterScout.Application\OuterScout.Application.csproj" />
+		<ProjectReference Include="..\OuterScout.WebApi\OuterScout.WebApi.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="default-config.json" CopyToOutputDirectory="PreserveNewest" />
 		<None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 	<ItemGroup>
-		<Content Include="SceneRecorder.csproj.user" />
+		<Content Include="OuterScout.csproj.user" />
 	</ItemGroup>
 </Project>

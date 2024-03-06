@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFramework>net48</TargetFramework>
 		<Copyright>Copyright © 2023 picalines</Copyright>
-		<RootNamespace>SceneRecorder.Infrastructure</RootNamespace>
+		<RootNamespace>OuterScout.Infrastructure</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup>
 		<LangVersion>12.0</LangVersion>

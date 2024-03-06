@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net48</TargetFramework>
 		<Copyright>Copyright © 2023 picalines</Copyright>
-		<RootNamespace>SceneRecorder.Domain</RootNamespace>
+		<RootNamespace>OuterScout.WebApi.Http</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup>
 		<LangVersion>12.0</LangVersion>
@@ -12,6 +12,6 @@
 		<NoWarn>MSB3270</NoWarn>
 	</PropertyGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\SceneRecorder.Infrastructure\SceneRecorder.Infrastructure.csproj" />
+		<ProjectReference Include="..\OuterScout.Infrastructure\OuterScout.Infrastructure.csproj" />
 	</ItemGroup>
 </Project>

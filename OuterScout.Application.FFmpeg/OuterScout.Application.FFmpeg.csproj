@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFramework>net48</TargetFramework>
 		<Copyright>Copyright © 2023 picalines</Copyright>
-		<RootNamespace>SceneRecorder.Application</RootNamespace>
+		<RootNamespace>OuterScout.Application.FFmpeg</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup>
 		<LangVersion>12.0</LangVersion>
@@ -12,8 +12,6 @@
 		<NoWarn>MSB3270</NoWarn>
 	</PropertyGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\SceneRecorder.Infrastructure\SceneRecorder.Infrastructure.csproj" />
-		<ProjectReference Include="..\SceneRecorder.Domain\SceneRecorder.Domain.csproj" />
-		<ProjectReference Include="..\SceneRecorder.Application.FFmpeg\SceneRecorder.Application.FFmpeg.csproj" />
+		<ProjectReference Include="..\OuterScout.Infrastructure\OuterScout.Infrastructure.csproj" />
 	</ItemGroup>
 </Project>
