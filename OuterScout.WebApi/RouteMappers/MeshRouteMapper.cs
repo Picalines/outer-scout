@@ -11,42 +11,18 @@ namespace OuterScout.WebApi.RouteMappers;
 
 using static ResponseFabric;
 
-internal sealed class GroundBodyRouteMapper : IRouteMapper
+internal sealed class MeshRouteMapper : IRouteMapper
 {
-    public static GroundBodyRouteMapper Instance { get; } = new();
+    public static MeshRouteMapper Instance { get; } = new();
 
-    private GroundBodyRouteMapper() { }
+    private MeshRouteMapper() { }
 
     public void MapRoutes(HttpServer.Builder serverBuilder)
     {
         using (serverBuilder.WithPlayableSceneFilter())
         {
-            serverBuilder.MapGet("gameObjects/:name/ground-body", GetGroundBody);
-
             serverBuilder.MapGet("gameObjects/:name/mesh", GetGameObjectMesh);
         }
-    }
-
-    private static IResponse GetGroundBody([FromUrl] string name)
-    {
-        if (name != Locator.GetPlayerBody().OrNull()?.name)
-        {
-            return BadRequest($"gameObject '{name}' does not have a ground body");
-        }
-
-        return LocatorExtensions.GetCurrentGroundBody() switch
-        {
-            { name: var groundBodyName, transform: var transform }
-                => Ok(
-                    new GameObjectDTO
-                    {
-                        Name = groundBodyName,
-                        Path = transform.GetPath(),
-                        Transform = ToGlobalTransformDTO(transform)
-                    }
-                ),
-            _ => NotFound(),
-        };
     }
 
     private static IResponse GetGameObjectMesh(

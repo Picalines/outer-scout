@@ -12,11 +12,11 @@ namespace OuterScout.WebApi.RouteMappers;
 
 using static ResponseFabric;
 
-internal sealed class TransformRouteMapper : IRouteMapper
+internal sealed class GameObjectRouteMapper : IRouteMapper
 {
-    public static TransformRouteMapper Instance { get; } = new();
+    public static GameObjectRouteMapper Instance { get; } = new();
 
-    private TransformRouteMapper() { }
+    private GameObjectRouteMapper() { }
 
     private sealed class CreateApiGameObjectRequest
     {

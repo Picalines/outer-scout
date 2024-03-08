@@ -15,12 +15,12 @@ internal sealed class PlayerRouteMapper : IRouteMapper
 {
     public static PlayerRouteMapper Instance { get; } = new();
 
-    private const string ReusedSpawnPointName = $"{nameof(OuterScout)}.SpawnPoint";
-
     private PlayerRouteMapper() { }
 
     private sealed class WarpRequest
     {
+        public required string GroundBody { get; init; }
+
         public required TransformDTO Transform { get; init; }
     }
 
@@ -28,6 +28,8 @@ internal sealed class PlayerRouteMapper : IRouteMapper
     {
         using (serverBuilder.WithPlayableSceneFilter())
         {
+            serverBuilder.MapGet("player/ground-body", GetPlayerGroundBody);
+
             serverBuilder.MapGet("player/sectors", GetPlayerSectors);
 
             using (serverBuilder.WithNotRecordingFilter())
@@ -37,11 +39,36 @@ internal sealed class PlayerRouteMapper : IRouteMapper
         }
     }
 
+    private static IResponse GetPlayerGroundBody()
+    {
+        if (
+            LocatorExtensions.GetCurrentGroundBody()
+            is not { name: var name, transform: var transform }
+        )
+        {
+            return ServiceUnavailable();
+        }
+
+        return Ok(
+            new
+            {
+                Name = name,
+                Transform = new TransformDTO()
+                {
+                    Position = transform.position,
+                    Rotation = transform.rotation,
+                    Scale = transform.lossyScale,
+                }
+            }
+        );
+    }
+
     private static IResponse GetPlayerSectors()
     {
-        var sectorDetector = Locator.GetPlayerDetector().OrNull()?.GetComponent<SectorDetector>();
-
-        if (sectorDetector is null)
+        if (
+            Locator.GetPlayerDetector().OrNull()?.GetComponent<SectorDetector>()
+            is not { } sectorDetector
+        )
         {
             return ServiceUnavailable();
         }
@@ -70,28 +97,27 @@ internal sealed class PlayerRouteMapper : IRouteMapper
             return ServiceUnavailable();
         }
 
-        if (
-            request.Transform
-            is not { Parent: { } groundBodyName, Position: { }, Rotation: { }, Scale: null }
-        )
+        if (request.Transform is not { Parent: null, Position: { }, Rotation: { }, Scale: null })
         {
             return BadRequest("invalid warp transform");
         }
 
         if (
-            gameObjects.FindOrNull(groundBodyName) is not { transform: var groundBodyTransform }
+            gameObjects.FindOrNull(request.GroundBody) is not { transform: var groundBodyTransform }
             || groundBodyTransform.GetComponentOrNull<OWRigidbody>() is not { } groundBody
         )
         {
-            return BadRequest($"'{groundBodyName}' is not a valid ground body");
+            return BadRequest($"'{request.GroundBody}' is not a valid ground body");
         }
 
         var localTransform = new GameObject().transform;
         localTransform.parent = groundBodyTransform;
         localTransform.ApplyKeepParent(request.Transform.ToLocalTransform(groundBodyTransform));
 
+        const string spawnPointName = $"{nameof(OuterScout)}.SpawnPoint";
+
         var spawnPoint = groundBodyTransform
-            .Find(ReusedSpawnPointName)
+            .Find(spawnPointName)
             .OrNull()
             ?.GetComponent<SpawnPoint>();
 
@@ -104,9 +130,9 @@ internal sealed class PlayerRouteMapper : IRouteMapper
 
             var newSpawnPointObject = nearestSpawnPoint is not null
                 ? UnityEngine.Object.Instantiate(nearestSpawnPoint.gameObject)
-                : new GameObject(ReusedSpawnPointName, typeof(SpawnPoint));
+                : new GameObject(spawnPointName, typeof(SpawnPoint));
 
-            newSpawnPointObject.name = ReusedSpawnPointName;
+            newSpawnPointObject.name = spawnPointName;
             newSpawnPointObject.transform.parent = groundBodyTransform;
 
             spawnPoint = newSpawnPointObject.GetComponent<SpawnPoint>();

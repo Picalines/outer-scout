@@ -15,12 +15,12 @@ public sealed class WebApiServer : IDisposable
     private static readonly IRouteMapper[] _RouteMappers = new IRouteMapper[]
     {
         CameraRouteMapper.Instance,
-        GroundBodyRouteMapper.Instance,
+        GameObjectRouteMapper.Instance,
         KeyframesRouteMapper.Instance,
+        MeshRouteMapper.Instance,
         PlayerRouteMapper.Instance,
         RecorderRouteMapper.Instance,
         SceneRouteMapper.Instance,
-        TransformRouteMapper.Instance,
     };
 
     private readonly HttpServer _httpServer;
