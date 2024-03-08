@@ -1,0 +1,324 @@
+openapi: 3.1.0
+info:
+  title: OuterScout
+  description: |-
+    OuterScout API allows you to create scene recordings of the Outer Wilds
+
+    With this API you can put multiple cameras on your scene, create keyframes to animate their parameters and transformation, and then record color and depth information to your disk
+  license:
+    name: MIT
+    url: https://github.com/Picalines/outer-scout/blob/master/OuterScout/LICENSE
+  version: 0.1.0
+tags:
+  - name: scene
+  - name: camera
+  - name: gameObject
+  - name: keyframes
+paths:
+  /scene:
+    post:
+      operationId: createScene
+      tags: [scene]
+      description: |-
+        Create an OuterScout scene. Scene contains cameras, custom GameObjects and other resources.
+        Use this route to clear previous scene
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+                - startFrame
+                - endFrame
+                - frameRate
+                - hidePlayerModel
+              properties:
+                startFrame:
+                  type: integer
+                  examples: [1]
+                endFrame:
+                  type: integer
+                  examples: [180]
+                frameRate:
+                  type: integer
+                  minimum: 1
+                  examples: [60]
+                hidePlayerModel:
+                  type: boolean
+      responses:
+        '201':
+          description: Successful operation
+        '400':
+          description: Invalid request body
+        '503':
+          description: Scene cannot be created at the moment
+  /scene/recording:
+    post:
+      operationId: startRecording
+      tags: [scene]
+      responses:
+        '201':
+          description: Recording has been started
+        '503':
+          description: Recording cannot be started at the moment
+  /scene/redording/status:
+    get:
+      operationId: getRecordingStatus
+      tags: [scene]
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  inProgress:
+                    type: boolean
+                  startFrame:
+                    type: integer
+                    examples: [1]
+                  endFrame:
+                    type: integer
+                    examples: [180]
+                  currentFrame:
+                    type: integer
+                    examples: [30]
+                  framesRecorded:
+                    type: integer
+                    examples: [29]
+  /cameras:
+    post:
+      operationId: createCamera
+      tags: [camera]
+      description: Create camera on the scene
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Camera'
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid request body
+        '503':
+          description: Camera cannot be created at the moment
+  /cameras/{id}/perspective:
+    put:
+      operationId: setCameraPerspective
+      tags: [camera]
+      parameters: 
+        - $ref: '#/components/parameters/cameraId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CameraPerspective'
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid request body
+        '404':
+          description: Camera was not found
+        '503':
+          description: Camera perspective cannot be set at the moment
+  /scene/active-camera:
+    get:
+      operationId: getActiveCamera
+      tags: [scene, camera]
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: Name of the GameObject containing current Unity camera
+        '503':
+          description: Active camera cannot be retrieved at the moment
+  /gameObjects/{name}/perspective:
+    get:
+      operationId: getUnityCameraPerspective
+      tags: [camera]
+      parameters:
+        - $ref: '#/components/parameters/gameObjectName'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CameraPerspective'
+        '400':
+          description: found camera does not use physical properties
+        '404':
+          description: GameObject or its Camera was not found
+    put:
+      operationId: setUnityCameraPerspective
+      tags: [camera]
+      parameters:
+        - $ref: '#/components/parameters/gameObjectName'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CameraPerspective'
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid request body
+        '404':
+          description: GameObject or its Camera was not found
+        '503':
+          description: Camera perspective cannot be set at the moment
+components:
+  schemas:
+    Vector2:
+      description: Two numbers defining a vector in 2D space
+      type: array
+      items:
+        type: number
+      minItems: 2
+      maxItems: 2
+    Vector3:
+      description: Three numbers defining a vector in 3D space
+      type: array
+      items:
+        type: number
+      minItems: 3
+      maxItems: 3
+    Quaternion:
+      description: Four numbers defining a rotation in 3D space
+      type: array
+      items:
+        type: number
+      minItems: 4
+      maxItems: 4
+      examples:
+        - [0, 0, 0, 1]
+    Transform:
+      description: Object transformation in 3D space
+      type: object
+      additionalProperties: false
+      properties:
+        parent:
+          type: string
+        position:
+          $ref: '#/components/schemas/Vector3'
+        rotation:
+          $ref: '#/components/schemas/Quaternion'
+        scale:
+          $ref: '#/components/schemas/Vector3'
+          examples:
+            - [1, 1, 1]
+    CameraPerspective:
+      description: Properties of PerspectiveCamera
+      type: object
+      additionalProperties: false
+      required: [focalLength, sensorSize, lensShift, nearClipPlane, farClipPlane]
+      properties:
+        focalLength:
+          type: number
+          minimum: 0.00001
+          examples:
+            - 40
+        sensorSize:
+          $ref: '#/components/schemas/Vector2'
+          examples:
+            - [36, 24]
+        lensShift:
+          $ref: '#/components/schemas/Vector2'
+          examples:
+            - [0, 0]
+        nearClipPlane:
+          type: number
+          minimum: 0.00001
+          examples:
+            - 0.1
+        farClipPlane:
+          type: number
+          minimum: 0.00001
+          examples:
+            - 5000
+    CameraId:
+      type: string
+      pattern: ^[a-zA-Z_][a-zA-Z0-9_\-]*$
+    CameraBase:
+      description: Base properties of all cameras
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          $ref: '#/components/schemas/CameraId'
+          examples:
+            - main
+        transform:
+          $ref: '#/components/schemas/Transform'
+    PerspectiveCamera:
+      description: Regular camera
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CameraBase'
+      additionalProperties: false
+      required: [type, resolution, gateFit]
+      properties:
+        type:
+          type: string
+          enum: [perspective]
+        resolution:
+          type: object
+          additionalProperties: false
+          required: [width, height]
+          properties:
+            width:
+              type: integer
+              minimum: 1
+            height:
+              type: integer
+              minimum: 1
+        gateFit:
+          type: string
+          enum: [horizontal, vertical]
+    EquirectangularCamera:
+      description: Equirectangular camera used to record 360 color output (can be used for HDRI)
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CameraBase'
+      additionalProperties: false
+      required: [type, faceResolution]
+      properties:
+        type:
+          type: string
+          enum: [equirectangular]
+        faceResolution:
+          type: integer
+          minimum: 1
+    Camera:
+      description: Any supported camera
+      type: object
+      anyOf:
+        - $ref: '#/components/schemas/PerspectiveCamera'
+        - $ref: '#/components/schemas/EquirectangularCamera'
+  parameters:
+    cameraId:
+      name: id
+      in: path
+      required: true
+      description: Id of a camera
+      schema:
+        $ref: '#/components/schemas/CameraId'
+    gameObjectName:
+      name: name
+      in: path
+      required: true
+      description: Name of a Unity GameObject
+      schema:
+        type: string
