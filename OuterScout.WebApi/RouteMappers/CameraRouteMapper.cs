@@ -30,6 +30,13 @@ internal sealed class CameraRouteMapper : IRouteMapper
             using (serverBuilder.WithNotRecordingFilter())
             {
                 serverBuilder.MapPost("cameras", CreateSceneCamera);
+
+                serverBuilder.MapPut("cameras/:id/perspective", PutGameObjectCameraPerspective);
+
+                serverBuilder.MapPut(
+                    "gameObjects/:name/camera/perspective",
+                    PutGameObjectCameraPerspective
+                );
             }
 
             serverBuilder.MapGet("scene/active-camera", GetActiveGamera);
@@ -37,11 +44,6 @@ internal sealed class CameraRouteMapper : IRouteMapper
             serverBuilder.MapGet(
                 "gameObjects/:name/camera/perspective",
                 GetGameObjectCameraPerspective
-            );
-
-            serverBuilder.MapPut(
-                "gameObjects/:name/camera/perspective",
-                PutGameObjectCameraPerspective
             );
         }
     }
@@ -116,6 +118,27 @@ internal sealed class CameraRouteMapper : IRouteMapper
         }
 
         return Ok(new { Name = camera.name });
+    }
+
+    private static IResponse PutCameraPerspective(
+        [FromUrl] string id,
+        [FromBody] CameraPerspective perspective,
+        ApiResourceRepository resources
+    )
+    {
+        if (resources.GlobalContainer.GetResource<ISceneCamera>(id) is not { } camera)
+        {
+            return NotFound($"camera '{id}' not found");
+        }
+
+        if (camera is not PerspectiveSceneCamera perspectiveCamera)
+        {
+            return BadRequest($"camera '{id}' is not perspective");
+        }
+
+        perspectiveCamera.Perspective = perspective;
+
+        return Ok();
     }
 
     private static IResponse GetGameObjectCameraPerspective(
