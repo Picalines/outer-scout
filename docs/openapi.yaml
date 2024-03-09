@@ -106,6 +106,22 @@ paths:
                     description: Name of the GameObject containing current Unity camera
         '503':
           description: Active camera cannot be retrieved at the moment
+  /scene/keyframes:
+    put:
+      operationId: setSceneKeyframes
+      tags: [scene, keyframes]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SceneKeyframes'
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid request body
+        '503':
+          description: Scene keyframes cannot be set at the moment
   /cameras:
     post:
       operationId: createCamera
@@ -143,6 +159,28 @@ paths:
           description: Camera was not found
         '503':
           description: Camera perspective cannot be set at the moment
+  /cameras/{id}/keyframes:
+    put:
+      operationId: setCameraKeyframes
+      tags: [camera, keyframes]
+      parameters:
+        - $ref: '#/components/parameters/cameraId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: '#/components/schemas/TransformKeyframes'
+                - $ref: '#/components/schemas/PerspectiveKeyframes'
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid requestBody
+        '404':
+          description: Camera was not found
+        '503':
+          description: Keyframes cannot be set at the moment
   /gameObjects:
     post:
       operationId: createGameObject
@@ -262,6 +300,26 @@ paths:
           description: GameObject or its Camera was not found
         '503':
           description: Camera perspective cannot be set at the moment
+  /gameObjects/{name}/keyframes:
+    put:
+      operationId: setGameObjectKeyframes
+      tags: [gameObject, keyframes]
+      parameters:
+        - $ref: '#/components/parameters/gameObjectName'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransformKeyframes'
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid requestBody
+        '404':
+          description: GameObject was not found
+        '503':
+          description: Keyframes cannot be set at the moment
   /player/ground-body:
     get:
       operationId: getPlayerGroundBody
@@ -463,6 +521,209 @@ components:
       anyOf:
         - $ref: '#/components/schemas/PerspectiveCamera'
         - $ref: '#/components/schemas/EquirectangularCamera'
+    KeyframeBase:
+      description: Base properties of all keyframes
+      type: object
+    NumberKeyframes:
+      type: object
+      additionalProperties: false
+      required: [keyframes]
+      description: Set of keyframes of number property
+      properties:
+        keyframes:
+          patternProperties:
+            "^\\d+$":
+              allOf:
+                - $ref: '#/components/schemas/KeyframeBase'
+                - type: object
+                  required: [value]
+                  properties:
+                    value:
+                      type: number
+          examples:
+            - 1:
+                value: 1
+              60:
+                value: 2
+    Vector2Keyframes:
+      type: object
+      additionalProperties: false
+      required: [keyframes]
+      description: Set of keyframes of Vector2 property
+      properties:
+        keyframes:
+          patternProperties:
+            "^\\d+$":
+              allOf:
+                - $ref: '#/components/schemas/KeyframeBase'
+                - type: object
+                  required: [value]
+                  properties:
+                    value:
+                      $ref: '#/components/schemas/Vector2'
+          examples:
+            - 1:
+                value: [36, 24]
+              60:
+                value: [72, 48]
+    Vector3Keyframes:
+      type: object
+      additionalProperties: false
+      required: [keyframes]
+      description: Set of keyframes of Vector3 property
+      properties:
+        keyframes:
+          patternProperties:
+            "^\\d+$":
+              allOf:
+                - $ref: '#/components/schemas/KeyframeBase'
+                - type: object
+                  required: [value]
+                  properties:
+                    value:
+                      $ref: '#/components/schemas/Vector3'
+          examples:
+            - 1:
+                value: [-3, 0, 0]
+              60:
+                value: [3, 0, 0]
+    QuaternionKeyframes:
+      type: object
+      additionalProperties: false
+      required: [keyframes]
+      description: Set of keyframes of Quaternion property
+      properties:
+        keyframes:
+          patternProperties:
+            "^\\d+$":
+              allOf:
+                - $ref: '#/components/schemas/KeyframeBase'
+                - type: object
+                  required: [value]
+                  properties:
+                    value:
+                      $ref: '#/components/schemas/Quaternion'
+          examples:
+            - 1:
+                value: [0, -0.26, 0, 0.97]
+              60:
+                value: [0, 0.26, 0, 0.97]
+    TimeScaleKeyframes:
+      type: object
+      allOf:
+        - type: object
+          additionalProperties: false
+          required: [type]
+          properties:
+            type:
+              type: string
+              enum: [time.scale]
+        - $ref: '#/components/schemas/NumberKeyframes'
+    SceneKeyframes:
+      anyOf:
+        - $ref: '#/components/schemas/TimeScaleKeyframes'
+    PositionKeyframes:
+      type: object
+      allOf:
+        - type: object
+          additionalProperties: false
+          required: [type]
+          properties:
+            type:
+              type: string
+              enum: [transform.position]
+        - $ref: '#/components/schemas/Vector3Keyframes'
+    RotationKeyframes:
+      type: object
+      allOf:
+        - type: object
+          additionalProperties: false
+          required: [type]
+          properties:
+            type:
+              type: string
+              enum: [transform.rotation]
+        - $ref: '#/components/schemas/QuaternionKeyframes'
+    ScaleKeyframes:
+      type: object
+      allOf:
+        - type: object
+          additionalProperties: false
+          required: [type]
+          properties:
+            type:
+              type: string
+              enum: [transform.scale]
+        - $ref: '#/components/schemas/Vector3Keyframes'
+    TransformKeyframes:
+      description: "Set of keyframes for one of Transform components: transform.position, transform.rotation or transform.scale"
+      anyOf:
+        - $ref: '#/components/schemas/PositionKeyframes'
+        - $ref: '#/components/schemas/RotationKeyframes'
+        - $ref: '#/components/schemas/ScaleKeyframes'
+    FocalLengthKeyframes:
+      type: object
+      allOf:
+        - type: object
+          additionalProperties: false
+          required: [type]
+          properties:
+            type:
+              type: string
+              enum: [perspective.focalLength]
+        - $ref: '#/components/schemas/NumberKeyframes'
+    SensorSizeKeyframes:
+      type: object
+      allOf:
+        - type: object
+          additionalProperties: false
+          required: [type]
+          properties:
+            type:
+              type: string
+              enum: [perspective.sensorSize]
+        - $ref: '#/components/schemas/Vector2Keyframes'
+    LensShiftKeyframes:
+      type: object
+      allOf:
+        - type: object
+          additionalProperties: false
+          required: [type]
+          properties:
+            type:
+              type: string
+              enum: [perspective.lensShift]
+        - $ref: '#/components/schemas/Vector2Keyframes'
+    NearClipPlaneKeyframes:
+      type: object
+      allOf:
+        - type: object
+          additionalProperties: false
+          required: [type]
+          properties:
+            type:
+              type: string
+              enum: [perspective.nearClipPlane]
+        - $ref: '#/components/schemas/NumberKeyframes'
+    FarClipPlaneKeyframes:
+      type: object
+      allOf:
+        - type: object
+          additionalProperties: false
+          required: [type]
+          properties:
+            type:
+              type: string
+              enum: [perspective.farClipPlane]
+        - $ref: '#/components/schemas/NumberKeyframes'
+    PerspectiveKeyframes:
+      description: "Set of keyframes for one of CameraPerspective components: perspective.focalLength, perspective.sensorSize, perspective.lensShift, perspective.nearClipPlane or perspective.farClipPlane"
+      anyOf:
+        - $ref: '#/components/schemas/FocalLengthKeyframes'
+        - $ref: '#/components/schemas/SensorSizeKeyframes'
+        - $ref: '#/components/schemas/LensShiftKeyframes'
+        - $ref: '#/components/schemas/NearClipPlaneKeyframes'
+        - $ref: '#/components/schemas/FarClipPlaneKeyframes'
   parameters:
     cameraId:
       name: id
