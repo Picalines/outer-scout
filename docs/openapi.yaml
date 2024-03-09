@@ -13,6 +13,7 @@ tags:
   - name: scene
   - name: camera
   - name: gameObject
+  - name: player
   - name: keyframes
 paths:
   /scene:
@@ -145,7 +146,7 @@ paths:
   /gameObjects/{name}/perspective:
     get:
       operationId: getUnityCameraPerspective
-      tags: [camera]
+      tags: [gameObject, camera]
       parameters:
         - $ref: '#/components/parameters/gameObjectName'
       responses:
@@ -161,7 +162,7 @@ paths:
           description: GameObject or its Camera was not found
     put:
       operationId: setUnityCameraPerspective
-      tags: [camera]
+      tags: [gameObject, camera]
       parameters:
         - $ref: '#/components/parameters/gameObjectName'
       requestBody:
@@ -178,6 +179,78 @@ paths:
           description: GameObject or its Camera was not found
         '503':
           description: Camera perspective cannot be set at the moment
+  /player/ground-body:
+    get:
+      operationId: getPlayerGroundBody
+      tags: [player]
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    examples:
+                      - TimberHearth_Body
+                  transform:
+                    $ref: '#/components/schemas/Transform'
+        '503':
+          description: Player ground body cannot be retrieved at the moment
+  /player/sectors:
+    get:
+      operationId: getPlayerSectors
+      tags: [player]
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sectors:
+                    type: array
+                    description: List of sectors player has entered. Last item is the last sector that the player entered
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        id:
+                          type: string
+                        path:
+                          type: string
+                          description: A path to sector GameObject in scene hierarchy
+  /player/warp:
+    post:
+      operationId: warpPlayer
+      tags: [player]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [groundBody, transform]
+              properties:
+                groundBody:
+                  type: string
+                  description: Name of ground body to warp to
+                  examples:
+                    - TimberHearth_Body
+                transform:
+                  $ref: '#/components/schemas/Transform'
+                  description: Transform local to ground body. Must include only position and rotation
+      responses:
+        '200':
+          description: Successful operation
+        '400':
+          description: Invalid ground body or transform
+        '503':
+          description: The player cannot be warped at the moment
 components:
   schemas:
     Vector2:
