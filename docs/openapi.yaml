@@ -320,6 +320,21 @@ paths:
           description: GameObject was not found
         '503':
           description: Keyframes cannot be set at the moment
+  /gameObjects/{name}/mesh:
+    get:
+      operationId: getGameObjectMesh
+      tags: [gameObject]
+      parameters:
+        - $ref: '#/components/parameters/gameObjectName'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameObjectMesh'
+        '404':
+          description: GameObject was not found
   /player/ground-body:
     get:
       operationId: getPlayerGroundBody
@@ -521,6 +536,58 @@ components:
       anyOf:
         - $ref: '#/components/schemas/PerspectiveCamera'
         - $ref: '#/components/schemas/EquirectangularCamera'
+    GameObjectMesh:
+      type: object
+      additionalProperties: false
+      required: [body, sectors]
+      properties:
+        body:
+          type: object
+          additionalProperties: false
+          required: [name, path, transform]
+          properties:
+            name:
+              type: string
+            path:
+              type: string
+            transform:
+              $ref: '#/components/schemas/Transform'
+        sectors:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [path, plainMeshes, streamedMeshes]
+            properties:
+              path:
+                type: string
+              plainMeshes:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MeshAsset'
+              streamedMeshes:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MeshAsset'
+    MeshAsset:
+      type: object
+      description: |-
+        Object used to describe Mesh asset placed in the Unity scene. There are two types of assets: static and streamed
+      additionalProperties: false
+      required: [path, globalTransform, localTransform]
+      properties:
+        path:
+          type: string
+          description: |-
+            Means differed thing based on mesh type
+
+            If the mesh is static, it's a path to GameObject in a hierarchy
+
+            If the mesh is streamed, it's a filesystem path to said mesh asset
+        globalTransform:
+          $ref: '#/components/schemas/Transform'
+        localTransform:
+          $ref: '#/components/schemas/Transform'
     KeyframeBase:
       description: Base properties of all keyframes
       type: object
