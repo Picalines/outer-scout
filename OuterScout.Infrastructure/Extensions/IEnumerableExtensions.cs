@@ -7,9 +7,8 @@ public static class IEnumerableExtensions
         foreach (var item in enumerable)
         {
             action(item);
+            yield return item;
         }
-
-        return enumerable;
     }
 
     public static IEnumerable<(int Index, T Value)> Indexed<T>(this IEnumerable<T> enumerable)
