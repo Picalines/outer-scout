@@ -67,6 +67,11 @@ public sealed partial class HttpServer
 
         public object? Bind(ParameterInfo parameter)
         {
+            if (parameter.ParameterType == typeof(string))
+            {
+                return _request.BodyReader.ReadToEnd();
+            }
+
             using var jsonReader = new JsonTextReader(_request.BodyReader);
             return _jsonSerializer.Deserialize(jsonReader, parameter.ParameterType);
         }
