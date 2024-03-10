@@ -1,6 +1,9 @@
+using System.Collections;
+using OuterScout.Domain;
+
 namespace OuterScout.Application.Animation;
 
 public interface IAnimator
 {
-    public void ApplyFrame(int frame);
+    public IEnumerator ApplyFrames(IntRange frameRange);
 }

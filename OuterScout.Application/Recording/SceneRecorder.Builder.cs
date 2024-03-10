@@ -24,11 +24,6 @@ public sealed partial class SceneRecorder
             WithCaptureFrameRatePatch();
         }
 
-        public IntRange FrameRange
-        {
-            get => _frameRange;
-        }
-
         public int CaptureFrameRate
         {
             get => _captureFrameRate;

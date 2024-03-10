@@ -1,4 +1,5 @@
-using OuterScout.Infrastructure.Extensions;
+using System.Collections;
+using OuterScout.Domain;
 
 namespace OuterScout.Application.Animation;
 
@@ -11,8 +12,18 @@ internal sealed class ComposedAnimator : IAnimator
         _animators = animators;
     }
 
-    public void ApplyFrame(int frame)
+    public IEnumerator ApplyFrames(IntRange frameRange)
     {
-        _animators.ForEach(animator => animator.ApplyFrame(frame));
+        var appliers = _animators.Select(animator => animator.ApplyFrames(frameRange)).ToArray();
+
+        foreach (var _ in frameRange)
+        {
+            foreach (var applier in appliers)
+            {
+                applier.MoveNext();
+            }
+
+            yield return null;
+        }
     }
 }
