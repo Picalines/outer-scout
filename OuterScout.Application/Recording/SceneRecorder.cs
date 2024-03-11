@@ -53,13 +53,15 @@ public sealed partial class SceneRecorder
 
         yield return null;
 
+        var animationApplier = _animators.ApplyFrames(_frameRange);
+
         foreach (var frame in _frameRange)
         {
             CurrentFrame = frame;
 
             yield return null;
 
-            _animators.ApplyFrame(frame);
+            animationApplier.MoveNext();
 
             yield return _waitForEndOfFrame;
 
