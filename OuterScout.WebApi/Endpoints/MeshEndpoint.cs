@@ -7,15 +7,15 @@ using OuterScout.WebApi.Http.Response;
 using OuterScout.WebApi.Services;
 using UnityEngine;
 
-namespace OuterScout.WebApi.RouteMappers;
+namespace OuterScout.WebApi.Endpoints;
 
 using static ResponseFabric;
 
-internal sealed class MeshRouteMapper : IRouteMapper
+internal sealed class MeshEndpoint : IRouteMapper
 {
-    public static MeshRouteMapper Instance { get; } = new();
+    public static MeshEndpoint Instance { get; } = new();
 
-    private MeshRouteMapper() { }
+    private MeshEndpoint() { }
 
     public void MapRoutes(HttpServer.Builder serverBuilder)
     {

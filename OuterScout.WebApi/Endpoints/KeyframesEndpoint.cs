@@ -11,17 +11,17 @@ using OuterScout.WebApi.Http.Response;
 using OuterScout.WebApi.Services;
 using UnityEngine;
 
-namespace OuterScout.WebApi.RouteMappers;
+namespace OuterScout.WebApi.Endpoints;
 
 using static ResponseFabric;
 
-internal sealed class KeyframesRouteMapper : IRouteMapper, IServiceConfiguration
+internal sealed class KeyframesEndpoint : IRouteMapper, IServiceConfiguration
 {
     private const string KeyframeScope = "request.keyframes";
 
-    public static KeyframesRouteMapper Instance { get; } = new();
+    public static KeyframesEndpoint Instance { get; } = new();
 
-    private KeyframesRouteMapper() { }
+    private KeyframesEndpoint() { }
 
     private sealed class KeyframeDTO<T>
     {

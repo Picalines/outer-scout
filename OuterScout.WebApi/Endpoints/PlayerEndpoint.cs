@@ -7,15 +7,15 @@ using OuterScout.WebApi.Http.Response;
 using OuterScout.WebApi.Services;
 using UnityEngine;
 
-namespace OuterScout.WebApi.RouteMappers;
+namespace OuterScout.WebApi.Endpoints;
 
 using static ResponseFabric;
 
-internal sealed class PlayerRouteMapper : IRouteMapper
+internal sealed class PlayerEndpoint : IRouteMapper
 {
-    public static PlayerRouteMapper Instance { get; } = new();
+    public static PlayerEndpoint Instance { get; } = new();
 
-    private PlayerRouteMapper() { }
+    private PlayerEndpoint() { }
 
     private sealed class WarpRequest
     {

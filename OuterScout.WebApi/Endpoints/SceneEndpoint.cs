@@ -9,15 +9,15 @@ using OuterScout.WebApi.Http.Response;
 using OuterScout.WebApi.Services;
 using OWML.Common;
 
-namespace OuterScout.WebApi.RouteMappers;
+namespace OuterScout.WebApi.Endpoints;
 
 using static ResponseFabric;
 
-internal sealed class SceneRouteMapper : IRouteMapper, IServiceConfiguration
+internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
 {
-    public static SceneRouteMapper Instance { get; } = new();
+    public static SceneEndpoint Instance { get; } = new();
 
-    private SceneRouteMapper() { }
+    private SceneEndpoint() { }
 
     private sealed class CreateSceneRequest
     {

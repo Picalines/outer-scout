@@ -10,15 +10,15 @@ using OuterScout.WebApi.Http.Response;
 using OuterScout.WebApi.Services;
 using UnityEngine;
 
-namespace OuterScout.WebApi.RouteMappers;
+namespace OuterScout.WebApi.Endpoints;
 
 using static ResponseFabric;
 
-internal sealed class CameraRouteMapper : IRouteMapper
+internal sealed class CameraEndpoint : IRouteMapper
 {
-    public static CameraRouteMapper Instance { get; } = new();
+    public static CameraEndpoint Instance { get; } = new();
 
-    private CameraRouteMapper() { }
+    private CameraEndpoint() { }
 
     private static Regex _validCameraIdRegex = new Regex(@"^[a-zA-Z_][a-zA-Z0-9_\-]*$");
 

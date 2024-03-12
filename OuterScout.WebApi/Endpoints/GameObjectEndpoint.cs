@@ -8,15 +8,15 @@ using OuterScout.WebApi.Http.Response;
 using OuterScout.WebApi.Services;
 using UnityEngine;
 
-namespace OuterScout.WebApi.RouteMappers;
+namespace OuterScout.WebApi.Endpoints;
 
 using static ResponseFabric;
 
-internal sealed class GameObjectRouteMapper : IRouteMapper
+internal sealed class GameObjectEndpoint : IRouteMapper
 {
-    public static GameObjectRouteMapper Instance { get; } = new();
+    public static GameObjectEndpoint Instance { get; } = new();
 
-    private GameObjectRouteMapper() { }
+    private GameObjectEndpoint() { }
 
     private sealed class CreateApiGameObjectRequest
     {

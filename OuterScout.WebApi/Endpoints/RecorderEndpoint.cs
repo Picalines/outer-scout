@@ -8,15 +8,15 @@ using OuterScout.WebApi.Http;
 using OuterScout.WebApi.Http.Response;
 using OuterScout.WebApi.Services;
 
-namespace OuterScout.WebApi.RouteMappers;
+namespace OuterScout.WebApi.Endpoints;
 
 using static ResponseFabric;
 
-internal sealed class RecorderRouteMapper : IRouteMapper
+internal sealed class RecorderEndpoint : IRouteMapper
 {
-    public static RecorderRouteMapper Instance { get; } = new();
+    public static RecorderEndpoint Instance { get; } = new();
 
-    private RecorderRouteMapper() { }
+    private RecorderEndpoint() { }
 
     private sealed class CreateTextureRecorderRequest
     {

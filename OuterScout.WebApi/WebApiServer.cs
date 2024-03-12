@@ -3,8 +3,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using OuterScout.Infrastructure.DependencyInjection;
 using OuterScout.Infrastructure.Extensions;
+using OuterScout.WebApi.Endpoints;
 using OuterScout.WebApi.Http;
-using OuterScout.WebApi.RouteMappers;
 using OuterScout.WebApi.Services;
 using OWML.Common;
 
@@ -14,13 +14,13 @@ public sealed class WebApiServer : IDisposable
 {
     private static readonly object[] _endpoints = new object[]
     {
-        CameraRouteMapper.Instance,
-        GameObjectRouteMapper.Instance,
-        KeyframesRouteMapper.Instance,
-        MeshRouteMapper.Instance,
-        PlayerRouteMapper.Instance,
-        RecorderRouteMapper.Instance,
-        SceneRouteMapper.Instance,
+        CameraEndpoint.Instance,
+        GameObjectEndpoint.Instance,
+        KeyframesEndpoint.Instance,
+        MeshEndpoint.Instance,
+        PlayerEndpoint.Instance,
+        RecorderEndpoint.Instance,
+        SceneEndpoint.Instance,
     };
 
     private readonly HttpServer _httpServer;
