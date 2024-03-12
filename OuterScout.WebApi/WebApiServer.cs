@@ -12,7 +12,7 @@ namespace OuterScout.WebApi;
 
 public sealed class WebApiServer : IDisposable
 {
-    private static readonly IRouteMapper[] _RouteMappers = new IRouteMapper[]
+    private static readonly object[] _endpoints = new object[]
     {
         CameraRouteMapper.Instance,
         GameObjectRouteMapper.Instance,
@@ -50,9 +50,12 @@ public sealed class WebApiServer : IDisposable
 
     private void MapRoutes(HttpServer.Builder serverBuilder)
     {
-        foreach (var mapper in _RouteMappers)
+        foreach (var endpoint in _endpoints)
         {
-            mapper.MapRoutes(serverBuilder);
+            if (endpoint is IRouteMapper mapper)
+            {
+                mapper.MapRoutes(serverBuilder);
+            }
         }
 
         serverBuilder.MapGet("", () => $"Welcome to {nameof(OuterScout)} API!");
@@ -109,9 +112,12 @@ public sealed class WebApiServer : IDisposable
 
         services.Register<GameObjectRepository>().InstantiatePerUnityScene();
 
-        services
-            .Register<RecordingProgressGUI>()
-            .InstantiatePerUnityScene()
-            .InstantiateAsComponentWithServices();
+        foreach (var endpoint in _endpoints)
+        {
+            if (endpoint is IServiceConfiguration configuration)
+            {
+                configuration.RegisterServices(services);
+            }
+        }
     }
 }

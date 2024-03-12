@@ -2,6 +2,7 @@ using OuterScout.Application.Animation;
 using OuterScout.Application.Recording;
 using OuterScout.Application.SceneCameras;
 using OuterScout.Domain;
+using OuterScout.Infrastructure.DependencyInjection;
 using OuterScout.WebApi.Extensions;
 using OuterScout.WebApi.Http;
 using OuterScout.WebApi.Http.Response;
@@ -12,7 +13,7 @@ namespace OuterScout.WebApi.RouteMappers;
 
 using static ResponseFabric;
 
-internal sealed class SceneRouteMapper : IRouteMapper
+internal sealed class SceneRouteMapper : IRouteMapper, IServiceConfiguration
 {
     public static SceneRouteMapper Instance { get; } = new();
 
@@ -48,6 +49,14 @@ internal sealed class SceneRouteMapper : IRouteMapper
                 serverBuilder.MapGet("scene/recording/status", GetRecordingStatus);
             }
         }
+    }
+
+    public void RegisterServices(ServiceContainer.Builder services)
+    {
+        services
+            .Register<RecordingProgressGUI>()
+            .InstantiatePerUnityScene()
+            .InstantiateAsComponentWithServices();
     }
 
     private static IResponse PostScene(
