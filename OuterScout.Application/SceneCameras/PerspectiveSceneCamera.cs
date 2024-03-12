@@ -153,16 +153,6 @@ public sealed class PerspectiveSceneCamera
         return gameObject.AddComponent<PerspectiveSceneCamera, Parameters>(parameters);
     }
 
-    private void Update()
-    {
-        if (_depthCamera is not null)
-        {
-            // It's impossible move depth bits to colorBuffer without a shader
-            // so we blit Depth texture to RGBA32.
-            Graphics.Blit(_depthTexture, _colorDepthTexture);
-        }
-    }
-
     private OWCamera? CreateDepthCamera()
     {
         if (SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.Depth) is false)
@@ -195,6 +185,8 @@ public sealed class PerspectiveSceneCamera
 
         depthCamera.targetTexture = _depthTexture;
 
+        depthCameraObject.AddComponent<DepthBlitter, PerspectiveSceneCamera>(this);
+
         return depthCamera;
     }
 
@@ -212,5 +204,23 @@ public sealed class PerspectiveSceneCamera
         Destroy(_depthTexture);
         Destroy(_colorDepthTexture);
         Destroy(_depthCamera?.gameObject);
+    }
+
+    private sealed class DepthBlitter : InitializedBehaviour<PerspectiveSceneCamera>
+    {
+        private readonly PerspectiveSceneCamera _camera;
+
+        private DepthBlitter()
+            : base(out var perspectiveCamera)
+        {
+            _camera = perspectiveCamera;
+        }
+
+        private void OnPostRender()
+        {
+            // It's impossible move depth bits to colorBuffer
+            // without a shader AFAIK, so we blit Depth texture to RGBA32.
+            Graphics.Blit(_camera._depthTexture, _camera._colorDepthTexture);
+        }
     }
 }

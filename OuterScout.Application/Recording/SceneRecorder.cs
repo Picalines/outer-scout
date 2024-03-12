@@ -51,8 +51,6 @@ public sealed partial class SceneRecorder
 
         _scenePatches.ForEach(patch => patch.Perform());
 
-        yield return null;
-
         var animationApplier = _animators.ApplyFrames(_frameRange);
 
         foreach (var frame in _frameRange)
