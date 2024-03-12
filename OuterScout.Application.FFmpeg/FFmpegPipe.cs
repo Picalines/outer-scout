@@ -9,24 +9,24 @@ internal sealed class FFmpegPipe : IDisposable
 {
     public event Action<string>? OutputReceived;
 
-    private readonly Process _FFmpegProcess;
+    private readonly Process _ffmpegProcess;
 
     private bool _threadsAreTerminated;
-    private readonly Thread _CopyThread;
-    private readonly Thread _PipeThread;
+    private readonly Thread _copyThread;
+    private readonly Thread _pipeThread;
 
-    private readonly AutoResetEvent _CopyStartEvent = new(initialState: false);
-    private readonly AutoResetEvent _CopyEndEvent = new(initialState: false);
-    private readonly AutoResetEvent _PipeStartEvent = new(initialState: false);
-    private readonly AutoResetEvent _PipeEndEvent = new(initialState: false);
+    private readonly AutoResetEvent _copyStartEvent = new(initialState: false);
+    private readonly AutoResetEvent _copyEndEvent = new(initialState: false);
+    private readonly AutoResetEvent _pipeStartEvent = new(initialState: false);
+    private readonly AutoResetEvent _pipeEndEvent = new(initialState: false);
 
-    private readonly Queue<NativeArray<byte>> _CopyQueue = new();
-    private readonly Queue<byte[]> _PipeQueue = new();
-    private readonly Queue<byte[]> _FreeBuffer = new();
+    private readonly Queue<NativeArray<byte>> _copyQueue = new();
+    private readonly Queue<byte[]> _pipeQueue = new();
+    private readonly Queue<byte[]> _freeBuffer = new();
 
     public FFmpegPipe(string ffmpegPath, string ffmpegArguments)
     {
-        _FFmpegProcess = Process.Start(
+        _ffmpegProcess = Process.Start(
             new ProcessStartInfo()
             {
                 FileName = ffmpegPath,
@@ -39,13 +39,13 @@ internal sealed class FFmpegPipe : IDisposable
             }
         );
 
-        _FFmpegProcess.ErrorDataReceived += (sender, args) => OutputReceived?.Invoke(args.Data);
-        _FFmpegProcess.BeginErrorReadLine();
+        _ffmpegProcess.ErrorDataReceived += (sender, args) => OutputReceived?.Invoke(args.Data);
+        _ffmpegProcess.BeginErrorReadLine();
 
-        _CopyThread = new Thread(CopyThread);
-        _PipeThread = new Thread(PipeThread);
-        _CopyThread.Start();
-        _PipeThread.Start();
+        _copyThread = new Thread(CopyThread);
+        _pipeThread = new Thread(PipeThread);
+        _copyThread.Start();
+        _pipeThread.Start();
     }
 
     public bool IsClosed
@@ -55,24 +55,24 @@ internal sealed class FFmpegPipe : IDisposable
 
     public void PushFrameData(NativeArray<byte> data)
     {
-        lock (_CopyQueue)
+        lock (_copyQueue)
         {
-            _CopyQueue.Enqueue(data);
+            _copyQueue.Enqueue(data);
         }
 
-        _CopyStartEvent.Set();
+        _copyStartEvent.Set();
     }
 
     public void SyncFrameData()
     {
-        while (_CopyQueue.Count > 0)
+        while (_copyQueue.Count > 0)
         {
-            _CopyEndEvent.WaitOne();
+            _copyEndEvent.WaitOne();
         }
 
-        while (_PipeQueue.Count > 4)
+        while (_pipeQueue.Count > 4)
         {
-            _PipeEndEvent.WaitOne();
+            _pipeEndEvent.WaitOne();
         }
     }
 
@@ -85,17 +85,17 @@ internal sealed class FFmpegPipe : IDisposable
 
         _threadsAreTerminated = true;
 
-        _CopyStartEvent.Set();
-        _PipeStartEvent.Set();
+        _copyStartEvent.Set();
+        _pipeStartEvent.Set();
 
-        _CopyThread.Join();
-        _PipeThread.Join();
+        _copyThread.Join();
+        _pipeThread.Join();
 
-        _FFmpegProcess.StandardInput.Close();
-        _FFmpegProcess.WaitForExit();
+        _ffmpegProcess.StandardInput.Close();
+        _ffmpegProcess.WaitForExit();
 
-        _FFmpegProcess.Close();
-        _FFmpegProcess.Dispose();
+        _ffmpegProcess.Close();
+        _ffmpegProcess.Dispose();
     }
 
     public void Dispose()
@@ -115,22 +115,22 @@ internal sealed class FFmpegPipe : IDisposable
     {
         while (_threadsAreTerminated is false)
         {
-            _CopyStartEvent.WaitOne();
+            _copyStartEvent.WaitOne();
 
-            while (_CopyQueue.Count > 0)
+            while (_copyQueue.Count > 0)
             {
                 NativeArray<byte> source;
-                lock (_CopyQueue)
+                lock (_copyQueue)
                 {
-                    source = _CopyQueue.Peek();
+                    source = _copyQueue.Peek();
                 }
 
                 byte[]? buffer = null;
-                if (_FreeBuffer.Count > 0)
+                if (_freeBuffer.Count > 0)
                 {
-                    lock (_FreeBuffer)
+                    lock (_freeBuffer)
                     {
-                        buffer = _FreeBuffer.Dequeue();
+                        buffer = _freeBuffer.Dequeue();
                     }
                 }
 
@@ -143,48 +143,48 @@ internal sealed class FFmpegPipe : IDisposable
                     buffer = source.ToArray();
                 }
 
-                lock (_PipeQueue)
+                lock (_pipeQueue)
                 {
-                    _PipeQueue.Enqueue(buffer!);
+                    _pipeQueue.Enqueue(buffer!);
                 }
 
-                _PipeStartEvent.Set();
+                _pipeStartEvent.Set();
 
-                lock (_CopyQueue)
+                lock (_copyQueue)
                 {
-                    _CopyQueue.Dequeue();
+                    _copyQueue.Dequeue();
                 }
 
-                _CopyEndEvent.Set();
+                _copyEndEvent.Set();
             }
         }
     }
 
     private void PipeThread()
     {
-        var ffmpegInputStream = _FFmpegProcess.StandardInput.BaseStream;
+        var ffmpegInputStream = _ffmpegProcess.StandardInput.BaseStream;
 
         while (_threadsAreTerminated is false)
         {
-            _PipeStartEvent.WaitOne();
+            _pipeStartEvent.WaitOne();
 
-            while (_PipeQueue.Count > 0)
+            while (_pipeQueue.Count > 0)
             {
                 byte[] buffer;
-                lock (_PipeQueue)
+                lock (_pipeQueue)
                 {
-                    buffer = _PipeQueue.Dequeue();
+                    buffer = _pipeQueue.Dequeue();
                 }
 
                 ffmpegInputStream.Write(buffer, 0, buffer.Length);
                 ffmpegInputStream.Flush();
 
-                lock (_FreeBuffer)
+                lock (_freeBuffer)
                 {
-                    _FreeBuffer.Enqueue(buffer);
+                    _freeBuffer.Enqueue(buffer);
                 }
 
-                _PipeEndEvent.Set();
+                _pipeEndEvent.Set();
             }
         }
     }

@@ -5,7 +5,7 @@ namespace OuterScout.Application.Extensions;
 
 public static class LocatorExtensions
 {
-    private static PlayerSpawner? _PlayerSpawner = null;
+    private static PlayerSpawner? _playerSpawner = null;
 
     public static bool IsInPlayableScene()
     {
@@ -20,12 +20,12 @@ public static class LocatorExtensions
 
     public static PlayerSpawner? GetPlayerSpawner()
     {
-        if (_PlayerSpawner != null)
+        if (_playerSpawner != null)
         {
-            return _PlayerSpawner;
+            return _playerSpawner;
         }
 
-        return _PlayerSpawner = GameObject
+        return _playerSpawner = GameObject
             .FindGameObjectWithTag("Player")
             .OrNull()
             ?.GetRequiredComponent<PlayerSpawner>();

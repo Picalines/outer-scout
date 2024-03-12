@@ -14,19 +14,19 @@ internal sealed class FFmpegTexturePipe : IDisposable
 
     private const int MaxReadbackRequests = 6;
 
-    private FFmpegPipe? _Pipe;
+    private FFmpegPipe? _pipe;
 
-    private readonly List<AsyncGPUReadbackRequest> _ReadbackQueue = new(4);
+    private readonly List<AsyncGPUReadbackRequest> _readbackQueue = new(4);
 
     public FFmpegTexturePipe(FFmpegPipe ffmpegPipe)
     {
-        _Pipe = ffmpegPipe;
+        _pipe = ffmpegPipe;
     }
 
-    [MemberNotNullWhen(false, nameof(_Pipe))]
+    [MemberNotNullWhen(false, nameof(_pipe))]
     public bool IsClosed
     {
-        get => _Pipe is null;
+        get => _pipe is null;
     }
 
     public void PushFrame(Texture source)
@@ -48,7 +48,7 @@ internal sealed class FFmpegTexturePipe : IDisposable
 
     private void FlushFrames()
     {
-        _Pipe?.SyncFrameData();
+        _pipe?.SyncFrameData();
     }
 
     public void Close()
@@ -60,8 +60,8 @@ internal sealed class FFmpegTexturePipe : IDisposable
 
         ProcessReadbackQueue();
         FlushFrames();
-        _Pipe.Dispose();
-        _Pipe = null;
+        _pipe.Dispose();
+        _pipe = null;
     }
 
     public void Dispose()
@@ -71,7 +71,7 @@ internal sealed class FFmpegTexturePipe : IDisposable
 
     private void QueueFrameReadback(Texture source)
     {
-        if (_ReadbackQueue.Count > MaxReadbackRequests)
+        if (_readbackQueue.Count > MaxReadbackRequests)
         {
             TooManyRequests?.Invoke();
             return;
@@ -86,20 +86,20 @@ internal sealed class FFmpegTexturePipe : IDisposable
 
         Graphics.Blit(source, tempRenderTexture, new Vector2(1, -1), new Vector2(0, 1));
 
-        _ReadbackQueue.Add(AsyncGPUReadback.Request(tempRenderTexture));
+        _readbackQueue.Add(AsyncGPUReadback.Request(tempRenderTexture));
 
         RenderTexture.ReleaseTemporary(tempRenderTexture);
     }
 
     private void ProcessReadbackQueue()
     {
-        while (_ReadbackQueue.Count > 0)
+        while (_readbackQueue.Count > 0)
         {
-            var firstRequest = _ReadbackQueue[0];
+            var firstRequest = _readbackQueue[0];
 
             if (firstRequest.done is false)
             {
-                if (_ReadbackQueue.Count > 1 && _ReadbackQueue[1].done)
+                if (_readbackQueue.Count > 1 && _readbackQueue[1].done)
                 {
                     firstRequest.WaitForCompletion();
                 }
@@ -109,7 +109,7 @@ internal sealed class FFmpegTexturePipe : IDisposable
                 }
             }
 
-            _ReadbackQueue.RemoveAt(0);
+            _readbackQueue.RemoveAt(0);
 
             if (firstRequest.hasError)
             {
@@ -117,7 +117,7 @@ internal sealed class FFmpegTexturePipe : IDisposable
                 continue;
             }
 
-            _Pipe!.PushFrameData(firstRequest.GetData<byte>());
+            _pipe!.PushFrameData(firstRequest.GetData<byte>());
         }
     }
 }

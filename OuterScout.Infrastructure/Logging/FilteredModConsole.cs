@@ -4,14 +4,14 @@ namespace OuterScout.Infrastructure.Logging;
 
 internal sealed class FilteredModConsole : IModConsole
 {
-    private readonly IModConsole _ModConsole;
+    private readonly IModConsole _modConsole;
 
-    private readonly Func<string, MessageType, bool> _Filter;
+    private readonly Func<string, MessageType, bool> _filter;
 
     public FilteredModConsole(IModConsole modConsole, Func<string, MessageType, bool> filter)
     {
-        _ModConsole = modConsole;
-        _Filter = filter;
+        _modConsole = modConsole;
+        _filter = filter;
     }
 
     [Obsolete]
@@ -27,17 +27,17 @@ internal sealed class FilteredModConsole : IModConsole
 
     public void WriteLine(string line, MessageType type)
     {
-        if (_Filter.Invoke(line, type))
+        if (_filter.Invoke(line, type))
         {
-            _ModConsole.WriteLine(line, type);
+            _modConsole.WriteLine(line, type);
         }
     }
 
     public void WriteLine(string line, MessageType type, string senderType)
     {
-        if (_Filter.Invoke(line, type))
+        if (_filter.Invoke(line, type))
         {
-            _ModConsole.WriteLine(line, type, senderType);
+            _modConsole.WriteLine(line, type, senderType);
         }
     }
 }
