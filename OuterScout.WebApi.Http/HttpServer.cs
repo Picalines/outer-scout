@@ -16,7 +16,7 @@ using RequestHandler = Func<IServiceContainer, IResponse>;
 
 public sealed partial class HttpServer : IDisposable
 {
-    private const string RequestScopeName = "request";
+    private const string RequestScope = "request";
 
     private readonly string _baseUrl;
 
@@ -109,7 +109,7 @@ public sealed partial class HttpServer : IDisposable
 
             var request = new Request.Builder()
                 .WithHttpMethod(httpMethod)
-                .WithBodyReader(bodyReader)
+                .WithBodyContent(bodyReader.ReadToEnd())
                 .WithPathAndQuery(uri)
                 .Build();
 
@@ -152,8 +152,7 @@ public sealed partial class HttpServer : IDisposable
         _currentRoute = route;
         _currentRequest = request;
 
-        using (request.BodyReader)
-        using (var scope = _services.StartScope(RequestScopeName))
+        using (var scope = _services.StartScope(RequestScope))
         {
             Log($"handling route '{route}'", MessageType.Info);
 
