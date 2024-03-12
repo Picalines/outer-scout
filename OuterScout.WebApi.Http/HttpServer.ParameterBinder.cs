@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Reflection;
 using Newtonsoft.Json;
 using OuterScout.Infrastructure.DependencyInjection;
+using OuterScout.Infrastructure.Extensions;
 using OuterScout.WebApi.Http.Response;
 using OuterScout.WebApi.Http.Routing;
 
@@ -11,15 +12,9 @@ public sealed partial class HttpServer
 {
     private sealed class UrlParameterBinder : IParameterBinder
     {
-        private readonly Route _route;
+        public required Route Route { private get; init; }
 
-        private readonly Request _request;
-
-        public UrlParameterBinder(Route route, Request request)
-        {
-            _route = route;
-            _request = request;
-        }
+        public required Request Request { private get; init; }
 
         public bool CanBind(ParameterInfo parameter)
         {
@@ -30,12 +25,12 @@ public sealed partial class HttpServer
         {
             var typeConverter = TypeDescriptor.GetConverter(parameter.ParameterType);
 
-            if (_route.ParameterIndexes.TryGetValue(parameter.Name, out var pathIndex))
+            if (Route.ParameterIndexes.TryGetValue(parameter.Name, out var pathIndex))
             {
-                return typeConverter.ConvertFromString(_request.Path[pathIndex]);
+                return typeConverter.ConvertFromString(Request.Path[pathIndex]);
             }
 
-            if (_request.QueryParameters.TryGetValue(parameter.Name, out var queryValue) is false)
+            if (Request.QueryParameters.TryGetValue(parameter.Name, out var queryValue) is false)
             {
                 throw new ResponseException(
                     ResponseFabric.BadRequest(
@@ -50,15 +45,9 @@ public sealed partial class HttpServer
 
     private sealed class RequestBodyBinder : IParameterBinder
     {
-        private readonly Request _request;
+        public required Request Request { private get; init; }
 
-        private readonly JsonSerializer _jsonSerializer;
-
-        public RequestBodyBinder(Request request, JsonSerializer jsonSerializer)
-        {
-            _request = request;
-            _jsonSerializer = jsonSerializer;
-        }
+        public required JsonSerializer JsonSerializer { private get; init; }
 
         public bool CanBind(ParameterInfo parameter)
         {
@@ -69,11 +58,19 @@ public sealed partial class HttpServer
         {
             if (parameter.ParameterType == typeof(string))
             {
-                return _request.BodyReader.ReadToEnd();
+                return Request.Body;
             }
 
-            using var jsonReader = new JsonTextReader(_request.BodyReader);
-            return _jsonSerializer.Deserialize(jsonReader, parameter.ParameterType);
+            return JsonSerializer.Deserialize(Request.Body, parameter.ParameterType) switch
+            {
+                { } parsedBody => parsedBody,
+                null when parameter.HasDefaultValue => parameter.DefaultValue,
+                null when parameter.IsNullable() => null,
+                _
+                    => throw new ResponseException(
+                        ResponseFabric.BadRequest($"invalid json request body")
+                    )
+            };
         }
     }
 }
