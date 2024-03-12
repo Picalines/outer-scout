@@ -1,18 +1,21 @@
 using System.Collections.ObjectModel;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace OuterScout.Infrastructure.Extensions;
 
 public static class ReflectionExtensions
 {
+    public static bool IsRequired(this PropertyInfo property)
+    {
+        return Attribute.IsDefined(property, typeof(RequiredMemberAttribute));
+    }
+
     public static bool IsNullable(this ParameterInfo parameter)
     {
-        var nullableAttribute = parameter.CustomAttributes.FirstOrDefault(
-            attribute =>
-                attribute
-                    is {
-                        AttributeType.FullName: "System.Runtime.CompilerServices.NullableAttribute"
-                    }
+        var nullableAttribute = parameter.CustomAttributes.FirstOrDefault(attribute =>
+            attribute
+                is { AttributeType.FullName: "System.Runtime.CompilerServices.NullableAttribute" }
         );
 
         if (nullableAttribute is not { ConstructorArguments.Count: 1 })
