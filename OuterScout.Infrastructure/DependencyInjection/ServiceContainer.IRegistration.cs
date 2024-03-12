@@ -5,8 +5,6 @@ public sealed partial class ServiceContainer
     public interface IRegistration<T>
         where T : class
     {
-        public ServiceContainer.Builder ContainerBuilder { get; }
-
         public IRegistration<T> As<U>()
             where U : class;
 
@@ -33,9 +31,9 @@ public sealed partial class ServiceContainer
     private sealed class Registration<T> : IRegistration<T>, IRegistration
         where T : class
     {
-        public ServiceContainer.Builder ContainerBuilder { get; }
-
         public Type InstanceType { get; } = typeof(T);
+
+        private readonly ServiceContainer.Builder _containerBuilder;
 
         private IInstantiator<T>? _instantiator = null;
 
@@ -47,7 +45,7 @@ public sealed partial class ServiceContainer
 
         public Registration(ServiceContainer.Builder containerBuilder)
         {
-            ContainerBuilder = containerBuilder;
+            _containerBuilder = containerBuilder;
         }
 
         public IRegistration<T> As<U>()
@@ -112,11 +110,11 @@ public sealed partial class ServiceContainer
 
         public void RegisterDependencies()
         {
-            var instantiatorRegistration = ContainerBuilder
+            var instantiatorRegistration = _containerBuilder
                 .Register<IInstantiator<T>>()
                 .ManageBy(
                     new ReferenceLifetime<IInstantiator<T>>(
-                        _instantiator ?? new ConstructorInstantiator<T>()
+                        _instantiator ?? new DefaultInstantiator<T>()
                     )
                 );
 

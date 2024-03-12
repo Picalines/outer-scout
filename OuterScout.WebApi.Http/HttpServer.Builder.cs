@@ -2,6 +2,7 @@
 using System.Reflection;
 using Newtonsoft.Json;
 using OuterScout.Infrastructure.DependencyInjection;
+using OuterScout.Infrastructure.Extensions;
 using OuterScout.WebApi.Http.Response;
 using OuterScout.WebApi.Http.Routing;
 
@@ -19,7 +20,7 @@ public sealed partial class HttpServer
 
         private readonly Router<RequestHandler>.Builder _routerBuilder = new();
 
-        private readonly Stack<WithFilterOnStack> _filterStack = new();
+        private readonly UsingStack<Delegate> _filterStack = new();
 
         private bool _built = false;
 
@@ -30,12 +31,11 @@ public sealed partial class HttpServer
 
             services.RegisterIfMissing<JsonSerializer>();
 
-            services
-                .Register<UrlParameterBinder>()
-                .As<IParameterBinder>()
-                .InScope(RequestScopeName);
-
-            services.Register<RequestBodyBinder>().As<IParameterBinder>().InScope(RequestScopeName);
+            using (services.InScope(RequestScope))
+            {
+                services.Register<UrlParameterBinder>().As<IParameterBinder>();
+                services.Register<RequestBodyBinder>().As<IParameterBinder>();
+            }
         }
 
         public void MapGet(string path, Delegate handler)
@@ -60,7 +60,7 @@ public sealed partial class HttpServer
 
         public IDisposable WithFilter(Delegate filter)
         {
-            return new WithFilterOnStack(_filterStack, filter);
+            return _filterStack.Use(filter);
         }
 
         public HttpServer Build()
@@ -76,13 +76,13 @@ public sealed partial class HttpServer
 
             _serviceBuilder
                 .Register<Route>()
-                .InScope(RequestScopeName)
-                .InstantiateBy(() => httpServer._currentRoute!);
+                .InstantiateBy(() => httpServer._currentRoute!)
+                .InScope(RequestScope);
 
             _serviceBuilder
                 .Register<Request>()
-                .InScope(RequestScopeName)
-                .InstantiateBy(() => httpServer._currentRequest!);
+                .InstantiateBy(() => httpServer._currentRequest!)
+                .InScope(RequestScope);
 
             httpServer = new HttpServer(_baseUrl, _serviceBuilder.Build(), _routerBuilder.Build());
 
@@ -95,7 +95,7 @@ public sealed partial class HttpServer
 
             var handler = handlerFunc.BindByContainer();
 
-            var filters = _filterStack.Select(f => f.Filter.BindByContainer()).Reverse().ToArray();
+            var filters = _filterStack.Values.Reverse().Select(f => f.BindByContainer()).ToArray();
 
             var filteredHandler = (IServiceContainer services) =>
             {
@@ -167,35 +167,6 @@ public sealed partial class HttpServer
             }
 
             return route;
-        }
-
-        private sealed class WithFilterOnStack : IDisposable
-        {
-            public Delegate Filter { get; }
-
-            private readonly Stack<WithFilterOnStack> _filterStack;
-
-            private bool _disposed = false;
-
-            public WithFilterOnStack(Stack<WithFilterOnStack> filterStack, Delegate requestHandler)
-            {
-                Filter = requestHandler;
-                _filterStack = filterStack;
-
-                _filterStack.Push(this);
-            }
-
-            public void Dispose()
-            {
-                if (_disposed)
-                {
-                    return;
-                }
-
-                _disposed = true;
-
-                while (_filterStack.TryPop(out var filter) && filter != this) { }
-            }
         }
     }
 }

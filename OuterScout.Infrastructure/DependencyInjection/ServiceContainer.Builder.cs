@@ -10,6 +10,8 @@ public sealed partial class ServiceContainer
 
         private bool _dependenciesAreRegistered = false;
 
+        private readonly UsingStack<string> _scopeStack = new();
+
         public ServiceContainer Build()
         {
             if (_dependenciesAreRegistered is false)
@@ -58,6 +60,11 @@ public sealed partial class ServiceContainer
             var registration = new Registration<T>(this);
             _registrations.Add(instanceType, registration);
 
+            if (_scopeStack.Top is { } scope)
+            {
+                registration.InScope(scope);
+            }
+
             return registration;
         }
 
@@ -75,6 +82,11 @@ public sealed partial class ServiceContainer
                 _registrations.Add(instanceType, registration);
             }
 
+            if (_scopeStack.Top is { } scope)
+            {
+                registration.InScope(scope);
+            }
+
             return registration;
         }
 
@@ -88,6 +100,11 @@ public sealed partial class ServiceContainer
             _registrations.Remove(instanceType);
 
             return Register<T>();
+        }
+
+        public IDisposable InScope(string scopeIdentifier)
+        {
+            return _scopeStack.Use(scopeIdentifier);
         }
 
         private void AssertServiceType(Type type)
