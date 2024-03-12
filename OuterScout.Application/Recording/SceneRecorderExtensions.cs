@@ -66,7 +66,7 @@ public static class SceneRecorderExtensions
             () =>
                 inputDevicesToEnable = InputSystem
                     .devices.Where(device => device.enabled)
-                    .ForEach(device => InputSystem.DisableDevice(device))
+                    .Tap(device => InputSystem.DisableDevice(device))
                     .ToArray(),
             () => inputDevicesToEnable.ForEach(InputSystem.EnableDevice)
         );
@@ -120,7 +120,7 @@ public static class SceneRecorderExtensions
                     .OrNull()
                     ?.GetComponentsInChildren<Renderer>()
                     .Where(renderer => renderer.enabled)
-                    .ForEach(renderer => renderer.enabled = false)
+                    .Tap(renderer => renderer.enabled = false)
                     .ToArray(),
             () => playerRenderersToEnable?.ForEach(renderer => renderer.enabled = true)
         );
