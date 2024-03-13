@@ -30,16 +30,21 @@ public sealed partial class HttpServer
                 return typeConverter.ConvertFromString(Request.Path[pathIndex]);
             }
 
-            if (Request.QueryParameters.TryGetValue(parameter.Name, out var queryValue) is false)
+            if (Request.QueryParameters.TryGetValue(parameter.Name, out var queryValue))
             {
-                throw new ResponseException(
-                    ResponseFabric.BadRequest(
-                        $"missing query parameter '{parameter.Name}' ({parameter.ParameterType.Name})"
-                    )
-                );
+                return typeConverter.ConvertFromString(queryValue);
             }
 
-            return typeConverter.ConvertFromString(queryValue);
+            if (parameter.HasDefaultValue)
+            {
+                return parameter.DefaultValue;
+            }
+
+            throw new ResponseException(
+                ResponseFabric.BadRequest(
+                    $"missing query parameter '{parameter.Name}' ({parameter.ParameterType.Name})"
+                )
+            );
         }
     }
 
