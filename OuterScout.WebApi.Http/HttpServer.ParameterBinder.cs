@@ -58,10 +58,10 @@ public sealed partial class HttpServer
         {
             if (parameter.ParameterType == typeof(string))
             {
-                return Request.Body;
+                return Request.BodyReader.ReadToEnd();
             }
 
-            return JsonSerializer.Deserialize(Request.Body, parameter.ParameterType) switch
+            return JsonSerializer.Deserialize(Request.BodyReader, parameter.ParameterType) switch
             {
                 { } parsedBody => parsedBody,
                 null when parameter.HasDefaultValue => parameter.DefaultValue,

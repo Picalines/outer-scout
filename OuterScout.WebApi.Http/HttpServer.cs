@@ -21,17 +21,14 @@ public sealed partial class HttpServer : IDisposable
     private readonly string _baseUrl;
 
     private readonly ServiceContainer _services;
-
     private readonly Router<RequestHandler> _router;
-
     private readonly HttpListener _httpListener;
+    private readonly IModConsole? _logger;
 
     private CancellationTokenSource? _cancellationTokenSource = null;
-
     private TaskCompletionSource<object?>? _stoppedListening = null;
 
     private Route? _currentRoute = null;
-
     private Request? _currentRequest = null;
 
     private bool _disposed = false;
@@ -43,6 +40,7 @@ public sealed partial class HttpServer : IDisposable
         _baseUrl = baseUrl;
         _services = services;
         _router = router;
+        _logger = services.ResolveOrNull<IModConsole>();
 
         _httpListener = new HttpListener();
         _httpListener.Prefixes.Add(_baseUrl);
@@ -102,14 +100,18 @@ public sealed partial class HttpServer : IDisposable
 
             Log($"received {httpMethod} request at '{uri}'", MessageType.Info);
 
-            var bodyReader = new StreamReader(
-                context.Request.InputStream,
-                context.Request.ContentEncoding
-            );
+            var bodyStream = new MemoryStream();
+            context.Request.InputStream.CopyTo(bodyStream);
+            context.Request.InputStream.Close();
+            bodyStream.Position = 0;
+
+            var bodyReader = new StreamReader(bodyStream, context.Request.ContentEncoding);
+
+            bodyReader.BaseStream.Position = 0;
 
             var request = new Request.Builder()
                 .WithHttpMethod(httpMethod)
-                .WithBodyContent(bodyReader.ReadToEnd())
+                .WithBodyReader(bodyReader)
                 .WithPathAndQuery(uri)
                 .Build();
 
@@ -152,6 +154,7 @@ public sealed partial class HttpServer : IDisposable
         _currentRoute = route;
         _currentRequest = request;
 
+        using (request.BodyReader)
         using (var scope = _services.StartScope(RequestScope))
         {
             Log($"handling route '{route}'", MessageType.Info);
@@ -283,8 +286,6 @@ public sealed partial class HttpServer : IDisposable
 
     private void Log(string message, MessageType messageType)
     {
-        _services
-            .ResolveOrNull<IModConsole>()
-            ?.WriteLine($"{nameof(OuterScout)} API: {message}", messageType);
+        _logger?.WriteLine($"{nameof(OuterScout)} API: {message}", messageType);
     }
 }

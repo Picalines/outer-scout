@@ -7,7 +7,7 @@ public sealed class Request
 {
     public HttpMethod HttpMethod { get; }
 
-    public string Body { get; }
+    public StreamReader BodyReader { get; }
 
     public IReadOnlyList<string> Path { get; }
 
@@ -15,13 +15,13 @@ public sealed class Request
 
     private Request(
         HttpMethod httpMethod,
-        string body,
+        StreamReader bodyReader,
         IReadOnlyList<string> path,
         IReadOnlyDictionary<string, string> queryParameters
     )
     {
         HttpMethod = httpMethod;
-        Body = body;
+        BodyReader = bodyReader;
         Path = path;
         QueryParameters = queryParameters;
     }
@@ -30,7 +30,7 @@ public sealed class Request
     {
         private HttpMethod _httpMethod = HttpMethod.Get;
 
-        private string _body = "";
+        private StreamReader _bodyReader = StreamReader.Null;
 
         private readonly List<string> _path = [];
 
@@ -42,7 +42,7 @@ public sealed class Request
         {
             IEnumerable<string> path = _path.Count > 0 ? _path : [""];
 
-            return new Request(_httpMethod, _body, path.ToArray(), _queryParameters.ToDictionary());
+            return new Request(_httpMethod, _bodyReader, path.ToArray(), _queryParameters.ToDictionary());
         }
 
         public Builder WithHttpMethod(HttpMethod httpMethod)
@@ -51,9 +51,9 @@ public sealed class Request
             return this;
         }
 
-        public Builder WithBodyContent(string body)
+        public Builder WithBodyReader(StreamReader bodyReader)
         {
-            _body = body;
+            _bodyReader = bodyReader;
             return this;
         }
 
