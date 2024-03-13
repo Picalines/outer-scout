@@ -32,12 +32,10 @@ internal sealed class GameObjectEndpoint : IRouteMapper
     public void MapRoutes(HttpServer.Builder serverBuilder)
     {
         using (serverBuilder.WithPlayableSceneFilter())
+        using (serverBuilder.WithSceneCreatedFilter())
         using (serverBuilder.WithNotRecordingFilter())
         {
-            using (serverBuilder.WithSceneCreatedFilter())
-            {
-                serverBuilder.MapPost("gameObjects", PostApiGameObject);
-            }
+            serverBuilder.MapPost("gameObjects", PostApiGameObject);
 
             serverBuilder.MapGet("gameObjects/:name/transform", GetGameObjectTransform);
 
@@ -47,6 +45,7 @@ internal sealed class GameObjectEndpoint : IRouteMapper
 
     private static IResponse PostApiGameObject(
         [FromBody] CreateApiGameObjectRequest request,
+        ApiResourceRepository resources,
         GameObjectRepository gameObjects
     )
     {
@@ -69,6 +68,10 @@ internal sealed class GameObjectEndpoint : IRouteMapper
             return BadRequest($"parent gameObject '{request.Transform.Parent}' not found");
         }
 
+        parent ??= resources
+            .GlobalContainer.GetRequiredResource<GameObject>(SceneEndpoint.OriginResource)
+            .transform;
+
         var gameObject = new GameObject($"{nameof(OuterScout)} '{request.Name}'");
         gameObject.transform.ApplyWithParent(request.Transform.ToLocalTransform(parent));
 
@@ -79,86 +82,76 @@ internal sealed class GameObjectEndpoint : IRouteMapper
 
     private static IResponse GetGameObjectTransform(
         [FromUrl] string name,
-        [FromUrl] string parent,
-        GameObjectRepository gameObjects
+        GameObjectRepository gameObjects,
+        ApiResourceRepository resources,
+        [FromUrl] string? parent = null
     )
     {
         if (gameObjects.FindOrNull(name) is not { transform: var transform })
         {
-            return BadRequest();
+            return BadRequest($"gameObject '{name}' not found");
         }
 
-        if (gameObjects.FindOrNull(parent) is not { transform: var parentTransform })
+        var parentTransform = parent is not null ? gameObjects.FindOrNull(parent)?.transform : null;
+
+        if ((parent, parentTransform) is (not null, null))
         {
-            return BadRequest();
+            return BadRequest($"gameObject '{parent}' not found");
         }
 
-        var globalTransform = new TransformDTO()
-        {
-            Position = transform.position,
-            Rotation = transform.rotation,
-            Scale = transform.lossyScale,
-        };
+        parentTransform ??= resources
+            .GlobalContainer.GetRequiredResource<GameObject>(SceneEndpoint.OriginResource)
+            .transform;
 
-        var localTransform = new TransformDTO()
-        {
-            Parent = parentTransform.name,
-            Position = parentTransform.InverseTransformPoint(transform.position),
-            Rotation = parentTransform.InverseTransformRotation(transform.rotation),
-            Scale = transform.lossyScale,
-        };
-
-        return Ok(new { Global = globalTransform, Local = localTransform });
+        return Ok(
+            new TransformDTO()
+            {
+                Parent = transform.parent.OrNull()?.name,
+                Position = parentTransform.InverseTransformPoint(transform.position),
+                Rotation = parentTransform.InverseTransformRotation(transform.rotation),
+                Scale = transform.lossyScale,
+            }
+        );
     }
 
     private static IResponse PutGameObjectTransform(
         [FromUrl] string name,
         [FromBody] TransformDTO transformDTO,
+        ApiResourceRepository resources,
         GameObjectRepository gameObjects
     )
     {
         if (gameObjects.FindOrNull(name) is not { transform: var transform })
         {
-            return BadRequest();
+            return BadRequest($"gameObject '{name}' not found");
         }
 
         if (transform == Locator.GetPlayerCamera().OrNull()?.transform)
         {
-            return MethodNotAllowed();
+            return MethodNotAllowed("can't modify player camera");
         }
 
-        var parentTransform = transformDTO.Parent is { } parentName
+        var parent = transformDTO.Parent is { } parentName
             ? gameObjects.FindOrNull(parentName)?.transform
             : null;
 
-        if ((transformDTO.Parent, parentTransform) is (not null, null))
+        if ((transformDTO.Parent, parent) is (not null, null))
         {
             return BadRequest();
         }
 
-        if (parentTransform is null)
-        {
-            if (transformDTO.Position is { } globalPosition)
-            {
-                transform.position = globalPosition;
-            }
+        parent ??= resources
+            .GlobalContainer.GetRequiredResource<GameObject>(SceneEndpoint.OriginResource)
+            .transform;
 
-            if (transformDTO.Rotation is { } globalRotation)
-            {
-                transform.rotation = globalRotation;
-            }
+        if (transformDTO.Position is { } localPosition)
+        {
+            transform.position = parent.TransformPoint(localPosition);
         }
-        else
-        {
-            if (transformDTO.Position is { } localPosition)
-            {
-                transform.position = parentTransform.TransformPoint(localPosition);
-            }
 
-            if (transformDTO.Rotation is { } localRotation)
-            {
-                transform.rotation = parentTransform.rotation * localRotation;
-            }
+        if (transformDTO.Rotation is { } localRotation)
+        {
+            transform.rotation = parent.rotation * localRotation;
         }
 
         if (transformDTO.Scale is { } localScale)

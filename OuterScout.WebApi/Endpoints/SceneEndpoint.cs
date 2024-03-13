@@ -1,13 +1,16 @@
 using OuterScout.Application.Animation;
+using OuterScout.Application.Extensions;
 using OuterScout.Application.Recording;
 using OuterScout.Application.SceneCameras;
 using OuterScout.Domain;
 using OuterScout.Infrastructure.DependencyInjection;
+using OuterScout.WebApi.DTOs;
 using OuterScout.WebApi.Extensions;
 using OuterScout.WebApi.Http;
 using OuterScout.WebApi.Http.Response;
 using OuterScout.WebApi.Services;
 using OWML.Common;
+using UnityEngine;
 
 namespace OuterScout.WebApi.Endpoints;
 
@@ -15,12 +18,16 @@ using static ResponseFabric;
 
 internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
 {
+    public const string OriginResource = "scene.origin";
+
     public static SceneEndpoint Instance { get; } = new();
 
     private SceneEndpoint() { }
 
     private sealed class CreateSceneRequest
     {
+        public required TransformDTO Origin { get; init; }
+
         public required bool HidePlayerModel { get; init; }
     }
 
@@ -65,9 +72,19 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
     private static IResponse PostScene(
         [FromBody] CreateSceneRequest request,
         IModConsole modConsole,
-        ApiResourceRepository resources
+        ApiResourceRepository resources,
+        GameObjectRepository gameObjects
     )
     {
+        var originParent = request.Origin.Parent is { } parentName
+            ? gameObjects.FindOrNull(parentName)?.transform
+            : null;
+
+        if ((request.Origin.Parent, originParent) is (not null, null))
+        {
+            return BadRequest($"gameObject '{request.Origin.Parent}' not found");
+        }
+
         resources.DisposeResources<IAnimator>();
         resources.DisposeResources<ISceneCamera>();
         resources.DisposeResources<ApiOwnedGameObject>();
@@ -91,6 +108,10 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
             sceneRecorderBuilder.WithHiddenPlayerModel();
         }
 
+        var originGameObject = new GameObject($"{nameof(OuterScout)}.{OriginResource}");
+        gameObjects.AddOwned(OriginResource, originGameObject);
+        originGameObject.transform.ApplyWithParent(request.Origin.ToLocalTransform(originParent));
+
         return Created();
     }
 
@@ -110,13 +131,8 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
             return BadRequest("invalid frame rate");
         }
 
-        if (
-            resources.GlobalContainer.GetResource<SceneRecorder.Builder>()
-            is not { } sceneRecorderBuilder
-        )
-        {
-            return ServiceUnavailable();
-        }
+        var sceneRecorderBuilder =
+            resources.GlobalContainer.GetRequiredResource<SceneRecorder.Builder>();
 
         resources.GlobalContainer.DisposeResources<SceneRecorder>();
 

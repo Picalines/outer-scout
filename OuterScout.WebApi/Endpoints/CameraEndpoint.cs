@@ -98,10 +98,14 @@ internal sealed class CameraEndpoint : IRouteMapper
             _ => null,
         };
 
-        if (newCamera is not { Transform.gameObject: var gameObject })
+        if (newCamera is null)
         {
             return BadRequest($"unknown camera type '{cameraDTO.Type}'");
         }
+
+        parentTransform ??= resources
+            .GlobalContainer.GetRequiredResource<GameObject>(SceneEndpoint.OriginResource)
+            .transform;
 
         newCamera.Transform.ApplyWithParent(cameraDTO.Transform.ToLocalTransform(parentTransform));
 
@@ -148,7 +152,7 @@ internal sealed class CameraEndpoint : IRouteMapper
     {
         if (gameObjects.FindOrNull(name)?.GetComponentOrNull<OWCamera>() is not { } camera)
         {
-            return NotFound();
+            return NotFound($"gameObject '{name}' not found");
         }
 
         if (camera.mainCamera.usePhysicalProperties is false)

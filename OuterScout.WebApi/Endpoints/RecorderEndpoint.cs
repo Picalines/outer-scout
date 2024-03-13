@@ -243,8 +243,6 @@ internal sealed class RecorderEndpoint : IRouteMapper, IServiceConfiguration
         public required string OutputPath { get; init; }
 
         public required string Format { get; init; }
-
-        public required string Parent { get; init; }
     }
 
     private sealed class PostTransformRecorderHandler()
@@ -262,29 +260,29 @@ internal sealed class RecorderEndpoint : IRouteMapper, IServiceConfiguration
                 return (BadRequest($"format '{requestBody.Format}' is not supported"), null);
             }
 
-            if (GameObjects.FindOrNull(requestBody.Parent) is not { transform: var parent })
-            {
-                return (BadRequest($"gameObject '{requestBody.Parent}' not found"), null);
-            }
+            var origin = ApiResources
+                .GlobalContainer.GetRequiredResource<GameObject>(SceneEndpoint.OriginResource)
+                .transform;
 
             var transformGetter = () =>
             {
-                if (transform == null || parent == null)
+                if (transform == null)
                 {
                     return null;
                 }
 
                 return new TransformDTO()
                 {
-                    Position = parent.InverseTransformPoint(transform.position),
-                    Rotation = parent.InverseTransformRotation(transform.rotation),
+                    Position = origin.InverseTransformPoint(transform.position),
+                    Rotation = origin.InverseTransformRotation(transform.rotation),
                     Scale = transform.lossyScale,
                 };
             };
 
-            var recorder = new JsonRecorder.Builder(requestBody.OutputPath, transformGetter)
-                .WithJsonSerializer(JsonSerializer)
-                .WithAdditionalProperty("parent", requestBody.Parent);
+            var recorder = new JsonRecorder.Builder(
+                requestBody.OutputPath,
+                transformGetter
+            ).WithJsonSerializer(JsonSerializer);
 
             return (Created(), recorder);
         }
