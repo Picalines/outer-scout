@@ -82,7 +82,7 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
 
         if ((request.Origin.Parent, originParent) is (not null, null))
         {
-            return BadRequest($"gameObject '{request.Origin.Parent}' not found");
+            return CommonResponse.GameObjectNotFound(request.Origin.Parent);
         }
 
         resources.DisposeResources<IAnimator>();

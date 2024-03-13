@@ -60,7 +60,7 @@ internal sealed class RecorderEndpoint : IRouteMapper, IServiceConfiguration
     {
         if (resources.GlobalContainer.GetResource<ISceneCamera>(id) is not { } camera)
         {
-            return NotFound($"camera '{id}' not found");
+            return CommonResponse.CameraNotFound(id);
         }
 
         var property = ReadPropertyFromBody(request, jsonSerializer);
@@ -88,7 +88,7 @@ internal sealed class RecorderEndpoint : IRouteMapper, IServiceConfiguration
     {
         if (gameObjects.FindOrNull(name) is not { } gameObject)
         {
-            return NotFound($"gameObject '{name}' not found");
+            return CommonResponse.GameObjectNotFound(name);
         }
 
         var property = ReadPropertyFromBody(request, jsonSerializer);

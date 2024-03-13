@@ -70,9 +70,9 @@ internal sealed class CameraEndpoint : IRouteMapper
             ? gameObjects.FindOrNull(parentName)?.transform
             : null;
 
-        if (cameraDTO.Transform.Parent is { } invalidParentName && parentTransform is null)
+        if ((cameraDTO.Transform.Parent, parentTransform) is (not null, null))
         {
-            return BadRequest($"gameObject '{invalidParentName}' not found");
+            return CommonResponse.GameObjectNotFound(cameraDTO.Transform.Parent);
         }
 
         ISceneCamera? newCamera = cameraDTO switch
@@ -132,7 +132,7 @@ internal sealed class CameraEndpoint : IRouteMapper
     {
         if (resources.GlobalContainer.GetResource<ISceneCamera>(id) is not { } camera)
         {
-            return NotFound($"camera '{id}' not found");
+            return CommonResponse.CameraNotFound(id);
         }
 
         if (camera is not PerspectiveSceneCamera perspectiveCamera)
@@ -152,7 +152,7 @@ internal sealed class CameraEndpoint : IRouteMapper
     {
         if (gameObjects.FindOrNull(name)?.GetComponentOrNull<OWCamera>() is not { } camera)
         {
-            return NotFound($"gameObject '{name}' not found");
+            return CommonResponse.GameObjectNotFound(name);
         }
 
         if (camera.mainCamera.usePhysicalProperties is false)

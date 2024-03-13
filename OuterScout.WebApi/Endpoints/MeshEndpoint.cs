@@ -32,7 +32,7 @@ internal sealed class MeshEndpoint : IRouteMapper
     {
         return gameObjects.FindOrNull(name) is { } gameObject
             ? Ok(GetBodyMeshDTO(gameObject))
-            : NotFound();
+            : CommonResponse.GameObjectNotFound(name);
     }
 
     private sealed class GameObjectMeshDTO

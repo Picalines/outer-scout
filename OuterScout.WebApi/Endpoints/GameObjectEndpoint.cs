@@ -65,14 +65,14 @@ internal sealed class GameObjectEndpoint : IRouteMapper
 
         if ((request.Transform.Parent, parent) is (not null, null))
         {
-            return BadRequest($"parent gameObject '{request.Transform.Parent}' not found");
+            return CommonResponse.GameObjectNotFound(request.Transform.Parent);
         }
 
         parent ??= resources
             .GlobalContainer.GetRequiredResource<GameObject>(SceneEndpoint.OriginResource)
             .transform;
 
-        var gameObject = new GameObject($"{nameof(OuterScout)} '{request.Name}'");
+        var gameObject = new GameObject($"{nameof(OuterScout)}#{request.Name}");
         gameObject.transform.ApplyWithParent(request.Transform.ToLocalTransform(parent));
 
         gameObjects.AddOwned(request.Name, gameObject);
@@ -89,14 +89,14 @@ internal sealed class GameObjectEndpoint : IRouteMapper
     {
         if (gameObjects.FindOrNull(name) is not { transform: var transform })
         {
-            return BadRequest($"gameObject '{name}' not found");
+            return CommonResponse.GameObjectNotFound(name);
         }
 
         var parentTransform = parent is not null ? gameObjects.FindOrNull(parent)?.transform : null;
 
         if ((parent, parentTransform) is (not null, null))
         {
-            return BadRequest($"gameObject '{parent}' not found");
+            return CommonResponse.GameObjectNotFound(parent);
         }
 
         parentTransform ??= resources
@@ -123,7 +123,7 @@ internal sealed class GameObjectEndpoint : IRouteMapper
     {
         if (gameObjects.FindOrNull(name) is not { transform: var transform })
         {
-            return BadRequest($"gameObject '{name}' not found");
+            return CommonResponse.GameObjectNotFound(name);
         }
 
         if (transform == Locator.GetPlayerCamera().OrNull()?.transform)
