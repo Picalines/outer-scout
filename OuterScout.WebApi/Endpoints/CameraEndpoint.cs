@@ -172,7 +172,7 @@ internal sealed class CameraEndpoint : IRouteMapper
 
         if (Locator.GetPlayerCamera() == camera)
         {
-            return ServiceUnavailable($"can't modify player camera");
+            return MethodNotAllowed("can't modify player camera");
         }
 
         camera.mainCamera.usePhysicalProperties = true;
