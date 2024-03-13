@@ -216,7 +216,7 @@ internal sealed class KeyframesEndpoint : IRouteMapper, IServiceConfiguration
                 is not { Keyframes: var keyframes }
             )
             {
-                return BadRequest($"invalid request body");
+                return BadRequest("invalid request body");
             }
 
             var resources = GetContainer(entity);

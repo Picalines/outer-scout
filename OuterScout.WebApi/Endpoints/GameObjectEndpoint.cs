@@ -51,7 +51,7 @@ internal sealed class GameObjectEndpoint : IRouteMapper
     {
         if (_validApiGameObjectNameRegex.IsMatch(request.Name) is false)
         {
-            return BadRequest($"invalid custom gameObject name");
+            return BadRequest("invalid custom gameObject name");
         }
 
         if (gameObjects.FindOrNull(request.Name) is not null)

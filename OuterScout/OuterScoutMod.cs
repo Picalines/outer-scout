@@ -42,7 +42,7 @@ internal sealed class OuterScoutMod : ModBehaviour
         if (SystemInfo.supportsAsyncGPUReadback is false)
         {
             ModHelper.Console.WriteLine(
-                $"async gpu readback is not supported, texture recording is not available",
+                "async gpu readback is not supported, texture recording is not available",
                 MessageType.Warning
             );
         }
@@ -58,7 +58,7 @@ internal sealed class OuterScoutMod : ModBehaviour
         if (FFmpeg.CheckInstallation() is { } exception)
         {
             ModHelper.Console.WriteLine(
-                $"ffmpeg executable not found, texture recording is not available. See exception below:",
+                "ffmpeg executable not found, texture recording is not available. See exception below:",
                 MessageType.Warning
             );
 

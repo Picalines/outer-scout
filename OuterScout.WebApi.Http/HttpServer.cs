@@ -60,7 +60,7 @@ public sealed partial class HttpServer : IDisposable
         _cancellationTokenSource?.Cancel();
         _stoppedListening?.Task.Wait();
 
-        Log($"stopped listening", MessageType.Info);
+        Log("stopped listening", MessageType.Info);
 
         _services.Dispose();
     }

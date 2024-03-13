@@ -54,6 +54,10 @@ public sealed partial class HttpServer
 
         public required JsonSerializer JsonSerializer { private get; init; }
 
+        private static IResponse _nullBodyResponse = ResponseFabric.BadRequest(
+            "invalid json request body"
+        );
+
         public bool CanBind(ParameterInfo parameter)
         {
             return parameter.GetCustomAttribute<FromBodyAttribute>() is not null;
@@ -71,10 +75,7 @@ public sealed partial class HttpServer
                 { } parsedBody => parsedBody,
                 null when parameter.HasDefaultValue => parameter.DefaultValue,
                 null when parameter.IsNullable() => null,
-                _
-                    => throw new ResponseException(
-                        ResponseFabric.BadRequest($"invalid json request body")
-                    )
+                _ => throw new ResponseException(_nullBodyResponse)
             };
         }
     }
