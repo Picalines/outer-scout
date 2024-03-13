@@ -30,7 +30,7 @@ internal sealed class PerspectiveSceneCameraDTO : ISceneCameraDTO
 
     public required string Id { get; init; }
 
-    public string Type { get; } = TypeValue;
+    public required string Type { get; init; } = TypeValue;
 
     public required TransformDTO Transform { get; init; }
 
@@ -47,7 +47,7 @@ internal sealed class EquirectSceneCameraDTO : ISceneCameraDTO
 
     public required string Id { get; init; }
 
-    public string Type { get; } = TypeValue;
+    public required string Type { get; init; } = TypeValue;
 
     public required TransformDTO Transform { get; init; }
 
