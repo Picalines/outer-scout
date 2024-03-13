@@ -42,7 +42,12 @@ public sealed class Request
         {
             IEnumerable<string> path = _path.Count > 0 ? _path : [""];
 
-            return new Request(_httpMethod, _bodyReader, path.ToArray(), _queryParameters.ToDictionary());
+            return new Request(
+                _httpMethod,
+                _bodyReader,
+                path.ToArray(),
+                _queryParameters.ToDictionary()
+            );
         }
 
         public Builder WithHttpMethod(HttpMethod httpMethod)
