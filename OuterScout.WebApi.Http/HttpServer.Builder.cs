@@ -8,6 +8,7 @@ using OuterScout.WebApi.Http.Routing;
 
 namespace OuterScout.WebApi.Http;
 
+using static ResponseFabric;
 using RequestHandler = Func<IServiceContainer, IResponse>;
 
 public sealed partial class HttpServer
@@ -124,11 +125,11 @@ public sealed partial class HttpServer
 
                 return result switch
                 {
-                    null => ResponseFabric.Ok(),
+                    null => Ok(),
                     IResponse response => response,
-                    string @string => ResponseFabric.Ok(@string),
-                    IEnumerator coroutine => ResponseFabric.Ok(coroutine),
-                    _ => ResponseFabric.Ok(result),
+                    string @string => Ok(@string),
+                    IEnumerator coroutine => Ok(coroutine),
+                    _ => Ok(result),
                 };
             }
             catch (Exception exception)
@@ -150,10 +151,10 @@ public sealed partial class HttpServer
 
                 if (exception is JsonSerializationException or JsonReaderException)
                 {
-                    return ResponseFabric.BadRequest(exception.Message);
+                    return BadRequest(exception.Message);
                 }
 
-                return ResponseFabric.InternalServerError(
+                return InternalServerError(
                     $"{exception.GetType()}: {exception.Message}\n{exception.StackTrace}"
                 );
             }

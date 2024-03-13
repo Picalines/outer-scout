@@ -8,6 +8,8 @@ using OuterScout.WebApi.Http.Routing;
 
 namespace OuterScout.WebApi.Http;
 
+using static ResponseFabric;
+
 public sealed partial class HttpServer
 {
     private sealed class UrlParameterBinder : IParameterBinder
@@ -40,11 +42,10 @@ public sealed partial class HttpServer
                 return parameter.DefaultValue;
             }
 
-            throw new ResponseException(
-                ResponseFabric.BadRequest(
+            throw BadRequest(
                     $"missing query parameter '{parameter.Name}' ({parameter.ParameterType.Name})"
                 )
-            );
+                .ToException();
         }
     }
 
@@ -54,9 +55,7 @@ public sealed partial class HttpServer
 
         public required JsonSerializer JsonSerializer { private get; init; }
 
-        private static IResponse _nullBodyResponse = ResponseFabric.BadRequest(
-            "invalid json request body"
-        );
+        private static IResponse _nullBodyResponse = BadRequest("invalid json request body");
 
         public bool CanBind(ParameterInfo parameter)
         {
@@ -75,7 +74,7 @@ public sealed partial class HttpServer
                 { } parsedBody => parsedBody,
                 null when parameter.HasDefaultValue => parameter.DefaultValue,
                 null when parameter.IsNullable() => null,
-                _ => throw new ResponseException(_nullBodyResponse)
+                _ => throw _nullBodyResponse.ToException()
             };
         }
     }
