@@ -8,11 +8,13 @@ internal interface IApiResourceContainer
 {
     public bool AddResource<T>(string name, T value);
 
-    public T? GetResource<T>(string name)
-        where T : class;
+    public T? GetResource<T>(string name);
 
-    public T? GetResource<T>()
-        where T : class;
+    public T? GetResource<T>();
+
+    public T GetRequiredResource<T>(string name);
+
+    public T GetRequiredResource<T>();
 
     public IEnumerable<T> GetResources<T>();
 
@@ -98,7 +100,6 @@ internal sealed class ApiResourceRepository : IDisposable
         }
 
         public T? GetResource<T>(string name)
-            where T : class
         {
             return _resources.TryGetValue(name, out var s)
                 ? s.OfType<T>().FirstOrDefault()
@@ -106,9 +107,24 @@ internal sealed class ApiResourceRepository : IDisposable
         }
 
         public T? GetResource<T>()
-            where T : class
         {
             return GetResources<T>().FirstOrDefault();
+        }
+
+        public T GetRequiredResource<T>(string name)
+        {
+            return GetResource<T>(name)
+                ?? throw new NullReferenceException(
+                    $"required resource '{name}' ({typeof(T)}) was not found"
+                );
+        }
+
+        public T GetRequiredResource<T>()
+        {
+            return GetResource<T>()
+                ?? throw new NullReferenceException(
+                    $"required resource of type {typeof(T)} was not found"
+                );
         }
 
         public void DisposeResource<T>(string name)

@@ -151,14 +151,6 @@ internal sealed class RecorderEndpoint : IRouteMapper, IServiceConfiguration
 
         public IResponse HandleRequest(E entity)
         {
-            if (
-                ApiResources.GlobalContainer.GetResource<SceneRecorder.Builder>()
-                is not { } sceneRecorderBuilder
-            )
-            {
-                return ServiceUnavailable();
-            }
-
             if (JsonSerializer.Deserialize<B>(Request.BodyReader) is not { } requestBody)
             {
                 return BadRequest("invalid request body");
@@ -168,7 +160,9 @@ internal sealed class RecorderEndpoint : IRouteMapper, IServiceConfiguration
 
             if (recorder is not null)
             {
-                sceneRecorderBuilder.WithRecorder(recorder);
+                ApiResources
+                    .GlobalContainer.GetRequiredResource<SceneRecorder.Builder>()
+                    .WithRecorder(recorder);
             }
 
             return response;

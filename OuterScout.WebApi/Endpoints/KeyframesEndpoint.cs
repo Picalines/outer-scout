@@ -226,13 +226,8 @@ internal sealed class KeyframesEndpoint : IRouteMapper, IServiceConfiguration
                 is not { Curve: PropertyCurve<T> propertyCurve } animator
             )
             {
-                if (
-                    ApiResources.GlobalContainer.GetResource<SceneRecorder.Builder>()
-                    is not { } sceneRecorderBuilder
-                )
-                {
-                    return ServiceUnavailable();
-                }
+                var sceneRecorderBuilder =
+                    ApiResources.GlobalContainer.GetRequiredResource<SceneRecorder.Builder>();
 
                 var applier = CreateApplier(entity);
                 propertyCurve = new PropertyCurve<T>(Lerper);
