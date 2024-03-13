@@ -21,13 +21,16 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
 
     private sealed class CreateSceneRequest
     {
+        public required bool HidePlayerModel { get; init; }
+    }
+
+    private sealed class StartRecordingRequest
+    {
+        public required int FrameRate { get; init; }
+
         public required int StartFrame { get; init; }
 
         public required int EndFrame { get; init; }
-
-        public required int FrameRate { get; init; }
-
-        public required bool HidePlayerModel { get; init; }
     }
 
     public void MapRoutes(HttpServer.Builder serverBuilder)
@@ -65,16 +68,6 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
         ApiResourceRepository resources
     )
     {
-        if (request.StartFrame > request.EndFrame)
-        {
-            return BadRequest("invalid frame range");
-        }
-
-        if (request.FrameRate < 1)
-        {
-            return BadRequest("invalid frame rate");
-        }
-
         resources.DisposeResources<IAnimator>();
         resources.DisposeResources<ISceneCamera>();
         resources.DisposeResources<ApiOwnedGameObject>();
@@ -85,8 +78,6 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
         resources.GlobalContainer.AddResource(nameof(SceneRecorder), sceneRecorderBuilder);
 
         sceneRecorderBuilder
-            .WithCaptureFrameRate(request.FrameRate)
-            .WithFrameRange(IntRange.FromValues(request.StartFrame, request.EndFrame))
             .WithProgressLoggedToConsole(modConsole)
             .WithTimeScaleRestored()
             .WithInvinciblePlayer()
@@ -104,10 +95,21 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
     }
 
     private static IResponse PostRecording(
+        [FromBody] StartRecordingRequest request,
         ApiResourceRepository resources,
         RecordingProgressGUI progressGUI
     )
     {
+        if (request.StartFrame > request.EndFrame)
+        {
+            return BadRequest("invalid frame range");
+        }
+
+        if (request.FrameRate < 1)
+        {
+            return BadRequest("invalid frame rate");
+        }
+
         if (
             resources.GlobalContainer.GetResource<SceneRecorder.Builder>()
             is not { } sceneRecorderBuilder
@@ -125,7 +127,13 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
 
         resources.GlobalContainer.AddResource(
             nameof(SceneRecorder),
-            sceneRecorderBuilder.StartRecording()
+            sceneRecorderBuilder.StartRecording(
+                new SceneRecorder.RecordingParameters()
+                {
+                    FrameRange = IntRange.FromValues(request.StartFrame, request.EndFrame),
+                    FrameRate = request.FrameRate,
+                }
+            )
         );
 
         return Created();

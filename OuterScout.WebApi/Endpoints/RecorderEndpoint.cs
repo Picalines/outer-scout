@@ -204,14 +204,6 @@ internal sealed class RecorderEndpoint : IRouteMapper, IServiceConfiguration
                 );
             }
 
-            if (
-                ApiResources.GlobalContainer.GetResource<SceneRecorder.Builder>()
-                is not { } sceneRecorderBuilder
-            )
-            {
-                return (ServiceUnavailable(), null);
-            }
-
             if (requestBody.Format is not "mp4")
             {
                 return (BadRequest($"format '{requestBody.Format}' is not supported"), null);
@@ -227,9 +219,10 @@ internal sealed class RecorderEndpoint : IRouteMapper, IServiceConfiguration
                 return (BadRequest($"camera cannot record {Property}"), null);
             }
 
-            var recorder = new RenderTextureRecorder.Builder(requestBody.OutputPath, renderTexture)
-                .WithFrameRate(sceneRecorderBuilder.CaptureFrameRate)
-                .WithConstantRateFactor(requestBody.ConstantRateFactor);
+            var recorder = new RenderTextureRecorder.Builder(
+                requestBody.OutputPath,
+                renderTexture
+            ).WithConstantRateFactor(requestBody.ConstantRateFactor);
 
             return (Created(), recorder);
         }

@@ -3,6 +3,7 @@ using OuterScout.Application.Animation;
 using OuterScout.Domain;
 using OuterScout.Infrastructure.Components;
 using OuterScout.Infrastructure.Extensions;
+using OuterScout.Infrastructure.Validation;
 using UnityEngine;
 
 namespace OuterScout.Application.Recording;
@@ -13,23 +14,25 @@ public sealed partial class SceneRecorder
 
     public int CurrentFrame { get; private set; }
 
-    private readonly IntRange _frameRange;
+    private readonly RecordingParameters _recordingPrameters;
     private readonly ComposedAnimator _animators;
-    private readonly ComposedRecorder _recorders;
+    private readonly IRecorder.IBuilder[] _recorders;
     private readonly ReversableAction[] _scenePatches;
 
     private static readonly WaitForEndOfFrame _waitForEndOfFrame = new();
 
     private SceneRecorder(
-        IntRange frameRange,
+        RecordingParameters recordingParameters,
         IAnimator[] animators,
-        IRecorder[] recorders,
+        IRecorder.IBuilder[] recorders,
         ReversableAction[] scenePatches
     )
     {
-        _frameRange = frameRange;
+        recordingParameters.FrameRate.Throw().IfLessThan(1);
+
+        _recordingPrameters = recordingParameters;
         _animators = new ComposedAnimator(animators);
-        _recorders = new ComposedRecorder(recorders);
+        _recorders = recorders;
         _scenePatches = scenePatches;
 
         GlobalCoroutine.Start(RecordScene());
@@ -37,23 +40,31 @@ public sealed partial class SceneRecorder
 
     public IntRange FrameRange
     {
-        get => _frameRange;
+        get => _recordingPrameters.FrameRange;
+    }
+
+    public int FrameRate
+    {
+        get => _recordingPrameters.FrameRate;
     }
 
     public int FramesRecorded
     {
-        get => CurrentFrame - _frameRange.Start;
+        get => CurrentFrame - FrameRange.Start;
     }
 
     private IEnumerator RecordScene()
     {
-        CurrentFrame = _frameRange.Start;
+        CurrentFrame = FrameRange.Start;
 
         _scenePatches.ForEach(patch => patch.Perform());
+        Time.captureFramerate = FrameRate;
 
-        var animationApplier = _animators.ApplyFrames(_frameRange);
+        var recorders = new ComposedRecorder(_recorders.Select(r => r.StartRecording()).ToArray());
 
-        foreach (var frame in _frameRange)
+        var animationApplier = _animators.ApplyFrames(FrameRange);
+
+        foreach (var frame in FrameRange)
         {
             CurrentFrame = frame;
 
@@ -63,12 +74,13 @@ public sealed partial class SceneRecorder
 
             yield return _waitForEndOfFrame;
 
-            _recorders.Capture();
+            recorders.Capture();
         }
 
+        Time.captureFramerate = 0;
         _scenePatches.Reverse().ForEach(patch => patch.Reverse());
 
-        _recorders.Dispose();
+        recorders.Dispose();
 
         IsRecording = false;
     }
