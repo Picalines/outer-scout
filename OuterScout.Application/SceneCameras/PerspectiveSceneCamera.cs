@@ -160,7 +160,7 @@ public sealed class PerspectiveSceneCamera
             return null;
         }
 
-        _colorCamera.ThrowIfNull();
+        _colorCamera.AssertNotNull();
 
         var depthCameraObject = new GameObject(
             $"{nameof(OuterScout)}.{nameof(PerspectiveSceneCamera)}.depth"

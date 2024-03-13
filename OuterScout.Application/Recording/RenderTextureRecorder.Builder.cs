@@ -21,9 +21,7 @@ public sealed partial class RenderTextureRecorder
         public Builder(string targetFile, RenderTexture renderTexture)
         {
             FFmpeg.ThrowIfNotAvailable();
-            SystemInfo
-                .supportsAsyncGPUReadback.Throw(e => new InvalidOperationException(e))
-                .IfFalse();
+            SystemInfo.supportsAsyncGPUReadback.Assert().IfFalse();
 
             _targetFile = targetFile;
             _texture = renderTexture;

@@ -5,6 +5,7 @@ using OuterScout.Application.SceneCameras;
 using OuterScout.Domain;
 using OuterScout.Infrastructure.DependencyInjection;
 using OuterScout.Infrastructure.Extensions;
+using OuterScout.Infrastructure.Validation;
 using OuterScout.WebApi.Extensions;
 using OuterScout.WebApi.Http;
 using OuterScout.WebApi.Http.Response;
@@ -168,14 +169,8 @@ internal sealed class KeyframesEndpoint : IRouteMapper, IServiceConfiguration
 
     private static string ReadPropertyFromBody(Request request, JsonSerializer jsonSerializer)
     {
-        var requestBase = jsonSerializer.IgnoreMissingMembers(
-            () => jsonSerializer.Deserialize<BaseRequestBody>(request.BodyReader)
-        );
-
-        if (requestBase is null)
-        {
-            throw new ResponseException(BadRequest("invalid request body"));
-        }
+        var requestBase = jsonSerializer.Deserialize<BaseRequestBody>(request.BodyReader);
+        requestBase.AssertNotNull();
 
         request.BodyReader.BaseStream.Position = 0;
 
@@ -211,13 +206,12 @@ internal sealed class KeyframesEndpoint : IRouteMapper, IServiceConfiguration
 
         public IResponse HandleRequest(E entity)
         {
-            if (
-                JsonSerializer.Deserialize<PutKeyframesRequest<T>>(Request.BodyReader)
-                is not { Keyframes: var keyframes }
-            )
-            {
-                return BadRequest("invalid request body");
-            }
+            var putKeyframesRequest = JsonSerializer.Deserialize<PutKeyframesRequest<T>>(
+                Request.BodyReader
+            );
+            putKeyframesRequest.AssertNotNull();
+
+            var keyframes = putKeyframesRequest.Keyframes;
 
             var resources = GetContainer(entity);
 

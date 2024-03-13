@@ -31,7 +31,7 @@ public sealed partial class ServiceContainer
 
         public T Instantiate()
         {
-            _container.ThrowIfNull();
+            _container.AssertNotNull();
 
             ScanInstanceType();
 
@@ -66,7 +66,7 @@ public sealed partial class ServiceContainer
                 return;
             }
 
-            _container.ThrowIfNull();
+            _container.AssertNotNull();
 
             if (_type is not { IsClass: true, IsAbstract: false })
             {

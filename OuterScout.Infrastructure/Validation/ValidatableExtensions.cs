@@ -4,6 +4,11 @@ namespace OuterScout.Infrastructure.Validation;
 
 public static class ValidatableExtensions
 {
+    public static T OrReturn<T>(this Validatable<T> validatable)
+    {
+        return validatable.Value;
+    }
+
     public static Validatable<T> If<T>(
         this Validatable<T> validatable,
         bool condition,
@@ -12,12 +17,8 @@ public static class ValidatableExtensions
     {
         if (condition)
         {
-            throw validatable.CustomExceptionOr(
-                expression =>
-                    throw new ArgumentException(
-                        $"condition {conditionExpression} is true",
-                        expression
-                    )
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentException($"condition {conditionExpression} is true", expression)
             );
         }
 
@@ -53,12 +54,8 @@ public static class ValidatableExtensions
 
         if (equalityComparer.Equals(validatable.Value, value) is true)
         {
-            throw validatable.CustomExceptionOr(
-                expression =>
-                    throw new ArgumentException(
-                        $"{expression} equals {valueExpression}",
-                        expression
-                    )
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentException($"{expression} equals {valueExpression}", expression)
             );
         }
 
@@ -76,12 +73,8 @@ public static class ValidatableExtensions
 
         if (equalityComparer.Equals(validatable.Value, value) is false)
         {
-            throw validatable.CustomExceptionOr(
-                expression =>
-                    throw new ArgumentException(
-                        $"{expression} equals {valueExpression}",
-                        expression
-                    )
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentException($"{expression} equals {valueExpression}", expression)
             );
         }
 
@@ -92,8 +85,8 @@ public static class ValidatableExtensions
     {
         if (validatable.Value == null)
         {
-            throw validatable.CustomExceptionOr(
-                expression => throw new ArgumentNullException(expression)
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentNullException(expression)
             );
         }
 
@@ -104,8 +97,8 @@ public static class ValidatableExtensions
     {
         if (validatable.Value is true)
         {
-            throw validatable.CustomExceptionOr(
-                expression => throw new ArgumentException($"{expression} is true", expression)
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentException($"{expression} is true", expression)
             );
         }
 
@@ -116,8 +109,8 @@ public static class ValidatableExtensions
     {
         if (validatable.Value is false)
         {
-            throw validatable.CustomExceptionOr(
-                expression => throw new ArgumentException($"{expression} is false", expression)
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentException($"{expression} is false", expression)
             );
         }
 
@@ -128,9 +121,8 @@ public static class ValidatableExtensions
     {
         if (validatable.Value is "")
         {
-            throw validatable.CustomExceptionOr(
-                expression =>
-                    throw new ArgumentException($"string {expression} is empty", expression)
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentException($"string {expression} is empty", expression)
             );
         }
 
@@ -141,12 +133,11 @@ public static class ValidatableExtensions
     {
         if (string.IsNullOrWhiteSpace(validatable.Value))
         {
-            throw validatable.CustomExceptionOr(
-                expression =>
-                    throw new ArgumentException(
-                        $"string {expression} is null or whitespace",
-                        expression
-                    )
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentException(
+                    $"string {expression} is null or whitespace",
+                    expression
+                )
             );
         }
 
@@ -157,12 +148,11 @@ public static class ValidatableExtensions
     {
         if (validatable.Value < threshold)
         {
-            throw validatable.CustomExceptionOr(
-                expression =>
-                    throw new ArgumentOutOfRangeException(
-                        expression,
-                        $"{expression} is less than {threshold}"
-                    )
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentOutOfRangeException(
+                    expression,
+                    $"{expression} is less than {threshold}"
+                )
             );
         }
 
@@ -173,12 +163,11 @@ public static class ValidatableExtensions
     {
         if (validatable.Value > threshold)
         {
-            throw validatable.CustomExceptionOr(
-                expression =>
-                    throw new ArgumentOutOfRangeException(
-                        expression,
-                        $"{expression} is greater than {threshold}"
-                    )
+            throw validatable.CustomExceptionOr(expression =>
+                throw new ArgumentOutOfRangeException(
+                    expression,
+                    $"{expression} is greater than {threshold}"
+                )
             );
         }
 

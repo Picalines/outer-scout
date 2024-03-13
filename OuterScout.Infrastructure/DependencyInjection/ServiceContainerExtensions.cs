@@ -52,7 +52,7 @@ public static class ServiceContainerExtensions
 
         public T GetInstance()
         {
-            _instantiator.ThrowIfNull();
+            _instantiator.AssertNotNull();
             return _instantiator.Instantiate();
         }
 
@@ -71,7 +71,7 @@ public static class ServiceContainerExtensions
 
         public T Instantiate()
         {
-            _container.ThrowIfNull();
+            _container.AssertNotNull();
             return instantiate.Invoke(_container);
         }
 

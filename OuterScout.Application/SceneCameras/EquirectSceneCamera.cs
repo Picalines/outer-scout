@@ -130,7 +130,7 @@ public sealed class EquirectSceneCamera
     private static OWCamera CreateFaceCamera(Transform parentTransform)
     {
         var playerCamera = Locator.GetPlayerCamera().OrNull();
-        playerCamera.ThrowIfNull();
+        playerCamera.AssertNotNull();
 
         var cameraObject = new GameObject(
             $"{nameof(OuterScout)}.{nameof(EquirectSceneCamera)}.face"

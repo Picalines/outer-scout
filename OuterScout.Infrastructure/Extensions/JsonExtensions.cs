@@ -11,24 +11,6 @@ public static class JsonExtensions
         return jsonSerializer.Deserialize<T>(jsonReader);
     }
 
-    public static T IgnoreMissingMembers<T>(this JsonSerializer jsonSerializer, Func<T> func)
-    {
-        lock (jsonSerializer)
-        {
-            var missingMemberHandling = jsonSerializer.MissingMemberHandling;
-            jsonSerializer.MissingMemberHandling = MissingMemberHandling.Ignore;
-
-            try
-            {
-                return func();
-            }
-            finally
-            {
-                jsonSerializer.MissingMemberHandling = missingMemberHandling;
-            }
-        }
-    }
-
     public static JsonConverterCollection Add(
         this JsonConverterCollection converters,
         IEnumerable<JsonConverter> convertersToAdd

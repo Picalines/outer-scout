@@ -14,17 +14,6 @@ public static class ThrowExtensions
         return new Validatable<T>(value, valueExpression, exceptionFactory);
     }
 
-    public static Validatable<T> Throw<T>(
-        this T value,
-        string argumentMessage,
-        [CallerArgumentExpression(nameof(value))] string valueExpression = ""
-    )
-    {
-        return value.Throw(
-            _ => new ArgumentException(message: argumentMessage, paramName: valueExpression)
-        );
-    }
-
     public static Validatable<T> ThrowIfNull<T>(
         [NotNull] this T? value,
         Validatable<T>.ExceptionFactory? exceptionFactory = null,
@@ -40,14 +29,24 @@ public static class ThrowExtensions
         return notNull.Throw(exceptionFactory, valueExpression);
     }
 
-    public static Validatable<T> ThrowIfNull<T>(
-        [NotNull] this T? value,
-        string argumentMessage,
+    public static Validatable<T> Assert<T>(
+        this T value,
         [CallerArgumentExpression(nameof(value))] string valueExpression = ""
     )
     {
-        return value.ThrowIfNull(
-            _ => new ArgumentException(message: argumentMessage, paramName: valueExpression)
-        );
+        return value.Throw(e => new AssertionException(e), valueExpression);
+    }
+
+    public static Validatable<T> AssertNotNull<T>(
+        [NotNull] this T? value,
+        [CallerArgumentExpression(nameof(value))] string valueExpression = ""
+    )
+    {
+        if (value is not { } notNull)
+        {
+            throw new AssertionException($"{valueExpression} is null");
+        }
+
+        return notNull.Assert(valueExpression);
     }
 }

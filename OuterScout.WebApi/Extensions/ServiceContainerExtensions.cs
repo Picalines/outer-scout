@@ -1,4 +1,3 @@
-using OuterScout.Infrastructure.Validation;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -52,9 +51,10 @@ public static class ServiceContainerExtensions
                 _instance = _instantiator?.Instantiate();
             }
 
-            _instance.ThrowIfNull(_ => new InvalidOperationException(
-                $"{typeof(T)} is not created yet"
-            ));
+            if (_instance is null)
+            {
+                throw new InvalidOperationException($"{typeof(T)} is not created yet");
+            }
 
             return _instance;
         }

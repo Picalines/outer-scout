@@ -68,10 +68,7 @@ public record struct IntRange : IEnumerable<int>
     {
         index.Throw().IfLessThan(0);
 
-        var value = Start + index;
-        value.Throw().IfGreaterThan(End);
-
-        return value;
+        return (Start + index).Throw().IfGreaterThan(End).OrReturn();
     }
 
     public void Deconstruct(out int start, out int end)

@@ -12,7 +12,7 @@ public sealed class GlobalCoroutine : MonoBehaviour
 
     private void Start()
     {
-        _coroutine.ThrowIfNull();
+        _coroutine.AssertNotNull();
 
         StartCoroutine(YieldAndDestory());
     }

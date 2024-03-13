@@ -32,7 +32,7 @@ public sealed partial class ServiceContainer
 
         public T GetInstance()
         {
-            _instance.ThrowIfNull();
+            _instance.AssertNotNull();
             return _instance;
         }
 
@@ -57,7 +57,7 @@ public sealed partial class ServiceContainer
 
         T ILifetime<T>.GetInstance()
         {
-            _instance.ThrowIfNull();
+            _instance.AssertNotNull();
             return _instance;
         }
 
