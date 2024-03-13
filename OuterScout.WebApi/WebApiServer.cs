@@ -5,6 +5,7 @@ using OuterScout.Infrastructure.DependencyInjection;
 using OuterScout.Infrastructure.Extensions;
 using OuterScout.WebApi.Endpoints;
 using OuterScout.WebApi.Http;
+using OuterScout.WebApi.Json;
 using OuterScout.WebApi.Services;
 using OWML.Common;
 
@@ -89,7 +90,7 @@ public sealed class WebApiServer : IDisposable
                     MissingMemberHandling = MissingMemberHandling.Error,
                     ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
                     NullValueHandling = NullValueHandling.Ignore,
-                    ContractResolver = new DefaultContractResolver
+                    ContractResolver = new OuterScoutContractResolver
                     {
                         NamingStrategy = new CamelCaseNamingStrategy
                         {

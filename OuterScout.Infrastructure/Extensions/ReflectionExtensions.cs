@@ -1,4 +1,3 @@
-using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -6,14 +5,37 @@ namespace OuterScout.Infrastructure.Extensions;
 
 public static class ReflectionExtensions
 {
-    public static bool IsRequired(this PropertyInfo property)
+    public static bool IsRequired(this MemberInfo member)
     {
-        return Attribute.IsDefined(property, typeof(RequiredMemberAttribute));
+        return Attribute.IsDefined(member, typeof(RequiredMemberAttribute));
+    }
+
+    public static bool IsNullable(this FieldInfo field)
+    {
+        return IsNullable(field.FieldType, field.CustomAttributes);
+    }
+
+    public static bool IsNullable(this PropertyInfo property)
+    {
+        return IsNullable(property.PropertyType, property.CustomAttributes);
     }
 
     public static bool IsNullable(this ParameterInfo parameter)
     {
-        var nullableAttribute = parameter.CustomAttributes.FirstOrDefault(attribute =>
+        return IsNullable(parameter.ParameterType, parameter.CustomAttributes);
+    }
+
+    private static bool IsNullable(
+        Type memberType,
+        IEnumerable<CustomAttributeData> customAttributes
+    )
+    {
+        if (memberType.IsValueType)
+        {
+            return Nullable.GetUnderlyingType(memberType) is not null;
+        }
+
+        var nullableAttribute = customAttributes.FirstOrDefault(attribute =>
             attribute
                 is { AttributeType.FullName: "System.Runtime.CompilerServices.NullableAttribute" }
         );
@@ -25,21 +47,30 @@ public static class ReflectionExtensions
 
         var nullabilityArgument = nullableAttribute.ConstructorArguments[0];
 
+        byte nullabilityByte = 0;
+
         if (nullabilityArgument.ArgumentType == typeof(byte[]))
         {
-            var nullabilityBytes =
-                (ReadOnlyCollection<CustomAttributeTypedArgument>)nullabilityArgument.Value!;
-
-            if (nullabilityBytes.Count > 0 && nullabilityBytes[0].ArgumentType == typeof(byte))
+            if (
+                nullabilityArgument
+                    is {
+                        Value: IReadOnlyList<CustomAttributeTypedArgument>
+                        {
+                            Count: > 0
+                        } nullabilityBytes
+                    }
+                && nullabilityBytes[0] is { } firstNullabilityByte
+                && firstNullabilityByte.ArgumentType == typeof(byte)
+            )
             {
-                return (byte)nullabilityBytes[0].Value == 2;
+                nullabilityByte = (byte)nullabilityBytes[0].Value;
             }
         }
         else if (nullabilityArgument.ArgumentType == typeof(byte))
         {
-            return (byte)nullabilityArgument.Value == 2;
+            nullabilityByte = (byte)nullabilityArgument.Value;
         }
 
-        return false;
+        return nullabilityByte is (byte)2;
     }
 }
