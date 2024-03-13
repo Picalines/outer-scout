@@ -28,17 +28,13 @@ internal sealed class KeyframesEndpoint : IRouteMapper, IServiceConfiguration
         public required T Value { get; init; }
     }
 
-    private sealed class PutKeyframesRequest
+    private class BaseRequestBody
     {
         public required string Property { get; init; }
-
-        public required object Keyframes { get; init; }
     }
 
-    private sealed class PutKeyframesRequest<T>
+    private sealed class PutKeyframesRequest<T> : BaseRequestBody
     {
-        public required string Property { get; init; }
-
         public required Dictionary<int, KeyframeDTO<T>> Keyframes { get; init; }
     }
 
@@ -78,27 +74,31 @@ internal sealed class KeyframesEndpoint : IRouteMapper, IServiceConfiguration
     }
 
     private static IResponse PutSceneKeyframes(
-        [FromBody] PutKeyframesRequest request,
+        Request request,
+        JsonSerializer jsonSerializer,
         ApiResourceRepository apiResources,
         IServiceScope services
     )
     {
+        var property = ReadPropertyFromBody(request, jsonSerializer);
+
         using var keyframeScope = services.StartScope(KeyframeScope);
 
         var handler = keyframeScope
             .ResolveAll<IPutKeyframesHandler>()
-            .FirstOrDefault(h => h.Property == request.Property);
+            .FirstOrDefault(h => h.Property == property);
 
         return handler switch
         {
             IPutKeyframesHandler<Unit> h => h.HandleRequest(Unit.Instance),
-            _ => BadRequest($"property '{request.Property}' is not animatable"),
+            _ => BadRequest($"property '{property}' is not animatable"),
         };
     }
 
     private static IResponse PutCameraKeyframes(
         [FromUrl] string id,
-        [FromBody] PutKeyframesRequest request,
+        Request request,
+        JsonSerializer jsonSerializer,
         ApiResourceRepository apiResources,
         IServiceScope services
     )
@@ -111,11 +111,13 @@ internal sealed class KeyframesEndpoint : IRouteMapper, IServiceConfiguration
             return NotFound($"camera '{id}' not found");
         }
 
+        var property = ReadPropertyFromBody(request, jsonSerializer);
+
         using var keyframeScope = services.StartScope(KeyframeScope);
 
         var handler = keyframeScope
             .ResolveAll<IPutKeyframesHandler>()
-            .FirstOrDefault(h => h.Property == request.Property);
+            .FirstOrDefault(h => h.Property == property);
 
         return handler switch
         {
@@ -131,13 +133,14 @@ internal sealed class KeyframesEndpoint : IRouteMapper, IServiceConfiguration
 
             IPutKeyframesHandler<Transform> th => th.HandleRequest(transform),
 
-            _ => BadRequest($"property '{request.Property}' is not animatable"),
+            _ => BadRequest($"property '{property}' is not animatable"),
         };
     }
 
     private static IResponse PutGameObjectKeyframes(
         [FromUrl] string name,
-        [FromBody] PutKeyframesRequest request,
+        Request request,
+        JsonSerializer jsonSerializer,
         GameObjectRepository gameObjects,
         IServiceScope services
     )
@@ -147,18 +150,36 @@ internal sealed class KeyframesEndpoint : IRouteMapper, IServiceConfiguration
             return NotFound($"gameObject '{name}' not found");
         }
 
+        var property = ReadPropertyFromBody(request, jsonSerializer);
+
         using var keyframeScope = services.StartScope(KeyframeScope);
 
         var handler = keyframeScope
             .ResolveAll<IPutKeyframesHandler>()
-            .FirstOrDefault(h => h.Property == request.Property);
+            .FirstOrDefault(h => h.Property == property);
 
         return handler switch
         {
             IPutKeyframesHandler<GameObject> gh => gh.HandleRequest(gameObject),
             IPutKeyframesHandler<Transform> th => th.HandleRequest(gameObject.transform),
-            _ => BadRequest($"property '{request.Property}' is not animatable"),
+            _ => BadRequest($"property '{property}' is not animatable"),
         };
+    }
+
+    private static string ReadPropertyFromBody(Request request, JsonSerializer jsonSerializer)
+    {
+        var requestBase = jsonSerializer.IgnoreMissingMembers(
+            () => jsonSerializer.Deserialize<BaseRequestBody>(request.BodyReader)
+        );
+
+        if (requestBase is null)
+        {
+            throw new ResponseException(BadRequest("invalid request body"));
+        }
+
+        request.BodyReader.BaseStream.Position = 0;
+
+        return requestBase.Property;
     }
 
     private interface IPutKeyframesHandler
@@ -191,7 +212,7 @@ internal sealed class KeyframesEndpoint : IRouteMapper, IServiceConfiguration
         public IResponse HandleRequest(E entity)
         {
             if (
-                JsonSerializer.Deserialize<PutKeyframesRequest<T>>(Request.Body)
+                JsonSerializer.Deserialize<PutKeyframesRequest<T>>(Request.BodyReader)
                 is not { Keyframes: var keyframes }
             )
             {

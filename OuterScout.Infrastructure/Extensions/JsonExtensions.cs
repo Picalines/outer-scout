@@ -4,18 +4,29 @@ namespace OuterScout.Infrastructure.Extensions;
 
 public static class JsonExtensions
 {
-    public static T? Deserialize<T>(this JsonSerializer jsonSerializer, string str)
+    public static T? Deserialize<T>(this JsonSerializer jsonSerializer, TextReader reader)
     {
-        using var jsonReader = new JsonTextReader(new StringReader(str));
+        using var jsonReader = new JsonTextReader(reader) { CloseInput = false };
 
         return jsonSerializer.Deserialize<T>(jsonReader);
     }
 
-    public static object? Deserialize(this JsonSerializer jsonSerializer, string str, Type type)
+    public static T IgnoreMissingMembers<T>(this JsonSerializer jsonSerializer, Func<T> func)
     {
-        using var jsonReader = new JsonTextReader(new StringReader(str));
+        lock (jsonSerializer)
+        {
+            var missingMemberHandling = jsonSerializer.MissingMemberHandling;
+            jsonSerializer.MissingMemberHandling = MissingMemberHandling.Ignore;
 
-        return jsonSerializer.Deserialize(jsonReader, type);
+            try
+            {
+                return func();
+            }
+            finally
+            {
+                jsonSerializer.MissingMemberHandling = missingMemberHandling;
+            }
+        }
     }
 
     public static JsonConverterCollection Add(
