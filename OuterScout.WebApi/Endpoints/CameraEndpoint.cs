@@ -171,7 +171,7 @@ internal sealed class CameraEndpoint : IRouteMapper
     {
         if (gameObjects.FindOrNull(name)?.GetComponentOrNull<OWCamera>() is not { } camera)
         {
-            return NotFound();
+            return CommonResponse.CameraNotFound(name);
         }
 
         if (Locator.GetPlayerCamera() == camera)
