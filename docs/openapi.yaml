@@ -66,6 +66,8 @@ paths:
       responses:
         '201':
           description: Recording has been started
+        '400':
+          $ref: '#/components/responses/invalidBody'
         '503':
           $ref: '#/components/responses/unavailable'
   /scene/redording/status:
@@ -140,7 +142,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Camera'
       responses:
-        '200':
+        '201':
           $ref: '#/components/responses/plainSuccess'
         '400':
           $ref: '#/components/responses/invalidBody'
@@ -225,7 +227,7 @@ paths:
         - $ref: '#/components/parameters/gameObjectName'
         - name: parent
           in: query
-          required: true
+          required: false
           description: A GameObject whose transform will be used as the origin
           schema:
             type: string
@@ -236,12 +238,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  global:
-                    $ref: '#/components/schemas/Transform'
-                  local:
-                    $ref: '#/components/schemas/Transform'
+                $ref: '#/components/schemas/Transform'
         '400':
           description: GameObject was not found
         '503':
@@ -260,6 +257,8 @@ paths:
                 New GameObject transformation
 
                 Parent will be used as the origin, but GameObject hierarchy will not be changed
+
+                Scene origin is used if parent is not specified
 
                 Only those components that are in the request body will be changed
       responses:
@@ -387,6 +386,8 @@ paths:
                         path:
                           type: string
                           description: A path to sector GameObject in scene hierarchy
+        '503':
+          $ref: '#/components/responses/unavailable'
   /player/warp:
     post:
       operationId: warpPlayer
