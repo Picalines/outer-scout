@@ -41,7 +41,7 @@ paths:
         '400':
           $ref: '#/components/responses/invalidBody'
         '503':
-          description: Scene cannot be created at the moment
+          $ref: '#/components/responses/unavailable'
   /scene/recording:
     post:
       operationId: startRecording
@@ -67,7 +67,7 @@ paths:
         '201':
           description: Recording has been started
         '503':
-          description: Recording cannot be started at the moment
+          $ref: '#/components/responses/unavailable'
   /scene/redording/status:
     get:
       operationId: getRecordingStatus
@@ -112,7 +112,7 @@ paths:
                     type: string
                     description: Name of the GameObject containing current Unity camera
         '503':
-          description: Active camera cannot be retrieved at the moment
+          $ref: '#/components/responses/unavailable'
   /scene/keyframes:
     put:
       operationId: setSceneKeyframes
@@ -128,7 +128,7 @@ paths:
         '400':
           $ref: '#/components/responses/invalidBody'
         '503':
-          description: Scene keyframes cannot be set at the moment
+          $ref: '#/components/responses/unavailable'
   /cameras:
     post:
       operationId: createCamera
@@ -145,7 +145,7 @@ paths:
         '400':
           $ref: '#/components/responses/invalidBody'
         '503':
-          description: Camera cannot be created at the moment
+          $ref: '#/components/responses/unavailable'
   /cameras/{id}/perspective:
     put:
       operationId: setCameraPerspective
@@ -165,7 +165,7 @@ paths:
         '404':
           $ref: '#/components/responses/cameraNotFound'
         '503':
-          description: Camera perspective cannot be set at the moment
+          $ref: '#/components/responses/unavailable'
   /cameras/{id}/keyframes:
     put:
       operationId: setCameraKeyframes
@@ -187,7 +187,7 @@ paths:
         '404':
           $ref: '#/components/responses/cameraNotFound'
         '503':
-          description: Keyframes cannot be set at the moment
+          $ref: '#/components/responses/unavailable'
   /gameObjects:
     post:
       operationId: createGameObject
@@ -216,7 +216,7 @@ paths:
         '400':
           $ref: '#/components/responses/invalidBody'
         '503':
-          description: GameObject cannot be created at the moment
+          $ref: '#/components/responses/unavailable'
   /gameObjects/{name}/transform:
     get:
       operationId: getGameObjectTransform
@@ -245,7 +245,7 @@ paths:
         '400':
           description: GameObject was not found
         '503':
-          description: GameObject transform cannot be retrieved at the moment
+          $ref: '#/components/responses/unavailable'
     put:
       operationId: setGameObjectTransform
       tags: [gameObject]
@@ -270,7 +270,7 @@ paths:
         '405':
           description: PlayerCamera transform cannot be changed
         '503':
-          description: GameObject transform cannot be changed at the moment
+          $ref: '#/components/responses/unavailable'
   /gameObjects/{name}/perspective:
     get:
       operationId: getUnityCameraPerspective
@@ -306,7 +306,7 @@ paths:
         '404':
           $ref: '#/components/responses/cameraNotFound'
         '503':
-          description: Camera perspective cannot be set at the moment
+          $ref: '#/components/responses/unavailable'
   /gameObjects/{name}/keyframes:
     put:
       operationId: setGameObjectKeyframes
@@ -326,7 +326,7 @@ paths:
         '404':
           $ref: '#/components/responses/gameObjectNotFound'
         '503':
-          description: Keyframes cannot be set at the moment
+          $ref: '#/components/responses/unavailable'
   /gameObjects/{name}/mesh:
     get:
       operationId: getGameObjectMesh
@@ -361,7 +361,7 @@ paths:
                   transform:
                     $ref: '#/components/schemas/Transform'
         '503':
-          description: Player ground body cannot be retrieved at the moment
+          $ref: '#/components/responses/unavailable'
   /player/sectors:
     get:
       operationId: getPlayerSectors
@@ -413,9 +413,15 @@ paths:
         '400':
           description: Invalid ground body or transform
         '503':
-          description: The player cannot be warped at the moment
+          $ref: '#/components/responses/unavailable'
 components:
   schemas:
+    GenericError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Generic error message
     Vector2:
       description: Two numbers defining a vector in 2D space
       type: array
@@ -818,7 +824,17 @@ components:
       description: Successful operation
     invalidBody:
       description: Invalid request body
+    unavailable:
+      description: Operation unavailable at the moment
     cameraNotFound:
       description: Camera was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GenericError'
     gameObjectNotFound:
       description: GameObject was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GenericError'
