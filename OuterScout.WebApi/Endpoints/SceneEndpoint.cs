@@ -76,11 +76,12 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
         GameObjectRepository gameObjects
     )
     {
-        var originParent = request.Origin.Parent is { } parentName
-            ? gameObjects.FindOrNull(parentName)?.transform
-            : null;
+        if (request.Origin.Parent is null)
+        {
+            return BadRequest("scene must be parented to exising gameObject");
+        }
 
-        if ((request.Origin.Parent, originParent) is (not null, null))
+        if (gameObjects.FindOrNull(request.Origin.Parent) is not { transform: var originParent })
         {
             return CommonResponse.GameObjectNotFound(request.Origin.Parent);
         }
