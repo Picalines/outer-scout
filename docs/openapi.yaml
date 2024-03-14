@@ -29,35 +29,40 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required:
-                - startFrame
-                - endFrame
-                - frameRate
-                - hidePlayerModel
+              required: [origin, hidePlayerModel]
               properties:
-                startFrame:
-                  type: integer
-                  examples: [1]
-                endFrame:
-                  type: integer
-                  examples: [180]
-                frameRate:
-                  type: integer
-                  minimum: 1
-                  examples: [60]
+                origin:
+                  $ref: '#/components/schemas/Transform'
                 hidePlayerModel:
                   type: boolean
       responses:
         '201':
-          description: Successful operation
+          $ref: '#/components/responses/plainSuccess'
         '400':
-          description: Invalid request body
+          $ref: '#/components/responses/invalidBody'
         '503':
           description: Scene cannot be created at the moment
   /scene/recording:
     post:
       operationId: startRecording
       tags: [scene]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required: [frameRate, startFrame, endFrame]
+              additionalProperties: false
+              properties:
+                frameRate:
+                  type: integer
+                  minimum: 1
+                  examples: [60]
+                startFrame:
+                  type: integer
+                  examples: [1]
+                endFrame:
+                  type: integer
+                  examples: [180]
       responses:
         '201':
           description: Recording has been started
@@ -69,7 +74,7 @@ paths:
       tags: [scene]
       responses:
         '200':
-          description: Successful operation
+          description: Returned recording status
           content:
             application/json:
               schema:
@@ -89,13 +94,15 @@ paths:
                   framesRecorded:
                     type: integer
                     examples: [29]
+        '503':
+          description: Recording haven't been started
   /scene/active-camera:
     get:
       operationId: getActiveCamera
       tags: [scene, camera]
       responses:
         '200':
-          description: Successful operation
+          description: Returned active camera
           content:
             application/json:
               schema:
@@ -117,9 +124,9 @@ paths:
               $ref: '#/components/schemas/SceneKeyframes'
       responses:
         '200':
-          description: Successful operation
+          $ref: '#/components/responses/plainSuccess'
         '400':
-          description: Invalid request body
+          $ref: '#/components/responses/invalidBody'
         '503':
           description: Scene keyframes cannot be set at the moment
   /cameras:
@@ -134,9 +141,9 @@ paths:
               $ref: '#/components/schemas/Camera'
       responses:
         '200':
-          description: Successful operation
+          $ref: '#/components/responses/plainSuccess'
         '400':
-          description: Invalid request body
+          $ref: '#/components/responses/invalidBody'
         '503':
           description: Camera cannot be created at the moment
   /cameras/{id}/perspective:
@@ -152,11 +159,11 @@ paths:
               $ref: '#/components/schemas/CameraPerspective'
       responses:
         '200':
-          description: Successful operation
+          $ref: '#/components/responses/plainSuccess'
         '400':
-          description: Invalid request body
+          $ref: '#/components/responses/invalidBody'
         '404':
-          description: Camera was not found
+          $ref: '#/components/responses/cameraNotFound'
         '503':
           description: Camera perspective cannot be set at the moment
   /cameras/{id}/keyframes:
@@ -174,11 +181,11 @@ paths:
                 - $ref: '#/components/schemas/PerspectiveKeyframes'
       responses:
         '200':
-          description: Successful operation
+          $ref: '#/components/responses/plainSuccess'
         '400':
-          description: Invalid requestBody
+          $ref: '#/components/responses/invalidBody'
         '404':
-          description: Camera was not found
+          $ref: '#/components/responses/cameraNotFound'
         '503':
           description: Keyframes cannot be set at the moment
   /gameObjects:
@@ -205,9 +212,9 @@ paths:
                       position: [0, 400, 0]
       responses:
         '201':
-          description: Successful operation
+          $ref: '#/components/responses/plainSuccess'
         '400':
-          description: Invalid request body, parent was not found
+          $ref: '#/components/responses/invalidBody'
         '503':
           description: GameObject cannot be created at the moment
   /gameObjects/{name}/transform:
@@ -225,7 +232,7 @@ paths:
           example: TimberHearth_Body
       responses:
         '200':
-          description: Successful operation
+          description: Returned gameObject transform
           content:
             application/json:
               schema:
@@ -257,9 +264,9 @@ paths:
                 Only those components that are in the request body will be changed
       responses:
         '200':
-          description: Successful operation
+          $ref: '#/components/responses/plainSuccess'
         '400':
-          description: Invalid request body, GameObject was not found
+          $ref: '#/components/responses/invalidBody'
         '405':
           description: PlayerCamera transform cannot be changed
         '503':
@@ -272,15 +279,15 @@ paths:
         - $ref: '#/components/parameters/gameObjectName'
       responses:
         '200':
-          description: Successful operation
+          description: Returned camera perspective
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CameraPerspective'
         '400':
-          description: found camera does not use physical properties
+          description: Found camera does not use physical properties
         '404':
-          description: GameObject or its Camera was not found
+          $ref: '#/components/responses/cameraNotFound'
     put:
       operationId: setUnityCameraPerspective
       tags: [gameObject, camera]
@@ -293,11 +300,11 @@ paths:
               $ref: '#/components/schemas/CameraPerspective'
       responses:
         '200':
-          description: Successful operation
+          $ref: '#/components/responses/plainSuccess'
         '400':
-          description: Invalid request body
+          $ref: '#/components/responses/invalidBody'
         '404':
-          description: GameObject or its Camera was not found
+          $ref: '#/components/responses/cameraNotFound'
         '503':
           description: Camera perspective cannot be set at the moment
   /gameObjects/{name}/keyframes:
@@ -313,11 +320,11 @@ paths:
               $ref: '#/components/schemas/TransformKeyframes'
       responses:
         '200':
-          description: Successful operation
+          $ref: '#/components/responses/plainSuccess'
         '400':
-          description: Invalid requestBody
+          $ref: '#/components/responses/invalidBody'
         '404':
-          description: GameObject was not found
+          $ref: '#/components/responses/gameObjectNotFound'
         '503':
           description: Keyframes cannot be set at the moment
   /gameObjects/{name}/mesh:
@@ -328,20 +335,20 @@ paths:
         - $ref: '#/components/parameters/gameObjectName'
       responses:
         '200':
-          description: Successful operation
+          description: Returned gameObject mesh
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GameObjectMesh'
         '404':
-          description: GameObject was not found
+          $ref: '#/components/responses/gameObjectNotFound'
   /player/ground-body:
     get:
       operationId: getPlayerGroundBody
       tags: [player]
       responses:
         '200':
-          description: Successful operation
+          description: Returned player ground body
           content:
             application/json:
               schema:
@@ -361,7 +368,7 @@ paths:
       tags: [player]
       responses:
         '200':
-          description: Successful operation
+          description: Returned player sector list
           content:
             application/json:
               schema:
@@ -402,7 +409,7 @@ paths:
                   description: Transform local to ground body. Must include only position and rotation
       responses:
         '200':
-          description: Successful operation
+          $ref: '#/components/responses/plainSuccess'
         '400':
           description: Invalid ground body or transform
         '503':
@@ -806,3 +813,12 @@ components:
       description: Name of a Unity GameObject
       schema:
         type: string
+  responses:
+    plainSuccess:
+      description: Successful operation
+    invalidBody:
+      description: Invalid request body
+    cameraNotFound:
+      description: Camera was not found
+    gameObjectNotFound:
+      description: GameObject was not found
