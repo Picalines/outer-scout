@@ -24,6 +24,12 @@ paths:
         Create an OuterScout scene. Scene contains cameras, custom GameObjects and other resources.
         Use this route to clear previous scene
       requestBody:
+        description: |-
+          In the request body you define the origin point, that is parented to some Unity GameObject.
+          That's required because Outer Wilds regularly 'recenters the universe' to avoid floating point errors,
+          so Unity global coordinates are not practical
+
+          The scene origin is a GameObject named "scene.origin"
         content:
           application/json:
             schema:
@@ -35,18 +41,30 @@ paths:
                   $ref: '#/components/schemas/Transform'
                 hidePlayerModel:
                   type: boolean
+              example:
+                hidePlayerModel: true
+                origin:
+                  parent: "TimberHearth_Body"
+                  position: [15.2269516, -43.7520866, 187.071]
+                  rotation: [0.5456432, 0.59208554, 0.523036, 0.279538333]
+                  scale: [1, 1, 1]
       responses:
         '201':
           $ref: '#/components/responses/plainSuccess'
         '400':
           $ref: '#/components/responses/invalidBody'
+        '404':
+          $ref: '#/components/responses/gameObjectNotFound'
         '503':
           $ref: '#/components/responses/unavailable'
   /scene/recording:
     post:
       operationId: startRecording
       tags: [scene]
+      description: |-
+        Use this operation to start recording the scene
       requestBody:
+        description: The framerate and frame range are declared in the request body
         content:
           application/json:
             schema:
@@ -56,13 +74,14 @@ paths:
                 frameRate:
                   type: integer
                   minimum: 1
-                  examples: [60]
                 startFrame:
                   type: integer
-                  examples: [1]
                 endFrame:
                   type: integer
-                  examples: [180]
+            example:
+              frameRate: 60
+              startFrame: 1
+              endFrame: 180
       responses:
         '201':
           description: Recording has been started
@@ -74,6 +93,7 @@ paths:
     get:
       operationId: getRecordingStatus
       tags: [scene]
+      description: Gets current information about the recording
       responses:
         '200':
           description: Returned recording status
@@ -86,22 +106,27 @@ paths:
                     type: boolean
                   startFrame:
                     type: integer
-                    examples: [1]
                   endFrame:
                     type: integer
-                    examples: [180]
                   currentFrame:
                     type: integer
-                    examples: [30]
                   framesRecorded:
                     type: integer
-                    examples: [29]
+                    minimum: 0
+              example:
+                inProgress: true
+                startFrame: 1
+                endFrame: 180
+                currentFrame: 30
+                framesRecorded: 29
         '503':
           description: Recording haven't been started
   /scene/active-camera:
     get:
       operationId: getActiveCamera
       tags: [scene, camera]
+      description: |-
+        Gets the name of current Unity camera. Use this to get the camera position and perspective later
       responses:
         '200':
           description: Returned active camera
@@ -113,12 +138,16 @@ paths:
                   name:
                     type: string
                     description: Name of the GameObject containing current Unity camera
+              example:
+                name: FREECAM
         '503':
           $ref: '#/components/responses/unavailable'
   /scene/keyframes:
     put:
       operationId: setSceneKeyframes
       tags: [scene, keyframes]
+      description: |-
+        Sets the keyframes related to the scene
       requestBody:
         content:
           application/json:
@@ -135,8 +164,11 @@ paths:
     post:
       operationId: createCamera
       tags: [camera]
-      description: Create camera on the scene
+      description: |-
+        Creates a camera that's used to record a video
       requestBody:
+        description: |-
+          The camera will be attached to the origin of the scene if the parent is not declared
         content:
           application/json:
             schema:
@@ -146,12 +178,17 @@ paths:
           $ref: '#/components/responses/plainSuccess'
         '400':
           $ref: '#/components/responses/invalidBody'
+        '404':
+          $ref: '#/components/responses/gameObjectNotFound'
         '503':
           $ref: '#/components/responses/unavailable'
   /cameras/{id}/perspective:
     put:
       operationId: setCameraPerspective
       tags: [camera]
+      description: |-
+        Sets the camera perspective. Note that the value will be ignored if the
+        perspective is animated
       parameters:
         - $ref: '#/components/parameters/cameraId'
       requestBody:
@@ -172,6 +209,9 @@ paths:
     put:
       operationId: setCameraKeyframes
       tags: [camera, keyframes]
+      description: |-
+        Sets the keyframes related to the camera. Use this to create
+        camera motion and perspective change
       parameters:
         - $ref: '#/components/parameters/cameraId'
       requestBody:
@@ -194,7 +234,12 @@ paths:
     post:
       operationId: createGameObject
       tags: [gameObject]
+      description: |-
+        Creates a custom Unity gameObject that can be used as a camera parent. The GameObject
+        is owned by the scene and will be destroyed when creating a new scene
       requestBody:
+        description: |-
+          The GameObject will be attached to the origin of the scene if the parent is not declared
         content:
           application/json:
             schema:
@@ -205,24 +250,30 @@ paths:
                 name:
                   type: string
                   pattern: ^[a-zA-Z_][a-zA-Z0-9_\-]*
-                  examples:
-                    - origin
                 transform:
                   $ref: '#/components/schemas/Transform'
-                  examples:
-                    - parent: TimberHearth_Body
-                      position: [0, 400, 0]
+            example:
+              name: timber_hearth_orbit
+              transform:
+                parent: TimberHearth_Body
+                position: [0, 400, 0]
       responses:
         '201':
           $ref: '#/components/responses/plainSuccess'
         '400':
           $ref: '#/components/responses/invalidBody'
+        '404':
+          $ref: '#/components/responses/gameObjectNotFound'
         '503':
           $ref: '#/components/responses/unavailable'
   /gameObjects/{name}/transform:
     get:
       operationId: getGameObjectTransform
       tags: [gameObject]
+      description: |-
+        Gets current Transform of the GameObject in the coordinates of the scene
+
+        Another GameObject will be used as the coordinate center if specified in the query
       parameters:
         - $ref: '#/components/parameters/gameObjectName'
         - name: parent
@@ -240,7 +291,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Transform'
         '400':
-          description: GameObject was not found
+          $ref: '#/components/responses/gameObjectNotFound'
         '503':
           $ref: '#/components/responses/unavailable'
     put:
