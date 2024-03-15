@@ -104,53 +104,47 @@ internal sealed class PlayerEndpoint : IRouteMapper
             return ServiceUnavailable();
         }
 
-        if (request.Transform is not { Parent: null, Position: { }, Rotation: { }, Scale: null })
+        if (
+            request.Transform
+            is not {
+                Parent: null,
+                Position: { } spawnLocalPosition,
+                Rotation: { } spawnLocalRotation,
+                Scale: null
+            }
+        )
         {
             return BadRequest("invalid warp transform");
         }
 
         if (
-            gameObjects.FindOrNull(request.GroundBody) is not { transform: var groundBodyTransform }
-            || groundBodyTransform.GetComponentOrNull<OWRigidbody>() is not { } groundBody
+            gameObjects.FindOrNull(request.GroundBody) is not { transform: var spawnParent }
+            || spawnParent.GetComponentOrNull<OWRigidbody>() is not { } groundBody
         )
         {
             return BadRequest($"'{request.GroundBody}' is not a valid ground body");
         }
 
-        var localTransform = new GameObject().transform;
-        localTransform.parent = groundBodyTransform;
-        localTransform.ApplyKeepParent(request.Transform.ToLocalTransform(groundBodyTransform));
+        var spawnPosition = spawnParent.TransformPoint(spawnLocalPosition);
+        var spawnRotation = spawnParent.rotation * spawnLocalRotation;
 
-        const string spawnPointName = $"{nameof(OuterScout)}.SpawnPoint";
+        var nearestSpawnPoint = spawnParent
+            .GetComponentsInChildren<SpawnPoint>()
+            .OrderBy(point => (point.transform.position - spawnPosition).magnitude)
+            .FirstOrDefault();
 
-        var spawnPoint = groundBodyTransform
-            .Find(spawnPointName)
-            .OrNull()
-            ?.GetComponent<SpawnPoint>();
+        var spawnPoint = nearestSpawnPoint is not null
+            ? UnityEngine.Object.Instantiate(nearestSpawnPoint)
+            : new GameObject("", typeof(SpawnPoint)).GetComponent<SpawnPoint>();
 
-        if (spawnPoint is null)
-        {
-            var nearestSpawnPoint = groundBodyTransform
-                .GetComponentsInChildren<SpawnPoint>()
-                .OrderBy(point => (point.transform.position - localTransform.position).magnitude)
-                .FirstOrDefault();
-
-            var newSpawnPointObject = nearestSpawnPoint is not null
-                ? UnityEngine.Object.Instantiate(nearestSpawnPoint.gameObject)
-                : new GameObject(spawnPointName, typeof(SpawnPoint));
-
-            newSpawnPointObject.name = spawnPointName;
-            newSpawnPointObject.transform.parent = groundBodyTransform;
-
-            spawnPoint = newSpawnPointObject.GetComponent<SpawnPoint>();
-        }
-
+        spawnPoint.name = $"{nameof(OuterScout)}.SpawnPoint";
+        spawnPoint.transform.parent = spawnParent;
         spawnPoint._isShipSpawn = false;
         spawnPoint._attachedBody = groundBody;
-        spawnPoint.transform.position = localTransform.position;
-        spawnPoint.transform.rotation = localTransform.rotation;
+        spawnPoint.transform.position = spawnPosition;
+        spawnPoint.transform.rotation = spawnRotation;
 
-        UnityEngine.Object.Destroy(localTransform.gameObject);
+        UnityEngine.Object.Destroy(spawnPoint, 10);
 
         playerSpawner.DebugWarp(spawnPoint);
 
