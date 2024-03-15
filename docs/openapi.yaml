@@ -490,7 +490,8 @@ paths:
       operationId: getUnityCameraPerspective
       tags: [gameObject, camera]
       summary: Gets the perspective of the Unity Camera attached to the GameObject
-      description: The camera must use physical properties
+      description: |-
+        Sets the UnityEngine.Camera.usePhysicalProperties to true before applying the perspective
       parameters:
         - $ref: '#/components/parameters/gameObjectName'
       responses:
