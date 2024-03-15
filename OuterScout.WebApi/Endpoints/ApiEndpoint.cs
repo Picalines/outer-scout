@@ -13,16 +13,19 @@ internal sealed class ApiEndpoint : IRouteMapper
 
     private static readonly Assembly _assembly;
 
-    private static readonly string _openApiSpenResource;
+    private static readonly string _openApiSpecResource;
+
+    private static readonly string _swaggerResource;
 
     private ApiEndpoint() { }
 
     static ApiEndpoint()
     {
         _assembly = Assembly.GetAssembly(typeof(ApiEndpoint));
-        _openApiSpenResource = _assembly
-            .GetManifestResourceNames()
-            .First(name => name.Contains("openapi.yaml"));
+        var resourceNames = _assembly.GetManifestResourceNames();
+
+        _openApiSpecResource = resourceNames.First(name => name.Contains("openapi.yaml"));
+        _swaggerResource = resourceNames.First(name => name.Contains("swagger.html"));
     }
 
     public void MapRoutes(HttpServer.Builder serverBuilder)
@@ -30,6 +33,8 @@ internal sealed class ApiEndpoint : IRouteMapper
         serverBuilder.MapGet("api/version", GetApiVersion);
 
         serverBuilder.MapGet("api/spec", GetApiSpecification);
+
+        serverBuilder.MapGet("api/swagger", GetSwaggerUI);
     }
 
     private static IResponse GetApiVersion()
@@ -51,8 +56,15 @@ internal sealed class ApiEndpoint : IRouteMapper
             return NotFound($"API spec of type '{type}' was not found");
         }
 
-        var stream = _assembly.GetManifestResourceStream(_openApiSpenResource);
+        var stream = _assembly.GetManifestResourceStream(_openApiSpecResource);
 
         return new StreamResponse(HttpStatusCode.OK, stream) { ContentType = "application/yaml" };
+    }
+
+    private static IResponse GetSwaggerUI()
+    {
+        var stream = _assembly.GetManifestResourceStream(_swaggerResource);
+
+        return new StreamResponse(HttpStatusCode.OK, stream) { ContentType = "text/html" };
     }
 }
