@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Net;
+﻿using System.Net;
 
 namespace OuterScout.WebApi.Http.Response;
 
@@ -18,14 +17,6 @@ public static class ResponseFabric
     private static JsonResponse FromJson<T>(HttpStatusCode httpStatusCode, T value)
     {
         return new JsonResponse(httpStatusCode, value);
-    }
-
-    private static CoroutineResponse FromCoroutine(
-        HttpStatusCode httpStatusCode,
-        IEnumerator coroutine
-    )
-    {
-        return new CoroutineResponse(httpStatusCode, "text/plain", coroutine);
     }
 
     // csharpier-ignore-start
@@ -311,100 +302,6 @@ public static class ResponseFabric
     public static JsonResponse GatewayTimeout<T>(T value) => FromJson(HttpStatusCode.GatewayTimeout, value);
 
     public static JsonResponse HttpVersionNotSupported<T>(T value) => FromJson(HttpStatusCode.HttpVersionNotSupported, value);
-
-    public static CoroutineResponse Continue(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Continue, coroutine);
-
-    public static CoroutineResponse SwitchingProtocols(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.SwitchingProtocols, coroutine);
-
-    public static CoroutineResponse Ok(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.OK, coroutine);
-
-    public static CoroutineResponse Created(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Created, coroutine);
-
-    public static CoroutineResponse Accepted(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Accepted, coroutine);
-
-    public static CoroutineResponse NonAuthoritativeInformation(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.NonAuthoritativeInformation, coroutine);
-
-    public static CoroutineResponse NoContent(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.NoContent, coroutine);
-
-    public static CoroutineResponse ResetContent(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.ResetContent, coroutine);
-
-    public static CoroutineResponse PartialContent(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.PartialContent, coroutine);
-
-    public static CoroutineResponse MultipleChoices(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.MultipleChoices, coroutine);
-
-    public static CoroutineResponse Ambiguous(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Ambiguous, coroutine);
-
-    public static CoroutineResponse MovedPermanently(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.MovedPermanently, coroutine);
-
-    public static CoroutineResponse Moved(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Moved, coroutine);
-
-    public static CoroutineResponse Found(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Found, coroutine);
-
-    public static CoroutineResponse Redirect(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Redirect, coroutine);
-
-    public static CoroutineResponse SeeOther(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.SeeOther, coroutine);
-
-    public static CoroutineResponse RedirectMethod(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.RedirectMethod, coroutine);
-
-    public static CoroutineResponse NotModified(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.NotModified, coroutine);
-
-    public static CoroutineResponse UseProxy(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.UseProxy, coroutine);
-
-    public static CoroutineResponse Unused(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Unused, coroutine);
-
-    public static CoroutineResponse TemporaryRedirect(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.TemporaryRedirect, coroutine);
-
-    public static CoroutineResponse RedirectKeepVerb(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.RedirectKeepVerb, coroutine);
-
-    public static CoroutineResponse BadRequest(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.BadRequest, coroutine);
-
-    public static CoroutineResponse Unauthorized(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Unauthorized, coroutine);
-
-    public static CoroutineResponse PaymentRequired(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.PaymentRequired, coroutine);
-
-    public static CoroutineResponse Forbidden(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Forbidden, coroutine);
-
-    public static CoroutineResponse NotFound(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.NotFound, coroutine);
-
-    public static CoroutineResponse MethodNotAllowed(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.MethodNotAllowed, coroutine);
-
-    public static CoroutineResponse NotAcceptable(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.NotAcceptable, coroutine);
-
-    public static CoroutineResponse ProxyAuthenticationRequired(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.ProxyAuthenticationRequired, coroutine);
-
-    public static CoroutineResponse RequestTimeout(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.RequestTimeout, coroutine);
-
-    public static CoroutineResponse Conflict(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Conflict, coroutine);
-
-    public static CoroutineResponse Gone(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.Gone, coroutine);
-
-    public static CoroutineResponse LengthRequired(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.LengthRequired, coroutine);
-
-    public static CoroutineResponse PreconditionFailed(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.PreconditionFailed, coroutine);
-
-    public static CoroutineResponse RequestEntityTooLarge(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.RequestEntityTooLarge, coroutine);
-
-    public static CoroutineResponse RequestUriTooLong(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.RequestUriTooLong, coroutine);
-
-    public static CoroutineResponse UnsupportedMediaType(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.UnsupportedMediaType, coroutine);
-
-    public static CoroutineResponse RequestedRangeNotSatisfiable(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.RequestedRangeNotSatisfiable, coroutine);
-
-    public static CoroutineResponse ExpectationFailed(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.ExpectationFailed, coroutine);
-
-    public static CoroutineResponse UpgradeRequired(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.UpgradeRequired, coroutine);
-
-    public static CoroutineResponse InternalServerError(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.InternalServerError, coroutine);
-
-    public static CoroutineResponse NotImplemented(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.NotImplemented, coroutine);
-
-    public static CoroutineResponse BadGateway(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.BadGateway, coroutine);
-
-    public static CoroutineResponse ServiceUnavailable(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.ServiceUnavailable, coroutine);
-
-    public static CoroutineResponse GatewayTimeout(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.GatewayTimeout, coroutine);
-
-    public static CoroutineResponse HttpVersionNotSupported(IEnumerator coroutine) => FromCoroutine(HttpStatusCode.HttpVersionNotSupported, coroutine);
 
     // csharpier-ignore-end
 }

@@ -1,7 +1,5 @@
-﻿using System.Collections;
-using System.Net;
+﻿using System.Net;
 using Newtonsoft.Json;
-using OuterScout.Infrastructure.Components;
 using OuterScout.Infrastructure.DependencyInjection;
 using OuterScout.Infrastructure.Extensions;
 using OuterScout.Infrastructure.Validation;
@@ -162,16 +160,7 @@ public sealed partial class HttpServer : IDisposable
             response = handler(scope);
         }
 
-        if (response is CoroutineResponse coroutineResponse)
-        {
-            GlobalCoroutine.Start(
-                HandleCoroutineResponse(context, request.HttpMethod, route, coroutineResponse)
-            );
-        }
-        else
-        {
-            SendSyncResponse(context, response);
-        }
+        SendSyncResponse(context, response);
     }
 
     private void SendSyncResponse(HttpListenerContext context, IResponse response)
@@ -208,68 +197,7 @@ public sealed partial class HttpServer : IDisposable
             return;
         }
 
-        throw new NotImplementedException();
-    }
-
-    private IEnumerator HandleCoroutineResponse(
-        HttpListenerContext context,
-        HttpMethod httpMethod,
-        Route route,
-        CoroutineResponse coroutineResponse
-    )
-    {
-        SetGenericHeaders(context, coroutineResponse);
-
-        var httpResponse = context.Response;
-        var coroutine = coroutineResponse.Coroutine;
-
-        using (var contentWriter = new StreamWriter(httpResponse.OutputStream))
-        {
-            while (true)
-            {
-                try
-                {
-                    if (coroutine.MoveNext() is false)
-                    {
-                        break;
-                    }
-                }
-                catch (Exception exception)
-                {
-                    Log(
-                        $"unhandled exception in async {httpMethod} request at '{route}'",
-                        MessageType.Error
-                    );
-
-                    Log(
-                        $"{exception.GetType().Name}: {exception.Message}\n{exception.StackTrace}",
-                        MessageType.Error
-                    );
-                    break;
-                }
-
-                switch (coroutine.Current)
-                {
-                    case string contentChunk:
-                        contentWriter.Write(contentChunk);
-                        contentWriter.Flush();
-                        break;
-
-                    case var coroutineControl:
-                        yield return coroutineControl;
-                        break;
-                }
-            }
-        }
-
-        httpResponse.Close();
-
-        Log(
-            $"sent response {coroutineResponse.StatusCode} to {httpMethod} request at '{route}'",
-            coroutineResponse.StatusCode is HttpStatusCode.InternalServerError
-                ? MessageType.Error
-                : MessageType.Info
-        );
+        throw new NotImplementedException($"{response.GetType()} is not supported by {nameof(HttpServer)}");
     }
 
     private static void SetGenericHeaders(HttpListenerContext context, IResponse response)
