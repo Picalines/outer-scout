@@ -98,7 +98,8 @@ internal sealed class ApiOwnedGameObject : MonoBehaviour, IDisposable
     {
         if (_gameObject != null)
         {
-            UnityEngine.Object.Destroy(_gameObject);
+            UnityEngine.Object.DestroyImmediate(_gameObject);
+            _gameObject = null;
         }
     }
 }
