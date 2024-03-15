@@ -26,12 +26,16 @@ internal sealed class CameraEndpoint : IRouteMapper
     {
         using (serverBuilder.WithPlayableSceneFilter())
         {
-            using (serverBuilder.WithSceneCreatedFilter())
             using (serverBuilder.WithNotRecordingFilter())
             {
-                serverBuilder.MapPost("cameras", CreateSceneCamera);
+                using (serverBuilder.WithSceneCreatedFilter())
+                {
+                    serverBuilder.MapPost("cameras", CreateSceneCamera);
 
-                serverBuilder.MapPut("cameras/:id/perspective", PutGameObjectCameraPerspective);
+                    serverBuilder.MapPut("cameras/:id/perspective", PutCameraPerspective);
+
+                    serverBuilder.MapPut("cameras/:id/transform", PutCameraTransform);
+                }
 
                 serverBuilder.MapPut(
                     "gameObjects/:name/camera/perspective",
@@ -141,6 +145,52 @@ internal sealed class CameraEndpoint : IRouteMapper
         }
 
         perspectiveCamera.Perspective = perspective;
+
+        return Ok();
+    }
+
+    private static IResponse PutCameraTransform(
+        [FromUrl] string id,
+        [FromBody] TransformDTO transformDTO,
+        ApiResourceRepository resources,
+        GameObjectRepository gameObjects
+    )
+    {
+        if (
+            resources.GlobalContainer.GetResource<ISceneCamera>(id)
+            is not { Transform: var transform }
+        )
+        {
+            return CommonResponse.CameraNotFound(id);
+        }
+
+        var parent = transformDTO.Parent is { } parentName
+            ? gameObjects.FindOrNull(parentName)?.transform
+            : null;
+
+        if ((transformDTO.Parent, parent) is (not null, null))
+        {
+            return CommonResponse.GameObjectNotFound(transformDTO.Parent);
+        }
+
+        parent ??= resources
+            .GlobalContainer.GetRequiredResource<GameObject>(SceneEndpoint.OriginResource)
+            .transform;
+
+        if (transformDTO.Position is { } localPosition)
+        {
+            transform.position = parent.TransformPoint(localPosition);
+        }
+
+        if (transformDTO.Rotation is { } localRotation)
+        {
+            transform.rotation = parent.rotation * localRotation;
+        }
+
+        if (transformDTO.Scale is { } localScale)
+        {
+            transform.localScale = localScale;
+        }
 
         return Ok();
     }

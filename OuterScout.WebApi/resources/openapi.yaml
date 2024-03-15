@@ -281,6 +281,38 @@ paths:
           $ref: '#/components/responses/gameObjectNotFound'
         '503':
           $ref: '#/components/responses/unavailable'
+  /cameras/{id}/transform:
+    operationId: setCameraTransform
+    tags: [camera]
+    summary: Sets the camera transformation
+    description: |-
+      Use this to reposition the desired camera before recording begins
+
+      The value will be ignored if the transform is animated
+    parameters:
+      - $ref: '#/components/parameters/cameraId'
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Transform'
+            description: |-
+              New camera transformation
+
+              Parent will be used as the origin, but GameObject hierarchy will not be changed
+
+              Scene origin is used if parent is not specified
+
+              Only those components that are in the request body will be changed
+    responses:
+      '200':
+        $ref: '#/components/responses/plainSuccess'
+      '400':
+        $ref: '#/components/responses/invalidBody'
+      '404':
+        $ref: '#/components/responses/cameraNotFound'
+      '503':
+        $ref: '#/components/responses/unavailable'
   /cameras/{id}/perspective:
     put:
       operationId: setCameraPerspective
@@ -476,7 +508,7 @@ paths:
                     position: [20.83783, -45.4903259, 185.232925]
                     rotation: [-0.208906114, 0.573324442, 0.7582229, -0.229685858]
                     scale: [1.00000024, 1.00000083, 1.00000048]
-        '400':
+        '404':
           $ref: '#/components/responses/gameObjectNotFound'
         '503':
           $ref: '#/components/responses/unavailable'
@@ -506,6 +538,8 @@ paths:
           $ref: '#/components/responses/plainSuccess'
         '400':
           $ref: '#/components/responses/invalidBody'
+        '404':
+          $ref: '#/components/responses/gameObjectNotFound'
         '405':
           description: PlayerCamera transform cannot be changed
         '503':
