@@ -76,12 +76,15 @@ internal sealed class PlayerEndpoint : IRouteMapper
         return Ok(
             new
             {
+                LastEntered = sectorDetector
+                    ._sectorList.Select(sector => sector.transform)
+                    .LastOrDefault()
+                    ?.GetPath(),
                 Sectors = sectorDetector
                     ._sectorList.Select(sector => new
                     {
                         Name = sector.name.ToString(),
-                        Id = sector.GetIDString(),
-                        Path = sector.transform.GetPath(),
+                        Id = sector.GetIDString() is { Length: > 0 } id ? id : null,
                     })
                     .ToArray(),
             }

@@ -666,20 +666,38 @@ paths:
             application/json:
               schema:
                 type: object
+                additionalProperties: false
+                required: [sectors]
                 properties:
+                  lastEntered:
+                    type: string
+                    description: The path in the hierarchy of GameObjects to the last entered sector
                   sectors:
                     type: array
                     description: List of sectors player has entered. Last item is the last sector that the player entered
                     items:
                       type: object
+                      additionalProperties: false
+                      required: [name]
                       properties:
                         name:
-                          type: string
-                        id:
                           type: string
                         path:
                           type: string
                           description: A path to sector GameObject in scene hierarchy
+                        id:
+                          type: string
+                          description: Some sectors contain a unique id
+              examples:
+                startingCamp:
+                  description: Sector list in the starting camp
+                  value:
+                    lastEntered: TimberHearth_Body/Sector_TH/Sector_Village/Sector_StartingCamp
+                    sectors:
+                      - name: Sector_TH
+                      - name: Sector_Village
+                      - name: Sector_LowerVillage
+                      - name: Sector_StartingCamp
         '503':
           $ref: '#/components/responses/unavailable'
   /player/warp:
