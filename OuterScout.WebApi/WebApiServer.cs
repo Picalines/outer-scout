@@ -86,7 +86,7 @@ public sealed class WebApiServer : IDisposable
             .AsExternalReference(
                 new JsonSerializer()
                 {
-                    MissingMemberHandling = MissingMemberHandling.Error,
+                    MissingMemberHandling = MissingMemberHandling.Ignore,
                     ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
                     NullValueHandling = NullValueHandling.Ignore,
                     ContractResolver = new OuterScoutContractResolver
