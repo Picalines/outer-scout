@@ -32,10 +32,12 @@ internal sealed class GameObjectEndpoint : IRouteMapper
     public void MapRoutes(HttpServer.Builder serverBuilder)
     {
         using (serverBuilder.WithPlayableSceneFilter())
-        using (serverBuilder.WithSceneCreatedFilter())
         using (serverBuilder.WithNotRecordingFilter())
         {
-            serverBuilder.MapPost("gameObjects", PostApiGameObject);
+            using (serverBuilder.WithSceneCreatedFilter())
+            {
+                serverBuilder.MapPost("gameObjects", PostApiGameObject);
+            }
 
             serverBuilder.MapGet("gameObjects/:name/transform", GetGameObjectTransform);
 
@@ -100,8 +102,13 @@ internal sealed class GameObjectEndpoint : IRouteMapper
         }
 
         parentTransform ??= resources
-            .GlobalContainer.GetRequiredResource<GameObject>(SceneEndpoint.OriginResource)
-            .transform;
+            .GlobalContainer.GetResource<GameObject>(SceneEndpoint.OriginResource)
+            ?.transform;
+
+        if (parentTransform is null)
+        {
+            return CommonResponse.SceneIsNotCreated;
+        }
 
         return Ok(
             new TransformDTO()
@@ -137,12 +144,17 @@ internal sealed class GameObjectEndpoint : IRouteMapper
 
         if ((transformDTO.Parent, parent) is (not null, null))
         {
-            return BadRequest();
+            return CommonResponse.GameObjectNotFound(transformDTO.Parent);
         }
 
         parent ??= resources
             .GlobalContainer.GetRequiredResource<GameObject>(SceneEndpoint.OriginResource)
-            .transform;
+            ?.transform;
+
+        if (parent is null)
+        {
+            return CommonResponse.SceneIsNotCreated;
+        }
 
         if (transformDTO.Position is { } localPosition)
         {
