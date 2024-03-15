@@ -27,7 +27,7 @@ internal static class HttpServerBuilderExtensions
             {
                 return
                     resources.GlobalContainer.GetResource<SceneRecorder>() is { IsRecording: true }
-                    ? ServiceUnavailable(new { Error = "not available while recording" })
+                    ? ServiceUnavailable(new { Error = "not available during recording" })
                     : null;
             }
         );
