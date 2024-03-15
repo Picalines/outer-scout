@@ -11,17 +11,23 @@ info:
   version: 0.1.0
 tags:
   - name: scene
+    description: Operations related to the scene
   - name: camera
+    description: Operations related to cameras
   - name: gameObject
+    description: Operations related to Unity GameObjects
   - name: player
+    description: Operations related to the player
   - name: keyframes
+    description: Operations used for animation
 paths:
   /scene:
     post:
       operationId: createScene
       tags: [scene]
+      summary: Creates an OuterScout scene
       description: |-
-        Create an OuterScout scene. Scene contains cameras, custom GameObjects and other resources.
+        Scene contains cameras, custom GameObjects and other resources.
         Use this route to clear previous scene
       requestBody:
         description: |-
@@ -41,13 +47,13 @@ paths:
                   $ref: '#/components/schemas/Transform'
                 hidePlayerModel:
                   type: boolean
-              example:
-                hidePlayerModel: true
-                origin:
-                  parent: "TimberHearth_Body"
-                  position: [15.2269516, -43.7520866, 187.071]
-                  rotation: [0.5456432, 0.59208554, 0.523036, 0.279538333]
-                  scale: [1, 1, 1]
+              examples:
+                - hidePlayerModel: true
+                  origin:
+                    parent: "TimberHearth_Body"
+                    position: [15.2269516, -43.7520866, 187.071]
+                    rotation: [0.5456432, 0.59208554, 0.523036, 0.279538333]
+                    scale: [1, 1, 1]
       responses:
         '201':
           $ref: '#/components/responses/plainSuccess'
@@ -61,8 +67,7 @@ paths:
     post:
       operationId: startRecording
       tags: [scene]
-      description: |-
-        Use this operation to start recording the scene
+      summary: Starts recording the scene
       requestBody:
         description: The framerate and frame range are declared in the request body
         content:
@@ -78,10 +83,10 @@ paths:
                   type: integer
                 endFrame:
                   type: integer
-            example:
-              frameRate: 60
-              startFrame: 1
-              endFrame: 180
+              examples:
+                - frameRate: 60
+                  startFrame: 1
+                  endFrame: 180
       responses:
         '201':
           description: Recording has been started
@@ -93,7 +98,7 @@ paths:
     get:
       operationId: getRecordingStatus
       tags: [scene]
-      description: Gets current information about the recording
+      summary: Gets current information about the recording
       responses:
         '200':
           description: Returned recording status
@@ -125,8 +130,9 @@ paths:
     get:
       operationId: getActiveCamera
       tags: [scene, camera]
+      summary: Gets the name of current Unity camera
       description: |-
-        Gets the name of current Unity camera. Use this to get the camera position and perspective later
+        Use this to get the camera position and perspective later
       responses:
         '200':
           description: Returned active camera
@@ -138,21 +144,31 @@ paths:
                   name:
                     type: string
                     description: Name of the GameObject containing current Unity camera
-              example:
-                name: FREECAM
+                examples:
+                  - name: PlayerCamera
+                  - name: FREECAM
         '503':
           $ref: '#/components/responses/unavailable'
   /scene/keyframes:
     put:
       operationId: setSceneKeyframes
       tags: [scene, keyframes]
-      description: |-
-        Sets the keyframes related to the scene
+      summary: Sets the keyframes related to the scene
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/SceneKeyframes'
+            examples:
+              time.scale:
+                description: Animates the Unity Time.timeScale property
+                value:
+                  property: time.scale
+                  keyframes:
+                    1: {value: 1}
+                    10: {value: 2}
+                    170: {value: 2}
+                    180: {value: 1}
       responses:
         '200':
           $ref: '#/components/responses/plainSuccess'
@@ -164,8 +180,7 @@ paths:
     post:
       operationId: createCamera
       tags: [camera]
-      description: |-
-        Creates a camera that's used to record a video
+      summary: Creates a camera that's used to record a video
       requestBody:
         description: |-
           The camera will be attached to the origin of the scene if the parent is not declared
@@ -173,6 +188,26 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Camera'
+            examples:
+              mainPerspective:
+                description: Main perspective camera
+                value:
+                  id: main
+                  type: perspective
+                  transform:
+                    position: [0, 2, -5]
+                  resolution:
+                    width: 1920
+                    height: 1080
+                  gateFit: vertical
+              hdri:
+                description: Equirectangular camera used to record HDRI
+                value:
+                  id: hdri
+                  type: equirectangular
+                  transform:
+                    position: [0, 0, 0]
+                  faceResolution: 1024
       responses:
         '201':
           $ref: '#/components/responses/plainSuccess'
@@ -186,9 +221,8 @@ paths:
     put:
       operationId: setCameraPerspective
       tags: [camera]
-      description: |-
-        Sets the camera perspective. Note that the value will be ignored if the
-        perspective is animated
+      summary: Sets the camera perspective
+      description: The value will be ignored if the perspective is animated
       parameters:
         - $ref: '#/components/parameters/cameraId'
       requestBody:
@@ -196,6 +230,15 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CameraPerspective'
+            examples:
+              playerCamera:
+                description: Camera perspective similar to the PlayerCamera
+                value:
+                  focalLength: 40
+                  sensorSize: [36, 24]
+                  lensShift: [0, 0]
+                  nearClipPlane: 0.1
+                  farClipPlane: 5000
       responses:
         '200':
           $ref: '#/components/responses/plainSuccess'
@@ -209,9 +252,9 @@ paths:
     put:
       operationId: setCameraKeyframes
       tags: [camera, keyframes]
+      summary: Sets the keyframes related to the camera
       description: |-
-        Sets the keyframes related to the camera. Use this to create
-        camera motion and perspective change
+        Use this to create camera motion and perspective change
       parameters:
         - $ref: '#/components/parameters/cameraId'
       requestBody:
@@ -221,6 +264,28 @@ paths:
               anyOf:
                 - $ref: '#/components/schemas/TransformKeyframes'
                 - $ref: '#/components/schemas/PerspectiveKeyframes'
+            examples:
+              slide:
+                description: Animates camera movement
+                value:
+                  property: transform.position
+                  keyframes:
+                    1: {value: [-3, 0, 0]}
+                    60: {value: [3, 0, 0]}
+              rotation:
+                description: Animates camera rotation
+                value:
+                  property: transform.rotation
+                  keyframes:
+                    1: {value: [0, -0.3420201, 0, 0.9396926]}
+                    60: {value: [0, 0.0871557, 0, 0.9961947]}
+              zoom:
+                description: Animates the focal length of the camera
+                value:
+                  property: perspective.focalLength
+                  keyframes:
+                    1: {value: 20}
+                    60: {value: 40}
       responses:
         '200':
           $ref: '#/components/responses/plainSuccess'
@@ -234,8 +299,9 @@ paths:
     post:
       operationId: createGameObject
       tags: [gameObject]
+      summary: Creates a custom Unity GameObject
       description: |-
-        Creates a custom Unity gameObject that can be used as a camera parent. The GameObject
+        Creates a custom Unity GameObject that can be used as a camera parent. The GameObject
         is owned by the scene and will be destroyed when creating a new scene
       requestBody:
         description: |-
@@ -270,6 +336,7 @@ paths:
     get:
       operationId: getGameObjectTransform
       tags: [gameObject]
+      summary: Gets current Transform of the GameObject
       description: |-
         Gets current Transform of the GameObject in the coordinates of the scene
 
@@ -297,6 +364,9 @@ paths:
     put:
       operationId: setGameObjectTransform
       tags: [gameObject]
+      summary: Sets the Unity GameObject transformation
+      description: |-
+        Use this to rearrange the desired GameObjects before recording begins
       parameters:
         - $ref: '#/components/parameters/gameObjectName'
       requestBody:
@@ -325,6 +395,8 @@ paths:
     get:
       operationId: getUnityCameraPerspective
       tags: [gameObject, camera]
+      summary: Gets the perspective of the Unity Camera attached to the GameObject
+      description: The camera must use physical properties
       parameters:
         - $ref: '#/components/parameters/gameObjectName'
       responses:
@@ -341,6 +413,8 @@ paths:
     put:
       operationId: setUnityCameraPerspective
       tags: [gameObject, camera]
+      summary: Sets the perspective of the Unity Camera attached to the GameObject
+      description: The camera must use physical properties
       parameters:
         - $ref: '#/components/parameters/gameObjectName'
       requestBody:
@@ -361,6 +435,9 @@ paths:
     put:
       operationId: setGameObjectKeyframes
       tags: [gameObject, keyframes]
+      summary: Sets the keyframes related to the GameObject
+      description: |-
+        Use this to move and rotate the GameObject during recording
       parameters:
         - $ref: '#/components/parameters/gameObjectName'
       requestBody:
@@ -368,6 +445,21 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/TransformKeyframes'
+            examples:
+              slide:
+                description: Animates movement
+                value:
+                  property: transform.position
+                  keyframes:
+                    1: {value: [10, 2, 0]}
+                    60: {value: [15, 0, 0]}
+              rotation:
+                description: Animates rotation
+                value:
+                  property: transform.rotation
+                  keyframes:
+                    1: {value: [0, -0.3420201, 0, 0.9396926]}
+                    60: {value: [0, 0.0871557, 0, 0.9961947]}
       responses:
         '200':
           $ref: '#/components/responses/plainSuccess'
@@ -381,6 +473,11 @@ paths:
     get:
       operationId: getGameObjectMesh
       tags: [gameObject]
+      summary: Gets a list of mesh assets nested in the GameObject
+      description: |-
+        Gets a list of mesh assets nested in the GameObject. Use this to import planet models into a 3D editor
+
+        This operation exists because the usual asset tools do not get streamed assets together with the main model
       parameters:
         - $ref: '#/components/parameters/gameObjectName'
       responses:
@@ -396,6 +493,9 @@ paths:
     get:
       operationId: getPlayerGroundBody
       tags: [player]
+      summary: Gets information about the current planet
+      description: |-
+        Gets the name and transformation of the GameObject of the planet on which the player is currently located
       responses:
         '200':
           description: Returned player ground body
@@ -416,6 +516,11 @@ paths:
     get:
       operationId: getPlayerSectors
       tags: [player]
+      summary: Gets a list of sectors where the player is currently located
+      description: |-
+        Planets and other locations are logically divided into sectors in order to efficiently load and unload detailed assets and turn off some logic
+
+        Some sectors are located inside others (for example, the zero gravity cave in the village). When a player enters a sector, the latter is added to the player's list of sectors, and when it exits, it is deleted.
       responses:
         '200':
           description: Returned player sector list
@@ -443,6 +548,11 @@ paths:
     post:
       operationId: warpPlayer
       tags: [player]
+      summary: Мoves the player to the desired position on the planet
+      description: |-
+        It is impossible to transfer to some planets by simply changing the player's transformation
+
+        Use this operation to quickly transfer to the desired planet
       requestBody:
         content:
           application/json:
@@ -470,6 +580,7 @@ components:
   schemas:
     GenericError:
       type: object
+      description: Generic object containing the error message
       properties:
         error:
           type: string
@@ -481,6 +592,8 @@ components:
         type: number
       minItems: 2
       maxItems: 2
+      examples:
+        - [0, 0]
     Vector3:
       description: Three numbers defining a vector in 3D space
       type: array
@@ -488,6 +601,8 @@ components:
         type: number
       minItems: 3
       maxItems: 3
+      examples:
+        - [0, 0, 0]
     Quaternion:
       description: Four numbers defining a rotation in 3D space
       type: array
@@ -510,8 +625,10 @@ components:
           $ref: '#/components/schemas/Quaternion'
         scale:
           $ref: '#/components/schemas/Vector3'
-          examples:
-            - [1, 1, 1]
+      examples:
+        - position: [0, 0, 0]
+          rotation: [0, 0, 0, 1]
+          scale: [1, 1, 1]
     CameraPerspective:
       description: Properties of PerspectiveCamera
       type: object
@@ -521,29 +638,28 @@ components:
         focalLength:
           type: number
           minimum: 0.00001
-          examples:
-            - 40
         sensorSize:
           $ref: '#/components/schemas/Vector2'
-          examples:
-            - [36, 24]
         lensShift:
           $ref: '#/components/schemas/Vector2'
-          examples:
-            - [0, 0]
         nearClipPlane:
           type: number
           minimum: 0.00001
-          examples:
-            - 0.1
         farClipPlane:
           type: number
           minimum: 0.00001
-          examples:
-            - 5000
+      examples:
+        - focalLength: 40
+          sensorSize: [36, 24]
+          lensShift: [0, 0]
+          nearClipPlane: 0.1
+          farClipPlane: 5000
     CameraId:
       type: string
       pattern: ^[a-zA-Z_][a-zA-Z0-9_\-]*$
+      examples:
+        - main
+        - hdri
     CameraBase:
       description: Base properties of all cameras
       type: object
@@ -552,8 +668,6 @@ components:
       properties:
         id:
           $ref: '#/components/schemas/CameraId'
-          examples:
-            - main
         transform:
           $ref: '#/components/schemas/Transform'
     PerspectiveCamera:
@@ -672,11 +786,10 @@ components:
                   properties:
                     value:
                       type: number
-          examples:
-            - 1:
-                value: 1
-              60:
-                value: 2
+      examples:
+        - keyframes:
+            1: {value: 1}
+            60: {value: 2}
     Vector2Keyframes:
       type: object
       additionalProperties: false
@@ -693,11 +806,10 @@ components:
                   properties:
                     value:
                       $ref: '#/components/schemas/Vector2'
-          examples:
-            - 1:
-                value: [36, 24]
-              60:
-                value: [72, 48]
+      examples:
+        - keyframes:
+            1: {value: [36, 24]}
+            60: {value: [72, 48]}
     Vector3Keyframes:
       type: object
       additionalProperties: false
@@ -714,11 +826,10 @@ components:
                   properties:
                     value:
                       $ref: '#/components/schemas/Vector3'
-          examples:
-            - 1:
-                value: [-3, 0, 0]
-              60:
-                value: [3, 0, 0]
+      examples:
+        - keyframes:
+            1: {value: [-3, 0, 0]}
+            60: {value: [3, 0, 0]}
     QuaternionKeyframes:
       type: object
       additionalProperties: false
@@ -735,11 +846,10 @@ components:
                   properties:
                     value:
                       $ref: '#/components/schemas/Quaternion'
-          examples:
-            - 1:
-                value: [0, -0.26, 0, 0.97]
-              60:
-                value: [0, 0.26, 0, 0.97]
+      examples:
+        - keyframes:
+            1: {value: [0, -0.26, 0, 0.97]}
+            60: {value: [0, 0.26, 0, 0.97]}
     TimeScaleKeyframes:
       type: object
       allOf:
@@ -751,6 +861,12 @@ components:
               type: string
               enum: [time.scale]
         - $ref: '#/components/schemas/NumberKeyframes'
+      examples:
+        - property: time.scale
+          keyframes:
+            1: {value: 1}
+            60: {value: 2}
+            180: {value: 1}
     SceneKeyframes:
       anyOf:
         - $ref: '#/components/schemas/TimeScaleKeyframes'
@@ -871,6 +987,13 @@ components:
       description: Name of a Unity GameObject
       schema:
         type: string
+      examples:
+        timberHearth:
+          description: Name of the Timber Hearth planet GameObject
+          value: TimberHearth_Body
+        playerBody:
+          description: Name fo the player body GameObject
+          value: Player_Body
   responses:
     plainSuccess:
       description: Successful operation
@@ -878,15 +1001,42 @@ components:
       description: Invalid request body
     unavailable:
       description: Operation unavailable at the moment
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GenericError'
+          examples:
+            notInPlayableScene:
+              description: The operation is not available in the main menu
+              value:
+                error: not in playable scene
+            recording:
+              description: The operation is not available during recording
+              value:
+                error: not available during recording
+            sceneNotCreated:
+              description: The operation is not available until the scene is created
+              value:
+                error: not available, create a scene first
     cameraNotFound:
       description: Camera was not found
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/GenericError'
+          examples:
+            mainCameraNotFound:
+              description: Main camera was not found
+              value:
+                error: camera 'main' was not found
     gameObjectNotFound:
       description: GameObject was not found
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/GenericError'
+          examples:
+            playerNotFound:
+              description: Player_Body was not found
+              value:
+                error: gameObject 'Player_Body' was not found
