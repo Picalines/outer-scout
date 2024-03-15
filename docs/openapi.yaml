@@ -7,7 +7,7 @@ info:
     With this API you can put multiple cameras on your scene, create keyframes to animate their parameters and transformation, and then record color and depth information to your disk
   license:
     name: MIT
-    url: https://github.com/Picalines/outer-scout/blob/master/OuterScout/LICENSE
+    url: https://github.com/Picalines/outer-scout/blob/master/LICENSE
   version: 0.1.0
 tags:
   - name: api
