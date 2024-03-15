@@ -50,6 +50,25 @@ paths:
                 major: 0
                 minor: 1
                 patch: 0
+  /api/spec:
+    get:
+      operationId: getApiSpec
+      tags: [api]
+      summary: Gets the API specification
+      description: |-
+        Returns the API specification in the specified type
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [openapi]
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/yaml: {}
   /scene:
     post:
       operationId: createScene

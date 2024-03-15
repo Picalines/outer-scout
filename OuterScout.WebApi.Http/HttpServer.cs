@@ -167,37 +167,35 @@ public sealed partial class HttpServer : IDisposable
     {
         SetGenericHeaders(context, response);
 
-        var httpResponse = context.Response;
+        using var httpResponse = context.Response;
 
         if (response is EmptyResponse)
         {
             httpResponse.ContentLength64 = 0;
-            httpResponse.Close();
-            return;
         }
-
-        if (response is StringResponse { Content: var content })
+        else if (response is StringResponse { Content: var content })
         {
-            using (var bodyWriter = new StreamWriter(httpResponse.OutputStream))
-            {
-                bodyWriter.Write(content);
-            }
-            httpResponse.Close();
-            return;
+            using var bodyWriter = new StreamWriter(httpResponse.OutputStream);
+            bodyWriter.Write(content);
         }
-
-        if (response is JsonResponse { Value: var value })
+        else if (response is StreamResponse { Stream: var stream })
         {
-            using (var bodyWriter = new StreamWriter(httpResponse.OutputStream))
-            {
-                var jsonSerializer = _services.Resolve<JsonSerializer>();
-                jsonSerializer.Serialize(bodyWriter, value);
-            }
+            stream.CopyTo(httpResponse.OutputStream);
+            stream.Close();
             httpResponse.Close();
-            return;
         }
-
-        throw new NotImplementedException($"{response.GetType()} is not supported by {nameof(HttpServer)}");
+        else if (response is JsonResponse { Value: var value })
+        {
+            using var bodyWriter = new StreamWriter(httpResponse.OutputStream);
+            var jsonSerializer = _services.Resolve<JsonSerializer>();
+            jsonSerializer.Serialize(bodyWriter, value);
+        }
+        else
+        {
+            throw new NotImplementedException(
+                $"{response.GetType()} is not supported by {nameof(HttpServer)}"
+            );
+        }
     }
 
     private static void SetGenericHeaders(HttpListenerContext context, IResponse response)
