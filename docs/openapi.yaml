@@ -20,6 +20,8 @@ tags:
     description: Operations related to the player
   - name: keyframes
     description: Operations used for animation
+  - name: recorder
+    description: Operations related to recorders
 paths:
   /scene:
     post:
@@ -310,6 +312,49 @@ paths:
           $ref: '#/components/responses/cameraNotFound'
         '503':
           $ref: '#/components/responses/unavailable'
+  /cameras/{id}/recorders:
+    post:
+      operationId: createCameraRecorder
+      tags: [camera, recorder]
+      parameters:
+        - $ref: '#/components/parameters/cameraId'
+      summary: Creates a camera recorder
+      description: |-
+        Cameras can record different types of videos. You need to create a separate recorder with the necessary settings for each video file
+
+        Recorder types are available for perspective camera: renderTexture.color, renderTexture.depth
+
+        Recorder types are available for equirectangular camera: renderTexture.color
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: '#/components/schemas/ColorTextureRecorder'
+                - $ref: '#/components/schemas/DepthTextureRecorder'
+            examples:
+              color:
+                description: Color video output
+                value:
+                  property: renderTexture.color
+                  outputPath: "D:\\color.mp4"
+                  format: mp4
+              depth:
+                description: Depth video output
+                value:
+                  property: renderTexture.depth
+                  outputPath: "D:\\depth.mp4"
+                  fomat: mp4
+                  constantRateFactor: 0
+      responses:
+        '201':
+          $ref: '#/components/responses/plainSuccess'
+        '400':
+          $ref: '#/components/responses/invalidBody'
+        '404':
+          $ref: '#/components/responses/cameraNotFound'
+        '503':
+          $ref: '#/components/responses/unavailable'
   /gameObjects:
     post:
       operationId: createGameObject
@@ -453,6 +498,26 @@ paths:
           $ref: '#/components/responses/cameraNotFound'
         '503':
           $ref: '#/components/responses/unavailable'
+  /gameObjects/{name}/mesh:
+    get:
+      operationId: getGameObjectMesh
+      tags: [gameObject]
+      summary: Gets a list of mesh assets nested in the GameObject
+      description: |-
+        Gets a list of mesh assets nested in the GameObject. Use this to import planet models into a 3D editor
+
+        This operation exists because the usual asset tools do not get streamed assets together with the main model
+      parameters:
+        - $ref: '#/components/parameters/gameObjectName'
+      responses:
+        '200':
+          description: Returned gameObject mesh
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameObjectMesh'
+        '404':
+          $ref: '#/components/responses/gameObjectNotFound'
   /gameObjects/{name}/keyframes:
     put:
       operationId: setGameObjectKeyframes
@@ -500,26 +565,38 @@ paths:
           $ref: '#/components/responses/gameObjectNotFound'
         '503':
           $ref: '#/components/responses/unavailable'
-  /gameObjects/{name}/mesh:
-    get:
-      operationId: getGameObjectMesh
-      tags: [gameObject]
-      summary: Gets a list of mesh assets nested in the GameObject
-      description: |-
-        Gets a list of mesh assets nested in the GameObject. Use this to import planet models into a 3D editor
-
-        This operation exists because the usual asset tools do not get streamed assets together with the main model
+  /gameObjects/{name}/recorders:
+    post:
+      operationId: createGameObjectRecorder
+      tags: [gameObject, recorder]
       parameters:
         - $ref: '#/components/parameters/gameObjectName'
+      summary: Creates a GameObject recorder
+      description: |-
+        You can create a GameObject transform recorder to build something based on this data in the 3D editor
+
+        Recorder types are available for GameObjects: transform
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransformRecorder'
+            examples:
+              timberHearthOrbit:
+                description: Recording Timber Hearth's position relative to the sun
+                value:
+                  property: transform
+                  outputPath: "D:\\TimberHearth_Body.json"
+                  format: json
       responses:
-        '200':
-          description: Returned gameObject mesh
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GameObjectMesh'
+        '201':
+          $ref: '#/components/responses/plainSuccess'
+        '400':
+          $ref: '#/components/responses/invalidBody'
         '404':
           $ref: '#/components/responses/gameObjectNotFound'
+        '503':
+          $ref: '#/components/responses/unavailable'
   /player/ground-body:
     get:
       operationId: getPlayerGroundBody
@@ -1005,6 +1082,74 @@ components:
         - $ref: '#/components/schemas/LensShiftKeyframes'
         - $ref: '#/components/schemas/NearClipPlaneKeyframes'
         - $ref: '#/components/schemas/FarClipPlaneKeyframes'
+    RecorderBase:
+      type: object
+      description: Base properties of all recoredrs
+    RenderTextureRecorder:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/RecorderBase'
+        - type: object
+          additionalProperties: false
+          required: [outputPath, format]
+          properties:
+            outputPath:
+              type: string
+              description: The path to the file where the video will be recorded
+            format:
+              type: string
+              enum: [mp4]
+              description: Output video format
+            constantRateFactor:
+              type: integer
+              default: 18
+              minimum: 0
+              maximum: 63
+              description: FFmpeg setting that controls the level of video compression
+              externalDocs:
+                url: https://trac.ffmpeg.org/wiki/Encode/H.264#crf
+    ColorTextureRecorder:
+      type: object
+      description: A recorder that records the color output of the camera
+      allOf:
+        - type: object
+          additionalProperties: false
+          required: [property]
+          properties:
+            property:
+              type: string
+              enum: [renderTexture.color]
+        - $ref: '#/components/schemas/RenderTextureRecorder'
+    DepthTextureRecorder:
+      type: object
+      description: A recorder that records the depth output of the camera
+      allOf:
+        - type: object
+          additionalProperties: false
+          required: [property]
+          properties:
+            property:
+              type: string
+              enum: [renderTexture.depth]
+        - $ref: '#/components/schemas/RenderTextureRecorder'
+    TransformRecorder:
+      type: object
+      description: A recorder that records the transformation of an object relative to the origin of the scene
+      allOf:
+        - $ref: '#/components/schemas/RecorderBase'
+        - type: object
+          additionalProperties: false
+          required: [property, outputPath, format]
+          properties:
+            property:
+              type: string
+              enum: [transform]
+            outputPath:
+              type: string
+              description: The path to the file where the transform will be recorded
+            format:
+              type: string
+              enum: [json]
   parameters:
     cameraId:
       name: id
