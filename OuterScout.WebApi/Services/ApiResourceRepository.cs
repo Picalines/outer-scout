@@ -66,7 +66,7 @@ internal sealed class ApiResourceRepository : IDisposable
 
     public void DisposeResources<T>()
     {
-        _containers.ForEach(c => c.DisposeResources<T>());
+        _containers.ToArray().ForEach(c => c.DisposeResources<T>());
     }
 
     void IDisposable.Dispose()
@@ -130,40 +130,36 @@ internal sealed class ApiResourceRepository : IDisposable
         public void DisposeResource<T>(string name)
         {
             if (
-                _resources.GetValueOrDefault(name) is { } s
-                && s.OfType<T>().FirstOrDefault() is { } resource
+                _resources.GetValueOrDefault(name) is { } instances
+                && instances.OfType<T>().FirstOrDefault() is { } resource
             )
             {
-                s.Remove(resource);
+                instances.Remove(resource);
                 DisposeResource(resource);
             }
         }
 
         public void DisposeResource<T>()
         {
-            foreach (var s in _resources.Values)
+            foreach (var instances in _resources.Values)
             {
-                if (s.OfType<T>().FirstOrDefault() is { } resource)
+                if (instances.OfType<T>().FirstOrDefault() is { } resource)
                 {
-                    s.Remove(resource);
+                    instances.Remove(resource);
                     DisposeResource(resource);
+                    return;
                 }
             }
         }
 
         public void DisposeResources<T>()
         {
-            foreach (var s in _resources.Values)
+            foreach (var instances in _resources.Values)
             {
-                foreach (var resource in s.ToArray())
+                foreach (var resource in instances.ToArray().OfType<T>())
                 {
-                    if (resource is not T resourceT)
-                    {
-                        continue;
-                    }
-
-                    s.Remove(resource);
-                    DisposeResource(resourceT);
+                    instances.Remove(resource);
+                    DisposeResource(resource);
                 }
             }
         }
@@ -181,7 +177,7 @@ internal sealed class ApiResourceRepository : IDisposable
             _repository._containers.Remove(this);
 
             _resources
-                .Values.SelectMany(s => s)
+                .Values.SelectMany(instances => instances)
                 .ToArray()
                 .OfType<IDisposable>()
                 .ForEach(resource => resource.Dispose());
