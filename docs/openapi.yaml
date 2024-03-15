@@ -10,6 +10,8 @@ info:
     url: https://github.com/Picalines/outer-scout/blob/master/OuterScout/LICENSE
   version: 0.1.0
 tags:
+  - name: api
+    description: Operations related to API information
   - name: scene
     description: Operations related to the scene
   - name: camera
@@ -23,6 +25,31 @@ tags:
   - name: recorder
     description: Operations related to recorders
 paths:
+  /api/version:
+    get:
+      operationId: getApiVersion
+      tags: [api]
+      summary: Gets the API version
+      description: |-
+        Use this operation to check API compatability
+      responses:
+        '200':
+          description: API version returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  major:
+                    type: integer
+                  minor:
+                    type: integer
+                  patch:
+                    type: integer
+              example:
+                major: 0
+                minor: 1
+                patch: 0
   /scene:
     post:
       operationId: createScene
