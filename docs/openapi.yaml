@@ -888,9 +888,9 @@ components:
       allOf:
         - type: object
           additionalProperties: false
-          required: [type]
+          required: [property]
           properties:
-            type:
+            property:
               type: string
               enum: [time.scale]
         - $ref: '#/components/schemas/NumberKeyframes'
@@ -908,9 +908,9 @@ components:
       allOf:
         - type: object
           additionalProperties: false
-          required: [type]
+          required: [property]
           properties:
-            type:
+            property:
               type: string
               enum: [transform.position]
         - $ref: '#/components/schemas/Vector3Keyframes'
@@ -919,9 +919,9 @@ components:
       allOf:
         - type: object
           additionalProperties: false
-          required: [type]
+          required: [property]
           properties:
-            type:
+            property:
               type: string
               enum: [transform.rotation]
         - $ref: '#/components/schemas/QuaternionKeyframes'
@@ -930,9 +930,9 @@ components:
       allOf:
         - type: object
           additionalProperties: false
-          required: [type]
+          required: [property]
           properties:
-            type:
+            property:
               type: string
               enum: [transform.scale]
         - $ref: '#/components/schemas/Vector3Keyframes'
@@ -947,9 +947,9 @@ components:
       allOf:
         - type: object
           additionalProperties: false
-          required: [type]
+          required: [property]
           properties:
-            type:
+            property:
               type: string
               enum: [perspective.focalLength]
         - $ref: '#/components/schemas/NumberKeyframes'
@@ -958,9 +958,9 @@ components:
       allOf:
         - type: object
           additionalProperties: false
-          required: [type]
+          required: [property]
           properties:
-            type:
+            property:
               type: string
               enum: [perspective.sensorSize]
         - $ref: '#/components/schemas/Vector2Keyframes'
@@ -969,9 +969,9 @@ components:
       allOf:
         - type: object
           additionalProperties: false
-          required: [type]
+          required: [property]
           properties:
-            type:
+            property:
               type: string
               enum: [perspective.lensShift]
         - $ref: '#/components/schemas/Vector2Keyframes'
@@ -980,9 +980,9 @@ components:
       allOf:
         - type: object
           additionalProperties: false
-          required: [type]
+          required: [property]
           properties:
-            type:
+            property:
               type: string
               enum: [perspective.nearClipPlane]
         - $ref: '#/components/schemas/NumberKeyframes'
@@ -991,9 +991,9 @@ components:
       allOf:
         - type: object
           additionalProperties: false
-          required: [type]
+          required: [property]
           properties:
-            type:
+            property:
               type: string
               enum: [perspective.farClipPlane]
         - $ref: '#/components/schemas/NumberKeyframes'
