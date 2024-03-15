@@ -258,6 +258,12 @@ paths:
                     width: 1920
                     height: 1080
                   gateFit: vertical
+                  perspective:
+                    focalLength: 40
+                    sensorSize: [36, 24]
+                    lensShift: [0, 0]
+                    nearClipPlane: 0.1
+                    farClipPlane: 5000
               hdri:
                 description: Equirectangular camera used to record HDRI
                 value:
