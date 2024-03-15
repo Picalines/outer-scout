@@ -146,6 +146,7 @@ internal sealed class PlayerEndpoint : IRouteMapper
 
         UnityEngine.Object.Destroy(spawnPoint, 10);
         UnpauseForSeconds(0.5f);
+        AssignDebugDreamLantern();
 
         playerSpawner.DebugWarp(spawnPoint);
 
@@ -165,5 +166,22 @@ internal sealed class PlayerEndpoint : IRouteMapper
 
         pauseMenu.EnableMenu(false);
         pauseMenuManager?.Invoke(nameof(PauseMenuManager.TryOpenPauseMenu), seconds);
+    }
+
+    private static void AssignDebugDreamLantern()
+    {
+        if (
+            Locator.GetDreamWorldController().OrNull() is not { } dreamWorldController
+            || dreamWorldController._debugPlayerLantern.OrNull() is not null
+        )
+        {
+            return;
+        }
+
+        dreamWorldController._debugPlayerLantern = GameObject
+            .FindObjectsOfType<DreamLanternItem>()
+            .FirstOrDefault(lantern =>
+                lantern._lanternType.HasFlag(DreamLanternType.Functioning) is true
+            );
     }
 }
