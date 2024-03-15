@@ -61,7 +61,16 @@ public sealed class WebApiServer : IDisposable
 
         serverBuilder.MapGet("", () => $"Welcome to {nameof(OuterScout)} API!");
 
-        serverBuilder.MapGet("api/status", () => new { Available = true });
+        serverBuilder.MapGet(
+            "api/version",
+            () =>
+                new
+                {
+                    Major = 0,
+                    Minor = 1,
+                    Patch = 0
+                }
+        );
     }
 
     private static void RegisterServices(ServiceContainer.Builder services)
