@@ -145,9 +145,25 @@ internal sealed class PlayerEndpoint : IRouteMapper
         spawnPoint.transform.rotation = spawnRotation;
 
         UnityEngine.Object.Destroy(spawnPoint, 10);
+        UnpauseForSeconds(0.5f);
 
         playerSpawner.DebugWarp(spawnPoint);
 
         return Ok();
+    }
+
+    private static void UnpauseForSeconds(float seconds)
+    {
+        var pauseCommandListener = Locator.GetPauseCommandListener().OrNull();
+        var pauseMenuManager = pauseCommandListener?._pauseMenu;
+        var pauseMenu = pauseMenuManager?._pauseMenu;
+
+        if (pauseMenu?.IsMenuEnabled() is not true)
+        {
+            return;
+        }
+
+        pauseMenu.EnableMenu(false);
+        pauseMenuManager?.Invoke(nameof(PauseMenuManager.TryOpenPauseMenu), seconds);
     }
 }
