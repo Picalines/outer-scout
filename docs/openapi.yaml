@@ -642,10 +642,17 @@ paths:
                 properties:
                   name:
                     type: string
-                    examples:
-                      - TimberHearth_Body
                   transform:
                     $ref: '#/components/schemas/Transform'
+              examples:
+                timberHearth:
+                  description: Information about the Timber Hearth at the beginning of the loop
+                  value:
+                    name: TimberHearth_Body
+                    transform:
+                      position: [-20.07576, 46.9629173, 185.391724]
+                      rotation: [0.0, 0.9937048, 0.0, 0.112030841]
+                      scale: [1, 1, 1]
         '503':
           $ref: '#/components/responses/unavailable'
   /player/sectors:
