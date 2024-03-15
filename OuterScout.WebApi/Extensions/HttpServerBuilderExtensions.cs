@@ -1,12 +1,9 @@
 ﻿using OuterScout.Application.Extensions;
 using OuterScout.Application.Recording;
 using OuterScout.WebApi.Http;
-using OuterScout.WebApi.Http.Response;
 using OuterScout.WebApi.Services;
 
 namespace OuterScout.WebApi.Extensions;
-
-using static ResponseFabric;
 
 internal static class HttpServerBuilderExtensions
 {
@@ -15,7 +12,7 @@ internal static class HttpServerBuilderExtensions
         return serverBuilder.WithFilter(() =>
         {
             return LocatorExtensions.IsInPlayableScene() is false
-                ? ServiceUnavailable(new { Error = "not in playable scene" })
+                ? CommonResponse.NotInPlayableScene
                 : null;
         });
     }
@@ -27,7 +24,7 @@ internal static class HttpServerBuilderExtensions
             {
                 return
                     resources.GlobalContainer.GetResource<SceneRecorder>() is { IsRecording: true }
-                    ? ServiceUnavailable(new { Error = "not available during recording" })
+                    ? CommonResponse.RecordingIsInProgress
                     : null;
             }
         );
@@ -39,7 +36,7 @@ internal static class HttpServerBuilderExtensions
             (ApiResourceRepository resources) =>
             {
                 return resources.GlobalContainer.GetResource<SceneRecorder.Builder>() is null
-                    ? ServiceUnavailable(new { Error = "not available, create a scene first" })
+                    ? CommonResponse.SceneIsNotCreated
                     : null;
             }
         );
