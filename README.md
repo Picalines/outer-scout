@@ -32,3 +32,94 @@ This mod implements the [API](OuterScout.WebApi/resources/openapi.yaml) that can
 
 All API paths are available in the [swagger-ui](https://github.com/swagger-api/swagger-ui) interface. You can view them by opening a web browser and navigating to `localhost:2209`.
 
+## A more in-depth API example
+
+Let's do something like the [dolly zoom](https://en.wikipedia.org/wiki/Dolly_zoom) effect. First we need to create an Outer Scout scene:
+
+```json5
+// POST /scene
+{
+  "hidePlayerModel": true,
+  "origin": {
+    "parent": "TimberHearth_Body",
+    // We will not use the origin in this scene.
+    // For reference: it is needed for various operations related to camera/gameObject coordinates
+  }
+}
+```
+
+Now we need a camera. The mod can create several cameras of different types, but we will only need one regular (perspective) camera:
+
+```json5
+// POST /cameras
+{
+    "id": "main",
+    "type": "perspective",
+    "transform": {
+        "parent": "TimberHearth_Body"
+        // The camera can be placed in a specific place on the scene,
+        // but we will do this later when we animate its position
+    },
+    "gateFit": "horizontal",
+    "resolution": {
+        "width": 1920,
+        "height": 1080
+    },
+    "perspective": {
+        // See the Unity documentation on the physical properties of cameras
+        // https://docs.unity3d.com/Manual/PhysicalCameras.html
+        "focalLength": 20,
+        "sensorSize": [36, 24],
+        "lensShift": [0, 0],
+        "nearClipPlane": 0.1,
+        "farClipPlane": 5000
+    }
+}
+```
+
+Now we need to animate the camera position and focal length:
+
+```json5
+// PUT /cameras/main/keyframes
+{
+    "property": "transform.position",
+    "keyframes": {
+        "1": { "value": [27.5874119, -43.0471764, 184.879181] },
+        "60": { "value": [21.0105915, -41.7467155, 186.2018] }
+    }
+}
+```
+
+```json5
+// PUT /cameras/main/keyframes
+{
+    "property": "perspective.focalLength",
+    "keyframes": {
+        "1": { "value": 40 },
+        "60": { "value": 20 }
+    }
+}
+```
+
+Then we need to specify which file on the disk to save the video to. To do this, we need to create a camera recorder:
+
+```json5
+// POST /cameras/main/recorders
+{
+    "property": "renderTexture.color",
+    "outputPath": "D:\\assets\\color.mp4",
+    "format": "mp4"
+}
+```
+
+And finally, we can record the created scene:
+
+```json5
+{
+    "startFrame": 1,
+    "endFrame": 60,
+    "frameRate": 60
+}
+```
+
+https://github.com/Picalines/outer-scout/assets/42614422/8bdc7919-bc91-4099-9595-7005a39a28ec
