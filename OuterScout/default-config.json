@@ -16,9 +16,9 @@
     },
     "apiPort": {
       "title": "Web API port",
-      "tooltip": "Port number that the mod will use to host it's HTTP API",
+      "tooltip": "Port number that the mod will use to host its HTTP API",
       "type": "number",
-      "value": 5000,
+      "value": 2209,
       "min": 1024,
       "max": 49151
     },
