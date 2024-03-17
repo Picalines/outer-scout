@@ -221,12 +221,13 @@ paths:
               time.scale:
                 description: Animates the Unity Time.timeScale property
                 value:
-                  property: time.scale
-                  keyframes:
-                    1: {value: 1}
-                    10: {value: 2}
-                    170: {value: 2}
-                    180: {value: 1}
+                  properties:
+                    time.scale:
+                      keyframes:
+                        1: {value: 1}
+                        10: {value: 2}
+                        170: {value: 2}
+                        180: {value: 1}
       responses:
         '200':
           $ref: '#/components/responses/plainSuccess'
@@ -363,31 +364,27 @@ paths:
         content:
           application/json:
             schema:
-              anyOf:
-                - $ref: '#/components/schemas/TransformKeyframes'
-                - $ref: '#/components/schemas/PerspectiveKeyframes'
+              type: object
+              additionalProperties: false
+              required: [properties]
+              properties:
+                properties:
+                  allOf:
+                    - $ref: '#/components/schemas/TransformKeyframes'
+                    - $ref: '#/components/schemas/PerspectiveKeyframes'
             examples:
-              slide:
-                description: Animates camera movement
+              dollyZoom:
+                description: Creates a dolly zoom effect
                 value:
-                  property: transform.position
-                  keyframes:
-                    1: {value: [-3, 0, 0]}
-                    60: {value: [3, 0, 0]}
-              rotation:
-                description: Animates camera rotation
-                value:
-                  property: transform.rotation
-                  keyframes:
-                    1: {value: [0, -0.3420201, 0, 0.9396926]}
-                    60: {value: [0, 0.0871557, 0, 0.9961947]}
-              zoom:
-                description: Animates the focal length of the camera
-                value:
-                  property: perspective.focalLength
-                  keyframes:
-                    1: {value: 20}
-                    60: {value: 40}
+                  properties:
+                    transform.position.z:
+                      keyframes:
+                        1: {value: -2}
+                        60: {value: 2}
+                    perspective.focalLength:
+                      keyframes:
+                        1: {value: 40}
+                        60: {value: 10}
       responses:
         '200':
           $ref: '#/components/responses/plainSuccess'
@@ -614,36 +611,36 @@ paths:
       description: |-
         Use this to move and rotate the GameObject during recording
 
-        Properties available for animation: transform.position, transform.rotation, transfrom.scale
+        Properties available for animation: transform.position.{x,y,z}, transform.rotation.{x,y,z,w}, transfrom.scale.{x,y,z}
       parameters:
         - $ref: '#/components/parameters/gameObjectName'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TransformKeyframes'
+              type: object
+              additionalProperties: false
+              required: [properties]
+              properties:
+                properties:
+                  $ref: '#/components/schemas/TransformKeyframes'
             examples:
-              translation:
-                description: Animates translation
+              transform:
+                description: Animates GameObject transformation
                 value:
-                  property: transform.position
-                  keyframes:
-                    1: {value: [10, 2, 0]}
-                    60: {value: [15, 0, 0]}
-              rotation:
-                description: Animates rotation
-                value:
-                  property: transform.rotation
-                  keyframes:
-                    1: {value: [0, -0.3420201, 0, 0.9396926]}
-                    60: {value: [0, 0.0871557, 0, 0.9961947]}
-              scale:
-                description: Animates scaling
-                value:
-                  property: transform.scale
-                  keyframes:
-                    1: {value: [1, 1, 1]}
-                    60: {value: [1, 2, 1]}
+                  properties:
+                    transform.position.x:
+                      keyframes:
+                        1: {value: -5}
+                        60: {value: 5}
+                    transform.rotation.w:
+                      keyframes:
+                        1: {value: 0}
+                        60: {value: 1}
+                    transform.scale.y:
+                      keyframes:
+                        1: {value: 0.5}
+                        60: {value: 1.5}
       responses:
         '200':
           $ref: '#/components/responses/plainSuccess'
@@ -990,211 +987,63 @@ components:
           $ref: '#/components/schemas/Transform'
         localTransform:
           $ref: '#/components/schemas/Transform'
-    KeyframeBase:
-      description: Base properties of all keyframes
+    Keyframe:
+      description: Property keyframe
       type: object
-    NumberKeyframes:
+      additionalProperties: false
+      required: [value]
+      properties:
+        value:
+          type: number
+    PropertyKeyframes:
       type: object
       additionalProperties: false
       required: [keyframes]
-      description: Set of keyframes of number property
+      description: Set of keyframes of the property
       properties:
         keyframes:
           patternProperties:
             "^\\d+$":
-              allOf:
-                - $ref: '#/components/schemas/KeyframeBase'
-                - type: object
-                  required: [value]
-                  properties:
-                    value:
-                      type: number
-      examples:
-        - keyframes:
-            1: {value: 1}
-            60: {value: 2}
-    Vector2Keyframes:
-      type: object
-      additionalProperties: false
-      required: [keyframes]
-      description: Set of keyframes of Vector2 property
-      properties:
-        keyframes:
-          patternProperties:
-            "^\\d+$":
-              allOf:
-                - $ref: '#/components/schemas/KeyframeBase'
-                - type: object
-                  required: [value]
-                  properties:
-                    value:
-                      $ref: '#/components/schemas/Vector2'
-      examples:
-        - keyframes:
-            1: {value: [36, 24]}
-            60: {value: [72, 48]}
-    Vector3Keyframes:
-      type: object
-      additionalProperties: false
-      required: [keyframes]
-      description: Set of keyframes of Vector3 property
-      properties:
-        keyframes:
-          patternProperties:
-            "^\\d+$":
-              allOf:
-                - $ref: '#/components/schemas/KeyframeBase'
-                - type: object
-                  required: [value]
-                  properties:
-                    value:
-                      $ref: '#/components/schemas/Vector3'
-      examples:
-        - keyframes:
-            1: {value: [-3, 0, 0]}
-            60: {value: [3, 0, 0]}
-    QuaternionKeyframes:
-      type: object
-      additionalProperties: false
-      required: [keyframes]
-      description: Set of keyframes of Quaternion property
-      properties:
-        keyframes:
-          patternProperties:
-            "^\\d+$":
-              allOf:
-                - $ref: '#/components/schemas/KeyframeBase'
-                - type: object
-                  required: [value]
-                  properties:
-                    value:
-                      $ref: '#/components/schemas/Quaternion'
-      examples:
-        - keyframes:
-            1: {value: [0, -0.26, 0, 0.97]}
-            60: {value: [0, 0.26, 0, 0.97]}
-    TimeScaleKeyframes:
-      type: object
-      allOf:
-        - type: object
-          additionalProperties: false
-          required: [property]
-          properties:
-            property:
-              type: string
-              enum: [time.scale]
-        - $ref: '#/components/schemas/NumberKeyframes'
-      examples:
-        - property: time.scale
-          keyframes:
-            1: {value: 1}
-            60: {value: 2}
-            180: {value: 1}
+              $ref: '#/components/schemas/Keyframe'
     SceneKeyframes:
-      anyOf:
-        - $ref: '#/components/schemas/TimeScaleKeyframes'
-    PositionKeyframes:
       type: object
-      allOf:
-        - type: object
-          additionalProperties: false
-          required: [property]
-          properties:
-            property:
-              type: string
-              enum: [transform.position]
-        - $ref: '#/components/schemas/Vector3Keyframes'
-    RotationKeyframes:
-      type: object
-      allOf:
-        - type: object
-          additionalProperties: false
-          required: [property]
-          properties:
-            property:
-              type: string
-              enum: [transform.rotation]
-        - $ref: '#/components/schemas/QuaternionKeyframes'
-    ScaleKeyframes:
-      type: object
-      allOf:
-        - type: object
-          additionalProperties: false
-          required: [property]
-          properties:
-            property:
-              type: string
-              enum: [transform.scale]
-        - $ref: '#/components/schemas/Vector3Keyframes'
+      additionalProperties:
+        items:
+          $ref: '#/components/schemas/PropertyKeyframes'
+      propertyNames:
+        enum:
+          - time.scale
     TransformKeyframes:
-      description: "Set of keyframes for one of Transform components: transform.position, transform.rotation or transform.scale"
-      anyOf:
-        - $ref: '#/components/schemas/PositionKeyframes'
-        - $ref: '#/components/schemas/RotationKeyframes'
-        - $ref: '#/components/schemas/ScaleKeyframes'
-    FocalLengthKeyframes:
       type: object
-      allOf:
-        - type: object
-          additionalProperties: false
-          required: [property]
-          properties:
-            property:
-              type: string
-              enum: [perspective.focalLength]
-        - $ref: '#/components/schemas/NumberKeyframes'
-    SensorSizeKeyframes:
-      type: object
-      allOf:
-        - type: object
-          additionalProperties: false
-          required: [property]
-          properties:
-            property:
-              type: string
-              enum: [perspective.sensorSize]
-        - $ref: '#/components/schemas/Vector2Keyframes'
-    LensShiftKeyframes:
-      type: object
-      allOf:
-        - type: object
-          additionalProperties: false
-          required: [property]
-          properties:
-            property:
-              type: string
-              enum: [perspective.lensShift]
-        - $ref: '#/components/schemas/Vector2Keyframes'
-    NearClipPlaneKeyframes:
-      type: object
-      allOf:
-        - type: object
-          additionalProperties: false
-          required: [property]
-          properties:
-            property:
-              type: string
-              enum: [perspective.nearClipPlane]
-        - $ref: '#/components/schemas/NumberKeyframes'
-    FarClipPlaneKeyframes:
-      type: object
-      allOf:
-        - type: object
-          additionalProperties: false
-          required: [property]
-          properties:
-            property:
-              type: string
-              enum: [perspective.farClipPlane]
-        - $ref: '#/components/schemas/NumberKeyframes'
+      additionalProperties:
+        items:
+          $ref: '#/components/schemas/PropertyKeyframes'
+      propertyNames:
+        enum:
+          - transform.position.x
+          - transform.position.y
+          - transform.position.z
+          - transform.rotation.x
+          - transform.rotation.y
+          - transform.rotation.z
+          - transform.rotation.w
+          - transform.scale.x
+          - transform.scale.y
+          - transform.scale.z
     PerspectiveKeyframes:
-      description: "Set of keyframes for one of CameraPerspective components: perspective.focalLength, perspective.sensorSize, perspective.lensShift, perspective.nearClipPlane or perspective.farClipPlane"
-      anyOf:
-        - $ref: '#/components/schemas/FocalLengthKeyframes'
-        - $ref: '#/components/schemas/SensorSizeKeyframes'
-        - $ref: '#/components/schemas/LensShiftKeyframes'
-        - $ref: '#/components/schemas/NearClipPlaneKeyframes'
-        - $ref: '#/components/schemas/FarClipPlaneKeyframes'
+      type: object
+      additionalProperties:
+        items:
+          $ref: '#/components/schemas/PropertyKeyframes'
+      propertyNames:
+        enum:
+          - perspective.focalLength
+          - perspective.sensorSize.x
+          - perspective.sensorSize.y
+          - perspective.lensShift.x
+          - perspective.lensShift.y
+          - perspective.nearClipPlane
+          - perspective.farClipPlane
     RecorderBase:
       type: object
       description: Base properties of all recoredrs

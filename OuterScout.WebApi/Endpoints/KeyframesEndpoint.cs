@@ -24,11 +24,14 @@ internal sealed class KeyframesEndpoint : IRouteMapper
         public required float Value { get; init; }
     }
 
-    private class PutKeyframesRequest
+    private sealed class PropertyAnimationData
     {
-        public required string Property { get; init; }
-
         public required Dictionary<int, KeyframeDTO> Keyframes { get; init; }
+    }
+
+    private sealed class PutKeyframesRequest
+    {
+        public required Dictionary<string, PropertyAnimationData> Properties { get; init; }
     }
 
     public void MapRoutes(HttpServer.Builder serverBuilder)
@@ -91,24 +94,34 @@ internal sealed class KeyframesEndpoint : IRouteMapper
         E entity
     )
     {
-        if (
-            container.GetResource<PropertyAnimator>(request.Property)
-            is not { Curve: var propertyCurve } propertyAnimator
-        )
+        var keyframes = new Dictionary<PropertyCurve, PropertyAnimationData>();
+
+        foreach (var (property, animationData) in request.Properties)
         {
-            if (CreatePropertyApplier(request.Property, entity) is not { } propertyApplier)
+            if (
+                container.GetResource<PropertyAnimator>(property)
+                is not { Curve: var propertyCurve }
+            )
             {
-                return BadRequest($"property '{request.Property}' is not animatable");
+                if (CreatePropertyApplier(property, entity) is not { } propertyApplier)
+                {
+                    return BadRequest($"property '{property}' is not animatable");
+                }
+
+                propertyCurve = new PropertyCurve();
+                var propertyAnimator = new PropertyAnimator(propertyCurve, propertyApplier);
+                container.AddResource(property, propertyAnimator);
             }
 
-            propertyCurve = new PropertyCurve();
-            propertyAnimator = new PropertyAnimator(propertyCurve, propertyApplier);
-            container.AddResource(request.Property, propertyAnimator);
+            keyframes.Add(propertyCurve, animationData);
         }
 
-        foreach (var (frame, keyframeDto) in request.Keyframes)
+        foreach (var (propertyCurve, animationData) in keyframes)
         {
-            propertyCurve.StoreKeyframe(new PropertyKeyframe(frame, keyframeDto.Value));
+            foreach (var (frame, keyframeDto) in animationData.Keyframes)
+            {
+                propertyCurve.StoreKeyframe(new PropertyKeyframe(frame, keyframeDto.Value));
+            }
         }
 
         return Ok();
