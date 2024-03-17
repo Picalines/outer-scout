@@ -39,12 +39,12 @@ Let's do something like the [dolly zoom](https://en.wikipedia.org/wiki/Dolly_zoo
 ```json5
 // POST /scene
 {
-  "hidePlayerModel": true,
-  "origin": {
-    "parent": "TimberHearth_Body",
-    // We will not use the origin in this scene.
-    // For reference: it is needed for various operations related to camera/gameObject coordinates
-  }
+    "hidePlayerModel": true,
+    "origin": {
+        "parent": "TimberHearth_Body",
+        "position": [20.8809223, -41.51514, 186.207733],
+        "rotation": [0.461064935, -0.4372242, -0.6413971, 0.429958254]
+    }
 }
 ```
 
@@ -56,9 +56,7 @@ Now we need a camera. The mod can create several cameras of different types, but
     "id": "main",
     "type": "perspective",
     "transform": {
-        "parent": "TimberHearth_Body"
-        // The camera can be placed in a specific place on the scene,
-        // but we will do this later when we animate its position
+        // camera is created at the origin
     },
     "gateFit": "horizontal",
     "resolution": {
@@ -82,21 +80,19 @@ Now we need to animate the camera position and focal length:
 ```json5
 // PUT /cameras/main/keyframes
 {
-    "property": "transform.position",
-    "keyframes": {
-        "1": { "value": [27.5874119, -43.0471764, 184.879181] },
-        "60": { "value": [21.0105915, -41.7467155, 186.2018] }
-    }
-}
-```
-
-```json5
-// PUT /cameras/main/keyframes
-{
-    "property": "perspective.focalLength",
-    "keyframes": {
-        "1": { "value": 40 },
-        "60": { "value": 20 }
+    "properties": {
+        "transform.position.z": {
+            "keyframes": {
+                "1": { "value": -2 },
+                "60": { "value": 2 }
+            }
+        },
+        "perspective.focalLength": {
+            "keyframes": {
+                "1": { "value": 40 },
+                "60": { "value": 10 }
+            }
+        }
     }
 }
 ```
@@ -107,7 +103,7 @@ Then we need to specify which file on the disk to save the video to. To do this,
 // POST /cameras/main/recorders
 {
     "property": "renderTexture.color",
-    "outputPath": "D:\\assets\\color.mp4",
+    "outputPath": "{{OUTPUT_DIR}}\\color.mp4",
     "format": "mp4"
 }
 ```
@@ -115,6 +111,7 @@ Then we need to specify which file on the disk to save the video to. To do this,
 And finally, we can record the created scene:
 
 ```json5
+// POST /scene/recording
 {
     "startFrame": 1,
     "endFrame": 60,
@@ -122,4 +119,4 @@ And finally, we can record the created scene:
 }
 ```
 
-https://github.com/Picalines/outer-scout/assets/42614422/8bdc7919-bc91-4099-9595-7005a39a28ec
+https://github.com/Picalines/outer-scout/assets/42614422/7c9d7ad6-5e62-48a0-9215-d89a342c56e5
