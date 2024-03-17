@@ -9,7 +9,7 @@ public sealed partial class SceneRecorder
     {
         private readonly HashSet<PropertyAnimator> _animators = [];
 
-        private readonly List<IRecorder.IBuilder> _recorderBuilders = [];
+        private readonly HashSet<IRecorder.IBuilder> _recorderBuilders = [];
 
         private readonly List<ReversableAction> _scenePatches = [];
 
