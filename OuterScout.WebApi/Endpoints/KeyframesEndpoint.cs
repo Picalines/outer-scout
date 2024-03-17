@@ -1,11 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.RegularExpressions;
 using OuterScout.Application.Animation;
-using OuterScout.Application.Recording;
 using OuterScout.Application.SceneCameras;
 using OuterScout.Domain;
-using OuterScout.Infrastructure.DependencyInjection;
 using OuterScout.Infrastructure.Extensions;
-using OuterScout.Infrastructure.Validation;
 using OuterScout.WebApi.Extensions;
 using OuterScout.WebApi.Http;
 using OuterScout.WebApi.Http.Response;
@@ -16,27 +13,22 @@ namespace OuterScout.WebApi.Endpoints;
 
 using static ResponseFabric;
 
-internal sealed class KeyframesEndpoint : IRouteMapper, IServiceConfiguration
+internal sealed class KeyframesEndpoint : IRouteMapper
 {
-    private const string KeyframeScope = "request.keyframes";
-
     public static KeyframesEndpoint Instance { get; } = new();
 
     private KeyframesEndpoint() { }
 
-    private sealed class KeyframeDTO<T>
+    private sealed class KeyframeDTO
     {
-        public required T Value { get; init; }
+        public required float Value { get; init; }
     }
 
-    private class BaseRequestBody
+    private class PutKeyframesRequest
     {
         public required string Property { get; init; }
-    }
 
-    private sealed class PutKeyframesRequest<T> : BaseRequestBody
-    {
-        public required Dictionary<int, KeyframeDTO<T>> Keyframes { get; init; }
+        public required Dictionary<int, KeyframeDTO> Keyframes { get; init; }
     }
 
     public void MapRoutes(HttpServer.Builder serverBuilder)
@@ -53,55 +45,18 @@ internal sealed class KeyframesEndpoint : IRouteMapper, IServiceConfiguration
         }
     }
 
-    public void RegisterServices(ServiceContainer.Builder services)
-    {
-        using (services.InScope(KeyframeScope))
-        {
-            services.Register<Lerper<float>>().AsExternalReference(Mathf.Lerp);
-            services.Register<Lerper<Vector2>>().AsExternalReference(Vector2.Lerp);
-            services.Register<Lerper<Vector3>>().AsExternalReference(Vector3.Lerp);
-            services.Register<Lerper<Quaternion>>().AsExternalReference(Quaternion.Slerp);
-
-            services.Register<PutTimeScaleKeyframesHandler>().As<IPutKeyframesHandler>();
-            services.Register<PutPositionKeyframesHandler>().As<IPutKeyframesHandler>();
-            services.Register<PutRotationKeyframesHandler>().As<IPutKeyframesHandler>();
-            services.Register<PutScaleKeyframesHandler>().As<IPutKeyframesHandler>();
-            services.Register<PutFocalLengthKeyframesHandler>().As<IPutKeyframesHandler>();
-            services.Register<PutSensorSizeKeyframesHandler>().As<IPutKeyframesHandler>();
-            services.Register<PutLensShiftKeyframesHandler>().As<IPutKeyframesHandler>();
-            services.Register<PutNearClipPlaneKeyframesHandler>().As<IPutKeyframesHandler>();
-            services.Register<PutFarClipPlaneKeyframesHandler>().As<IPutKeyframesHandler>();
-        }
-    }
-
     private static IResponse PutSceneKeyframes(
-        Request request,
-        JsonSerializer jsonSerializer,
-        ApiResourceRepository apiResources,
-        IServiceScope services
+        [FromBody] PutKeyframesRequest request,
+        ApiResourceRepository apiResources
     )
     {
-        var property = ReadPropertyFromBody(request, jsonSerializer);
-
-        using var keyframeScope = services.StartScope(KeyframeScope);
-
-        var handler = keyframeScope
-            .ResolveAll<IPutKeyframesHandler>()
-            .FirstOrDefault(h => h.Property == property);
-
-        return handler switch
-        {
-            IPutKeyframesHandler<Unit> h => h.HandleRequest(Unit.Instance),
-            _ => BadRequest($"property '{property}' is not animatable"),
-        };
+        return PutKeyframes(request, apiResources.GlobalContainer, Unit.Instance);
     }
 
     private static IResponse PutCameraKeyframes(
         [FromUrl] string id,
-        Request request,
-        JsonSerializer jsonSerializer,
-        ApiResourceRepository apiResources,
-        IServiceScope services
+        [FromBody] PutKeyframesRequest request,
+        ApiResourceRepository apiResources
     )
     {
         if (
@@ -112,38 +67,14 @@ internal sealed class KeyframesEndpoint : IRouteMapper, IServiceConfiguration
             return CommonResponse.CameraNotFound(id);
         }
 
-        var property = ReadPropertyFromBody(request, jsonSerializer);
-
-        using var keyframeScope = services.StartScope(KeyframeScope);
-
-        var handler = keyframeScope
-            .ResolveAll<IPutKeyframesHandler>()
-            .FirstOrDefault(h => h.Property == property);
-
-        return handler switch
-        {
-            IPutKeyframesHandler<PerspectiveSceneCamera> ph
-                when camera is PerspectiveSceneCamera perspectiveCamera
-                => ph.HandleRequest(perspectiveCamera),
-
-            IPutKeyframesHandler<EquirectSceneCamera> eh
-                when camera is EquirectSceneCamera equirectCamera
-                => eh.HandleRequest(equirectCamera),
-
-            IPutKeyframesHandler<ISceneCamera> ch => ch.HandleRequest(camera),
-
-            IPutKeyframesHandler<Transform> th => th.HandleRequest(transform),
-
-            _ => BadRequest($"property '{property}' is not animatable"),
-        };
+        return PutKeyframes(request, apiResources.ContainerOf(transform.gameObject), camera);
     }
 
     private static IResponse PutGameObjectKeyframes(
         [FromUrl] string name,
-        Request request,
-        JsonSerializer jsonSerializer,
-        GameObjectRepository gameObjects,
-        IServiceScope services
+        [FromBody] PutKeyframesRequest request,
+        ApiResourceRepository apiResources,
+        GameObjectRepository gameObjects
     )
     {
         if (gameObjects.FindOrNull(name) is not { } gameObject)
@@ -151,189 +82,158 @@ internal sealed class KeyframesEndpoint : IRouteMapper, IServiceConfiguration
             return CommonResponse.GameObjectNotFound(name);
         }
 
-        var property = ReadPropertyFromBody(request, jsonSerializer);
+        return PutKeyframes(request, apiResources.ContainerOf(gameObject), gameObject);
+    }
 
-        using var keyframeScope = services.StartScope(KeyframeScope);
-
-        var handler = keyframeScope
-            .ResolveAll<IPutKeyframesHandler>()
-            .FirstOrDefault(h => h.Property == property);
-
-        return handler switch
+    private static IResponse PutKeyframes<E>(
+        PutKeyframesRequest request,
+        IApiResourceContainer container,
+        E entity
+    )
+    {
+        if (
+            container.GetResource<PropertyAnimator>(request.Property)
+            is not { Curve: var propertyCurve } propertyAnimator
+        )
         {
-            IPutKeyframesHandler<GameObject> gh => gh.HandleRequest(gameObject),
-            IPutKeyframesHandler<Transform> th => th.HandleRequest(gameObject.transform),
-            _ => BadRequest($"property '{property}' is not animatable"),
+            if (CreatePropertyApplier(request.Property, entity) is not { } propertyApplier)
+            {
+                return BadRequest($"property '{request.Property}' is not animatable");
+            }
+
+            propertyCurve = new PropertyCurve();
+            propertyAnimator = new PropertyAnimator(propertyCurve, propertyApplier);
+            container.AddResource(request.Property, propertyAnimator);
+        }
+
+        foreach (var (frame, keyframeDto) in request.Keyframes)
+        {
+            propertyCurve.StoreKeyframe(new PropertyKeyframe(frame, keyframeDto.Value));
+        }
+
+        return Ok();
+    }
+
+    private static PropertyApplier? CreatePropertyApplier<E>(string property, E entity)
+    {
+        return entity switch
+        {
+            Unit => ScenePropertyApplier(property),
+
+            GameObject { transform: var transform } => TransformApplier(property, transform),
+
+            PerspectiveSceneCamera { Transform: var transform } perspectiveCamera
+                => TransformApplier(property, transform)
+                    ?? PerspectiveApplier(property, perspectiveCamera),
+
+            ISceneCamera { Transform: var transform } => TransformApplier(property, transform),
+
+            _ => null,
         };
     }
 
-    private static string ReadPropertyFromBody(Request request, JsonSerializer jsonSerializer)
+    private static PropertyApplier? ScenePropertyApplier(string property)
     {
-        var requestBase = jsonSerializer.Deserialize<BaseRequestBody>(request.BodyReader);
-        requestBase.AssertNotNull();
-
-        request.BodyReader.BaseStream.Position = 0;
-
-        return requestBase.Property;
-    }
-
-    private interface IPutKeyframesHandler
-    {
-        public string Property { get; }
-    }
-
-    private interface IPutKeyframesHandler<E> : IPutKeyframesHandler
-    {
-        public IResponse HandleRequest(E entity);
-    }
-
-    private abstract class PutKeyframesHandler<E, T> : IPutKeyframesHandler<E>
-    {
-        public string Property { get; }
-
-        public required Request Request { private get; init; }
-
-        public required JsonSerializer JsonSerializer { private get; init; }
-
-        public required Lerper<T> Lerper { private get; init; }
-
-        public required ApiResourceRepository ApiResources { protected get; init; }
-
-        public PutKeyframesHandler(string property)
+        return property switch
         {
-            Property = property;
+            "time.scale" => timeScale => Time.timeScale = timeScale,
+            _ => null,
+        };
+    }
+
+    private static readonly Regex _transformPropertyRegex = new Regex(
+        @"^transform\.(?<component>position|rotation|scale)\.(?<axis>[xyzw])$"
+    );
+
+    private static PropertyApplier? TransformApplier(string property, Transform transform)
+    {
+        if (_transformPropertyRegex.Match(property) is not { Success: true, Groups: var groups })
+        {
+            return null;
         }
 
-        public IResponse HandleRequest(E entity)
+        var axisIndex = groups["axis"].Value switch
         {
-            var putKeyframesRequest = JsonSerializer.Deserialize<PutKeyframesRequest<T>>(
-                Request.BodyReader
-            );
-            putKeyframesRequest.AssertNotNull();
+            "x" => 0,
+            "y" => 1,
+            "z" => 2,
+            "w" => 3,
+            _ => -1
+        };
 
-            var keyframes = putKeyframesRequest.Keyframes;
+        return (groups["component"].Value, axisIndex) switch
+        {
+            ("position", >= 0 and <= 2)
+                => axisValue =>
+                    transform.localPosition = transform.localPosition.WithAxis(
+                        axisIndex,
+                        axisValue
+                    ),
 
-            var resources = GetContainer(entity);
+            ("rotation", >= 0 and <= 3)
+                => axisValue =>
+                    transform.localRotation = transform.localRotation.WithAxis(
+                        axisIndex,
+                        axisValue
+                    ),
 
-            if (
-                resources.GetResource<Animator<T>>(Property)
-                is not { Curve: PropertyCurve<T> propertyCurve } animator
-            )
-            {
-                var sceneRecorderBuilder =
-                    ApiResources.GlobalContainer.GetRequiredResource<SceneRecorder.Builder>();
+            ("scale", >= 0 and <= 2)
+                => axisValue =>
+                    transform.localScale = transform.localScale.WithAxis(axisIndex, axisValue),
 
-                var applier = CreateApplier(entity);
-                propertyCurve = new PropertyCurve<T>(Lerper);
-                animator = new Animator<T>(propertyCurve, applier);
+            _ => null,
+        };
+    }
 
-                resources.AddResource(Property, animator);
-                sceneRecorderBuilder.WithAnimator(animator);
-            }
+    private static readonly Regex _perspectivePropertyRegex = new Regex(
+        @"^perspective\.(?<component>focalLength|sensorSize|lensShift|(?:near|far)ClipPlane)(?:\.(?<axis>[xy]))?$"
+    );
 
-            foreach (var (frame, keyframeDto) in keyframes)
-            {
-                propertyCurve.StoreKeyframe(new Keyframe<T>(frame, keyframeDto.Value));
-            }
-
-            return Ok();
+    private static PropertyApplier? PerspectiveApplier(
+        string property,
+        PerspectiveSceneCamera camera
+    )
+    {
+        if (_perspectivePropertyRegex.Match(property) is not { Success: true, Groups: var groups })
+        {
+            return null;
         }
 
-        protected abstract IApiResourceContainer GetContainer(E entity);
+        const int noAxis = -1;
 
-        protected abstract Applier<T> CreateApplier(E entity);
-    }
+        var axisIndex = groups["axis"] switch
+        {
+            { Success: true, Value: "x" } => 0,
+            { Success: true, Value: "y" } => 1,
+            _ => noAxis
+        };
 
-    private sealed class PutTimeScaleKeyframesHandler()
-        : PutKeyframesHandler<Unit, float>("time.scale")
-    {
-        protected override IApiResourceContainer GetContainer(Unit _) =>
-            ApiResources.GlobalContainer;
+        return (component: groups["component"].Value, axisIndex) switch
+        {
+            ("focalLength", noAxis)
+                => length => camera.Perspective = camera.Perspective with { FocalLength = length },
 
-        protected override Applier<float> CreateApplier(Unit _) =>
-            timeScale => Time.timeScale = timeScale;
-    }
+            ("sensorSize", >= 0 and <= 1)
+                => axisValue =>
+                    camera.Perspective = camera.Perspective with
+                    {
+                        SensorSize = camera.Perspective.SensorSize.WithAxis(axisIndex, axisValue)
+                    },
 
-    private sealed class PutPositionKeyframesHandler()
-        : PutKeyframesHandler<Transform, Vector3>("transform.position")
-    {
-        protected override IApiResourceContainer GetContainer(Transform transform) =>
-            ApiResources.ContainerOf(transform.gameObject);
+            ("lensShift", >= 0 and <= 1)
+                => axisValue =>
+                    camera.Perspective = camera.Perspective with
+                    {
+                        LensShift = camera.Perspective.LensShift.WithAxis(axisIndex, axisValue)
+                    },
 
-        protected override Applier<Vector3> CreateApplier(Transform transform) =>
-            position => transform.localPosition = position;
-    }
+            ("nearClipPlane", noAxis)
+                => plane => camera.Perspective = camera.Perspective with { NearClipPlane = plane },
 
-    private sealed class PutRotationKeyframesHandler()
-        : PutKeyframesHandler<Transform, Quaternion>("transform.rotation")
-    {
-        protected override IApiResourceContainer GetContainer(Transform transform) =>
-            ApiResources.ContainerOf(transform.gameObject);
+            ("farClipPlane", noAxis)
+                => plane => camera.Perspective = camera.Perspective with { FarClipPlane = plane },
 
-        protected override Applier<Quaternion> CreateApplier(Transform transform) =>
-            rotation => transform.localRotation = rotation;
-    }
-
-    private sealed class PutScaleKeyframesHandler()
-        : PutKeyframesHandler<Transform, Vector3>("transform.scale")
-    {
-        protected override IApiResourceContainer GetContainer(Transform transform) =>
-            ApiResources.ContainerOf(transform.gameObject);
-
-        protected override Applier<Vector3> CreateApplier(Transform transform) =>
-            scale => transform.localScale = scale;
-    }
-
-    private sealed class PutFocalLengthKeyframesHandler()
-        : PutKeyframesHandler<PerspectiveSceneCamera, float>("perspective.focalLength")
-    {
-        protected override IApiResourceContainer GetContainer(PerspectiveSceneCamera camera) =>
-            ApiResources.ContainerOf(camera.transform.gameObject);
-
-        protected override Applier<float> CreateApplier(PerspectiveSceneCamera camera) =>
-            focalLength =>
-                camera.Perspective = camera.Perspective with { FocalLength = focalLength };
-    }
-
-    private sealed class PutSensorSizeKeyframesHandler()
-        : PutKeyframesHandler<PerspectiveSceneCamera, Vector2>("perspective.sensorSize")
-    {
-        protected override IApiResourceContainer GetContainer(PerspectiveSceneCamera camera) =>
-            ApiResources.ContainerOf(camera.transform.gameObject);
-
-        protected override Applier<Vector2> CreateApplier(PerspectiveSceneCamera camera) =>
-            sensorSize => camera.Perspective = camera.Perspective with { SensorSize = sensorSize };
-    }
-
-    private sealed class PutLensShiftKeyframesHandler()
-        : PutKeyframesHandler<PerspectiveSceneCamera, Vector2>("perspective.lensShift")
-    {
-        protected override IApiResourceContainer GetContainer(PerspectiveSceneCamera camera) =>
-            ApiResources.ContainerOf(camera.transform.gameObject);
-
-        protected override Applier<Vector2> CreateApplier(PerspectiveSceneCamera camera) =>
-            lensShift => camera.Perspective = camera.Perspective with { LensShift = lensShift };
-    }
-
-    private sealed class PutNearClipPlaneKeyframesHandler()
-        : PutKeyframesHandler<PerspectiveSceneCamera, float>("perspective.nearClipPlane")
-    {
-        protected override IApiResourceContainer GetContainer(PerspectiveSceneCamera camera) =>
-            ApiResources.ContainerOf(camera.transform.gameObject);
-
-        protected override Applier<float> CreateApplier(PerspectiveSceneCamera camera) =>
-            nearClipPlane =>
-                camera.Perspective = camera.Perspective with { NearClipPlane = nearClipPlane };
-    }
-
-    private sealed class PutFarClipPlaneKeyframesHandler()
-        : PutKeyframesHandler<PerspectiveSceneCamera, float>("perspective.farClipPlane")
-    {
-        protected override IApiResourceContainer GetContainer(PerspectiveSceneCamera camera) =>
-            ApiResources.ContainerOf(camera.transform.gameObject);
-
-        protected override Applier<float> CreateApplier(PerspectiveSceneCamera camera) =>
-            farClipPlane =>
-                camera.Perspective = camera.Perspective with { FarClipPlane = farClipPlane };
+            _ => null,
+        };
     }
 }

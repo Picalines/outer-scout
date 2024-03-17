@@ -3,18 +3,11 @@ using OuterScout.Infrastructure.Validation;
 
 namespace OuterScout.Application.Animation;
 
-public sealed class PropertyCurve<T> : IPropertyCurve<T>
+public sealed class PropertyCurve
 {
-    private readonly Lerper<T> _lerper;
+    private readonly SortedDictionary<int, PropertyKeyframe> _keyframes = [];
 
-    private readonly SortedDictionary<int, Keyframe<T>> _keyframes = [];
-
-    public PropertyCurve(Lerper<T> lerper)
-    {
-        _lerper = lerper;
-    }
-
-    public void StoreKeyframe(Keyframe<T> keyframe)
+    public void StoreKeyframe(PropertyKeyframe keyframe)
     {
         // SortedDictionary.Enumerator will throw InvalidOperationException
         // if a Curve is modified during iteration
@@ -22,7 +15,7 @@ public sealed class PropertyCurve<T> : IPropertyCurve<T>
         _keyframes[keyframe.Frame] = keyframe;
     }
 
-    public IEnumerable<T> GetValues(IntRange frameRange)
+    public IEnumerable<float> GetValues(IntRange frameRange)
     {
         _keyframes.Count.Throw().IfEquals(0);
 
@@ -61,10 +54,7 @@ public sealed class PropertyCurve<T> : IPropertyCurve<T>
                 rightKeyframe = keyframeEnumerator.Current;
             }
 
-            var range = IntRange.FromValues(leftKeyframe.Frame, rightKeyframe.Frame);
-            var progress = ((float)currentFrame - range.Start) / range.Length;
-
-            yield return _lerper(leftKeyframe.Value, rightKeyframe.Value, progress);
+            yield return leftKeyframe.Interpolate(rightKeyframe, currentFrame);
 
             currentFrame++;
         }

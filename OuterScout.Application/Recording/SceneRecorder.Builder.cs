@@ -7,7 +7,7 @@ public sealed partial class SceneRecorder
 {
     public sealed class Builder
     {
-        private readonly HashSet<IAnimator> _animators = [];
+        private readonly HashSet<PropertyAnimator> _animators = [];
 
         private readonly List<IRecorder.IBuilder> _recorderBuilders = [];
 
@@ -23,7 +23,7 @@ public sealed partial class SceneRecorder
             );
         }
 
-        public Builder WithAnimator(IAnimator animator)
+        public Builder WithAnimator(PropertyAnimator animator)
         {
             _animators.Add(animator);
             return this;

@@ -3,11 +3,11 @@ using OuterScout.Domain;
 
 namespace OuterScout.Application.Animation;
 
-internal sealed class ComposedAnimator : IAnimator
+internal sealed class ComposedAnimator
 {
-    private readonly IReadOnlyList<IAnimator> _animators;
+    private readonly IReadOnlyList<PropertyAnimator> _animators;
 
-    public ComposedAnimator(IReadOnlyList<IAnimator> animators)
+    public ComposedAnimator(IReadOnlyList<PropertyAnimator> animators)
     {
         _animators = animators;
     }

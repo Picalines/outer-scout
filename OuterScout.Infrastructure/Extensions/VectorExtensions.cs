@@ -30,4 +30,22 @@ public static class VectorExtensions
         z = quaternion.z;
         w = quaternion.w;
     }
+
+    public static Vector2 WithAxis(this Vector2 vector, int axisIndex, float value)
+    {
+        vector[axisIndex] = value;
+        return vector;
+    }
+
+    public static Vector3 WithAxis(this Vector3 vector, int axisIndex, float value)
+    {
+        vector[axisIndex] = value;
+        return vector;
+    }
+
+    public static Quaternion WithAxis(this Quaternion quaternion, int axisIndex, float value)
+    {
+        quaternion[axisIndex] = value;
+        return quaternion;
+    }
 }

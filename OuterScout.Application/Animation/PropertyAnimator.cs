@@ -3,13 +3,13 @@ using OuterScout.Domain;
 
 namespace OuterScout.Application.Animation;
 
-public sealed class Animator<T> : IAnimator
+public sealed class PropertyAnimator
 {
-    public IPropertyCurve<T> Curve { get; }
+    public PropertyCurve Curve { get; }
 
-    public Applier<T> Applier { get; }
+    public PropertyApplier Applier { get; }
 
-    public Animator(IPropertyCurve<T> curve, Applier<T> applier)
+    public PropertyAnimator(PropertyCurve curve, PropertyApplier applier)
     {
         Curve = curve;
         Applier = applier;

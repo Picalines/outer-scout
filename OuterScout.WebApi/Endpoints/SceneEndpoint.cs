@@ -4,6 +4,7 @@ using OuterScout.Application.Recording;
 using OuterScout.Application.SceneCameras;
 using OuterScout.Domain;
 using OuterScout.Infrastructure.DependencyInjection;
+using OuterScout.Infrastructure.Extensions;
 using OuterScout.WebApi.DTOs;
 using OuterScout.WebApi.Extensions;
 using OuterScout.WebApi.Http;
@@ -86,7 +87,7 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
             return CommonResponse.GameObjectNotFound(request.Origin.Parent);
         }
 
-        resources.DisposeResources<IAnimator>();
+        resources.DisposeResources<PropertyAnimator>();
         resources.DisposeResources<ISceneCamera>();
         resources.DisposeResources<ApiOwnedGameObject>();
 
@@ -134,6 +135,14 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
 
         var sceneRecorderBuilder =
             resources.GlobalContainer.GetRequiredResource<SceneRecorder.Builder>();
+
+        resources
+            .GetResources<PropertyAnimator>()
+            .ForEach(animator => sceneRecorderBuilder.WithAnimator(animator));
+
+        resources
+            .GetResources<IRecorder.IBuilder>()
+            .ForEach(recorder => sceneRecorderBuilder.WithRecorder(recorder));
 
         resources.GlobalContainer.DisposeResources<SceneRecorder>();
 

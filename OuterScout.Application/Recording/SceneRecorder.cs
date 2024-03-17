@@ -23,7 +23,7 @@ public sealed partial class SceneRecorder
 
     private SceneRecorder(
         RecordingParameters recordingParameters,
-        IAnimator[] animators,
+        PropertyAnimator[] animators,
         IRecorder.IBuilder[] recorders,
         ReversableAction[] scenePatches
     )

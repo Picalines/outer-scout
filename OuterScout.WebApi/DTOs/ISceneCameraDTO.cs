@@ -6,8 +6,8 @@ using UnityEngine;
 namespace OuterScout.WebApi.DTOs;
 
 [JsonConverter(typeof(JsonSubtypes), nameof(ISceneCameraDTO.Type))]
-[JsonSubtypes.KnownSubType(typeof(PerspectiveSceneCameraDTO), PerspectiveSceneCameraDTO.TypeValue)]
-[JsonSubtypes.KnownSubType(typeof(EquirectSceneCameraDTO), EquirectSceneCameraDTO.TypeValue)]
+[JsonSubtypes.KnownSubType(typeof(PerspectiveSceneCameraDTO), "perspective")]
+[JsonSubtypes.KnownSubType(typeof(EquirectSceneCameraDTO), "equirectangular")]
 internal interface ISceneCameraDTO
 {
     public string Id { get; }
@@ -26,11 +26,9 @@ internal sealed class ResolutionDTO
 
 internal sealed class PerspectiveSceneCameraDTO : ISceneCameraDTO
 {
-    public const string TypeValue = "perspective";
-
     public required string Id { get; init; }
 
-    public required string Type { get; init; } = TypeValue;
+    public required string Type { get; init; } = "perspective";
 
     public required TransformDTO Transform { get; init; }
 
@@ -43,11 +41,9 @@ internal sealed class PerspectiveSceneCameraDTO : ISceneCameraDTO
 
 internal sealed class EquirectSceneCameraDTO : ISceneCameraDTO
 {
-    public const string TypeValue = "equirectangular";
-
     public required string Id { get; init; }
 
-    public required string Type { get; init; } = TypeValue;
+    public required string Type { get; init; } = "equirectangular";
 
     public required TransformDTO Transform { get; init; }
 
