@@ -7,6 +7,11 @@ public sealed class PropertyCurve
 {
     private readonly SortedDictionary<int, PropertyKeyframe> _keyframes = [];
 
+    public bool IsEmpty
+    {
+        get => _keyframes.Count is 0;
+    }
+
     public void StoreKeyframe(PropertyKeyframe keyframe)
     {
         // SortedDictionary.Enumerator will throw InvalidOperationException
@@ -17,7 +22,7 @@ public sealed class PropertyCurve
 
     public IEnumerable<float> GetValues(IntRange frameRange)
     {
-        _keyframes.Count.Throw().IfEquals(0);
+        IsEmpty.Throw().IfTrue();
 
         if (_keyframes.Count is 1)
         {

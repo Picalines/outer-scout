@@ -17,6 +17,11 @@ public sealed class PropertyAnimator
 
     public IEnumerator ApplyFrames(IntRange frameRange)
     {
+        if (Curve.IsEmpty)
+        {
+            return Array.Empty<object>().GetEnumerator();
+        }
+
         return Curve
             .GetValues(frameRange)
             .Select(value =>
