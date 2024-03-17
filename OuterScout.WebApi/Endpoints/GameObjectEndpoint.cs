@@ -148,7 +148,7 @@ internal sealed class GameObjectEndpoint : IRouteMapper
         }
 
         parent ??= resources
-            .GlobalContainer.GetRequiredResource<GameObject>(SceneEndpoint.OriginResource)
+            .GlobalContainer.GetResource<GameObject>(SceneEndpoint.OriginResource)
             ?.transform;
 
         if (parent is null)
