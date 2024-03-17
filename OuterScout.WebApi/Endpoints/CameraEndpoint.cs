@@ -1,4 +1,6 @@
 ﻿using System.Text.RegularExpressions;
+using JsonSubTypes;
+using Newtonsoft.Json;
 using OuterScout.Application.Extensions;
 using OuterScout.Application.SceneCameras;
 using OuterScout.Domain;
@@ -52,6 +54,51 @@ internal sealed class CameraEndpoint : IRouteMapper
         }
     }
 
+    [JsonConverter(typeof(JsonSubtypes), nameof(ISceneCameraDTO.Type))]
+    [JsonSubtypes.KnownSubType(typeof(PerspectiveSceneCameraDTO), "perspective")]
+    [JsonSubtypes.KnownSubType(typeof(EquirectSceneCameraDTO), "equirectangular")]
+    private interface ISceneCameraDTO
+    {
+        public string Id { get; }
+
+        public string Type { get; }
+
+        public TransformDTO Transform { get; }
+    }
+
+    private sealed class ResolutionDTO
+    {
+        public required int Width { get; init; }
+
+        public required int Height { get; init; }
+    }
+
+    private sealed class PerspectiveSceneCameraDTO : ISceneCameraDTO
+    {
+        public required string Id { get; init; }
+
+        public required string Type { get; init; } = "perspective";
+
+        public required TransformDTO Transform { get; init; }
+
+        public required Camera.GateFitMode GateFit { get; init; }
+
+        public required ResolutionDTO Resolution { get; init; }
+
+        public required CameraPerspective Perspective { get; init; }
+    }
+
+    private sealed class EquirectSceneCameraDTO : ISceneCameraDTO
+    {
+        public required string Id { get; init; }
+
+        public required string Type { get; init; } = "equirectangular";
+
+        public required TransformDTO Transform { get; init; }
+
+        public required int FaceResolution { get; init; }
+    }
+
     private static IResponse CreateSceneCamera(
         [FromBody] ISceneCameraDTO cameraDTO,
         GameObjectRepository gameObjects,
@@ -70,14 +117,18 @@ internal sealed class CameraEndpoint : IRouteMapper
             return BadRequest($"camera with id '{cameraId}' already exists");
         }
 
-        var parentTransform = cameraDTO.Transform.Parent is { } parentName
+        var parent = cameraDTO.Transform.Parent is { } parentName
             ? gameObjects.FindOrNull(parentName)?.transform
             : null;
 
-        if ((cameraDTO.Transform.Parent, parentTransform) is (not null, null))
+        if ((cameraDTO.Transform.Parent, parent) is (not null, null))
         {
             return CommonResponse.GameObjectNotFound(cameraDTO.Transform.Parent);
         }
+
+        parent ??= resources
+            .GlobalContainer.GetRequiredResource<GameObject>(SceneEndpoint.OriginResource)
+            .transform;
 
         ISceneCamera? newCamera = cameraDTO switch
         {
@@ -107,11 +158,7 @@ internal sealed class CameraEndpoint : IRouteMapper
             return BadRequest($"unknown camera type '{cameraDTO.Type}'");
         }
 
-        parentTransform ??= resources
-            .GlobalContainer.GetRequiredResource<GameObject>(SceneEndpoint.OriginResource)
-            .transform;
-
-        newCamera.Transform.ApplyWithParent(cameraDTO.Transform.ToLocalTransform(parentTransform));
+        newCamera.Transform.ApplyWithParent(cameraDTO.Transform.ToLocalTransform(parent));
 
         resources.GlobalContainer.AddResource<ISceneCamera>(cameraId, newCamera);
 
