@@ -25,9 +25,10 @@ The add-on and the mod communicate over the HTTP protocol on local port `2209`. 
 ## How it works
 
 This mod implements the [API](OuterScout.WebApi/resources/openapi.yaml) that can:
-- Create one or more cameras of different types (even [360](OuterScout.WebApi/resources/openapi.yaml#L267)!)
-- Animate their transform and [perspective](OuterScout.WebApi/resources/openapi.yaml#L854) using [keyframes](OuterScout.WebApi/resources/openapi.yaml#L370)
-- Create [recorders](OuterScout.WebApi/resources/openapi.yaml#L420) of their RenderTextures (color or depth)
+- Create custom Unity GameObjects
+- Add different types of cameras to them (even [360](OuterScout.WebApi/resources/openapi.yaml#L806)!)
+- Animate their transform and [perspective](OuterScout.WebApi/resources/openapi.yaml#L758) using [keyframes](OuterScout.WebApi/resources/openapi.yaml#L471)
+- Create [recorders](OuterScout.WebApi/resources/openapi.yaml#L529) of their RenderTextures (color or depth)
 - [Record](OuterScout.WebApi/resources/openapi.yaml#L119) your scene with a [fixed frame rate](https://docs.unity3d.com/ScriptReference/Time-captureFramerate.html)
 
 All API paths are available in the [swagger-ui](https://github.com/swagger-api/swagger-ui) interface. You can view them by opening a web browser and navigating to `localhost:2209`.
@@ -51,13 +52,20 @@ Let's do something like the [dolly zoom](https://en.wikipedia.org/wiki/Dolly_zoo
 Now we need a camera. The mod can create several cameras of different types, but we will only need one regular (perspective) camera:
 
 ```json5
-// POST /cameras
+// POST /objects
 {
-    "id": "main",
-    "type": "perspective",
+    "name": "mainCamera",
     "transform": {
         // camera is created at the origin
     },
+}
+```
+
+```json5
+// POST /objects/mainCamera/camera
+{
+    "id": "main",
+    "type": "perspective",
     "gateFit": "horizontal",
     "resolution": {
         "width": 1920,
@@ -78,7 +86,7 @@ Now we need a camera. The mod can create several cameras of different types, but
 Now we need to animate the camera position and focal length:
 
 ```json5
-// PUT /cameras/main/keyframes
+// PUT /objects/mainCamera/keyframes
 {
     "properties": {
         "transform.position.z": {
@@ -87,7 +95,7 @@ Now we need to animate the camera position and focal length:
                 "60": { "value": 2 }
             }
         },
-        "perspective.focalLength": {
+        "camera.perspective.focalLength": {
             "keyframes": {
                 "1": { "value": 40 },
                 "60": { "value": 10 }
@@ -100,9 +108,9 @@ Now we need to animate the camera position and focal length:
 Then we need to specify which file on the disk to save the video to. To do this, we need to create a camera recorder:
 
 ```json5
-// POST /cameras/main/recorders
+// POST /objects/mainCamera/recorders
 {
-    "property": "renderTexture.color",
+    "property": "camera.renderTexture.color",
     "outputPath": "D:\\assets\\color.mp4",
     "format": "mp4"
 }
