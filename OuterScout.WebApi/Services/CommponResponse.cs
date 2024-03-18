@@ -18,6 +18,11 @@ internal static class CommonResponse
     public static IResponse GameObjectNotFound(string name) =>
         NotFound(new { Error = $"gameObject '{name}' was not found" });
 
-    public static IResponse CameraNotFound(string id) =>
-        NotFound(new { Error = $"camera '{id}' was not found" });
+    public static IResponse GameObjectIsNotCustom(string name) =>
+        NotFound(new { Error = $"gameObject '{name}' is not custom" });
+
+    public static IResponse CameraComponentNotFound(string gameObjectName) =>
+        NotFound(
+            new { Error = $"camera component of gameObject '{gameObjectName}' was not found" }
+        );
 }
