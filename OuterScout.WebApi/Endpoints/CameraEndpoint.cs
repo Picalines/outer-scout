@@ -1,10 +1,10 @@
-﻿using System.Text.RegularExpressions;
-using JsonSubTypes;
+﻿using JsonSubTypes;
 using Newtonsoft.Json;
 using OuterScout.Application.Extensions;
 using OuterScout.Application.SceneCameras;
 using OuterScout.Domain;
 using OuterScout.Infrastructure.Extensions;
+using OuterScout.Infrastructure.Validation;
 using OuterScout.WebApi.DTOs;
 using OuterScout.WebApi.Extensions;
 using OuterScout.WebApi.Http;
@@ -18,52 +18,43 @@ using static ResponseFabric;
 
 internal sealed class CameraEndpoint : IRouteMapper
 {
+    public static class CameraType
+    {
+        public const string Perspective = "perspective";
+
+        public const string Equirect = "equirectangular";
+
+        public const string Unity = "unity";
+    }
+
     public static CameraEndpoint Instance { get; } = new();
 
     private CameraEndpoint() { }
 
-    private static Regex _validCameraIdRegex = new Regex(@"^[a-zA-Z_][a-zA-Z0-9_\-]*$");
-
     public void MapRoutes(HttpServer.Builder serverBuilder)
     {
         using (serverBuilder.WithPlayableSceneFilter())
+        using (serverBuilder.WithNotRecordingFilter())
         {
-            using (serverBuilder.WithNotRecordingFilter())
+            using (serverBuilder.WithSceneCreatedFilter())
             {
-                using (serverBuilder.WithSceneCreatedFilter())
-                {
-                    serverBuilder.MapPost("cameras", CreateSceneCamera);
-
-                    serverBuilder.MapPut("cameras/:id/perspective", PutCameraPerspective);
-
-                    serverBuilder.MapPut("cameras/:id/transform", PutCameraTransform);
-                }
-
-                serverBuilder.MapPut(
-                    "gameObjects/:name/camera/perspective",
-                    PutGameObjectCameraPerspective
-                );
+                serverBuilder.MapPost("objects/:name/camera", PostCamera);
             }
+
+            serverBuilder.MapGet("objects/:name/camera", GetCamera);
 
             serverBuilder.MapGet("scene/active-camera", GetActiveGamera);
 
-            serverBuilder.MapGet(
-                "gameObjects/:name/camera/perspective",
-                GetGameObjectCameraPerspective
-            );
+            serverBuilder.MapPut("objects/:name/camera", PutCamera);
         }
     }
 
-    [JsonConverter(typeof(JsonSubtypes), nameof(ISceneCameraDto.Type))]
-    [JsonSubtypes.KnownSubType(typeof(PerspectiveSceneCameraDto), "perspective")]
-    [JsonSubtypes.KnownSubType(typeof(EquirectSceneCameraDto), "equirectangular")]
-    private interface ISceneCameraDto
+    [JsonConverter(typeof(JsonSubtypes), nameof(IPostCameraRequest.Type))]
+    [JsonSubtypes.KnownSubType(typeof(PostPerspectiveSceneCameraRequest), CameraType.Perspective)]
+    [JsonSubtypes.KnownSubType(typeof(PostEquirectSceneCameraRequest), CameraType.Equirect)]
+    private interface IPostCameraRequest
     {
-        public string Id { get; }
-
         public string Type { get; }
-
-        public TransformDto Transform { get; }
     }
 
     private sealed class ResolutionDto
@@ -73,13 +64,11 @@ internal sealed class CameraEndpoint : IRouteMapper
         public required int Height { get; init; }
     }
 
-    private sealed class PerspectiveSceneCameraDto : ISceneCameraDto
+    private sealed class PostPerspectiveSceneCameraRequest : IPostCameraRequest
     {
-        public required string Id { get; init; }
+        public required string Type { get; init; } = CameraType.Perspective;
 
-        public required string Type { get; init; } = "perspective";
-
-        public required TransformDto Transform { get; init; }
+        public TransformDto? Transform { get; init; }
 
         public required Camera.GateFitMode GateFit { get; init; }
 
@@ -88,57 +77,46 @@ internal sealed class CameraEndpoint : IRouteMapper
         public required CameraPerspective Perspective { get; init; }
     }
 
-    private sealed class EquirectSceneCameraDto : ISceneCameraDto
+    private sealed class PostEquirectSceneCameraRequest : IPostCameraRequest
     {
-        public required string Id { get; init; }
+        public required string Type { get; init; } = CameraType.Equirect;
 
-        public required string Type { get; init; } = "equirectangular";
-
-        public required TransformDto Transform { get; init; }
+        public TransformDto? Transform { get; init; }
 
         public required int FaceResolution { get; init; }
     }
 
-    private static IResponse CreateSceneCamera(
-        [FromBody] ISceneCameraDto cameraDto,
+    private static IResponse PostCamera(
+        [FromUrl] string name,
+        [FromBody] IPostCameraRequest request,
         GameObjectRepository gameObjects,
         ApiResourceRepository resources
     )
     {
-        var cameraId = cameraDto.Id;
-
-        if (_validCameraIdRegex.IsMatch(cameraId) is false)
+        if (gameObjects.GetOwnOrNull(name) is not { } gameObject)
         {
-            return BadRequest("invalid camera id");
+            return CommonResponse.GameObjectIsNotCustom(name);
         }
 
-        if (resources.GlobalContainer.GetResource<ISceneCamera>(cameraId) is { })
+        var container = resources.ContainerOf(gameObject);
+
+        if (container.GetResource<ISceneCamera>() is not null)
         {
-            return BadRequest($"camera with id '{cameraId}' already exists");
+            return BadRequest(
+                new { Error = $"gameObject '{name}' already contains camera component" }
+            );
         }
 
-        var parent = cameraDto.Transform.Parent is { } parentName
-            ? gameObjects.FindOrNull(parentName)?.transform
-            : null;
-
-        if ((cameraDto.Transform.Parent, parent) is (not null, null))
+        ISceneCamera? newCamera = request switch
         {
-            return CommonResponse.GameObjectNotFound(cameraDto.Transform.Parent);
-        }
-
-        parent ??= resources
-            .GlobalContainer.GetRequiredResource<GameObject>(SceneEndpoint.OriginResource)
-            .transform;
-
-        ISceneCamera? newCamera = cameraDto switch
-        {
-            PerspectiveSceneCameraDto
+            PostPerspectiveSceneCameraRequest
             {
                 Resolution: var resolution,
                 GateFit: var gateFit,
                 Perspective: var perspective
             }
                 => PerspectiveSceneCamera.Create(
+                    gameObject,
                     new()
                     {
                         Resolution = new Vector2Int(resolution.Width, resolution.Height),
@@ -147,127 +125,133 @@ internal sealed class CameraEndpoint : IRouteMapper
                     }
                 ),
 
-            EquirectSceneCameraDto { FaceResolution: var faceResolution }
-                => EquirectSceneCamera.Create(new() { CubemapFaceSize = faceResolution }),
+            PostEquirectSceneCameraRequest { FaceResolution: var faceResolution }
+                => EquirectSceneCamera.Create(
+                    gameObject,
+                    new() { CubemapFaceSize = faceResolution }
+                ),
 
             _ => null,
         };
 
-        if (newCamera is null)
-        {
-            return BadRequest($"unknown camera type '{cameraDto.Type}'");
-        }
+        newCamera.AssertNotNull();
 
-        newCamera.Transform.parent = parent;
-        newCamera.Transform.ResetLocal();
-        cameraDto.Transform.ApplyLocal(newCamera.Transform);
-
-        resources.GlobalContainer.AddResource<ISceneCamera>(cameraId, newCamera);
+        container.AddResource<ISceneCamera>(name, newCamera);
 
         return Created();
     }
 
-    private static IResponse GetActiveGamera()
+    private sealed class CameraResponse
     {
-        if (Locator.GetActiveCamera().OrNull() is not { } camera)
-        {
-            return ServiceUnavailable();
-        }
+        public required string Type { get; init; }
 
-        return Ok(new { Name = camera.name });
+        public required CameraPerspective? Perspective { get; init; }
     }
 
-    private static IResponse PutCameraPerspective(
-        [FromUrl] string id,
-        [FromBody] CameraPerspective perspective,
+    private static IResponse GetCamera(
+        [FromUrl] string name,
+        GameObjectRepository gameObjects,
         ApiResourceRepository resources
     )
     {
-        if (resources.GlobalContainer.GetResource<ISceneCamera>(id) is not { } camera)
-        {
-            return CommonResponse.CameraNotFound(id);
-        }
-
-        if (camera is not PerspectiveSceneCamera perspectiveCamera)
-        {
-            return BadRequest($"camera '{id}' is not perspective");
-        }
-
-        perspectiveCamera.Perspective = perspective;
-
-        return Ok();
-    }
-
-    private static IResponse PutCameraTransform(
-        [FromUrl] string id,
-        [FromBody] TransformDto transformDto,
-        ApiResourceRepository resources,
-        GameObjectRepository gameObjects
-    )
-    {
-        if (
-            resources.GlobalContainer.GetResource<ISceneCamera>(id)
-            is not { Transform: var transform }
-        )
-        {
-            return CommonResponse.CameraNotFound(id);
-        }
-
-        var parent = transformDto.Parent is { } parentName
-            ? gameObjects.FindOrNull(parentName)?.transform
-            : null;
-
-        if ((transformDto.Parent, parent) is (not null, null))
-        {
-            return CommonResponse.GameObjectNotFound(transformDto.Parent);
-        }
-
-        parent ??= resources
-            .GlobalContainer.GetRequiredResource<GameObject>(SceneEndpoint.OriginResource)
-            .transform;
-
-        transformDto.ApplyGlobal(transform, parent);
-
-        return Ok();
-    }
-
-    private static IResponse GetGameObjectCameraPerspective(
-        [FromUrl] string name,
-        GameObjectRepository gameObjects
-    )
-    {
-        if (gameObjects.FindOrNull(name)?.GetComponentOrNull<OWCamera>() is not { } camera)
+        if (gameObjects.FindOrNull(name) is not { } gameObject)
         {
             return CommonResponse.GameObjectNotFound(name);
         }
 
-        if (camera.mainCamera.usePhysicalProperties is false)
+        if (resources.ContainerOf(gameObject).GetResource<ISceneCamera>() is not { } sceneCamera)
         {
-            return BadRequest($"camera '{name}' does not use physical properties");
+            return gameObject.GetComponentOrNull<OWCamera>() is { } owCamera
+                ? Ok(GetUnityCameraResponse(owCamera))
+                : CommonResponse.CameraComponentNotFound(name);
         }
 
-        return Ok(new { Perspective = camera.GetPerspective() });
+        CameraResponse? response = sceneCamera switch
+        {
+            PerspectiveSceneCamera { Perspective: var perspective }
+                => new() { Type = CameraType.Perspective, Perspective = perspective },
+
+            EquirectSceneCamera => new() { Type = CameraType.Equirect, Perspective = null },
+
+            _ => null,
+        };
+
+        response.AssertNotNull();
+
+        return Ok(response);
     }
 
-    private static IResponse PutGameObjectCameraPerspective(
-        [FromUrl] string name,
-        [FromBody] CameraPerspective perspective,
-        GameObjectRepository gameObjects
+    private static IResponse GetActiveGamera(
+        GameObjectRepository gameObjects,
+        ApiResourceRepository resources
     )
     {
-        if (gameObjects.FindOrNull(name)?.GetComponentOrNull<OWCamera>() is not { } camera)
+        return Locator.GetActiveCamera().OrNull() switch
         {
-            return CommonResponse.CameraNotFound(name);
+            { } camera => Ok(GetUnityCameraResponse(camera)),
+            _ => ServiceUnavailable(),
+        };
+    }
+
+    private static CameraResponse GetUnityCameraResponse(OWCamera owCamera)
+    {
+        return new CameraResponse
+        {
+            Type = CameraType.Unity,
+            Perspective = owCamera.mainCamera
+                is { usePhysicalProperties: true, orthographic: false }
+                ? owCamera.GetPerspective()
+                : null
+        };
+    }
+
+    private sealed class PutCameraRequest
+    {
+        public CameraPerspective? Perspective { get; init; }
+    }
+
+    private static IResponse PutCamera(
+        [FromUrl] string name,
+        [FromBody] PutCameraRequest request,
+        GameObjectRepository gameObjects,
+        ApiResourceRepository resources
+    )
+    {
+        if (gameObjects.FindOrNull(name) is not { } gameObject)
+        {
+            return CommonResponse.GameObjectNotFound(name);
         }
 
-        if (Locator.GetPlayerCamera() == camera)
+        if (request.Perspective is not { } perspective)
         {
-            return MethodNotAllowed("can't modify player camera");
+            return Ok();
         }
 
-        camera.mainCamera.usePhysicalProperties = true;
+        if (resources.ContainerOf(gameObject).GetResource<ISceneCamera>() is { } sceneCamera)
+        {
+            if (sceneCamera is not PerspectiveSceneCamera perspectiveCamera)
+            {
+                return MethodNotAllowed();
+            }
 
-        camera.ApplyPerspective(perspective);
+            perspectiveCamera.Perspective = perspective;
+        }
+        else
+        {
+            if (gameObject.GetComponentOrNull<OWCamera>() is not { } owCamera)
+            {
+                return CommonResponse.CameraComponentNotFound(name);
+            }
+
+            if (owCamera.mainCamera.OrNull() is not { orthographic: false })
+            {
+                return MethodNotAllowed();
+            }
+
+            owCamera.mainCamera.usePhysicalProperties = true;
+
+            owCamera.ApplyPerspective(perspective);
+        }
 
         return Ok();
     }
