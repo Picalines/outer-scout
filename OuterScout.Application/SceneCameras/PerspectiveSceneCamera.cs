@@ -78,15 +78,6 @@ public sealed class PerspectiveSceneCamera
         Perspective = _perspective; // apply params to both cameras
     }
 
-    public Transform Transform
-    {
-        get
-        {
-            AssertNotDisposed();
-            return transform;
-        }
-    }
-
     public RenderTexture? ColorTexture
     {
         get
@@ -132,29 +123,29 @@ public sealed class PerspectiveSceneCamera
 
         _disposed = true;
 
-        Destroy(gameObject);
+        Destroy(this);
     }
 
-    public static PerspectiveSceneCamera? Create(Parameters parameters)
+    public static PerspectiveSceneCamera Create(GameObject gameObject, Parameters parameters)
     {
         parameters.Resolution.x.Throw().IfLessThan(1);
         parameters.Resolution.y.Throw().IfLessThan(1);
+        gameObject.Throw().If(gameObject.HasComponent<OWCamera>());
 
-        var playerCamera = Locator.GetPlayerCamera().OrNull();
-        if (playerCamera is null)
-        {
-            return null;
-        }
-
-        var gameObject = new GameObject($"{nameof(OuterScout)}.{nameof(PerspectiveSceneCamera)}");
-
-        playerCamera.CopyTo(gameObject, copyPostProcessing: true);
+        Locator
+            .GetPlayerCamera()
+            .OrNull()
+            .AssertNotNull()
+            .OrReturn()
+            .CopyTo(gameObject, copyPostProcessing: true);
 
         return gameObject.AddComponent<PerspectiveSceneCamera, Parameters>(parameters);
     }
 
     private OWCamera? CreateDepthCamera()
     {
+        AssertNotDisposed();
+
         if (SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.Depth) is false)
         {
             return null;
@@ -167,7 +158,7 @@ public sealed class PerspectiveSceneCamera
         );
 
         var depthTransform = depthCameraObject.transform;
-        depthTransform.parent = Transform;
+        depthTransform.parent = transform;
         depthTransform.ResetLocal();
 
         var depthCamera = _colorCamera.CopyTo(depthCameraObject, copyPostProcessing: false);
@@ -192,10 +183,7 @@ public sealed class PerspectiveSceneCamera
 
     private void AssertNotDisposed()
     {
-        if (_disposed)
-        {
-            throw new InvalidOperationException($"{nameof(PerspectiveSceneCamera)} is disposed");
-        }
+        _disposed.Assert().IfTrue();
     }
 
     private void OnDestory()

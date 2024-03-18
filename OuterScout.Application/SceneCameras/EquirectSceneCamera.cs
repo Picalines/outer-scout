@@ -63,15 +63,6 @@ public sealed class EquirectSceneCamera
         }
     }
 
-    public Transform Transform
-    {
-        get
-        {
-            AssertNotDisposed();
-            return transform;
-        }
-    }
-
     public RenderTexture? ColorTexture
     {
         get
@@ -99,14 +90,12 @@ public sealed class EquirectSceneCamera
 
         _disposed = true;
 
-        Destroy(gameObject);
+        Destroy(this);
     }
 
-    public static EquirectSceneCamera Create(Parameters parameters)
+    public static EquirectSceneCamera Create(GameObject gameObject, Parameters parameters)
     {
         parameters.CubemapFaceSize.Throw().IfLessThan(1);
-
-        var gameObject = new GameObject($"{nameof(OuterScout)}.{nameof(EquirectSceneCamera)}");
 
         return gameObject.AddComponent<EquirectSceneCamera, Parameters>(parameters);
     }
