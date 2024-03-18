@@ -58,6 +58,25 @@ internal sealed class GameObjectRepository
         return null;
     }
 
+    public bool IsOwn(GameObject gameObject)
+    {
+        return gameObject.OrNull()?.HasComponent<ApiOwnedGameObject>() is true;
+    }
+
+    public GameObject? GetOwnOrNull(string name)
+    {
+        return
+            _apiResources.GlobalContainer.GetResource<GameObject>(name) is { } gameObjectInRepo
+            && IsOwn(gameObjectInRepo)
+            ? gameObjectInRepo
+            : null;
+    }
+
+    public void DestroyOwnObjects()
+    {
+        _apiResources.DisposeResources<ApiOwnedGameObject>();
+    }
+
     private bool AddExternal(string name, GameObject gameObject)
     {
         bool added = _apiResources.GlobalContainer.AddResource(name, gameObject);
@@ -83,23 +102,23 @@ internal sealed class GameObjectRepository
             Destroyed = null;
         }
     }
-}
 
-internal sealed class ApiOwnedGameObject : MonoBehaviour, IDisposable
-{
-    private GameObject? _gameObject;
-
-    private void Start()
+    private sealed class ApiOwnedGameObject : MonoBehaviour, IDisposable
     {
-        _gameObject = gameObject;
-    }
+        private GameObject? _gameObject;
 
-    void IDisposable.Dispose()
-    {
-        if (_gameObject != null)
+        private void Start()
         {
-            UnityEngine.Object.DestroyImmediate(_gameObject);
-            _gameObject = null;
+            _gameObject = gameObject;
+        }
+
+        void IDisposable.Dispose()
+        {
+            if (_gameObject != null)
+            {
+                UnityEngine.Object.DestroyImmediate(_gameObject);
+                _gameObject = null;
+            }
         }
     }
 }
