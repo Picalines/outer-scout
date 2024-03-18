@@ -1,7 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using OuterScout.Application.Animation;
 using OuterScout.Application.SceneCameras;
-using OuterScout.Domain;
 using OuterScout.Infrastructure.Extensions;
 using OuterScout.WebApi.Extensions;
 using OuterScout.WebApi.Http;
@@ -19,6 +18,18 @@ internal sealed class KeyframesEndpoint : IRouteMapper
 
     private KeyframesEndpoint() { }
 
+    public void MapRoutes(HttpServer.Builder serverBuilder)
+    {
+        using (serverBuilder.WithPlayableSceneFilter())
+        using (serverBuilder.WithSceneCreatedFilter())
+        using (serverBuilder.WithNotRecordingFilter())
+        {
+            serverBuilder.MapPut("scene/keyframes", PutSceneKeyframes);
+
+            serverBuilder.MapPut("objects/:name/keyframes", PutGameObjectKeyframes);
+        }
+    }
+
     private sealed class KeyframeDto
     {
         public required float Value { get; init; }
@@ -34,43 +45,12 @@ internal sealed class KeyframesEndpoint : IRouteMapper
         public required Dictionary<string, PropertyAnimationDto> Properties { get; init; }
     }
 
-    public void MapRoutes(HttpServer.Builder serverBuilder)
-    {
-        using (serverBuilder.WithPlayableSceneFilter())
-        using (serverBuilder.WithSceneCreatedFilter())
-        using (serverBuilder.WithNotRecordingFilter())
-        {
-            serverBuilder.MapPut("scene/keyframes", PutSceneKeyframes);
-
-            serverBuilder.MapPut("cameras/:id/keyframes", PutCameraKeyframes);
-
-            serverBuilder.MapPut("gameObjects/:name/keyframes", PutGameObjectKeyframes);
-        }
-    }
-
     private static IResponse PutSceneKeyframes(
         [FromBody] PutKeyframesRequest request,
         ApiResourceRepository apiResources
     )
     {
-        return PutKeyframes(request, apiResources.GlobalContainer, Unit.Instance);
-    }
-
-    private static IResponse PutCameraKeyframes(
-        [FromUrl] string id,
-        [FromBody] PutKeyframesRequest request,
-        ApiResourceRepository apiResources
-    )
-    {
-        if (
-            apiResources.GlobalContainer.GetResource<ISceneCamera>(id)
-            is not { Transform: { } transform } camera
-        )
-        {
-            return CommonResponse.CameraNotFound(id);
-        }
-
-        return PutKeyframes(request, apiResources.ContainerOf(transform.gameObject), camera);
+        return PutKeyframes(apiResources, request, null);
     }
 
     private static IResponse PutGameObjectKeyframes(
@@ -85,15 +65,19 @@ internal sealed class KeyframesEndpoint : IRouteMapper
             return CommonResponse.GameObjectNotFound(name);
         }
 
-        return PutKeyframes(request, apiResources.ContainerOf(gameObject), gameObject);
+        return PutKeyframes(apiResources, request, gameObject);
     }
 
-    private static IResponse PutKeyframes<E>(
+    private static IResponse PutKeyframes(
+        ApiResourceRepository apiResources,
         PutKeyframesRequest request,
-        IApiResourceContainer container,
-        E entity
+        GameObject? gameObject
     )
     {
+        var container = gameObject is not null
+            ? apiResources.ContainerOf(gameObject)
+            : apiResources.GlobalContainer;
+
         var keyframes = new Dictionary<PropertyCurve, PropertyAnimationDto>();
 
         foreach (var (property, animationDto) in request.Properties)
@@ -103,7 +87,10 @@ internal sealed class KeyframesEndpoint : IRouteMapper
                 is not { Curve: var propertyCurve }
             )
             {
-                if (CreatePropertyApplier(property, entity) is not { } propertyApplier)
+                if (
+                    CreatePropertyApplier(apiResources, gameObject, property)
+                    is not { } propertyApplier
+                )
                 {
                     return BadRequest($"property '{property}' is not animatable");
                 }
@@ -127,21 +114,19 @@ internal sealed class KeyframesEndpoint : IRouteMapper
         return Ok();
     }
 
-    private static PropertyApplier? CreatePropertyApplier<E>(string property, E entity)
+    private static PropertyApplier? CreatePropertyApplier(
+        ApiResourceRepository apiResources,
+        GameObject? gameObject,
+        string property
+    )
     {
-        return entity switch
+        return gameObject switch
         {
-            Unit => ScenePropertyApplier(property),
+            { transform: var transform }
+                => TransformApplier(transform, property)
+                    ?? PerspectiveApplier(apiResources, gameObject, property),
 
-            GameObject { transform: var transform } => TransformApplier(property, transform),
-
-            PerspectiveSceneCamera { Transform: var transform } perspectiveCamera
-                => TransformApplier(property, transform)
-                    ?? PerspectiveApplier(property, perspectiveCamera),
-
-            ISceneCamera { Transform: var transform } => TransformApplier(property, transform),
-
-            _ => null,
+            _ => ScenePropertyApplier(property)
         };
     }
 
@@ -158,7 +143,7 @@ internal sealed class KeyframesEndpoint : IRouteMapper
         @"^transform\.(?<component>position|rotation|scale)\.(?<axis>[xyzw])$"
     );
 
-    private static PropertyApplier? TransformApplier(string property, Transform transform)
+    private static PropertyApplier? TransformApplier(Transform transform, string property)
     {
         if (_transformPropertyRegex.Match(property) is not { Success: true, Groups: var groups })
         {
@@ -199,15 +184,20 @@ internal sealed class KeyframesEndpoint : IRouteMapper
     }
 
     private static readonly Regex _perspectivePropertyRegex = new Regex(
-        @"^perspective\.(?<component>focalLength|sensorSize|lensShift|(?:near|far)ClipPlane)(?:\.(?<axis>[xy]))?$"
+        @"^camera\.perspective\.(?<component>focalLength|sensorSize|lensShift|(?:near|far)ClipPlane)(?:\.(?<axis>[xy]))?$"
     );
 
     private static PropertyApplier? PerspectiveApplier(
-        string property,
-        PerspectiveSceneCamera camera
+        ApiResourceRepository apiResouces,
+        GameObject gameObject,
+        string property
     )
     {
-        if (_perspectivePropertyRegex.Match(property) is not { Success: true, Groups: var groups })
+        if (
+            _perspectivePropertyRegex.Match(property) is not { Success: true, Groups: var groups }
+            || apiResouces.ContainerOf(gameObject).GetResource<PerspectiveSceneCamera>()
+                is not { } camera
+        )
         {
             return null;
         }
