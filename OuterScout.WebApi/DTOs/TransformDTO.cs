@@ -2,7 +2,7 @@
 
 namespace OuterScout.WebApi.DTOs;
 
-internal sealed class TransformDTO
+internal sealed record TransformDto
 {
     public string? Parent { get; init; }
 

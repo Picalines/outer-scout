@@ -22,7 +22,7 @@ internal sealed class GameObjectEndpoint : IRouteMapper
     {
         public required string Name { get; init; }
 
-        public required TransformDTO Transform { get; init; }
+        public required TransformDto Transform { get; init; }
     }
 
     private static readonly Regex _validApiGameObjectNameRegex = new Regex(
@@ -75,7 +75,9 @@ internal sealed class GameObjectEndpoint : IRouteMapper
             .transform;
 
         var gameObject = new GameObject($"{nameof(OuterScout)}#{request.Name}");
-        gameObject.transform.ApplyWithParent(request.Transform.ToLocalTransform(parent));
+        gameObject.transform.parent = parent;
+        gameObject.transform.ResetLocal();
+        request.Transform.ApplyLocal(gameObject.transform);
 
         gameObjects.AddOwned(request.Name, gameObject);
 
@@ -86,7 +88,7 @@ internal sealed class GameObjectEndpoint : IRouteMapper
         [FromUrl] string name,
         GameObjectRepository gameObjects,
         ApiResourceRepository resources,
-        [FromUrl] string? parent = null
+        [FromUrl] string? origin = null
     )
     {
         if (gameObjects.FindOrNull(name) is not { transform: var transform })
@@ -94,36 +96,33 @@ internal sealed class GameObjectEndpoint : IRouteMapper
             return CommonResponse.GameObjectNotFound(name);
         }
 
-        var parentTransform = parent is not null ? gameObjects.FindOrNull(parent)?.transform : null;
+        var originTransform = origin is not null ? gameObjects.FindOrNull(origin)?.transform : null;
 
-        if ((parent, parentTransform) is (not null, null))
+        if ((origin, originTransform) is (not null, null))
         {
-            return CommonResponse.GameObjectNotFound(parent);
+            return CommonResponse.GameObjectNotFound(origin);
         }
 
-        parentTransform ??= resources
+        originTransform ??= resources
             .GlobalContainer.GetResource<GameObject>(SceneEndpoint.OriginResource)
             ?.transform;
 
-        if (parentTransform is null)
+        if (originTransform is null)
         {
             return CommonResponse.SceneIsNotCreated;
         }
 
         return Ok(
-            new TransformDTO()
+            originTransform.InverseDto(transform) with
             {
-                Parent = transform.parent.OrNull()?.name,
-                Position = parentTransform.InverseTransformPoint(transform.position),
-                Rotation = parentTransform.InverseTransformRotation(transform.rotation),
-                Scale = transform.lossyScale,
+                Parent = transform.parent.OrNull()?.name
             }
         );
     }
 
     private static IResponse PutGameObjectTransform(
         [FromUrl] string name,
-        [FromBody] TransformDTO transformDTO,
+        [FromBody] TransformDto transformDto,
         ApiResourceRepository resources,
         GameObjectRepository gameObjects
     )
@@ -138,13 +137,13 @@ internal sealed class GameObjectEndpoint : IRouteMapper
             return MethodNotAllowed("can't modify player camera");
         }
 
-        var parent = transformDTO.Parent is { } parentName
+        var parent = transformDto.Parent is { } parentName
             ? gameObjects.FindOrNull(parentName)?.transform
             : null;
 
-        if ((transformDTO.Parent, parent) is (not null, null))
+        if ((transformDto.Parent, parent) is (not null, null))
         {
-            return CommonResponse.GameObjectNotFound(transformDTO.Parent);
+            return CommonResponse.GameObjectNotFound(transformDto.Parent);
         }
 
         parent ??= resources
@@ -156,20 +155,7 @@ internal sealed class GameObjectEndpoint : IRouteMapper
             return CommonResponse.SceneIsNotCreated;
         }
 
-        if (transformDTO.Position is { } localPosition)
-        {
-            transform.position = parent.TransformPoint(localPosition);
-        }
-
-        if (transformDTO.Rotation is { } localRotation)
-        {
-            transform.rotation = parent.rotation * localRotation;
-        }
-
-        if (transformDTO.Scale is { } localScale)
-        {
-            transform.localScale = localScale;
-        }
+        transformDto.ApplyGlobal(transform, parent);
 
         return Ok();
     }

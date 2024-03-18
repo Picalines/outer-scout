@@ -485,7 +485,7 @@ paths:
         Another GameObject will be used as the coordinate center if specified in the query
       parameters:
         - $ref: '#/components/parameters/gameObjectName'
-        - name: parent
+        - name: origin
           in: query
           required: false
           description: A GameObject whose transform will be used as the origin
@@ -501,7 +501,7 @@ paths:
                 $ref: '#/components/schemas/Transform'
               examples:
                 playerInitial:
-                  description: Player initial transformation (parent=TimberHearth_Body)
+                  description: Player initial transformation (origin=TimberHearth_Body)
                   value:
                     position: [20.83783, -45.4903259, 185.232925]
                     rotation: [-0.208906114, 0.573324442, 0.7582229, -0.229685858]
@@ -978,14 +978,12 @@ components:
         path:
           type: string
           description: |-
-            Means differed thing based on mesh type
+            Means differend thing based on the mesh type
 
             If the mesh is static, it's a path to GameObject in a hierarchy
 
             If the mesh is streamed, it's a filesystem path to said mesh asset
-        globalTransform:
-          $ref: '#/components/schemas/Transform'
-        localTransform:
+        transform:
           $ref: '#/components/schemas/Transform'
     Keyframe:
       description: Property keyframe

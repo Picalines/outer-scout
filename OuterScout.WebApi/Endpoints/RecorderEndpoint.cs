@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 using OuterScout.Application.FFmpeg;
 using OuterScout.Application.Recording;
 using OuterScout.Application.SceneCameras;
-using OuterScout.WebApi.DTOs;
 using OuterScout.WebApi.Extensions;
 using OuterScout.WebApi.Http;
 using OuterScout.WebApi.Http.Response;
@@ -225,12 +224,7 @@ internal sealed class RecorderEndpoint : IRouteMapper
                 return null;
             }
 
-            return new TransformDTO()
-            {
-                Position = origin.InverseTransformPoint(transform.position),
-                Rotation = origin.InverseTransformRotation(transform.rotation),
-                Scale = transform.lossyScale,
-            };
+            return origin.InverseDto(transform);
         };
 
         var recorder = new JsonRecorder.Builder(request.OutputPath, transformGetter);

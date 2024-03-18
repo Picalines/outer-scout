@@ -31,65 +31,62 @@ internal sealed class MeshEndpoint : IRouteMapper
     )
     {
         return gameObjects.FindOrNull(name) is { } gameObject
-            ? Ok(GetBodyMeshDTO(gameObject))
+            ? Ok(GetBodyMeshDto(gameObject))
             : CommonResponse.GameObjectNotFound(name);
     }
 
-    private sealed class GameObjectMeshDTO
+    private sealed class GameObjectMeshDto
     {
-        public required GameObjectDTO Body { get; init; }
+        public required GameObjectDto Body { get; init; }
 
-        public required IReadOnlyList<SectorMeshDTO> Sectors { get; init; }
+        public required IReadOnlyList<SectorMeshDto> Sectors { get; init; }
     }
 
-    private sealed class GameObjectDTO
+    private sealed class GameObjectDto
     {
         public required string Name { get; init; }
 
         public required string Path { get; init; }
 
-        public required TransformDTO Transform { get; init; }
+        public required TransformDto Transform { get; init; }
     }
 
-    private sealed class SectorMeshDTO
+    private sealed class SectorMeshDto
     {
         public required string Path { get; init; }
 
-        public required IReadOnlyList<MeshDTO> PlainMeshes { get; init; }
+        public required IReadOnlyList<MeshDto> PlainMeshes { get; init; }
 
-        public required IReadOnlyList<MeshDTO> StreamedMeshes { get; init; }
+        public required IReadOnlyList<MeshDto> StreamedMeshes { get; init; }
     }
 
-    private sealed class MeshDTO
+    private sealed class MeshDto
     {
         // GameObject path for "static" meshes, Asset path for streamed ones
         public required string Path { get; init; }
 
-        public required TransformDTO GlobalTransform { get; init; }
-
-        public required TransformDTO LocalTransform { get; init; }
+        public required TransformDto Transform { get; init; }
     }
 
-    private static GameObjectMeshDTO GetBodyMeshDTO(GameObject body)
+    private static GameObjectMeshDto GetBodyMeshDto(GameObject body)
     {
         var bodyTransform = body.transform;
 
         var renderedMeshFilters = GetComponentsInChildrenWithSector<MeshFilter>(body)
             .Where(pair => pair.Component.HasComponent<Renderer>() is true);
 
-        var noSectorMeshInfo = CreateEmptySectorDTO(bodyTransform.GetPath());
-        var sectorMeshInfos = new Dictionary<Sector, SectorMeshDTO>();
+        var noSectorMeshInfo = CreateEmptySectorDto(bodyTransform.GetPath());
+        var sectorMeshInfos = new Dictionary<Sector, SectorMeshDto>();
 
         foreach (var (sector, meshFilter) in renderedMeshFilters)
         {
             var sectorMeshInfo = sector is null
                 ? noSectorMeshInfo
-                : sectorMeshInfos.GetOrCreate(sector, () => CreateEmptySectorDTO(sector));
+                : sectorMeshInfos.GetOrCreate(sector, () => CreateEmptySectorDto(sector));
 
             var (meshGameObject, meshTransform) = (meshFilter.gameObject, meshFilter.transform);
 
-            var globalMeshTransform = ToGlobalTransformDTO(meshTransform);
-            var localMeshTrasnform = ToLocalTransformDTO(bodyTransform, meshTransform);
+            var localMeshTrasnform = bodyTransform.InverseDto(meshTransform);
 
             if (
                 StreamingManager.s_tableLoaded
@@ -101,31 +98,29 @@ internal sealed class MeshEndpoint : IRouteMapper
                 && assetBundle is StreamingMeshAssetBundle { isLoaded: true } meshAssetBundle
             )
             {
-                var streamedMeshes = (sectorMeshInfo.StreamedMeshes as List<MeshDTO>)!;
+                var streamedMeshes = (sectorMeshInfo.StreamedMeshes as List<MeshDto>)!;
                 streamedMeshes.Add(
                     new()
                     {
                         Path = meshAssetBundle._meshNamesByID[streamingHandle.meshIndex],
-                        GlobalTransform = globalMeshTransform,
-                        LocalTransform = localMeshTrasnform,
+                        Transform = localMeshTrasnform,
                     }
                 );
             }
             else
             {
-                var plainMeshes = (sectorMeshInfo.PlainMeshes as List<MeshDTO>)!;
+                var plainMeshes = (sectorMeshInfo.PlainMeshes as List<MeshDto>)!;
                 plainMeshes.Add(
                     new()
                     {
                         Path = meshGameObject.transform.GetPath(),
-                        GlobalTransform = globalMeshTransform,
-                        LocalTransform = localMeshTrasnform,
+                        Transform = localMeshTrasnform,
                     }
                 );
             }
         }
 
-        var sectorMeshInfosList = new List<SectorMeshDTO>();
+        var sectorMeshInfosList = new List<SectorMeshDto>();
         if (noSectorMeshInfo is not { PlainMeshes.Count: 0, StreamedMeshes.Count: 0 })
         {
             sectorMeshInfosList.Add(noSectorMeshInfo);
@@ -133,52 +128,32 @@ internal sealed class MeshEndpoint : IRouteMapper
 
         sectorMeshInfosList.AddRange(sectorMeshInfos.Values);
 
-        return new GameObjectMeshDTO()
+        return new GameObjectMeshDto()
         {
             Body = new()
             {
                 Name = body.name,
                 Path = bodyTransform.GetPath(),
-                Transform = ToGlobalTransformDTO(bodyTransform),
+                Transform = bodyTransform.GlobalDto(),
             },
             Sectors = sectorMeshInfosList,
         };
     }
 
-    private static SectorMeshDTO CreateEmptySectorDTO(string path)
+    private static SectorMeshDto CreateEmptySectorDto(string path)
     {
         return new()
         {
             Path = path,
-            PlainMeshes = new List<MeshDTO>(),
-            StreamedMeshes = new List<MeshDTO>(),
+            PlainMeshes = new List<MeshDto>(),
+            StreamedMeshes = new List<MeshDto>(),
         };
     }
 
-    private static SectorMeshDTO CreateEmptySectorDTO(Sector sector)
+    private static SectorMeshDto CreateEmptySectorDto(Sector sector)
     {
-        return CreateEmptySectorDTO(sector.transform.GetPath());
+        return CreateEmptySectorDto(sector.transform.GetPath());
     }
-
-    private static TransformDTO ToGlobalTransformDTO(Transform transform) =>
-        new()
-        {
-            Position = transform.position,
-            Rotation = transform.rotation,
-            Scale = transform.lossyScale,
-        };
-
-    private static TransformDTO ToLocalTransformDTO(
-        Transform parentTransform,
-        Transform childTransform
-    ) =>
-        new()
-        {
-            Parent = parentTransform.name,
-            Position = parentTransform.InverseTransformPoint(childTransform.position),
-            Rotation = parentTransform.InverseTransformRotation(childTransform.rotation),
-            Scale = childTransform.lossyScale,
-        };
 
     private static IEnumerable<(Sector? Sector, T Component)> GetComponentsInChildrenWithSector<T>(
         GameObject gameObject,

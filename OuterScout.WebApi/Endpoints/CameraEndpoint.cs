@@ -54,58 +54,58 @@ internal sealed class CameraEndpoint : IRouteMapper
         }
     }
 
-    [JsonConverter(typeof(JsonSubtypes), nameof(ISceneCameraDTO.Type))]
-    [JsonSubtypes.KnownSubType(typeof(PerspectiveSceneCameraDTO), "perspective")]
-    [JsonSubtypes.KnownSubType(typeof(EquirectSceneCameraDTO), "equirectangular")]
-    private interface ISceneCameraDTO
+    [JsonConverter(typeof(JsonSubtypes), nameof(ISceneCameraDto.Type))]
+    [JsonSubtypes.KnownSubType(typeof(PerspectiveSceneCameraDto), "perspective")]
+    [JsonSubtypes.KnownSubType(typeof(EquirectSceneCameraDto), "equirectangular")]
+    private interface ISceneCameraDto
     {
         public string Id { get; }
 
         public string Type { get; }
 
-        public TransformDTO Transform { get; }
+        public TransformDto Transform { get; }
     }
 
-    private sealed class ResolutionDTO
+    private sealed class ResolutionDto
     {
         public required int Width { get; init; }
 
         public required int Height { get; init; }
     }
 
-    private sealed class PerspectiveSceneCameraDTO : ISceneCameraDTO
+    private sealed class PerspectiveSceneCameraDto : ISceneCameraDto
     {
         public required string Id { get; init; }
 
         public required string Type { get; init; } = "perspective";
 
-        public required TransformDTO Transform { get; init; }
+        public required TransformDto Transform { get; init; }
 
         public required Camera.GateFitMode GateFit { get; init; }
 
-        public required ResolutionDTO Resolution { get; init; }
+        public required ResolutionDto Resolution { get; init; }
 
         public required CameraPerspective Perspective { get; init; }
     }
 
-    private sealed class EquirectSceneCameraDTO : ISceneCameraDTO
+    private sealed class EquirectSceneCameraDto : ISceneCameraDto
     {
         public required string Id { get; init; }
 
         public required string Type { get; init; } = "equirectangular";
 
-        public required TransformDTO Transform { get; init; }
+        public required TransformDto Transform { get; init; }
 
         public required int FaceResolution { get; init; }
     }
 
     private static IResponse CreateSceneCamera(
-        [FromBody] ISceneCameraDTO cameraDTO,
+        [FromBody] ISceneCameraDto cameraDto,
         GameObjectRepository gameObjects,
         ApiResourceRepository resources
     )
     {
-        var cameraId = cameraDTO.Id;
+        var cameraId = cameraDto.Id;
 
         if (_validCameraIdRegex.IsMatch(cameraId) is false)
         {
@@ -117,22 +117,22 @@ internal sealed class CameraEndpoint : IRouteMapper
             return BadRequest($"camera with id '{cameraId}' already exists");
         }
 
-        var parent = cameraDTO.Transform.Parent is { } parentName
+        var parent = cameraDto.Transform.Parent is { } parentName
             ? gameObjects.FindOrNull(parentName)?.transform
             : null;
 
-        if ((cameraDTO.Transform.Parent, parent) is (not null, null))
+        if ((cameraDto.Transform.Parent, parent) is (not null, null))
         {
-            return CommonResponse.GameObjectNotFound(cameraDTO.Transform.Parent);
+            return CommonResponse.GameObjectNotFound(cameraDto.Transform.Parent);
         }
 
         parent ??= resources
             .GlobalContainer.GetRequiredResource<GameObject>(SceneEndpoint.OriginResource)
             .transform;
 
-        ISceneCamera? newCamera = cameraDTO switch
+        ISceneCamera? newCamera = cameraDto switch
         {
-            PerspectiveSceneCameraDTO
+            PerspectiveSceneCameraDto
             {
                 Resolution: var resolution,
                 GateFit: var gateFit,
@@ -147,7 +147,7 @@ internal sealed class CameraEndpoint : IRouteMapper
                     }
                 ),
 
-            EquirectSceneCameraDTO { FaceResolution: var faceResolution }
+            EquirectSceneCameraDto { FaceResolution: var faceResolution }
                 => EquirectSceneCamera.Create(new() { CubemapFaceSize = faceResolution }),
 
             _ => null,
@@ -155,10 +155,12 @@ internal sealed class CameraEndpoint : IRouteMapper
 
         if (newCamera is null)
         {
-            return BadRequest($"unknown camera type '{cameraDTO.Type}'");
+            return BadRequest($"unknown camera type '{cameraDto.Type}'");
         }
 
-        newCamera.Transform.ApplyWithParent(cameraDTO.Transform.ToLocalTransform(parent));
+        newCamera.Transform.parent = parent;
+        newCamera.Transform.ResetLocal();
+        cameraDto.Transform.ApplyLocal(newCamera.Transform);
 
         resources.GlobalContainer.AddResource<ISceneCamera>(cameraId, newCamera);
 
@@ -198,7 +200,7 @@ internal sealed class CameraEndpoint : IRouteMapper
 
     private static IResponse PutCameraTransform(
         [FromUrl] string id,
-        [FromBody] TransformDTO transformDTO,
+        [FromBody] TransformDto transformDto,
         ApiResourceRepository resources,
         GameObjectRepository gameObjects
     )
@@ -211,33 +213,20 @@ internal sealed class CameraEndpoint : IRouteMapper
             return CommonResponse.CameraNotFound(id);
         }
 
-        var parent = transformDTO.Parent is { } parentName
+        var parent = transformDto.Parent is { } parentName
             ? gameObjects.FindOrNull(parentName)?.transform
             : null;
 
-        if ((transformDTO.Parent, parent) is (not null, null))
+        if ((transformDto.Parent, parent) is (not null, null))
         {
-            return CommonResponse.GameObjectNotFound(transformDTO.Parent);
+            return CommonResponse.GameObjectNotFound(transformDto.Parent);
         }
 
         parent ??= resources
             .GlobalContainer.GetRequiredResource<GameObject>(SceneEndpoint.OriginResource)
             .transform;
 
-        if (transformDTO.Position is { } localPosition)
-        {
-            transform.position = parent.TransformPoint(localPosition);
-        }
-
-        if (transformDTO.Rotation is { } localRotation)
-        {
-            transform.rotation = parent.rotation * localRotation;
-        }
-
-        if (transformDTO.Scale is { } localScale)
-        {
-            transform.localScale = localScale;
-        }
+        transformDto.ApplyGlobal(transform, parent);
 
         return Ok();
     }

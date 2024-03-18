@@ -19,19 +19,19 @@ internal sealed class KeyframesEndpoint : IRouteMapper
 
     private KeyframesEndpoint() { }
 
-    private sealed class KeyframeDTO
+    private sealed class KeyframeDto
     {
         public required float Value { get; init; }
     }
 
-    private sealed class PropertyAnimationData
+    private sealed class PropertyAnimationDto
     {
-        public required Dictionary<int, KeyframeDTO> Keyframes { get; init; }
+        public required Dictionary<int, KeyframeDto> Keyframes { get; init; }
     }
 
     private sealed class PutKeyframesRequest
     {
-        public required Dictionary<string, PropertyAnimationData> Properties { get; init; }
+        public required Dictionary<string, PropertyAnimationDto> Properties { get; init; }
     }
 
     public void MapRoutes(HttpServer.Builder serverBuilder)
@@ -94,9 +94,9 @@ internal sealed class KeyframesEndpoint : IRouteMapper
         E entity
     )
     {
-        var keyframes = new Dictionary<PropertyCurve, PropertyAnimationData>();
+        var keyframes = new Dictionary<PropertyCurve, PropertyAnimationDto>();
 
-        foreach (var (property, animationData) in request.Properties)
+        foreach (var (property, animationDto) in request.Properties)
         {
             if (
                 container.GetResource<PropertyAnimator>(property)
@@ -113,12 +113,12 @@ internal sealed class KeyframesEndpoint : IRouteMapper
                 container.AddResource(property, propertyAnimator);
             }
 
-            keyframes.Add(propertyCurve, animationData);
+            keyframes.Add(propertyCurve, animationDto);
         }
 
-        foreach (var (propertyCurve, animationData) in keyframes)
+        foreach (var (propertyCurve, animationDto) in keyframes)
         {
-            foreach (var (frame, keyframeDto) in animationData.Keyframes)
+            foreach (var (frame, keyframeDto) in animationDto.Keyframes)
             {
                 propertyCurve.StoreKeyframe(new PropertyKeyframe(frame, keyframeDto.Value));
             }

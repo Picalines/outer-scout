@@ -21,7 +21,7 @@ internal sealed class PlayerEndpoint : IRouteMapper
     {
         public required string GroundBody { get; init; }
 
-        public required TransformDTO Transform { get; init; }
+        public required TransformDto Transform { get; init; }
     }
 
     public void MapRoutes(HttpServer.Builder serverBuilder)
@@ -53,7 +53,7 @@ internal sealed class PlayerEndpoint : IRouteMapper
             new
             {
                 Name = name,
-                Transform = new TransformDTO()
+                Transform = new TransformDto()
                 {
                     Position = transform.position,
                     Rotation = transform.rotation,

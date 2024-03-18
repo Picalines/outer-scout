@@ -27,7 +27,7 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
 
     private sealed class CreateSceneRequest
     {
-        public required TransformDTO Origin { get; init; }
+        public required TransformDto Origin { get; init; }
 
         public required bool HidePlayerModel { get; init; }
     }
@@ -111,8 +111,11 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
         }
 
         var originGameObject = new GameObject($"{nameof(OuterScout)}.{OriginResource}");
+        originGameObject.transform.parent = originParent;
+        originGameObject.transform.ResetLocal();
+        request.Origin.ApplyLocal(originGameObject.transform);
+
         gameObjects.AddOwned(OriginResource, originGameObject);
-        originGameObject.transform.ApplyWithParent(request.Origin.ToLocalTransform(originParent));
 
         return Created();
     }
