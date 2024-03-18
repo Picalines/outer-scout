@@ -181,14 +181,11 @@ internal sealed class CameraEndpoint : IRouteMapper
         return Ok(response);
     }
 
-    private static IResponse GetActiveGamera(
-        GameObjectRepository gameObjects,
-        ApiResourceRepository resources
-    )
+    private static IResponse GetActiveGamera()
     {
         return Locator.GetActiveCamera().OrNull() switch
         {
-            { } camera => Ok(GetUnityCameraResponse(camera)),
+            { } camera => Ok(new { Name = camera.name, Camera = GetUnityCameraResponse(camera) }),
             _ => ServiceUnavailable(),
         };
     }
