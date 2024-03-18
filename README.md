@@ -103,7 +103,7 @@ Then we need to specify which file on the disk to save the video to. To do this,
 // POST /cameras/main/recorders
 {
     "property": "renderTexture.color",
-    "outputPath": "{{OUTPUT_DIR}}\\color.mp4",
+    "outputPath": "D:\\assets\\color.mp4",
     "format": "mp4"
 }
 ```
