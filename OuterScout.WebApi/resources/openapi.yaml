@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: OuterScout
   description: |-
-    OuterScout API allows you to create scene recordings of the Outer Wilds
+    A toolbox for creating cinematic shots in Outer Wilds
 
     With this API you can put multiple cameras on your scene, create keyframes to animate their parameters and transformation, and then record color and depth information to your disk
   license:
@@ -14,16 +14,16 @@ tags:
     description: Operations related to API information
   - name: scene
     description: Operations related to the scene
+  - name: object
+    description: Operations related to Unity GameObjects
   - name: camera
     description: Operations related to cameras
-  - name: gameObject
-    description: Operations related to Unity GameObjects
+  - name: animation
+    description: Operations used for animation
+  - name: recording
+    description: Operations related to recorders
   - name: player
     description: Operations related to the player
-  - name: keyframes
-    description: Operations used for animation
-  - name: recorder
-    description: Operations related to recorders
 paths:
   /api/version:
     get:
@@ -71,7 +71,7 @@ paths:
             application/yaml: {}
   /scene:
     post:
-      operationId: createScene
+      operationId: postScene
       tags: [scene]
       summary: Creates an OuterScout scene
       description: |-
@@ -119,10 +119,9 @@ paths:
   /scene/recording:
     post:
       operationId: startRecording
-      tags: [scene]
+      tags: [recording]
       summary: Starts recording the scene
       requestBody:
-        description: The framerate and frame range are declared in the request body
         content:
           application/json:
             schema:
@@ -150,7 +149,7 @@ paths:
   /scene/redording/status:
     get:
       operationId: getRecordingStatus
-      tags: [scene]
+      tags: [recording]
       summary: Gets current information about the recording
       responses:
         '200':
@@ -183,10 +182,8 @@ paths:
   /scene/active-camera:
     get:
       operationId: getActiveCamera
-      tags: [scene, camera]
-      summary: Gets the name of current Unity camera
-      description: |-
-        Use this to get the camera position and perspective later
+      tags: [camera]
+      summary: Gets the current Unity camera
       responses:
         '200':
           description: Returned active camera
@@ -194,21 +191,40 @@ paths:
             application/json:
               schema:
                 type: object
+                additionalProperties: false
+                required: [name, camera]
                 properties:
                   name:
                     type: string
                     description: Name of the GameObject containing current Unity camera
+                  camera:
+                    type: object
+                    additionalProperties: false
+                    required: [type]
+                    properties:
+                      type:
+                        type: string
+                        enum: [unity]
+                      perspective:
+                        $ref: '#/components/schemas/CameraPerspective'
               examples:
-                playerCamera:
-                  value: {name: PlayerCamera}
-                freeCamera:
-                  value: {name: FREECAM}
+                freecam:
+                  value:
+                    name: FREECAM
+                    camera:
+                      type: unity
+                      perspective:
+                        focalLength: 20
+                        sensorSize: [36, 24]
+                        lensShift: [0, 0]
+                        nearClipPlane: 0.1
+                        farClipPlane: 5000
         '503':
           $ref: '#/components/responses/unavailable'
   /scene/keyframes:
     put:
-      operationId: setSceneKeyframes
-      tags: [scene, keyframes]
+      operationId: putSceneKeyframes
+      tags: [animation]
       summary: Sets the keyframes related to the scene
       description: |-
         Properties available for animation: time.scale
@@ -235,216 +251,13 @@ paths:
           $ref: '#/components/responses/invalidBody'
         '503':
           $ref: '#/components/responses/unavailable'
-  /cameras:
+  /objects:
     post:
-      operationId: createCamera
-      tags: [camera]
-      summary: Creates a camera that's used to record a video
-      requestBody:
-        description: |-
-          The camera will be attached to the origin of the scene if the parent is not declared
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Camera'
-            examples:
-              mainPerspective:
-                description: Main perspective camera
-                value:
-                  id: main
-                  type: perspective
-                  transform:
-                    position: [0, 2, -5]
-                  resolution:
-                    width: 1920
-                    height: 1080
-                  gateFit: vertical
-                  perspective:
-                    focalLength: 40
-                    sensorSize: [36, 24]
-                    lensShift: [0, 0]
-                    nearClipPlane: 0.1
-                    farClipPlane: 5000
-              hdri:
-                description: Equirectangular camera used to record HDRI
-                value:
-                  id: hdri
-                  type: equirectangular
-                  transform:
-                    position: [0, 0, 0]
-                  faceResolution: 1024
-      responses:
-        '201':
-          $ref: '#/components/responses/plainSuccess'
-        '400':
-          $ref: '#/components/responses/invalidBody'
-        '404':
-          $ref: '#/components/responses/gameObjectNotFound'
-        '503':
-          $ref: '#/components/responses/unavailable'
-  /cameras/{id}/transform:
-    put:
-      operationId: setCameraTransform
-      tags: [camera]
-      summary: Sets the camera transformation
-      description: |-
-        Use this to reposition the desired camera before recording begins
-
-        The value will be ignored if the transform is animated
-      parameters:
-        - $ref: '#/components/parameters/cameraId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Transform'
-              description: |-
-                New camera transformation
-
-                Parent will be used as the origin, but GameObject hierarchy will not be changed
-
-                Scene origin is used if parent is not specified
-
-                Only those components that are in the request body will be changed
-      responses:
-        '200':
-          $ref: '#/components/responses/plainSuccess'
-        '400':
-          $ref: '#/components/responses/invalidBody'
-        '404':
-          $ref: '#/components/responses/cameraNotFound'
-        '503':
-          $ref: '#/components/responses/unavailable'
-  /cameras/{id}/perspective:
-    put:
-      operationId: setCameraPerspective
-      tags: [camera]
-      summary: Sets the camera perspective
-      description: |-
-        Camera must be of the "perspective" type
-
-        The value will be ignored if the perspective is animated
-      parameters:
-        - $ref: '#/components/parameters/cameraId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CameraPerspective'
-            examples:
-              playerCamera:
-                description: Camera perspective similar to the PlayerCamera
-                value:
-                  focalLength: 40
-                  sensorSize: [36, 24]
-                  lensShift: [0, 0]
-                  nearClipPlane: 0.1
-                  farClipPlane: 5000
-      responses:
-        '200':
-          $ref: '#/components/responses/plainSuccess'
-        '400':
-          $ref: '#/components/responses/invalidBody'
-        '404':
-          $ref: '#/components/responses/cameraNotFound'
-        '503':
-          $ref: '#/components/responses/unavailable'
-  /cameras/{id}/keyframes:
-    put:
-      operationId: setCameraKeyframes
-      tags: [camera, keyframes]
-      summary: Sets the keyframes related to the camera
-      description: |-
-        Use this to create camera motion and perspective change
-
-        Properties available for animation: transform.position, transform.rotation, transfrom.scale, perspective.focalLength, perspective.sensorSize, perspective.lensShift, perspective.nearClipPlane, perspective.farClipPlane
-      parameters:
-        - $ref: '#/components/parameters/cameraId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              additionalProperties: false
-              required: [properties]
-              properties:
-                properties:
-                  allOf:
-                    - $ref: '#/components/schemas/TransformKeyframes'
-                    - $ref: '#/components/schemas/PerspectiveKeyframes'
-            examples:
-              dollyZoom:
-                description: Creates a dolly zoom effect
-                value:
-                  properties:
-                    transform.position.z:
-                      keyframes:
-                        1: {value: -2}
-                        60: {value: 2}
-                    perspective.focalLength:
-                      keyframes:
-                        1: {value: 40}
-                        60: {value: 10}
-      responses:
-        '200':
-          $ref: '#/components/responses/plainSuccess'
-        '400':
-          $ref: '#/components/responses/invalidBody'
-        '404':
-          $ref: '#/components/responses/cameraNotFound'
-        '503':
-          $ref: '#/components/responses/unavailable'
-  /cameras/{id}/recorders:
-    post:
-      operationId: createCameraRecorder
-      tags: [camera, recorder]
-      parameters:
-        - $ref: '#/components/parameters/cameraId'
-      summary: Creates a camera recorder
-      description: |-
-        Cameras can record different types of videos. You need to create a separate recorder with the necessary settings for each video file
-
-        Recorder types are available for perspective camera: renderTexture.color, renderTexture.depth
-
-        Recorder types are available for equirectangular camera: renderTexture.color
-      requestBody:
-        content:
-          application/json:
-            schema:
-              anyOf:
-                - $ref: '#/components/schemas/ColorTextureRecorder'
-                - $ref: '#/components/schemas/DepthTextureRecorder'
-            examples:
-              color:
-                description: Color video output
-                value:
-                  property: renderTexture.color
-                  outputPath: "D:\\color.mp4"
-                  format: mp4
-              depth:
-                description: Depth video output
-                value:
-                  property: renderTexture.depth
-                  outputPath: "D:\\depth.mp4"
-                  fomat: mp4
-                  constantRateFactor: 0
-      responses:
-        '201':
-          $ref: '#/components/responses/plainSuccess'
-        '400':
-          $ref: '#/components/responses/invalidBody'
-        '404':
-          $ref: '#/components/responses/cameraNotFound'
-        '503':
-          $ref: '#/components/responses/unavailable'
-  /gameObjects:
-    post:
-      operationId: createGameObject
-      tags: [gameObject]
+      operationId: postGameObject
+      tags: [object]
       summary: Creates a custom Unity GameObject
       description: |-
-        Creates a custom Unity GameObject that can be used as a camera parent. The GameObject
-        is owned by the scene and will be destroyed when creating a new OuterScout scene
+        Creates a custom Unity GameObject. The GameObject is owned by the scene and will be destroyed when creating a new OuterScout scene
       requestBody:
         description: |-
           The GameObject will be attached to the origin of the scene if the parent is not declared
@@ -453,7 +266,7 @@ paths:
             schema:
               type: object
               additionalProperties: false
-              required: [name, transform]
+              required: [name]
               properties:
                 name:
                   type: string
@@ -474,17 +287,17 @@ paths:
           $ref: '#/components/responses/gameObjectNotFound'
         '503':
           $ref: '#/components/responses/unavailable'
-  /gameObjects/{name}/transform:
+  /objects/{name}:
     get:
-      operationId: getGameObjectTransform
-      tags: [gameObject]
-      summary: Gets current Transform of the GameObject
+      operationId: getObject
+      tags: [object]
+      summary: Gets information related to the GameObject
       description: |-
         Gets current Transform of the GameObject in the coordinates of the scene
 
         Another GameObject will be used as the coordinate center if specified in the query
       parameters:
-        - $ref: '#/components/parameters/gameObjectName'
+        - $ref: '#/components/parameters/objectName'
         - name: origin
           in: query
           required: false
@@ -494,43 +307,61 @@ paths:
           example: TimberHearth_Body
       responses:
         '200':
-          description: Returned gameObject transform
+          description: Returned gameObject information
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Transform'
+                type: object
+                additionalProperties: false
+                required: [name, transform]
+                properties:
+                  name:
+                    type: string
+                  transform:
+                    $ref: '#/components/schemas/Transform'
               examples:
                 playerInitial:
                   description: Player initial transformation (origin=TimberHearth_Body)
                   value:
-                    position: [20.83783, -45.4903259, 185.232925]
-                    rotation: [-0.208906114, 0.573324442, 0.7582229, -0.229685858]
-                    scale: [1.00000024, 1.00000083, 1.00000048]
+                    name: Player_Body
+                    transform:
+                      position: [20.83783, -45.4903259, 185.232925]
+                      rotation: [-0.208906114, 0.573324442, 0.7582229, -0.229685858]
+                      scale: [1.00000024, 1.00000083, 1.00000048]
         '404':
           $ref: '#/components/responses/gameObjectNotFound'
         '503':
           $ref: '#/components/responses/unavailable'
     put:
-      operationId: setGameObjectTransform
-      tags: [gameObject]
-      summary: Sets the Unity GameObject transformation
+      operationId: putObject
+      tags: [object]
+      summary: Sets the specified GameObject fields
       description: |-
-        Use this to rearrange the desired GameObjects before recording begins
+        Use this to update the desired GameObjects before recording begins
       parameters:
-        - $ref: '#/components/parameters/gameObjectName'
+        - $ref: '#/components/parameters/objectName'
+        - name: origin
+          in: query
+          required: false
+          description: A GameObject whose transform will be used as the origin
+          schema:
+            type: string
+          example: TimberHearth_Body
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Transform'
-              description: |-
-                New GameObject transformation
+              type: object
+              additionalProperties: false
+              properties:
+                transform:
+                  $ref: '#/components/schemas/Transform'
+                  description: |-
+                    New GameObject transformation. Chaning the parent of an object is prohibited
 
-                Parent will be used as the origin, but GameObject hierarchy will not be changed
+                    Scene origin is used if the query parameter is omitted
 
-                Scene origin is used if parent is not specified
-
-                Only those components that are in the request body will be changed
+                    Only those components that are in the request body will be changed
       responses:
         '200':
           $ref: '#/components/responses/plainSuccess'
@@ -538,42 +369,96 @@ paths:
           $ref: '#/components/responses/invalidBody'
         '404':
           $ref: '#/components/responses/gameObjectNotFound'
-        '405':
-          description: PlayerCamera transform cannot be changed
         '503':
           $ref: '#/components/responses/unavailable'
-  /gameObjects/{name}/perspective:
-    get:
-      operationId: getUnityCameraPerspective
-      tags: [gameObject, camera]
-      summary: Gets the perspective of the Unity Camera attached to the GameObject
+  /objects/{name}/camera:
+    post:
+      operationId: postCamera
+      tags: [camera]
+      summary: Creates a camera that's used to record a video
       description: |-
-        Sets the UnityEngine.Camera.usePhysicalProperties to true before applying the perspective
+        You can add only one camera to each object
       parameters:
-        - $ref: '#/components/parameters/gameObjectName'
-      responses:
-        '200':
-          description: Returned camera perspective
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CameraPerspective'
-        '400':
-          description: Found camera does not use physical properties
-        '404':
-          $ref: '#/components/responses/cameraNotFound'
-    put:
-      operationId: setUnityCameraPerspective
-      tags: [gameObject, camera]
-      summary: Sets the perspective of the Unity Camera attached to the GameObject
-      description: The camera must use physical properties (UnityEngine.Camera.usePhysicalProperties)
-      parameters:
-        - $ref: '#/components/parameters/gameObjectName'
+        - $ref: '#/components/parameters/objectName'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CameraPerspective'
+              type: object
+              anyOf:
+                - $ref: '#/components/schemas/PerspectiveCamera'
+                - $ref: '#/components/schemas/EquirectangularCamera'
+            examples:
+              mainPerspective:
+                description: Main perspective camera
+                value:
+                  type: perspective
+                  resolution:
+                    width: 1920
+                    height: 1080
+                  gateFit: vertical
+                  perspective:
+                    focalLength: 40
+                    sensorSize: [36, 24]
+                    lensShift: [0, 0]
+                    nearClipPlane: 0.1
+                    farClipPlane: 5000
+              hdri:
+                description: Equirectangular camera used to record HDRI
+                value:
+                  type: equirectangular
+                  faceResolution: 1024
+      responses:
+        '201':
+          $ref: '#/components/responses/plainSuccess'
+        '400':
+          $ref: '#/components/responses/invalidBody'
+        '404':
+          $ref: '#/components/responses/gameObjectNotFound'
+        '503':
+          $ref: '#/components/responses/unavailable'
+    get:
+      operationId: getCamera
+      tags: [camera]
+      summary: Gets the camera information
+      description: |-
+        Can be used to get information about Unity cameras
+      parameters:
+        - $ref: '#/components/parameters/objectName'
+      responses:
+        '200':
+          description: Returned camera information
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [type]
+                properties:
+                  type:
+                    type: string
+                    enum: [perspective, equirectangular, unity]
+                  perspective:
+                    $ref: '#/components/schemas/CameraPerspective'
+        '400':
+          $ref: '#/components/responses/invalidBody'
+        '404':
+          $ref: '#/components/responses/cameraNotFound'
+    put:
+      operationId: putCamera
+      tags: [camera]
+      summary: Sets the specified camera fields
+      parameters:
+        - $ref: '#/components/parameters/objectName'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                perspective:
+                  $ref: '#/components/schemas/CameraPerspective'
       responses:
         '200':
           $ref: '#/components/responses/plainSuccess'
@@ -583,37 +468,13 @@ paths:
           $ref: '#/components/responses/cameraNotFound'
         '503':
           $ref: '#/components/responses/unavailable'
-  /gameObjects/{name}/mesh:
-    get:
-      operationId: getGameObjectMesh
-      tags: [gameObject]
-      summary: Gets a list of mesh assets nested in the GameObject
-      description: |-
-        Gets a list of mesh assets nested in the GameObject. Use this to import planet models into a 3D editor
-
-        This operation exists because the usual asset tools do not get streamed assets together with the main model
-      parameters:
-        - $ref: '#/components/parameters/gameObjectName'
-      responses:
-        '200':
-          description: Returned gameObject mesh
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GameObjectMesh'
-        '404':
-          $ref: '#/components/responses/gameObjectNotFound'
-  /gameObjects/{name}/keyframes:
+  /objects/{name}/keyframes:
     put:
-      operationId: setGameObjectKeyframes
-      tags: [gameObject, keyframes]
+      operationId: setObjectKeyframes
+      tags: [animation]
       summary: Sets the keyframes related to the GameObject
-      description: |-
-        Use this to move and rotate the GameObject during recording
-
-        Properties available for animation: transform.position.{x,y,z}, transform.rotation.{x,y,z,w}, transfrom.scale.{x,y,z}
       parameters:
-        - $ref: '#/components/parameters/gameObjectName'
+        - $ref: '#/components/parameters/objectName'
       requestBody:
         content:
           application/json:
@@ -623,7 +484,10 @@ paths:
               required: [properties]
               properties:
                 properties:
-                  $ref: '#/components/schemas/TransformKeyframes'
+                  type: object
+                  anyOf:
+                    - $ref: '#/components/schemas/TransformKeyframes'
+                    - $ref: '#/components/schemas/PerspectiveKeyframes'
             examples:
               transform:
                 description: Animates GameObject transformation
@@ -641,6 +505,18 @@ paths:
                       keyframes:
                         1: {value: 0.5}
                         60: {value: 1.5}
+              dollyZoom:
+                description: Creates a dolly zoom effect
+                value:
+                  properties:
+                    transform.position.z:
+                      keyframes:
+                        1: {value: -2}
+                        60: {value: 2}
+                    perspective.focalLength:
+                      keyframes:
+                        1: {value: 40}
+                        60: {value: 10}
       responses:
         '200':
           $ref: '#/components/responses/plainSuccess'
@@ -650,12 +526,12 @@ paths:
           $ref: '#/components/responses/gameObjectNotFound'
         '503':
           $ref: '#/components/responses/unavailable'
-  /gameObjects/{name}/recorders:
+  /objects/{name}/recorders:
     post:
-      operationId: createGameObjectRecorder
-      tags: [gameObject, recorder]
+      operationId: postObjectRecorder
+      tags: [recording]
       parameters:
-        - $ref: '#/components/parameters/gameObjectName'
+        - $ref: '#/components/parameters/objectName'
       summary: Creates a GameObject recorder
       description: |-
         You can create a GameObject transform recorder to build something based on this data in the 3D editor
@@ -665,7 +541,11 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TransformRecorder'
+              type: object
+              anyOf:
+                - $ref: '#/components/schemas/ColorTextureRecorder'
+                - $ref: '#/components/schemas/DepthTextureRecorder'
+                - $ref: '#/components/schemas/TransformRecorder'
             examples:
               timberHearthOrbit:
                 description: Recording Timber Hearth's position relative to the sun
@@ -682,6 +562,26 @@ paths:
           $ref: '#/components/responses/gameObjectNotFound'
         '503':
           $ref: '#/components/responses/unavailable'
+  /objects/{name}/mesh:
+    get:
+      operationId: getObjectMesh
+      tags: [object]
+      summary: Gets a list of mesh assets nested in the GameObject
+      description: |-
+        Gets a list of mesh assets nested in the GameObject. Use this to import planet models into a 3D editor
+
+        This operation exists because the usual asset tools do not get streamed assets together with the main model
+      parameters:
+        - $ref: '#/components/parameters/objectName'
+      responses:
+        '200':
+          description: Returned gameObject mesh
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameObjectMesh'
+        '404':
+          $ref: '#/components/responses/gameObjectNotFound'
   /player/ground-body:
     get:
       operationId: getPlayerGroundBody
@@ -874,27 +774,9 @@ components:
           lensShift: [0, 0]
           nearClipPlane: 0.1
           farClipPlane: 5000
-    CameraId:
-      type: string
-      pattern: ^[a-zA-Z_][a-zA-Z0-9_\-]*$
-      examples:
-        - main
-        - hdri
-    CameraBase:
-      description: Base properties of all cameras
-      type: object
-      required:
-        - id
-      properties:
-        id:
-          $ref: '#/components/schemas/CameraId'
-        transform:
-          $ref: '#/components/schemas/Transform'
     PerspectiveCamera:
       description: Regular camera
       type: object
-      allOf:
-        - $ref: '#/components/schemas/CameraBase'
       additionalProperties: false
       required: [type, resolution, gateFit]
       properties:
@@ -918,8 +800,6 @@ components:
     EquirectangularCamera:
       description: Equirectangular camera used to record 360 color output (can be used for HDRI)
       type: object
-      allOf:
-        - $ref: '#/components/schemas/CameraBase'
       additionalProperties: false
       required: [type, faceResolution]
       properties:
@@ -929,12 +809,6 @@ components:
         faceResolution:
           type: integer
           minimum: 1
-    Camera:
-      description: Any supported camera
-      type: object
-      anyOf:
-        - $ref: '#/components/schemas/PerspectiveCamera'
-        - $ref: '#/components/schemas/EquirectangularCamera'
     GameObjectMesh:
       type: object
       additionalProperties: false
@@ -973,7 +847,7 @@ components:
       description: |-
         Object used to describe Mesh asset placed in the Unity scene. There are two types of assets: static and streamed
       additionalProperties: false
-      required: [path, globalTransform, localTransform]
+      required: [path, transform]
       properties:
         path:
           type: string
@@ -1042,32 +916,26 @@ components:
           - perspective.lensShift.y
           - perspective.nearClipPlane
           - perspective.farClipPlane
-    RecorderBase:
-      type: object
-      description: Base properties of all recoredrs
     RenderTextureRecorder:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/RecorderBase'
-        - type: object
-          additionalProperties: false
-          required: [outputPath, format]
-          properties:
-            outputPath:
-              type: string
-              description: The path to the file where the video will be recorded
-            format:
-              type: string
-              enum: [mp4]
-              description: Output video format
-            constantRateFactor:
-              type: integer
-              default: 18
-              minimum: 0
-              maximum: 63
-              description: FFmpeg setting that controls the level of video compression
-              externalDocs:
-                url: https://trac.ffmpeg.org/wiki/Encode/H.264#crf
+      additionalProperties: false
+      required: [outputPath, format]
+      properties:
+        outputPath:
+          type: string
+          description: The path to the file where the video will be recorded
+        format:
+          type: string
+          enum: [mp4]
+          description: Output video format
+        constantRateFactor:
+          type: integer
+          default: 18
+          minimum: 0
+          maximum: 63
+          description: FFmpeg setting that controls the level of video compression
+          externalDocs:
+            url: https://trac.ffmpeg.org/wiki/Encode/H.264#crf
     ColorTextureRecorder:
       type: object
       description: A recorder that records the color output of the camera
@@ -1095,30 +963,20 @@ components:
     TransformRecorder:
       type: object
       description: A recorder that records the transformation of an object relative to the origin of the scene
-      allOf:
-        - $ref: '#/components/schemas/RecorderBase'
-        - type: object
-          additionalProperties: false
-          required: [property, outputPath, format]
-          properties:
-            property:
-              type: string
-              enum: [transform]
-            outputPath:
-              type: string
-              description: The path to the file where the transform will be recorded
-            format:
-              type: string
-              enum: [json]
+      additionalProperties: false
+      required: [property, outputPath, format]
+      properties:
+        property:
+          type: string
+          enum: [transform]
+        outputPath:
+          type: string
+          description: The path to the file where the transform will be recorded
+        format:
+          type: string
+          enum: [json]
   parameters:
-    cameraId:
-      name: id
-      in: path
-      required: true
-      description: Id of a camera
-      schema:
-        $ref: '#/components/schemas/CameraId'
-    gameObjectName:
+    objectName:
       name: name
       in: path
       required: true
@@ -1172,7 +1030,7 @@ components:
             mainCameraNotFound:
               description: Main camera was not found
               value:
-                error: camera 'main' was not found
+                error: camera component of gameObject 'mainCamera' was not found
     gameObjectNotFound:
       description: GameObject was not found
       content:
