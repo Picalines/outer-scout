@@ -212,6 +212,14 @@ public sealed partial class HttpServer : IDisposable
 
     private void Log(string message, MessageType messageType)
     {
-        _logger?.WriteLine($"{nameof(OuterScout)} API: {message}", messageType);
+        if (_logger is null)
+        {
+            return;
+        }
+
+        lock (_logger)
+        {
+            _logger.WriteLine($"{nameof(OuterScout)} API: {message}", messageType);
+        }
     }
 }

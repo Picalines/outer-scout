@@ -15,6 +15,15 @@ using static ResponseFabric;
 
 internal sealed class RecorderEndpoint : IRouteMapper
 {
+    public static class PropertyName
+    {
+        public const string ColorTexture = "camera.renderTexture.color";
+
+        public const string DepthTexture = "camera.renderTexture.depth";
+
+        public const string Transform = "transform";
+    }
+
     public static RecorderEndpoint Instance { get; } = new();
 
     private RecorderEndpoint() { }
@@ -25,16 +34,14 @@ internal sealed class RecorderEndpoint : IRouteMapper
         using (serverBuilder.WithSceneCreatedFilter())
         using (serverBuilder.WithNotRecordingFilter())
         {
-            serverBuilder.MapPost("cameras/:id/recorders", PostCameraRecorder);
-
-            serverBuilder.MapPost("gameObjects/:name/recorders", PostGameObjectRecorder);
+            serverBuilder.MapPost("objects/:name/recorders", PostGameObjectRecorder);
         }
     }
 
     [JsonConverter(typeof(JsonSubtypes), nameof(IPostRecorderRequest.Property))]
-    [JsonSubtypes.KnownSubType(typeof(PostColorTextureRecorderRequest), "renderTexture.color")]
-    [JsonSubtypes.KnownSubType(typeof(PostDepthTextureRecorderRequest), "renderTexture.depth")]
-    [JsonSubtypes.KnownSubType(typeof(PostTransformRecorderRequest), "transform")]
+    [JsonSubtypes.KnownSubType(typeof(PostColorTextureRecorderRequest), PropertyName.ColorTexture)]
+    [JsonSubtypes.KnownSubType(typeof(PostDepthTextureRecorderRequest), PropertyName.DepthTexture)]
+    [JsonSubtypes.KnownSubType(typeof(PostTransformRecorderRequest), PropertyName.Transform)]
     private interface IPostRecorderRequest
     {
         public string Property { get; }
@@ -53,45 +60,21 @@ internal sealed class RecorderEndpoint : IRouteMapper
 
     private sealed class PostColorTextureRecorderRequest : PostTextureRecorderRequest
     {
-        public override required string Property { get; init; } = "renderTexture.color";
+        public override required string Property { get; init; } = PropertyName.ColorTexture;
     }
 
     private sealed class PostDepthTextureRecorderRequest : PostTextureRecorderRequest
     {
-        public override required string Property { get; init; } = "renderTexture.depth";
+        public override required string Property { get; init; } = PropertyName.DepthTexture;
     }
 
     private sealed class PostTransformRecorderRequest : IPostRecorderRequest
     {
-        public required string Property { get; init; } = "transform";
+        public required string Property { get; init; } = PropertyName.Transform;
 
         public required string OutputPath { get; init; }
 
         public required string Format { get; init; }
-    }
-
-    private static IResponse PostCameraRecorder(
-        [FromUrl] string id,
-        [FromBody] IPostRecorderRequest request,
-        JsonSerializer jsonSerializer,
-        ApiResourceRepository apiResources
-    )
-    {
-        if (
-            apiResources.GlobalContainer.GetResource<ISceneCamera>(id)
-            is not { Transform.gameObject: var gameObject } camera
-        )
-        {
-            return CommonResponse.CameraNotFound(id);
-        }
-
-        return PostRecorder(
-            apiResources,
-            jsonSerializer,
-            request,
-            apiResources.ContainerOf(gameObject),
-            camera
-        );
     }
 
     private static IResponse PostGameObjectRecorder(
@@ -107,42 +90,24 @@ internal sealed class RecorderEndpoint : IRouteMapper
             return CommonResponse.GameObjectNotFound(name);
         }
 
-        return PostRecorder(
-            apiResources,
-            jsonSerializer,
-            request,
-            apiResources.ContainerOf(gameObject),
-            gameObject
-        );
-    }
+        var container = apiResources.ContainerOf(gameObject);
 
-    private static IResponse PostRecorder<E>(
-        ApiResourceRepository apiResources,
-        JsonSerializer jsonSerializer,
-        IPostRecorderRequest request,
-        IApiResourceContainer container,
-        E entity
-    )
-    {
         if (container.GetResource<IRecorder.IBuilder>(request.Property) is { })
         {
             return BadRequest($"recorder for property '{request.Property}' already exists");
         }
 
-        var (response, recorder) = (request, entity) switch
+        var (response, recorder) = request switch
         {
-            (PostTextureRecorderRequest textureRecorderRequest, ISceneCamera camera)
-                => PostRenderTextureRecorder(textureRecorderRequest, camera),
+            PostTextureRecorderRequest textureRecorderRequest
+                => PostRenderTextureRecorder(apiResources, textureRecorderRequest, gameObject),
 
-            (
-                PostTransformRecorderRequest transformRecorderRequest,
-                GameObject { transform: var transform }
-            )
+            PostTransformRecorderRequest transformRecorderRequest
                 => PostTransformRecorder(
                     apiResources,
                     jsonSerializer,
                     transformRecorderRequest,
-                    transform
+                    gameObject
                 ),
 
             _ => (BadRequest($"property '{request.Property}' is not recordable"), null)
@@ -157,8 +122,9 @@ internal sealed class RecorderEndpoint : IRouteMapper
     }
 
     private static (IResponse, IRecorder.IBuilder?) PostRenderTextureRecorder(
+        ApiResourceRepository apiResources,
         PostTextureRecorderRequest request,
-        ISceneCamera camera
+        GameObject gameObject
     )
     {
         if (FFmpeg.CheckInstallation() is { } exception)
@@ -179,6 +145,11 @@ internal sealed class RecorderEndpoint : IRouteMapper
         if (request.ConstantRateFactor is < 0 or > 63)
         {
             return (BadRequest("unsupported constant rate factor value"), null);
+        }
+
+        if (apiResources.ContainerOf(gameObject).GetResource<ISceneCamera>() is not { } camera)
+        {
+            return (CommonResponse.CameraComponentNotFound(gameObject.name), null);
         }
 
         var renderTexture = request switch
@@ -205,13 +176,15 @@ internal sealed class RecorderEndpoint : IRouteMapper
         ApiResourceRepository apiResources,
         JsonSerializer jsonSerializer,
         PostTransformRecorderRequest request,
-        Transform transform
+        GameObject gameObject
     )
     {
         if (request.Format is not "json")
         {
             return (BadRequest($"format '{request.Format}' is not supported"), null);
         }
+
+        var transform = gameObject.transform;
 
         var origin = apiResources
             .GlobalContainer.GetRequiredResource<GameObject>(SceneEndpoint.OriginResource)

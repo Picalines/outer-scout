@@ -21,7 +21,7 @@ internal sealed class MeshEndpoint : IRouteMapper
     {
         using (serverBuilder.WithPlayableSceneFilter())
         {
-            serverBuilder.MapGet("gameObjects/:name/mesh", GetGameObjectMesh);
+            serverBuilder.MapGet("objects/:name/mesh", GetGameObjectMesh);
         }
     }
 
@@ -39,7 +39,7 @@ internal sealed class MeshEndpoint : IRouteMapper
     {
         public required GameObjectDto Body { get; init; }
 
-        public required IReadOnlyList<SectorMeshDto> Sectors { get; init; }
+        public required IReadOnlyList<SectorDto> Sectors { get; init; }
     }
 
     private sealed class GameObjectDto
@@ -51,16 +51,16 @@ internal sealed class MeshEndpoint : IRouteMapper
         public required TransformDto Transform { get; init; }
     }
 
-    private sealed class SectorMeshDto
+    private sealed class SectorDto
     {
         public required string Path { get; init; }
 
-        public required IReadOnlyList<MeshDto> PlainMeshes { get; init; }
+        public required IReadOnlyList<MeshAssetDto> PlainMeshes { get; init; }
 
-        public required IReadOnlyList<MeshDto> StreamedMeshes { get; init; }
+        public required IReadOnlyList<MeshAssetDto> StreamedMeshes { get; init; }
     }
 
-    private sealed class MeshDto
+    private sealed class MeshAssetDto
     {
         // GameObject path for "static" meshes, Asset path for streamed ones
         public required string Path { get; init; }
@@ -76,7 +76,7 @@ internal sealed class MeshEndpoint : IRouteMapper
             .Where(pair => pair.Component.HasComponent<Renderer>() is true);
 
         var noSectorMeshInfo = CreateEmptySectorDto(bodyTransform.GetPath());
-        var sectorMeshInfos = new Dictionary<Sector, SectorMeshDto>();
+        var sectorMeshInfos = new Dictionary<Sector, SectorDto>();
 
         foreach (var (sector, meshFilter) in renderedMeshFilters)
         {
@@ -98,7 +98,7 @@ internal sealed class MeshEndpoint : IRouteMapper
                 && assetBundle is StreamingMeshAssetBundle { isLoaded: true } meshAssetBundle
             )
             {
-                var streamedMeshes = (sectorMeshInfo.StreamedMeshes as List<MeshDto>)!;
+                var streamedMeshes = (sectorMeshInfo.StreamedMeshes as List<MeshAssetDto>)!;
                 streamedMeshes.Add(
                     new()
                     {
@@ -109,7 +109,7 @@ internal sealed class MeshEndpoint : IRouteMapper
             }
             else
             {
-                var plainMeshes = (sectorMeshInfo.PlainMeshes as List<MeshDto>)!;
+                var plainMeshes = (sectorMeshInfo.PlainMeshes as List<MeshAssetDto>)!;
                 plainMeshes.Add(
                     new()
                     {
@@ -120,7 +120,7 @@ internal sealed class MeshEndpoint : IRouteMapper
             }
         }
 
-        var sectorMeshInfosList = new List<SectorMeshDto>();
+        var sectorMeshInfosList = new List<SectorDto>();
         if (noSectorMeshInfo is not { PlainMeshes.Count: 0, StreamedMeshes.Count: 0 })
         {
             sectorMeshInfosList.Add(noSectorMeshInfo);
@@ -140,17 +140,17 @@ internal sealed class MeshEndpoint : IRouteMapper
         };
     }
 
-    private static SectorMeshDto CreateEmptySectorDto(string path)
+    private static SectorDto CreateEmptySectorDto(string path)
     {
         return new()
         {
             Path = path,
-            PlainMeshes = new List<MeshDto>(),
-            StreamedMeshes = new List<MeshDto>(),
+            PlainMeshes = new List<MeshAssetDto>(),
+            StreamedMeshes = new List<MeshAssetDto>(),
         };
     }
 
-    private static SectorMeshDto CreateEmptySectorDto(Sector sector)
+    private static SectorDto CreateEmptySectorDto(Sector sector)
     {
         return CreateEmptySectorDto(sector.transform.GetPath());
     }
