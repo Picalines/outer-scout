@@ -1,7 +1,6 @@
 using OuterScout.Application.Animation;
 using OuterScout.Application.Extensions;
 using OuterScout.Application.Recording;
-using OuterScout.Application.SceneCameras;
 using OuterScout.Domain;
 using OuterScout.Infrastructure.DependencyInjection;
 using OuterScout.Infrastructure.Extensions;
@@ -88,8 +87,8 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
         }
 
         resources.DisposeResources<PropertyAnimator>();
-        resources.DisposeResources<ISceneCamera>();
-        resources.DisposeResources<ApiOwnedGameObject>();
+        resources.DisposeResources<IRecorder.IBuilder>();
+        gameObjects.DestroyOwnObjects();
 
         resources.GlobalContainer.DisposeResource<SceneRecorder.Builder>();
 
