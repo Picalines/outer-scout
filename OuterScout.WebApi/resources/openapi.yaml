@@ -547,6 +547,12 @@ paths:
                 - $ref: '#/components/schemas/DepthTextureRecorder'
                 - $ref: '#/components/schemas/TransformRecorder'
             examples:
+              mainCameraColor:
+                description: Recording a video from the camera
+                value:
+                  property: camera.renderTexture.color
+                  outputPath: "D:\\assets\\color.mp4"
+                  format: mp4
               timberHearthOrbit:
                 description: Recording Timber Hearth's position relative to the sun
                 value:
@@ -909,13 +915,13 @@ components:
           $ref: '#/components/schemas/PropertyKeyframes'
       propertyNames:
         enum:
-          - perspective.focalLength
-          - perspective.sensorSize.x
-          - perspective.sensorSize.y
-          - perspective.lensShift.x
-          - perspective.lensShift.y
-          - perspective.nearClipPlane
-          - perspective.farClipPlane
+          - camera.perspective.focalLength
+          - camera.perspective.sensorSize.x
+          - camera.perspective.sensorSize.y
+          - camera.perspective.lensShift.x
+          - camera.perspective.lensShift.y
+          - camera.perspective.nearClipPlane
+          - camera.perspective.farClipPlane
     RenderTextureRecorder:
       type: object
       additionalProperties: false
@@ -946,7 +952,7 @@ components:
           properties:
             property:
               type: string
-              enum: [renderTexture.color]
+              enum: [camera.renderTexture.color]
         - $ref: '#/components/schemas/RenderTextureRecorder'
     DepthTextureRecorder:
       type: object
@@ -958,7 +964,7 @@ components:
           properties:
             property:
               type: string
-              enum: [renderTexture.depth]
+              enum: [camera.renderTexture.depth]
         - $ref: '#/components/schemas/RenderTextureRecorder'
     TransformRecorder:
       type: object
