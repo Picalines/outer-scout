@@ -5,7 +5,7 @@ on:
 
 env:
     PROJ_USERNAME: picalines
-    PROJ_NAME: SceneRecorder
+    PROJ_NAME: OuterScout
 
 jobs:
     pre_job:
