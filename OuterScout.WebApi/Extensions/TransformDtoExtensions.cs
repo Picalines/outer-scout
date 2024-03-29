@@ -61,7 +61,7 @@ internal static class TransformDtoExtensions
         {
             Position = parent.InverseTransformPoint(child.position),
             Rotation = parent.InverseTransformRotation(child.rotation),
-            Scale = parent.lossyScale,
+            Scale = child.lossyScale,
         };
     }
 }
