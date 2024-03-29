@@ -29,6 +29,7 @@ internal sealed class MeshEndpoint : IRouteMapper
         [FromUrl] string name,
         GameObjectRepository gameObjects,
         [FromUrl] string ignorePaths = ":",
+        [FromUrl] string ignoreLayers = "",
         [FromUrl] bool caseSensitive = false
     )
     {
@@ -36,8 +37,12 @@ internal sealed class MeshEndpoint : IRouteMapper
             ? Ok(
                 GetBodyMeshDto(
                     gameObject,
-                    new HashSet<string>(ignorePaths.Split(',')),
-                    caseSensitive
+                    new FilterParameters()
+                    {
+                        CaseSensitive = caseSensitive,
+                        IgnorePaths = new HashSet<string>(ignorePaths.Split(',')),
+                        IgnoreLayers = new HashSet<string>(ignoreLayers.Split(',')),
+                    }
                 )
             )
             : CommonResponse.GameObjectNotFound(name);
@@ -76,24 +81,33 @@ internal sealed class MeshEndpoint : IRouteMapper
         public required TransformDto Transform { get; init; }
     }
 
-    private static GameObjectMeshDto GetBodyMeshDto(
-        GameObject body,
-        IEnumerable<string> ignorePaths,
-        bool caseSensitive
-    )
+    private sealed class FilterParameters
     {
-        var stringComparison = caseSensitive
+        public required bool CaseSensitive { get; init; }
+
+        public required IEnumerable<string> IgnorePaths { get; init; }
+
+        public required IEnumerable<string> IgnoreLayers { get; init; }
+    }
+
+    private static GameObjectMeshDto GetBodyMeshDto(GameObject body, FilterParameters filter)
+    {
+        var stringComparison = filter.CaseSensitive
             ? StringComparison.Ordinal
             : StringComparison.OrdinalIgnoreCase;
+
+        var ignoredLayers = new HashSet<int>(filter.IgnoreLayers.Select(LayerMask.NameToLayer));
+
         var bodyTransform = body.transform;
 
-        var renderedMeshFilters = GetComponentsInChildrenWithSector<MeshFilter>(body)
-            .Where(pair => pair.Component.HasComponent<Renderer>() is true);
+        var sectoredMeshFilters = GetComponentsInChildrenWithSector<MeshFilter>(body)
+            .Where(pair => pair.Component.HasComponent<Renderer>() is true)
+            .Where(pair => ignoredLayers.Contains(pair.Component.gameObject.layer) is false);
 
         var noSectorMeshInfo = CreateEmptySectorDto(bodyTransform.GetPath());
         var sectorMeshInfos = new Dictionary<Sector, SectorDto>();
 
-        foreach (var (sector, meshFilter) in renderedMeshFilters)
+        foreach (var (sector, meshFilter) in sectoredMeshFilters)
         {
             var sectorMeshInfo = sector is null
                 ? noSectorMeshInfo
@@ -123,7 +137,10 @@ internal sealed class MeshEndpoint : IRouteMapper
                 meshPath = meshGameObject.transform.GetPath();
             }
 
-            if (ignorePaths.Any(part => meshPath.IndexOf(part, stringComparison) is >= 0) is false)
+            if (
+                filter.IgnorePaths.Any(part => meshPath.IndexOf(part, stringComparison) is >= 0)
+                is false
+            )
             {
                 meshList.Add(
                     new MeshAssetDto()

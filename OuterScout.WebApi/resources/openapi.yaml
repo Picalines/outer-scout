@@ -599,6 +599,15 @@ paths:
             type: string
           default: ":"
           example: "normals,:"
+        - name: ignoreLayers
+          in: query
+          required: false
+          description: |-
+            The list is separated by commas. If the asset is located on one of the Unity layers from the list, it is skipped
+          schema:
+            type: string
+          default: ""
+          example: "DreamSimulation"
         - name: caseSensitive
           in: query
           required: false
