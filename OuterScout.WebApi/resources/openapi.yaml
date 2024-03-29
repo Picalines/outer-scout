@@ -116,6 +116,17 @@ paths:
           $ref: '#/components/responses/gameObjectNotFound'
         '503':
           $ref: '#/components/responses/unavailable'
+    delete:
+      operationId: deleteScene
+      tags: [scene]
+      summary: Deletes the OuterScout scene
+      description: |-
+        Scene resources are permanently erased when you change the Unity scene (when you go to the main menu)
+      responses:
+        '200':
+          $ref: '#/components/responses/plainSuccess'
+        '503':
+          $ref: '#/components/responses/unavailable'
   /scene/recording:
     post:
       operationId: startRecording

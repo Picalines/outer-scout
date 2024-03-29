@@ -6,4 +6,9 @@ public static class ResponseExtensions
     {
         return new ResponseException(response);
     }
+
+    public static bool IsSuccessful(this IResponse response)
+    {
+        return (int)response.StatusCode is >= 200 and < 300;
+    }
 }

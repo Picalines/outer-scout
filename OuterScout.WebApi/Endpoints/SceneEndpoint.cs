@@ -47,6 +47,7 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
             using (serverBuilder.WithNotRecordingFilter())
             {
                 serverBuilder.MapPost("scene", PostScene);
+                serverBuilder.MapDelete("scene", DeleteScene);
 
                 using (serverBuilder.WithSceneCreatedFilter())
                 {
@@ -86,11 +87,13 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
             return CommonResponse.GameObjectNotFound(request.Origin.Parent);
         }
 
-        resources.DisposeResources<PropertyAnimator>();
-        resources.DisposeResources<IRecorder.IBuilder>();
-        gameObjects.DestroyOwnObjects();
-
-        resources.GlobalContainer.DisposeResource<SceneRecorder.Builder>();
+        if (
+            DeleteScene(resources, gameObjects) is { } deleteResponse
+            && deleteResponse.IsSuccessful() is false
+        )
+        {
+            return deleteResponse;
+        }
 
         var sceneRecorderBuilder = new SceneRecorder.Builder();
         resources.GlobalContainer.AddResource(nameof(SceneRecorder), sceneRecorderBuilder);
@@ -117,6 +120,20 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
         gameObjects.AddOwned(OriginResource, originGameObject);
 
         return Created();
+    }
+
+    private static IResponse DeleteScene(
+        ApiResourceRepository resources,
+        GameObjectRepository gameObjects
+    )
+    {
+        resources.DisposeResources<PropertyAnimator>();
+        resources.DisposeResources<IRecorder.IBuilder>();
+        gameObjects.DestroyOwnObjects();
+
+        resources.GlobalContainer.DisposeResource<SceneRecorder.Builder>();
+
+        return Ok();
     }
 
     private static IResponse PostRecording(
