@@ -590,6 +590,21 @@ paths:
         This operation exists because the usual asset tools do not get streamed assets together with the main model
       parameters:
         - $ref: '#/components/parameters/objectName'
+        - name: ignorePaths
+          in: query
+          required: false
+          description: |-
+            The list is separated by commas. If the path to the asset contains at least one substring from the list, the asset is skipped 
+          schema:
+            type: string
+          default: ":"
+          example: "normals,:"
+        - name: caseSensitive
+          in: query
+          required: false
+          schema:
+            type: boolean
+          default: false
       responses:
         '200':
           description: Returned gameObject mesh
