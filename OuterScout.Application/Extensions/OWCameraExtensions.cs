@@ -1,4 +1,5 @@
 ﻿using OuterScout.Domain;
+using OuterScout.Infrastructure.Extensions;
 using OuterScout.Infrastructure.Validation;
 using UnityEngine;
 using UnityEngine.PostProcessing;
@@ -43,9 +44,13 @@ public static class OWCameraExtensions
         bool copyPostProcessing = true
     )
     {
+        cameraParent.Throw().If(cameraParent.HasComponent<Camera>());
+
         cameraParent.SetActive(false);
 
-        cameraParent.AddComponent<Camera>(); // controlled by OWCamera
+        var newCamera = cameraParent.AddComponent<Camera>();
+
+        var cameraParentTransform = sourceOWCamera.transform;
 
         var newOWCamera = cameraParent.AddComponent<OWCamera>();
         newOWCamera.renderSkybox = sourceOWCamera.renderSkybox;
@@ -54,29 +59,41 @@ public static class OWCameraExtensions
         newOWCamera.farCameraDistance = sourceOWCamera.farCameraDistance;
         newOWCamera.useFarCamera = sourceOWCamera.useFarCamera;
 
-        if (copyPostProcessing && sourceOWCamera.postProcessing != null)
+        if (copyPostProcessing)
         {
-            cameraParent.AddComponent<PostProcessingBehaviour>().profile = sourceOWCamera
-                .postProcessing
-                .profile;
+            if (
+                sourceOWCamera.GetComponentOrNull<FlashbackScreenGrabImageEffect>() is
+                { _downsampleShader: var downSampleShader }
+            )
+            {
+                cameraParent.AddComponent<FlashbackScreenGrabImageEffect>()._downsampleShader =
+                    downSampleShader;
+            }
+
+            if (
+                sourceOWCamera.GetComponentOrNull<PlanetaryFogImageEffect>() is
+                { fogShader: var fogShader }
+            )
+            {
+                cameraParent.AddComponent<PlanetaryFogImageEffect>().fogShader = fogShader;
+            }
+
+            if (
+                sourceOWCamera.GetComponentOrNull<PostProcessingBehaviour>() is
+                { profile: var postProfile }
+            )
+            {
+                cameraParent.AddComponent<PostProcessingBehaviour>().profile = postProfile;
+            }
         }
 
-        cameraParent.SetActive(true); // OWCamera.Awake
+        var position = cameraParentTransform.position;
+        var rotation = cameraParentTransform.rotation;
+        newCamera.CopyFrom(sourceOWCamera.mainCamera);
+        cameraParentTransform.position = position;
+        cameraParentTransform.rotation = rotation;
 
-        // after awake in order to set properties on UnityEngine.Camera
-        newOWCamera.mainCamera.usePhysicalProperties = sourceOWCamera
-            .mainCamera
-            .usePhysicalProperties;
-
-        newOWCamera.mainCamera.gateFit = sourceOWCamera.mainCamera.gateFit;
-
-        newOWCamera.backgroundColor = sourceOWCamera.backgroundColor;
-        newOWCamera.clearFlags = sourceOWCamera.clearFlags;
-        newOWCamera.cullingMask = sourceOWCamera.cullingMask;
-        newOWCamera.farClipPlane = sourceOWCamera.farClipPlane;
-        newOWCamera.nearClipPlane = sourceOWCamera.nearClipPlane;
-        newOWCamera.aspect = sourceOWCamera.aspect;
-        newOWCamera.fieldOfView = sourceOWCamera.fieldOfView;
+        cameraParent.SetActive(true);
 
         return newOWCamera;
     }
