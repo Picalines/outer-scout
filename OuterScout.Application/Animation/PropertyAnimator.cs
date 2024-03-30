@@ -1,34 +1,21 @@
-using System.Collections;
-using OuterScout.Domain;
+using UnityEngine;
 
 namespace OuterScout.Application.Animation;
 
 public sealed class PropertyAnimator
 {
-    public PropertyCurve Curve { get; }
+    public AnimationCurve Curve { get; }
 
     public PropertyApplier Applier { get; }
 
-    public PropertyAnimator(PropertyCurve curve, PropertyApplier applier)
+    public PropertyAnimator(AnimationCurve curve, PropertyApplier applier)
     {
         Curve = curve;
         Applier = applier;
     }
 
-    public IEnumerator ApplyFrames(IntRange frameRange)
+    public void ApplyFrame(int frame)
     {
-        if (Curve.IsEmpty)
-        {
-            return Array.Empty<object>().GetEnumerator();
-        }
-
-        return Curve
-            .GetValues(frameRange)
-            .Select(value =>
-            {
-                Applier(value);
-                return (object?)null;
-            })
-            .GetEnumerator();
+        Applier(Curve.Evaluate(frame));
     }
 }

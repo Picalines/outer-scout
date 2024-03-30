@@ -33,6 +33,8 @@ internal sealed class KeyframesEndpoint : IRouteMapper
     private sealed class KeyframeDto
     {
         public required float Value { get; init; }
+
+        // TODO: other UnityEngine.Keyframe fields
     }
 
     private sealed class PropertyAnimationDto
@@ -78,7 +80,7 @@ internal sealed class KeyframesEndpoint : IRouteMapper
             ? apiResources.ContainerOf(gameObject)
             : apiResources.GlobalContainer;
 
-        var keyframes = new Dictionary<PropertyCurve, PropertyAnimationDto>();
+        var keyframes = new Dictionary<AnimationCurve, PropertyAnimationDto>();
 
         foreach (var (property, animationDto) in request.Properties)
         {
@@ -95,7 +97,12 @@ internal sealed class KeyframesEndpoint : IRouteMapper
                     return BadRequest($"property '{property}' is not animatable");
                 }
 
-                propertyCurve = new PropertyCurve();
+                propertyCurve = new AnimationCurve()
+                {
+                    preWrapMode = WrapMode.ClampForever,
+                    postWrapMode = WrapMode.ClampForever
+                };
+
                 var propertyAnimator = new PropertyAnimator(propertyCurve, propertyApplier);
                 container.AddResource(property, propertyAnimator);
             }
@@ -107,7 +114,7 @@ internal sealed class KeyframesEndpoint : IRouteMapper
         {
             foreach (var (frame, keyframeDto) in animationDto.Keyframes)
             {
-                propertyCurve.StoreKeyframe(new PropertyKeyframe(frame, keyframeDto.Value));
+                propertyCurve.AddKey(frame, keyframeDto.Value);
             }
         }
 
