@@ -129,8 +129,8 @@ internal sealed class KeyframesEndpoint : IRouteMapper
     {
         return gameObject switch
         {
-            { transform: var transform }
-                => TransformApplier(transform, property)
+            not null
+                => TransformApplier(gameObject.GetOrAddComponent<RawLocalTransform>(), property)
                     ?? PerspectiveApplier(apiResources, gameObject, property),
 
             _ => ScenePropertyApplier(property)
@@ -150,7 +150,7 @@ internal sealed class KeyframesEndpoint : IRouteMapper
         @"^transform\.(?<component>position|rotation|scale)\.(?<axis>[xyzw])$"
     );
 
-    private static PropertyApplier? TransformApplier(Transform transform, string property)
+    private static PropertyApplier? TransformApplier(RawLocalTransform transform, string property)
     {
         if (_transformPropertyRegex.Match(property) is not { Success: true, Groups: var groups })
         {
@@ -170,21 +170,21 @@ internal sealed class KeyframesEndpoint : IRouteMapper
         {
             ("position", >= 0 and <= 2)
                 => axisValue =>
-                    transform.localPosition = transform.localPosition.WithAxis(
+                    transform.LocalPosition = transform.LocalPosition.WithAxis(
                         axisIndex,
                         axisValue
                     ),
 
             ("rotation", >= 0 and <= 3)
                 => axisValue =>
-                    transform.localRotation = transform.localRotation.WithAxis(
+                    transform.LocalRotation = transform.LocalRotation.WithAxis(
                         axisIndex,
                         axisValue
                     ),
 
             ("scale", >= 0 and <= 2)
                 => axisValue =>
-                    transform.localScale = transform.localScale.WithAxis(axisIndex, axisValue),
+                    transform.LocalScale = transform.LocalScale.WithAxis(axisIndex, axisValue),
 
             _ => null,
         };
@@ -245,5 +245,45 @@ internal sealed class KeyframesEndpoint : IRouteMapper
 
             _ => null,
         };
+    }
+
+    // Unity normalizes the quaternion when assigning a localRotation, which makes
+    // it impossible to consistently change each axis of the localRotation.
+    // This class separately stores the unnormalized quaternion, and
+    // applies it to the original transform.
+    private sealed class RawLocalTransform : MonoBehaviour
+    {
+        private Transform _transform = null!;
+
+        private Vector3 _localPosition;
+        private Quaternion _localRotation;
+        private Vector3 _localScale;
+
+        private void Awake()
+        {
+            _transform = transform;
+
+            _localPosition = _transform.localPosition;
+            _localRotation = _transform.localRotation;
+            _localScale = _transform.localScale;
+        }
+
+        public Vector3 LocalPosition
+        {
+            get => _localPosition;
+            set => _transform.localPosition = _localPosition = value;
+        }
+
+        public Quaternion LocalRotation
+        {
+            get => _localRotation;
+            set => _transform.localRotation = _localRotation = value;
+        }
+
+        public Vector3 LocalScale
+        {
+            get => _localScale;
+            set => _transform.localScale = _localScale = value;
+        }
     }
 }
