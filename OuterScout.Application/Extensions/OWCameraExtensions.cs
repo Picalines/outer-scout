@@ -50,8 +50,6 @@ public static class OWCameraExtensions
 
         var newCamera = cameraParent.AddComponent<Camera>();
 
-        var cameraParentTransform = sourceOWCamera.transform;
-
         var newOWCamera = cameraParent.AddComponent<OWCamera>();
         newOWCamera.renderSkybox = sourceOWCamera.renderSkybox;
         newOWCamera.useGUILayout = sourceOWCamera.useGUILayout;
@@ -86,6 +84,8 @@ public static class OWCameraExtensions
                 cameraParent.AddComponent<PostProcessingBehaviour>().profile = postProfile;
             }
         }
+
+        var cameraParentTransform = sourceOWCamera.transform;
 
         var position = cameraParentTransform.position;
         var rotation = cameraParentTransform.rotation;

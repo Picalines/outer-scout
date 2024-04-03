@@ -157,11 +157,11 @@ public sealed class PerspectiveSceneCamera
             $"{nameof(OuterScout)}.{nameof(PerspectiveSceneCamera)}.depth"
         );
 
+        var depthCamera = _colorCamera.CopyTo(depthCameraObject, copyPostProcessing: false);
+
         var depthTransform = depthCameraObject.transform;
         depthTransform.parent = transform;
         depthTransform.ResetLocal();
-
-        var depthCamera = _colorCamera.CopyTo(depthCameraObject, copyPostProcessing: false);
 
         depthCamera.renderSkybox = false;
         depthCamera.useGUILayout = false;
