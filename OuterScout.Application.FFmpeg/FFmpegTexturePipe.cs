@@ -16,7 +16,7 @@ internal sealed class FFmpegTexturePipe : IDisposable
 
     private FFmpegPipe? _pipe;
 
-    private readonly List<AsyncGPUReadbackRequest> _readbackQueue = new(4);
+    private readonly List<AsyncGPUReadbackRequest> _readbackQueue = new(MaxReadbackRequests);
 
     public FFmpegTexturePipe(FFmpegPipe ffmpegPipe)
     {
@@ -36,7 +36,7 @@ internal sealed class FFmpegTexturePipe : IDisposable
             throw new InvalidOperationException($"{nameof(FFmpegTexturePipe)} is closed");
         }
 
-        ProcessReadbackQueue();
+        PushCompletedReadbackRequests();
 
         if (source != null)
         {
@@ -58,7 +58,7 @@ internal sealed class FFmpegTexturePipe : IDisposable
             return;
         }
 
-        ProcessReadbackQueue();
+        ForceReadbackQueueCompletion();
         FlushFrames();
         _pipe.Dispose();
         _pipe = null;
@@ -91,7 +91,7 @@ internal sealed class FFmpegTexturePipe : IDisposable
         RenderTexture.ReleaseTemporary(tempRenderTexture);
     }
 
-    private void ProcessReadbackQueue()
+    private void PushCompletedReadbackRequests()
     {
         while (_readbackQueue.Count > 0)
         {
@@ -110,6 +110,28 @@ internal sealed class FFmpegTexturePipe : IDisposable
             }
 
             _readbackQueue.RemoveAt(0);
+
+            if (firstRequest.hasError)
+            {
+                RequestError?.Invoke();
+                continue;
+            }
+
+            _pipe!.PushFrameData(firstRequest.GetData<byte>());
+        }
+    }
+
+    private void ForceReadbackQueueCompletion()
+    {
+        while (_readbackQueue.Count > 0)
+        {
+            var firstRequest = _readbackQueue[0];
+            _readbackQueue.RemoveAt(0);
+
+            if (firstRequest.done is false)
+            {
+                firstRequest.WaitForCompletion();
+            }
 
             if (firstRequest.hasError)
             {

@@ -68,7 +68,7 @@ public sealed class FFmpegTextureEncoder : IDisposable
                 .Add($"-r {outputOptions.FrameRate}")
                 .Add("-i -")
                 .Add("-an")
-                .Add("-c:v libx265")
+                .Add("-c:v libx264")
                 .Add("-movflags +faststart")
                 .Add($"-crf {outputOptions.ConstantRateFactor}")
                 .Add("-q:v 0")

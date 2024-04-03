@@ -111,18 +111,31 @@ public static class SceneRecorderExtensions
 
     public static SceneRecorder.Builder WithHiddenPlayerModel(this SceneRecorder.Builder builder)
     {
-        Renderer[]? playerRenderersToEnable = null;
+        Renderer[]? renderersToEnable = null;
+        Light[]? lightsToEnable = null;
 
         return builder.WithScenePatch(
             () =>
-                playerRenderersToEnable = Locator
-                    .GetPlayerBody()
-                    .OrNull()
+            {
+                var playerBody = Locator.GetPlayerBody().OrNull();
+
+                renderersToEnable = playerBody
                     ?.GetComponentsInChildren<Renderer>()
                     .Where(renderer => renderer.enabled)
                     .Tap(renderer => renderer.enabled = false)
-                    .ToArray(),
-            () => playerRenderersToEnable?.ForEach(renderer => renderer.enabled = true)
+                    .ToArray();
+
+                lightsToEnable = playerBody
+                    ?.GetComponentsInChildren<Light>()
+                    .Where(light => light.enabled)
+                    .Tap(light => light.enabled = false)
+                    .ToArray();
+            },
+            () =>
+            {
+                renderersToEnable?.ForEach(renderer => renderer.enabled = true);
+                lightsToEnable?.ForEach(light => light.enabled = true);
+            }
         );
     }
 

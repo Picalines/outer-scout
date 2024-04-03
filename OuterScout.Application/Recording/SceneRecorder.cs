@@ -62,15 +62,11 @@ public sealed partial class SceneRecorder
 
         var recorders = new ComposedRecorder(_recorders.Select(r => r.StartRecording()).ToArray());
 
-        var animationApplier = _animators.ApplyFrames(FrameRange);
-
         foreach (var frame in FrameRange)
         {
-            CurrentFrame = frame;
-
             yield return null;
 
-            animationApplier.MoveNext();
+            _animators.ApplyFrame(CurrentFrame = frame);
 
             yield return _waitForEndOfFrame;
 

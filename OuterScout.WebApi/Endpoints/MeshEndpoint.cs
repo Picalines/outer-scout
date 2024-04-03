@@ -27,11 +27,24 @@ internal sealed class MeshEndpoint : IRouteMapper
 
     private static IResponse GetGameObjectMesh(
         [FromUrl] string name,
-        GameObjectRepository gameObjects
+        GameObjectRepository gameObjects,
+        [FromUrl] string ignorePaths = ":",
+        [FromUrl] string ignoreLayers = "",
+        [FromUrl] bool caseSensitive = false
     )
     {
         return gameObjects.FindOrNull(name) is { } gameObject
-            ? Ok(GetBodyMeshDto(gameObject))
+            ? Ok(
+                GetBodyMeshDto(
+                    gameObject,
+                    new FilterParameters()
+                    {
+                        CaseSensitive = caseSensitive,
+                        IgnorePaths = new HashSet<string>(ignorePaths.Split(',')),
+                        IgnoreLayers = new HashSet<string>(ignoreLayers.Split(',')),
+                    }
+                )
+            )
             : CommonResponse.GameObjectNotFound(name);
     }
 
@@ -68,17 +81,33 @@ internal sealed class MeshEndpoint : IRouteMapper
         public required TransformDto Transform { get; init; }
     }
 
-    private static GameObjectMeshDto GetBodyMeshDto(GameObject body)
+    private sealed class FilterParameters
     {
+        public required bool CaseSensitive { get; init; }
+
+        public required IEnumerable<string> IgnorePaths { get; init; }
+
+        public required IEnumerable<string> IgnoreLayers { get; init; }
+    }
+
+    private static GameObjectMeshDto GetBodyMeshDto(GameObject body, FilterParameters filter)
+    {
+        var stringComparison = filter.CaseSensitive
+            ? StringComparison.Ordinal
+            : StringComparison.OrdinalIgnoreCase;
+
+        var ignoredLayers = new HashSet<int>(filter.IgnoreLayers.Select(LayerMask.NameToLayer));
+
         var bodyTransform = body.transform;
 
-        var renderedMeshFilters = GetComponentsInChildrenWithSector<MeshFilter>(body)
-            .Where(pair => pair.Component.HasComponent<Renderer>() is true);
+        var sectoredMeshFilters = GetComponentsInChildrenWithSector<MeshFilter>(body)
+            .Where(pair => pair.Component.HasComponent<Renderer>() is true)
+            .Where(pair => ignoredLayers.Contains(pair.Component.gameObject.layer) is false);
 
         var noSectorMeshInfo = CreateEmptySectorDto(bodyTransform.GetPath());
         var sectorMeshInfos = new Dictionary<Sector, SectorDto>();
 
-        foreach (var (sector, meshFilter) in renderedMeshFilters)
+        foreach (var (sector, meshFilter) in sectoredMeshFilters)
         {
             var sectorMeshInfo = sector is null
                 ? noSectorMeshInfo
@@ -86,7 +115,8 @@ internal sealed class MeshEndpoint : IRouteMapper
 
             var (meshGameObject, meshTransform) = (meshFilter.gameObject, meshFilter.transform);
 
-            var localMeshTrasnform = bodyTransform.InverseDto(meshTransform);
+            List<MeshAssetDto> meshList;
+            string meshPath;
 
             if (
                 StreamingManager.s_tableLoaded
@@ -98,23 +128,25 @@ internal sealed class MeshEndpoint : IRouteMapper
                 && assetBundle is StreamingMeshAssetBundle { isLoaded: true } meshAssetBundle
             )
             {
-                var streamedMeshes = (sectorMeshInfo.StreamedMeshes as List<MeshAssetDto>)!;
-                streamedMeshes.Add(
-                    new()
-                    {
-                        Path = meshAssetBundle._meshNamesByID[streamingHandle.meshIndex],
-                        Transform = localMeshTrasnform,
-                    }
-                );
+                meshList = (sectorMeshInfo.StreamedMeshes as List<MeshAssetDto>)!;
+                meshPath = meshAssetBundle._meshNamesByID[streamingHandle.meshIndex];
             }
             else
             {
-                var plainMeshes = (sectorMeshInfo.PlainMeshes as List<MeshAssetDto>)!;
-                plainMeshes.Add(
-                    new()
+                meshList = (sectorMeshInfo.PlainMeshes as List<MeshAssetDto>)!;
+                meshPath = meshGameObject.transform.GetPath();
+            }
+
+            if (
+                filter.IgnorePaths.Any(part => meshPath.IndexOf(part, stringComparison) is >= 0)
+                is false
+            )
+            {
+                meshList.Add(
+                    new MeshAssetDto()
                     {
-                        Path = meshGameObject.transform.GetPath(),
-                        Transform = localMeshTrasnform,
+                        Path = meshPath,
+                        Transform = bodyTransform.InverseDto(meshTransform),
                     }
                 );
             }

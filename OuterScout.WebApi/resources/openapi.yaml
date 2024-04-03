@@ -116,6 +116,17 @@ paths:
           $ref: '#/components/responses/gameObjectNotFound'
         '503':
           $ref: '#/components/responses/unavailable'
+    delete:
+      operationId: deleteScene
+      tags: [scene]
+      summary: Deletes the OuterScout scene
+      description: |-
+        Scene resources are permanently erased when you change the Unity scene (when you go to the main menu)
+      responses:
+        '200':
+          $ref: '#/components/responses/plainSuccess'
+        '503':
+          $ref: '#/components/responses/unavailable'
   /scene/recording:
     post:
       operationId: startRecording
@@ -579,6 +590,30 @@ paths:
         This operation exists because the usual asset tools do not get streamed assets together with the main model
       parameters:
         - $ref: '#/components/parameters/objectName'
+        - name: ignorePaths
+          in: query
+          required: false
+          description: |-
+            The list is separated by commas. If the path to the asset contains at least one substring from the list, the asset is skipped 
+          schema:
+            type: string
+          default: ":"
+          example: "normals,:"
+        - name: ignoreLayers
+          in: query
+          required: false
+          description: |-
+            The list is separated by commas. If the asset is located on one of the Unity layers from the list, it is skipped
+          schema:
+            type: string
+          default: ""
+          example: "DreamSimulation"
+        - name: caseSensitive
+          in: query
+          required: false
+          schema:
+            type: boolean
+          default: false
       responses:
         '200':
           description: Returned gameObject mesh

@@ -125,11 +125,11 @@ public sealed class EquirectSceneCamera
             $"{nameof(OuterScout)}.{nameof(EquirectSceneCamera)}.face"
         );
 
+        var faceCamera = playerCamera.CopyTo(cameraObject);
+
         var cameraTransfrom = cameraObject.transform;
         cameraTransfrom.parent = parentTransform;
         cameraTransfrom.ResetLocal();
-
-        var faceCamera = playerCamera.CopyTo(cameraObject);
 
         faceCamera.aspect = 1;
         faceCamera.fieldOfView = 90;
