@@ -75,6 +75,8 @@ internal sealed class RecorderEndpoint : IRouteMapper
         public required string OutputPath { get; init; }
 
         public required string Format { get; init; }
+
+        public required string Origin { get; init; }
     }
 
     private static IResponse PostGameObjectRecorder(
@@ -105,6 +107,7 @@ internal sealed class RecorderEndpoint : IRouteMapper
             PostTransformRecorderRequest transformRecorderRequest
                 => PostTransformRecorder(
                     apiResources,
+                    gameObjects,
                     jsonSerializer,
                     transformRecorderRequest,
                     gameObject
@@ -174,6 +177,7 @@ internal sealed class RecorderEndpoint : IRouteMapper
 
     private static (IResponse, IRecorder.IBuilder?) PostTransformRecorder(
         ApiResourceRepository apiResources,
+        GameObjectRepository gameObjects,
         JsonSerializer jsonSerializer,
         PostTransformRecorderRequest request,
         GameObject gameObject
@@ -184,15 +188,16 @@ internal sealed class RecorderEndpoint : IRouteMapper
             return (BadRequest($"format '{request.Format}' is not supported"), null);
         }
 
-        var transform = gameObject.transform;
+        if (gameObjects.FindOrNull(request.Origin) is not { transform: var origin })
+        {
+            return (CommonResponse.GameObjectNotFound(request.Origin), null);
+        }
 
-        var origin = apiResources
-            .GlobalContainer.GetRequiredResource<GameObject>(SceneEndpoint.OriginResource)
-            .transform;
+        var transform = gameObject.transform;
 
         var transformGetter = () =>
         {
-            if (transform == null)
+            if (transform == null || origin == null)
             {
                 return null;
             }

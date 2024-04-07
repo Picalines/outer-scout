@@ -1,16 +1,13 @@
 using OuterScout.Application.Animation;
-using OuterScout.Application.Extensions;
 using OuterScout.Application.Recording;
 using OuterScout.Domain;
 using OuterScout.Infrastructure.DependencyInjection;
 using OuterScout.Infrastructure.Extensions;
-using OuterScout.WebApi.DTOs;
 using OuterScout.WebApi.Extensions;
 using OuterScout.WebApi.Http;
 using OuterScout.WebApi.Http.Response;
 using OuterScout.WebApi.Services;
 using OWML.Common;
-using UnityEngine;
 
 namespace OuterScout.WebApi.Endpoints;
 
@@ -18,16 +15,12 @@ using static ResponseFabric;
 
 internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
 {
-    public const string OriginResource = "scene.origin";
-
     public static SceneEndpoint Instance { get; } = new();
 
     private SceneEndpoint() { }
 
     private sealed class CreateSceneRequest
     {
-        public required TransformDto Origin { get; init; }
-
         public required bool HidePlayerModel { get; init; }
     }
 
@@ -77,16 +70,6 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
         GameObjectRepository gameObjects
     )
     {
-        if (request.Origin.Parent is null)
-        {
-            return BadRequest("scene must be parented to exising gameObject");
-        }
-
-        if (gameObjects.FindOrNull(request.Origin.Parent) is not { transform: var originParent })
-        {
-            return CommonResponse.GameObjectNotFound(request.Origin.Parent);
-        }
-
         if (
             DeleteScene(resources, gameObjects) is { } deleteResponse
             && deleteResponse.IsSuccessful() is false
@@ -111,13 +94,6 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
         {
             sceneRecorderBuilder.WithHiddenPlayerModel();
         }
-
-        var originGameObject = new GameObject($"{nameof(OuterScout)}.{OriginResource}");
-        originGameObject.transform.parent = originParent;
-        originGameObject.transform.ResetLocal();
-        request.Origin.ApplyLocal(originGameObject.transform);
-
-        gameObjects.AddOwned(OriginResource, originGameObject);
 
         return Created();
     }

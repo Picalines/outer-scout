@@ -40,8 +40,17 @@ Let's do something like the [dolly zoom](https://en.wikipedia.org/wiki/Dolly_zoo
 ```json5
 // POST /scene
 {
-    "hidePlayerModel": true,
-    "origin": {
+    "hidePlayerModel": true
+}
+```
+
+The example will be easier to read if we create an additional "origin of the scene" object:
+
+```json5
+// POST /objects
+{
+    "name": "scene.origin",
+    "transform": {
         "parent": "TimberHearth_Body",
         "position": [20.8809223, -41.51514, 186.207733],
         "rotation": [0.461064935, -0.4372242, -0.6413971, 0.429958254]
@@ -56,7 +65,7 @@ Now we need a camera. The mod can create several cameras of different types, but
 {
     "name": "mainCamera",
     "transform": {
-        // camera is created at the origin
+        "parent": "scene.origin"
     },
 }
 ```

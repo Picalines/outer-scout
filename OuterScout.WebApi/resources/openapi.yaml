@@ -80,33 +80,19 @@ paths:
 
         Scene resources are permanently erased when you change the Unity scene (when you go to the main menu)
       requestBody:
-        description: |-
-          In the request body you define the origin point, that is parented to some Unity GameObject.
-          That's required because Outer Wilds regularly "recenters the universe" to avoid floating point errors,
-          so Unity global coordinates are not practical
-
-          The scene origin is a GameObject named "scene.origin"
         content:
           application/json:
             schema:
               type: object
               additionalProperties: false
-              required: [origin, hidePlayerModel]
+              required: [hidePlayerModel]
               properties:
-                origin:
-                  $ref: '#/components/schemas/Transform'
                 hidePlayerModel:
                   type: boolean
             examples:
               villageCampfire:
-                description: The request body creating a scene next to the campfire in the starting village on Timber Hearth
                 value:
                   hidePlayerModel: true
-                  origin:
-                    parent: "TimberHearth_Body"
-                    position: [15.2269516, -43.7520866, 187.071]
-                    rotation: [0.5456432, 0.59208554, 0.523036, 0.279538333]
-                    scale: [1, 1, 1]
       responses:
         '201':
           $ref: '#/components/responses/plainSuccess'
@@ -271,13 +257,13 @@ paths:
         Creates a custom Unity GameObject. The GameObject is owned by the scene and will be destroyed when creating a new OuterScout scene
       requestBody:
         description: |-
-          The GameObject will be attached to the origin of the scene if the parent is not declared
+          The transform field must have a parent property
         content:
           application/json:
             schema:
               type: object
               additionalProperties: false
-              required: [name]
+              required: [name, transform]
               properties:
                 name:
                   type: string
@@ -304,15 +290,17 @@ paths:
       tags: [object]
       summary: Gets information related to the GameObject
       description: |-
-        Gets current Transform of the GameObject in the coordinates of the scene
-
-        Another GameObject will be used as the coordinate center if specified in the query
+        Gets current Transform of the GameObject relative to another one
       parameters:
         - $ref: '#/components/parameters/objectName'
         - name: origin
           in: query
-          required: false
-          description: A GameObject whose transform will be used as the origin
+          required: true
+          description: |-
+            A GameObject whose transform will be used as the origin
+
+            That's required because Outer Wilds regularly "recenters the universe" to avoid floating point errors,
+            so Unity global coordinates are not practical
           schema:
             type: string
           example: TimberHearth_Body
@@ -353,8 +341,12 @@ paths:
         - $ref: '#/components/parameters/objectName'
         - name: origin
           in: query
-          required: false
-          description: A GameObject whose transform will be used as the origin
+          required: true
+          description: |-
+            A GameObject whose transform will be used as the origin
+
+            That's required because Outer Wilds regularly "recenters the universe" to avoid floating point errors,
+            so Unity global coordinates are not practical
           schema:
             type: string
           example: TimberHearth_Body
@@ -369,10 +361,6 @@ paths:
                   $ref: '#/components/schemas/Transform'
                   description: |-
                     New GameObject transformation. Chaning the parent of an object is prohibited
-
-                    Scene origin is used if the query parameter is omitted
-
-                    Only those components that are in the request body will be changed
       responses:
         '200':
           $ref: '#/components/responses/plainSuccess'
@@ -1005,7 +993,7 @@ components:
       type: object
       description: A recorder that records the transformation of an object relative to the origin of the scene
       additionalProperties: false
-      required: [property, outputPath, format]
+      required: [property, outputPath, format, origin]
       properties:
         property:
           type: string
@@ -1016,6 +1004,9 @@ components:
         format:
           type: string
           enum: [json]
+        origin:
+          type: string
+          description: A GameObject whose transform will be used as the origin 
   parameters:
     objectName:
       name: name
