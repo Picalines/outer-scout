@@ -267,7 +267,7 @@ paths:
               properties:
                 name:
                   type: string
-                  pattern: ^[a-zA-Z_][a-zA-Z0-9_\-]*
+                  description: Must be not empty and cannot contain '/'
                 transform:
                   $ref: '#/components/schemas/Transform'
             example:

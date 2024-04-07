@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using OuterScout.Application.Extensions;
+﻿using OuterScout.Application.Extensions;
 using OuterScout.Infrastructure.Extensions;
 using OuterScout.WebApi.DTOs;
 using OuterScout.WebApi.Extensions;
@@ -34,8 +33,6 @@ internal sealed class GameObjectEndpoint : IRouteMapper
         }
     }
 
-    private static readonly Regex _customObjectNameRegex = new Regex(@"^[a-zA-Z_][a-zA-Z0-9_\-]*$");
-
     private sealed class PostCustomObjectRequest
     {
         public required string Name { get; init; }
@@ -48,7 +45,7 @@ internal sealed class GameObjectEndpoint : IRouteMapper
         GameObjectRepository gameObjects
     )
     {
-        if (_customObjectNameRegex.IsMatch(request.Name) is false)
+        if (request.Name is "" || request.Name.Contains("/"))
         {
             return BadRequest("invalid object name");
         }
