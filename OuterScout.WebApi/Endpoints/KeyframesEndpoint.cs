@@ -3,7 +3,6 @@ using System.Text.RegularExpressions;
 using OuterScout.Application.Animation;
 using OuterScout.Application.SceneCameras;
 using OuterScout.Infrastructure.Extensions;
-using OuterScout.Infrastructure.Validation;
 using OuterScout.WebApi.Extensions;
 using OuterScout.WebApi.Http;
 using OuterScout.WebApi.Http.Response;
@@ -208,18 +207,11 @@ internal sealed class KeyframesEndpoint : IRouteMapper
         GameObject gameObject
     )
     {
-        if (gameObject.TryGetComponent<TransformApplier>(out var transformApplier) is false)
-        {
-            gameObject.SetActive(false);
+        var transformApplier = gameObject.GetOrAddComponent<TransformApplier>();
 
-            transformApplier = gameObject.AddComponent<TransformApplier>();
-
-            transformApplier.Parent = gameObjects.IsOwn(gameObject)
-                ? gameObject.transform.parent
-                : SceneEndpoint.GetOriginOrNull(gameObjects).OrThrow();
-
-            gameObject.SetActive(true);
-        }
+        transformApplier.Parent = gameObjects.IsOwn(gameObject)
+            ? gameObject.transform.parent
+            : SceneEndpoint.GetOriginOrNull(gameObjects).OrThrow();
 
         return transformApplier;
     }
@@ -334,7 +326,7 @@ internal sealed class KeyframesEndpoint : IRouteMapper
     // applies it to the original transform.
     private sealed class TransformApplier : MonoBehaviour
     {
-        public Transform Parent { get; set; } = null!;
+        private Transform _parent = null!;
 
         private Transform _transform = null!;
 
@@ -344,25 +336,32 @@ internal sealed class KeyframesEndpoint : IRouteMapper
 
         private void Awake()
         {
-            Parent.Throw().IfNull();
-
             _transform = transform;
 
-            _localPosition = Parent.InverseTransformPoint(_transform.position);
-            _localRotation = Parent.InverseTransformRotation(_transform.rotation);
             _localScale = _transform.localScale;
+        }
+
+        public Transform Parent
+        {
+            set
+            {
+                _parent = value;
+
+                _localPosition = _parent.InverseTransformPoint(_transform.position);
+                _localRotation = _parent.InverseTransformRotation(_transform.rotation);
+            }
         }
 
         public Vector3 LocalPosition
         {
             get => _localPosition;
-            set => _transform.position = Parent.TransformPoint(_localPosition = value);
+            set => _transform.position = _parent.TransformPoint(_localPosition = value);
         }
 
         public Quaternion LocalRotation
         {
             get => _localRotation;
-            set => _transform.rotation = Parent.rotation * (_localRotation = value);
+            set => _transform.rotation = _parent.rotation * (_localRotation = value);
         }
 
         public Vector3 LocalScale
