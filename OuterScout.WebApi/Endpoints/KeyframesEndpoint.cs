@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using OuterScout.Application.Animation;
 using OuterScout.Application.SceneCameras;
 using OuterScout.Infrastructure.Extensions;
+using OuterScout.Infrastructure.Validation;
 using OuterScout.WebApi.Extensions;
 using OuterScout.WebApi.Http;
 using OuterScout.WebApi.Http.Response;
@@ -120,7 +121,7 @@ internal sealed class KeyframesEndpoint : IRouteMapper
             )
             {
                 if (
-                    CreatePropertyApplier(apiResources, gameObject, property)
+                    CreatePropertyApplier(apiResources, gameObjects, gameObject, property)
                     is not { } propertyApplier
                 )
                 {
@@ -176,6 +177,7 @@ internal sealed class KeyframesEndpoint : IRouteMapper
 
     private static PropertyApplier? CreatePropertyApplier(
         ApiResourceRepository apiResources,
+        GameObjectRepository gameObjects,
         GameObject? gameObject,
         string property
     )
@@ -183,8 +185,10 @@ internal sealed class KeyframesEndpoint : IRouteMapper
         return gameObject switch
         {
             not null
-                => TransformApplier(gameObject.GetOrAddComponent<RawLocalTransform>(), property)
-                    ?? PerspectiveApplier(apiResources, gameObject, property),
+                => TransformPropertyApplier(
+                    GetOrAddTransformApplier(gameObjects, gameObject),
+                    property
+                ) ?? PerspectiveApplier(apiResources, gameObject, property),
 
             _ => ScenePropertyApplier(property)
         };
@@ -199,11 +203,28 @@ internal sealed class KeyframesEndpoint : IRouteMapper
         };
     }
 
+    private static TransformApplier GetOrAddTransformApplier(
+        GameObjectRepository gameObjects,
+        GameObject gameObject
+    )
+    {
+        var transformApplier = gameObject.GetOrAddComponent<TransformApplier>();
+
+        transformApplier.Parent = gameObjects.IsOwn(gameObject)
+            ? gameObject.transform.parent
+            : SceneEndpoint.GetOriginOrNull(gameObjects).OrThrow();
+
+        return transformApplier;
+    }
+
     private static readonly Regex _transformPropertyRegex = new Regex(
         @"^transform\.(?<component>position|rotation|scale)\.(?<axis>[xyzw])$"
     );
 
-    private static PropertyApplier? TransformApplier(RawLocalTransform transform, string property)
+    private static PropertyApplier? TransformPropertyApplier(
+        TransformApplier transform,
+        string property
+    )
     {
         if (_transformPropertyRegex.Match(property) is not { Success: true, Groups: var groups })
         {
@@ -304,8 +325,10 @@ internal sealed class KeyframesEndpoint : IRouteMapper
     // it impossible to consistently change each axis of the localRotation.
     // This class separately stores the unnormalized quaternion, and
     // applies it to the original transform.
-    private sealed class RawLocalTransform : MonoBehaviour
+    private sealed class TransformApplier : MonoBehaviour
     {
+        public Transform Parent { get; set; } = null!;
+
         private Transform _transform = null!;
 
         private Vector3 _localPosition;
@@ -314,23 +337,25 @@ internal sealed class KeyframesEndpoint : IRouteMapper
 
         private void Awake()
         {
+            Parent.Throw().IfNull();
+
             _transform = transform;
 
-            _localPosition = _transform.localPosition;
-            _localRotation = _transform.localRotation;
+            _localPosition = Parent.InverseTransformPoint(_transform.position);
+            _localRotation = Parent.InverseTransformRotation(_transform.rotation);
             _localScale = _transform.localScale;
         }
 
         public Vector3 LocalPosition
         {
             get => _localPosition;
-            set => _transform.localPosition = _localPosition = value;
+            set => _transform.position = Parent.TransformPoint(_localPosition = value);
         }
 
         public Quaternion LocalRotation
         {
             get => _localRotation;
-            set => _transform.localRotation = _localRotation = value;
+            set => _transform.localRotation = Parent.rotation * (_localRotation = value);
         }
 
         public Vector3 LocalScale
