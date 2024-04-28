@@ -1,4 +1,6 @@
-﻿namespace OuterScout.Infrastructure.Extensions;
+﻿using System.Runtime.CompilerServices;
+
+namespace OuterScout.Infrastructure.Extensions;
 
 public static class UnityObjectExtensions
 {
@@ -10,7 +12,10 @@ public static class UnityObjectExtensions
             : unityObject;
     }
 
-    public static T OrThrow<T>(this T? unityObject, string errorMessage)
+    public static T OrThrow<T>(
+        this T? unityObject,
+        [CallerArgumentExpression(nameof(unityObject))] string errorMessage = ""
+    )
         where T : UnityEngine.Object
     {
         return unityObject == null
