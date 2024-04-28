@@ -208,11 +208,18 @@ internal sealed class KeyframesEndpoint : IRouteMapper
         GameObject gameObject
     )
     {
-        var transformApplier = gameObject.GetOrAddComponent<TransformApplier>();
+        if (gameObject.TryGetComponent<TransformApplier>(out var transformApplier) is false)
+        {
+            gameObject.SetActive(false);
 
-        transformApplier.Parent = gameObjects.IsOwn(gameObject)
-            ? gameObject.transform.parent
-            : SceneEndpoint.GetOriginOrNull(gameObjects).OrThrow();
+            transformApplier = gameObject.AddComponent<TransformApplier>();
+
+            transformApplier.Parent = gameObjects.IsOwn(gameObject)
+                ? gameObject.transform.parent
+                : SceneEndpoint.GetOriginOrNull(gameObjects).OrThrow();
+
+            gameObject.SetActive(true);
+        }
 
         return transformApplier;
     }
