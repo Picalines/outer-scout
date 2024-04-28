@@ -1,4 +1,5 @@
 using OuterScout.Application.Animation;
+using OuterScout.Application.Extensions;
 using OuterScout.Application.Recording;
 using OuterScout.Domain;
 using OuterScout.Infrastructure.DependencyInjection;
@@ -102,8 +103,9 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
         var sceneRecorderBuilder = new SceneRecorder.Builder();
         resources.GlobalContainer.AddResource(nameof(SceneRecorder), sceneRecorderBuilder);
 
-        var originObject = new GameObject(OriginResource);
+        var originObject = new GameObject($"{nameof(OuterScout)}.{OriginResource}");
         originObject.transform.parent = originParent;
+        originObject.transform.ResetLocal();
         request.Origin.ApplyLocal(originObject.transform);
         gameObjects.AddOwned(OriginResource, originObject);
 
