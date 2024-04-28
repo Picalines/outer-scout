@@ -5,7 +5,6 @@ using OuterScout.Application.SceneCameras;
 using OuterScout.Domain;
 using OuterScout.Infrastructure.Extensions;
 using OuterScout.Infrastructure.Validation;
-using OuterScout.WebApi.DTOs;
 using OuterScout.WebApi.Extensions;
 using OuterScout.WebApi.Http;
 using OuterScout.WebApi.Http.Response;
@@ -68,8 +67,6 @@ internal sealed class CameraEndpoint : IRouteMapper
     {
         public required string Type { get; init; } = CameraType.Perspective;
 
-        public TransformDto? Transform { get; init; }
-
         public required Camera.GateFitMode GateFit { get; init; }
 
         public required ResolutionDto Resolution { get; init; }
@@ -80,8 +77,6 @@ internal sealed class CameraEndpoint : IRouteMapper
     private sealed class PostEquirectSceneCameraRequest : IPostCameraRequest
     {
         public required string Type { get; init; } = CameraType.Equirect;
-
-        public TransformDto? Transform { get; init; }
 
         public required int FaceResolution { get; init; }
     }
