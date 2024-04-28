@@ -355,7 +355,7 @@ internal sealed class KeyframesEndpoint : IRouteMapper
         public Quaternion LocalRotation
         {
             get => _localRotation;
-            set => _transform.localRotation = Parent.rotation * (_localRotation = value);
+            set => _transform.rotation = Parent.rotation * (_localRotation = value);
         }
 
         public Vector3 LocalScale
