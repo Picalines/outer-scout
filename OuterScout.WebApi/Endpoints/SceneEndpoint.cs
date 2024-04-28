@@ -69,7 +69,7 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
             .InstantiateAsComponentWithServices();
     }
 
-    public Transform? GetOriginOrNull(GameObjectRepository gameObjects)
+    public static Transform? GetOriginOrNull(GameObjectRepository gameObjects)
     {
         return gameObjects.GetOwnOrNull(OriginResource)?.transform;
     }
