@@ -3,11 +3,13 @@ using OuterScout.Application.Recording;
 using OuterScout.Domain;
 using OuterScout.Infrastructure.DependencyInjection;
 using OuterScout.Infrastructure.Extensions;
+using OuterScout.WebApi.DTOs;
 using OuterScout.WebApi.Extensions;
 using OuterScout.WebApi.Http;
 using OuterScout.WebApi.Http.Response;
 using OuterScout.WebApi.Services;
 using OWML.Common;
+using UnityEngine;
 
 namespace OuterScout.WebApi.Endpoints;
 
@@ -15,6 +17,8 @@ using static ResponseFabric;
 
 internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
 {
+    public const string OriginResource = "scene.origin";
+
     public static SceneEndpoint Instance { get; } = new();
 
     private SceneEndpoint() { }
@@ -22,6 +26,8 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
     private sealed class CreateSceneRequest
     {
         public required bool HidePlayerModel { get; init; }
+
+        public required TransformDto Origin { get; init; }
     }
 
     private sealed class StartRecordingRequest
@@ -63,6 +69,11 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
             .InstantiateAsComponentWithServices();
     }
 
+    public Transform? GetOriginOrNull(GameObjectRepository gameObjects)
+    {
+        return gameObjects.GetOwnOrNull(OriginResource)?.transform;
+    }
+
     private static IResponse PostScene(
         [FromBody] CreateSceneRequest request,
         IModConsole modConsole,
@@ -78,8 +89,23 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
             return deleteResponse;
         }
 
+        if (request.Origin.Parent is null)
+        {
+            return BadRequest(new { Error = "scene.origin must have a parent GameObject" });
+        }
+
+        if (gameObjects.FindOrNull(request.Origin.Parent) is not { transform: var originParent })
+        {
+            return CommonResponse.GameObjectNotFound(request.Origin.Parent);
+        }
+
         var sceneRecorderBuilder = new SceneRecorder.Builder();
         resources.GlobalContainer.AddResource(nameof(SceneRecorder), sceneRecorderBuilder);
+
+        var originObject = new GameObject(OriginResource);
+        originObject.transform.parent = originParent;
+        request.Origin.ApplyLocal(originObject.transform);
+        gameObjects.AddOwned(OriginResource, originObject);
 
         sceneRecorderBuilder
             .WithProgressLoggedToConsole(modConsole)
