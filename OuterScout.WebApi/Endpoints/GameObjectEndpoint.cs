@@ -114,7 +114,7 @@ internal sealed class GameObjectEndpoint : IRouteMapper
         [FromUrl] string name,
         [FromBody] PutGameObjectRequest request,
         GameObjectRepository gameObjects,
-        [FromUrl] string origin = ""
+        [FromUrl] string? origin = null
     )
     {
         if (gameObjects.FindOrNull(name) is not { transform: var transform })
@@ -124,7 +124,7 @@ internal sealed class GameObjectEndpoint : IRouteMapper
 
         if (request is { Transform: { } transformDto })
         {
-            if (origin is "")
+            if (origin is null)
             {
                 return BadRequest(
                     new
