@@ -25,7 +25,6 @@ internal sealed class GameObjectRepository
         name.Throw()
             .IfNullOrWhiteSpace()
             .If(name.Contains('/'))
-            .If(FindOrNull(name) is not null)
             .If(Contains(name));
 
         bool added = AddExternal(name, gameObject);
