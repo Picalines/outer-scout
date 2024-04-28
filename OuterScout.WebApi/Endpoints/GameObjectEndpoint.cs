@@ -45,7 +45,7 @@ internal sealed class GameObjectEndpoint : IRouteMapper
         GameObjectRepository gameObjects
     )
     {
-        if (request.Name is "" || request.Name.Contains("/"))
+        if (request.Name is "" || request.Name.Contains("/") || request.Name.StartsWith("scene."))
         {
             return BadRequest("invalid object name");
         }
