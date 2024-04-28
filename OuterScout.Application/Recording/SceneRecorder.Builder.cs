@@ -1,4 +1,5 @@
 using OuterScout.Application.Animation;
+using OuterScout.Application.Extensions;
 using OuterScout.Domain;
 
 namespace OuterScout.Application.Recording;
@@ -7,7 +8,7 @@ public sealed partial class SceneRecorder
 {
     public sealed class Builder
     {
-        private readonly HashSet<PropertyAnimator> _animators = [];
+        private readonly OrderedSet<PropertyAnimator> _animators = [];
 
         private readonly HashSet<IRecorder.IBuilder> _recorderBuilders = [];
 
@@ -15,7 +16,7 @@ public sealed partial class SceneRecorder
 
         public SceneRecorder StartRecording(RecordingParameters parameters)
         {
-            return new(
+            return new SceneRecorder(
                 parameters,
                 _animators.ToArray(),
                 _recorderBuilders.ToArray(),

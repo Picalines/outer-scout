@@ -157,8 +157,8 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
         var sceneRecorderBuilder =
             resources.GlobalContainer.GetRequiredResource<SceneRecorder.Builder>();
 
-        resources
-            .GetResources<PropertyAnimator>()
+        KeyframesEndpoint
+            .GetOrderedPropertyAnimators(resources)
             .ForEach(animator => sceneRecorderBuilder.WithAnimator(animator));
 
         resources

@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using OuterScout.Application.Animation;
 using OuterScout.Application.SceneCameras;
 using OuterScout.Infrastructure.Extensions;
@@ -16,6 +17,11 @@ internal sealed class KeyframesEndpoint : IRouteMapper
 {
     public static KeyframesEndpoint Instance { get; } = new();
 
+    private static readonly ConditionalWeakTable<
+        PropertyAnimator,
+        PropertyAnimatorData
+    > _propertyAnimatorData = new();
+
     private KeyframesEndpoint() { }
 
     public void MapRoutes(HttpServer.Builder serverBuilder)
@@ -28,6 +34,23 @@ internal sealed class KeyframesEndpoint : IRouteMapper
 
             serverBuilder.MapPut("objects/:name/keyframes", PutGameObjectKeyframes);
         }
+    }
+
+    public static IEnumerable<PropertyAnimator> GetOrderedPropertyAnimators(
+        ApiResourceRepository apiResources
+    )
+    {
+        // Properties are animated in a special order:
+        // 1. scene properties (time.scale)
+        // 2. scene.origin
+        // 3. Outer Wilds objects (because they're animated relative to scene.origin)
+        // 4. Outer Scout custom objects (because they might be parented to Outer Wilds objects)
+
+        return apiResources
+            .GetResources<PropertyAnimator>()
+            .OrderBy(animator =>
+                _propertyAnimatorData.TryGetValue(animator, out var data) ? data.Order : 0
+            );
     }
 
     private sealed class KeyframeDto
@@ -47,12 +70,18 @@ internal sealed class KeyframesEndpoint : IRouteMapper
         public required Dictionary<string, PropertyAnimationDto> Properties { get; init; }
     }
 
+    private sealed class PropertyAnimatorData
+    {
+        public required int Order { get; init; }
+    }
+
     private static IResponse PutSceneKeyframes(
         [FromBody] PutKeyframesRequest request,
-        ApiResourceRepository apiResources
+        ApiResourceRepository apiResources,
+        GameObjectRepository gameObjects
     )
     {
-        return PutKeyframes(apiResources, request, null);
+        return PutKeyframes(apiResources, gameObjects, request, null);
     }
 
     private static IResponse PutGameObjectKeyframes(
@@ -67,11 +96,12 @@ internal sealed class KeyframesEndpoint : IRouteMapper
             return CommonResponse.GameObjectNotFound(name);
         }
 
-        return PutKeyframes(apiResources, request, gameObject);
+        return PutKeyframes(apiResources, gameObjects, request, gameObject);
     }
 
     private static IResponse PutKeyframes(
         ApiResourceRepository apiResources,
+        GameObjectRepository gameObjects,
         PutKeyframesRequest request,
         GameObject? gameObject
     )
@@ -105,6 +135,11 @@ internal sealed class KeyframesEndpoint : IRouteMapper
 
                 var propertyAnimator = new PropertyAnimator(propertyCurve, propertyApplier);
                 container.AddResource(property, propertyAnimator);
+
+                _propertyAnimatorData.Add(
+                    propertyAnimator,
+                    new() { Order = GetPropertyAnimatorOrder(gameObjects, gameObject) }
+                );
             }
 
             keyframes.Add(propertyCurve, animationDto);
@@ -119,6 +154,24 @@ internal sealed class KeyframesEndpoint : IRouteMapper
         }
 
         return Ok();
+    }
+
+    private static int GetPropertyAnimatorOrder(
+        GameObjectRepository gameObjects,
+        GameObject? gameObject
+    )
+    {
+        if (gameObject is null)
+        {
+            return 0;
+        }
+
+        if (ReferenceEquals(SceneEndpoint.GetOriginOrNull(gameObjects), gameObject.transform))
+        {
+            return 1;
+        }
+
+        return gameObjects.IsOwn(gameObject) ? 3 : 2;
     }
 
     private static PropertyApplier? CreatePropertyApplier(
