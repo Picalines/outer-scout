@@ -22,10 +22,7 @@ internal sealed class GameObjectRepository
     {
         gameObject.OrNull().ThrowIfNull();
 
-        name.Throw()
-            .IfNullOrWhiteSpace()
-            .If(name.Contains('/'))
-            .If(Contains(name));
+        name.Throw().IfNullOrWhiteSpace().If(name.Contains('/')).If(Contains(name));
 
         bool added = AddExternal(name, gameObject);
 
