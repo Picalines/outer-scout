@@ -17,6 +17,7 @@ public sealed class WebApiServer : IDisposable
     {
         ApiEndpoint.Instance,
         CameraEndpoint.Instance,
+        EnvironmentEndpoint.Instance,
         GameObjectEndpoint.Instance,
         KeyframesEndpoint.Instance,
         MeshEndpoint.Instance,
