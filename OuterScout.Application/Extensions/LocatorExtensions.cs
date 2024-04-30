@@ -12,10 +12,9 @@ public static class LocatorExtensions
         return LoadManager.GetCurrentScene() is OWScene.SolarSystem or OWScene.EyeOfTheUniverse;
     }
 
-    public static GameObject? GetCurrentGroundBody()
+    public static GameObject? GetLastGroundBody()
     {
-        return Locator.GetPlayerController().OrNull()?.GetLastGroundBody().OrNull()?.gameObject
-            ?? Locator.GetAstroObject(AstroObject.Name.TimberHearth).OrNull()?.gameObject;
+        return Locator.GetPlayerController().OrNull()?.GetLastGroundBody().OrNull()?.gameObject;
     }
 
     public static PlayerSpawner? GetPlayerSpawner()

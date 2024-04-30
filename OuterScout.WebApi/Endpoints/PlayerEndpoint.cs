@@ -42,7 +42,7 @@ internal sealed class PlayerEndpoint : IRouteMapper
     private static IResponse GetPlayerGroundBody()
     {
         if (
-            LocatorExtensions.GetCurrentGroundBody()
+            LocatorExtensions.GetLastGroundBody()
             is not { name: var name, transform: var transform }
         )
         {
