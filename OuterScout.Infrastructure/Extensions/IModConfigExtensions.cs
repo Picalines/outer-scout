@@ -4,12 +4,6 @@ namespace OuterScout.Infrastructure.Extensions;
 
 public static class IModConfigExtensions
 {
-    public static bool GetDisableRenderInPauseSetting(this IModConfig modConfig) =>
-        modConfig.GetSettingsValue<bool>("disableRenderInPause");
-
-    public static bool GetEnableProgressUISetting(this IModConfig modConfig) =>
-        modConfig.GetSettingsValue<bool>("enableProgressUI");
-
     public static int GetApiPortSetting(this IModConfig modConfig) =>
         modConfig.GetSettingsValue<int>("apiPort");
 

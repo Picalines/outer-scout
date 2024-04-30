@@ -2,18 +2,6 @@
   "$schema": "https://raw.githubusercontent.com/ow-mods/owml/master/schemas/config_schema.json",
   "enabled": true,
   "settings": {
-    "disableRenderInPause": {
-      "title": "Disable rendering in pause",
-      "tooltip": "Disables cameras when the game is paused. Use this to save resources in windowed mode",
-      "type": "toggle",
-      "value": true
-    },
-    "enableProgressUI": {
-      "title": "Enable recording progress UI",
-      "tooltip": "Enable this to see information while recording",
-      "type": "toggle",
-      "value": true
-    },
     "apiPort": {
       "title": "Web API port",
       "tooltip": "Port number that the mod will use to host its HTTP API",
