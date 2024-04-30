@@ -17,7 +17,7 @@ internal sealed class MeshEndpoint : IRouteMapper
 
     private MeshEndpoint() { }
 
-    public void MapRoutes(HttpServer.Builder serverBuilder)
+    void IRouteMapper.MapRoutes(HttpServer.Builder serverBuilder)
     {
         using (serverBuilder.WithPlayableSceneFilter())
         {

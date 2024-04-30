@@ -24,7 +24,7 @@ internal sealed class PlayerEndpoint : IRouteMapper
         public required TransformDto Transform { get; init; }
     }
 
-    public void MapRoutes(HttpServer.Builder serverBuilder)
+    void IRouteMapper.MapRoutes(HttpServer.Builder serverBuilder)
     {
         using (serverBuilder.WithPlayableSceneFilter())
         {

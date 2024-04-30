@@ -40,7 +40,7 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
         public required int EndFrame { get; init; }
     }
 
-    public void MapRoutes(HttpServer.Builder serverBuilder)
+    void IRouteMapper.MapRoutes(HttpServer.Builder serverBuilder)
     {
         using (serverBuilder.WithPlayableSceneFilter())
         {
@@ -62,7 +62,7 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
         }
     }
 
-    public void RegisterServices(ServiceContainer.Builder services)
+    void IServiceConfiguration.RegisterServices(ServiceContainer.Builder services)
     {
         services
             .Register<RecordingProgressGUI>()

@@ -28,7 +28,7 @@ internal sealed class RecorderEndpoint : IRouteMapper
 
     private RecorderEndpoint() { }
 
-    public void MapRoutes(HttpServer.Builder serverBuilder)
+    void IRouteMapper.MapRoutes(HttpServer.Builder serverBuilder)
     {
         using (serverBuilder.WithPlayableSceneFilter())
         using (serverBuilder.WithSceneCreatedFilter())

@@ -28,7 +28,7 @@ internal sealed class ApiEndpoint : IRouteMapper
         _swaggerResource = resourceNames.First(name => name.Contains("swagger.html"));
     }
 
-    public void MapRoutes(HttpServer.Builder serverBuilder)
+    void IRouteMapper.MapRoutes(HttpServer.Builder serverBuilder)
     {
         serverBuilder.MapGet("api/version", GetApiVersion);
 
