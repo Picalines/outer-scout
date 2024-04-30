@@ -46,7 +46,7 @@ internal sealed class PlayerEndpoint : IRouteMapper
             is not { name: var name, transform: var transform }
         )
         {
-            return ServiceUnavailable();
+            return NotFound();
         }
 
         return Ok(
