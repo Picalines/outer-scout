@@ -43,6 +43,8 @@ public sealed partial class HttpServer : IDisposable
         _httpListener = new HttpListener();
         _httpListener.Prefixes.Add(_baseUrl);
 
+        Log($"started listening at {_httpListener.Prefixes.Single()}", MessageType.Info);
+
         Task.Run(ListenAsync);
     }
 
@@ -70,8 +72,6 @@ public sealed partial class HttpServer : IDisposable
             return;
         }
 
-        Log($"started listening at {_httpListener.Prefixes.Single()}", MessageType.Info);
-
         _stoppedListening = new();
 
         _cancellationTokenSource = new CancellationTokenSource();
@@ -96,8 +96,6 @@ public sealed partial class HttpServer : IDisposable
             var uri = context.Request.Url;
             var httpMethod = new HttpMethod(context.Request.HttpMethod);
 
-            Log($"received {httpMethod} request at '{uri}'", MessageType.Info);
-
             var bodyStream = new MemoryStream();
             context.Request.InputStream.CopyTo(bodyStream);
             context.Request.InputStream.Close();
@@ -118,8 +116,6 @@ public sealed partial class HttpServer : IDisposable
                 unityThreadExecutor.EnqueueTask(
                     () => HandleRequest(context, route, request, requestHandler)
                 );
-
-                Log($"route '{route}' is queued for handling", MessageType.Info);
             }
             else
             {
@@ -127,7 +123,11 @@ public sealed partial class HttpServer : IDisposable
 
                 SendSyncResponse(context, ResponseFabric.NotFound());
 
-                Log($"route for '{context.Request.Url}' not found", MessageType.Warning);
+                var unmatchedPathAndQuery = context.Request.Url.PathAndQuery;
+
+                unityThreadExecutor.EnqueueTask(
+                    () => Log($"route not found: {unmatchedPathAndQuery}", MessageType.Warning)
+                );
             }
         }
 
@@ -147,6 +147,8 @@ public sealed partial class HttpServer : IDisposable
         RequestHandler handler
     )
     {
+        Log($"handling {route}", MessageType.Info);
+
         IResponse response;
 
         _currentRoute = route;
@@ -155,8 +157,6 @@ public sealed partial class HttpServer : IDisposable
         using (request.BodyReader)
         using (var scope = _services.StartScope(RequestScope))
         {
-            Log($"handling route '{route}'", MessageType.Info);
-
             response = handler(scope);
         }
 
@@ -212,14 +212,6 @@ public sealed partial class HttpServer : IDisposable
 
     private void Log(string message, MessageType messageType)
     {
-        if (_logger is null)
-        {
-            return;
-        }
-
-        lock (_logger)
-        {
-            _logger.WriteLine($"{nameof(OuterScout)} API: {message}", messageType);
-        }
+        _logger?.WriteLine($"{nameof(OuterScout)} API: {message}", messageType);
     }
 }
