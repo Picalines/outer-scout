@@ -32,11 +32,16 @@ public sealed class GlobalCoroutine : MonoBehaviour
 
     private IEnumerator YieldAndDestory()
     {
-        while (_coroutine.MoveNext() is true)
+        try
         {
-            yield return _coroutine.Current;
+            while (_coroutine.MoveNext() is true)
+            {
+                yield return _coroutine.Current;
+            }
         }
-
-        Destroy(gameObject);
+        finally
+        {
+            Destroy(gameObject);
+        }
     }
 }
