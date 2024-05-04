@@ -96,7 +96,13 @@ internal sealed class RecorderEndpoint : IRouteMapper
 
         if (container.GetResource<IRecorder.IBuilder>(request.Property) is { })
         {
-            return BadRequest($"recorder for property '{request.Property}' already exists");
+            return BadRequest(
+                new Problem("recorderAlreadyExists")
+                {
+                    Title = "Recorder for property already exists",
+                    Detail = $"Recorder for property '{request.Property}' already exists"
+                }
+            );
         }
 
         var (response, recorder) = request switch
@@ -113,7 +119,17 @@ internal sealed class RecorderEndpoint : IRouteMapper
                     gameObject
                 ),
 
-            _ => (BadRequest($"property '{request.Property}' is not recordable"), null)
+            _
+                => (
+                    BadRequest(
+                        new Problem("propertyIsNotRecordable")
+                        {
+                            Title = "Property is not recordable",
+                            Detail = $"Property '{request.Property}' is not recordable"
+                        }
+                    ),
+                    null
+                )
         };
 
         if (recorder is not null)
@@ -134,7 +150,11 @@ internal sealed class RecorderEndpoint : IRouteMapper
         {
             return (
                 ServiceUnavailable(
-                    new { Error = "ffmpeg is not available", Exception = exception }
+                    new Problem("ffmpegIsNotAvailable")
+                    {
+                        Title = "ffmpeg is not available",
+                        Data = { ["exception"] = exception }
+                    }
                 ),
                 null
             );
@@ -142,16 +162,29 @@ internal sealed class RecorderEndpoint : IRouteMapper
 
         if (request.Format is not "mp4")
         {
-            return (BadRequest($"format '{request.Format}' is not supported"), null);
+            return (
+                CommonResponse.InvalidBodyField(
+                    "format",
+                    $"format '{request.Format}' is not supported"
+                ),
+                null
+            );
         }
 
         if (request.ConstantRateFactor is < 0 or > 63)
         {
-            return (BadRequest("unsupported constant rate factor value"), null);
+            return (
+                CommonResponse.InvalidBodyField(
+                    "constantRateFactor",
+                    "unsupported constant rate factor value"
+                ),
+                null
+            );
         }
 
         if (apiResources.ContainerOf(gameObject).GetResource<ISceneCamera>() is not { } camera)
         {
+            // TODO: gameObject.name is not the same as resource name
             return (CommonResponse.CameraComponentNotFound(gameObject.name), null);
         }
 
@@ -164,7 +197,15 @@ internal sealed class RecorderEndpoint : IRouteMapper
 
         if (renderTexture is null)
         {
-            return (BadRequest($"camera cannot record {request.Property}"), null);
+            return (
+                BadRequest(
+                    new Problem("unsupportedTextureType")
+                    {
+                        Detail = $"Camera cannot record {request.Property}"
+                    }
+                ),
+                null
+            );
         }
 
         var recorder = new RenderTextureRecorder.Builder(
@@ -185,7 +226,13 @@ internal sealed class RecorderEndpoint : IRouteMapper
     {
         if (request.Format is not "json")
         {
-            return (BadRequest($"format '{request.Format}' is not supported"), null);
+            return (
+                CommonResponse.InvalidBodyField(
+                    "format",
+                    $"format '{request.Format}' is not supported"
+                ),
+                null
+            );
         }
 
         var (origin, originName) = request switch
