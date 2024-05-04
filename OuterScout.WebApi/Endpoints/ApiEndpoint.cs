@@ -53,7 +53,9 @@ internal sealed class ApiEndpoint : IRouteMapper
     {
         if (type is not "openapi")
         {
-            return NotFound($"API spec of type '{type}' was not found");
+            return NotFound(
+                new Problem("unknownApiSpec") { Detail = $"API spec of type '{type}' was not found" }
+            );
         }
 
         var stream = _assembly.GetManifestResourceStream(_openApiSpecResource);
