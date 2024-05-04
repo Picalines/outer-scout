@@ -169,6 +169,7 @@ internal sealed class PlayerEndpoint : IRouteMapper
         pauseMenuManager?.Invoke(nameof(PauseMenuManager.TryOpenPauseMenu), seconds);
     }
 
+    // DebugWarp throws when you attempt to warp to the DreamWorld without a lantern in hands
     private static void AssignDebugDreamLantern()
     {
         if (
