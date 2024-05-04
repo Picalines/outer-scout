@@ -43,7 +43,12 @@ public sealed partial class HttpServer
             }
 
             throw BadRequest(
-                    $"missing query parameter '{parameter.Name}' ({parameter.ParameterType.Name})"
+                    new Problem("missingQueryParameter")
+                    {
+                        Title = "Missing required query parameter",
+                        Detail =
+                            $"Missing query parameter '{parameter.Name}' ({parameter.ParameterType.Name})"
+                    }
                 )
                 .ToException();
         }
@@ -55,7 +60,13 @@ public sealed partial class HttpServer
 
         public required JsonSerializer JsonSerializer { private get; init; }
 
-        private static IResponse _nullBodyResponse = BadRequest("invalid json request body");
+        private static IResponse _unexpectedBodyType = BadRequest(
+            new Problem("unexpectedBodyType")
+            {
+                Title = "Unexpected body type",
+                Detail = "The operation expects a JSON object in the request body"
+            }
+        );
 
         public bool CanBind(ParameterInfo parameter)
         {
@@ -74,7 +85,7 @@ public sealed partial class HttpServer
                 { } parsedBody => parsedBody,
                 null when parameter.HasDefaultValue => parameter.DefaultValue,
                 null when parameter.IsNullable() => null,
-                _ => throw _nullBodyResponse.ToException()
+                _ => throw _unexpectedBodyType.ToException()
             };
         }
     }
