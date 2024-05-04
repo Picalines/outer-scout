@@ -71,6 +71,16 @@ paths:
           description: Successful operation
           content:
             application/yaml: {}
+  /api/swagger:
+    get:
+      operationId: getApiSwagger
+      tags: [api]
+      summary: Returns the Swagger HTML
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            text/html: {}
   /environment:
     get:
       operationId: getEnvironment
