@@ -153,6 +153,7 @@ internal sealed class PlayerEndpoint : IRouteMapper
         return Ok();
     }
 
+    // DebugWarp works in the Update loop
     private static void UnpauseForSeconds(float seconds)
     {
         var pauseCommandListener = Locator.GetPauseCommandListener().OrNull();
