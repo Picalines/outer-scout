@@ -85,7 +85,7 @@ public static class OWCameraExtensions
             }
         }
 
-        var cameraParentTransform = sourceOWCamera.transform;
+        var cameraParentTransform = cameraParent.transform;
 
         var position = cameraParentTransform.position;
         var rotation = cameraParentTransform.rotation;
