@@ -12,6 +12,8 @@ info:
 tags:
   - name: api
     description: Operations related to API information
+  - name: environment
+    description: Operations related to the general state of Outer Wilds app
   - name: scene
     description: Operations related to the scene
   - name: object
