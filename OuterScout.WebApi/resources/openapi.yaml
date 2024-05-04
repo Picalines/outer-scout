@@ -69,6 +69,24 @@ paths:
           description: Successful operation
           content:
             application/yaml: {}
+  /environment:
+    get:
+      operationId: getEnvironment
+      tags: [environment]
+      summary: Gets information about general Outer Wilds app state
+      responses:
+        '200':
+          description: Information about general Outer Wilds app state
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [outerWildsScene]
+                additionalProperties: false
+                properties:
+                  outerWildsScene:
+                    type: string
+                    example: SolarSystem
   /scene:
     post:
       operationId: postScene
