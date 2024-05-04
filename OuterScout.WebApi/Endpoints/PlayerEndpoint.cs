@@ -46,7 +46,13 @@ internal sealed class PlayerEndpoint : IRouteMapper
             is not { name: var name, transform: var transform }
         )
         {
-            return NotFound();
+            return NotFound(
+                new Problem("groundBodyNotFound")
+                {
+                    Title = "The ground body not found",
+                    Detail = "The ground body not found. Try to jump and land on the body"
+                }
+            );
         }
 
         return Ok(
@@ -114,7 +120,10 @@ internal sealed class PlayerEndpoint : IRouteMapper
             }
         )
         {
-            return BadRequest("invalid warp transform");
+            return CommonResponse.InvalidBodyField(
+                "transform",
+                "must not contain parent and scale, must contain position and rotation"
+            );
         }
 
         if (
@@ -122,7 +131,12 @@ internal sealed class PlayerEndpoint : IRouteMapper
             || spawnParent.GetComponentOrNull<OWRigidbody>() is not { } groundBody
         )
         {
-            return BadRequest($"'{request.GroundBody}' is not a valid ground body");
+            return BadRequest(
+                new Problem("invalidWarpTarget")
+                {
+                    Detail = $"'{request.GroundBody}' is not a valid ground body"
+                }
+            );
         }
 
         var spawnPosition = spawnParent.TransformPoint(spawnLocalPosition);
