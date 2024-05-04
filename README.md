@@ -16,9 +16,9 @@ After that, the footage recorded from the game is imported into your Blender pro
 
 ## Requirements
 
-Download the zip archive of the [Blender add-on](https://github.com/Picalines/outer-scout-blender) from the Releases tab and [install it](https://docs.blender.org/manual/en/latest/editors/preferences/addons.html#installing-add-ons).
+Download the zip archive of the [add-on](https://github.com/Picalines/outer-scout-blender) source code and [install it in Blender](https://docs.blender.org/manual/en/latest/editors/preferences/addons.html#installing-add-ons).
 
-[FFmpeg](https://ffmpeg.org/about.html) is required for video recording functionality. The `ffmpeg` command must be available in the PATH (a specific path can be specified in the settings). For developers on Windows, I recommend installing ffmpeg via [scoop](https://bjansen.github.io/scoop-apps/main/ffmpeg)
+[FFmpeg](https://ffmpeg.org/about.html) is required for video recording functionality. The `ffmpeg` command must be available in the PATH (a specific path to the executable can be specified in the settings). On Windows I recommend installing ffmpeg via [scoop](https://bjansen.github.io/scoop-apps/main/ffmpeg)
 
 The add-on and the mod communicate over the HTTP protocol on local port `2209`. You can change the port in the settings of two programs
 
