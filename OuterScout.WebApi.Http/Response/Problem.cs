@@ -13,7 +13,7 @@ public sealed class Problem
     public string? Detail { get; init; }
 
     [JsonExtensionData]
-    public Dictionary<string, object> Data { get; init; } = [];
+    public Dictionary<string, object?> Data { get; init; } = [];
 
     public Problem(string type)
     {
