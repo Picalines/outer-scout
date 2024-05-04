@@ -771,13 +771,17 @@ paths:
           $ref: '#/components/responses/unavailable'
 components:
   schemas:
-    GenericError:
+    Problem:
       type: object
-      description: Generic object containing the error message
+      description: Generic object containing the error details
+      required: [type]
       properties:
-        error:
+        type:
           type: string
-          description: Generic error message
+        title:
+          type: string
+        detail:
+          type: string
     Vector2:
       description: Two numbers defining a vector in 2D space
       type: array
@@ -1073,49 +1077,33 @@ components:
     invalidBody:
       description: Invalid request body
       content:
-        text/plain:
-          examples:
-            invalidJson:
-              description: Json parsing error message
-              value: "Unexpected character encountered while parsing value: ,. Path 'hidePlayerModel', line 2, position 24."
+        application/problem+json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/Problem'
+              - type: object
+                properties:
+                  lineNumber:
+                    type: integer
+                  linePosition:
+                    type: integer
+                  path:
+                    type: string
     unavailable:
       description: Operation unavailable at the moment
       content:
-        application/json:
+        application/problem+json:
           schema:
-            $ref: '#/components/schemas/GenericError'
-          examples:
-            notInPlayableScene:
-              description: The operation is not available in the main menu
-              value:
-                error: not in playable scene
-            recording:
-              description: The operation is not available during recording
-              value:
-                error: not available during recording
-            sceneNotCreated:
-              description: The operation is not available until the scene is created
-              value:
-                error: not available, create a scene first
+            $ref: '#/components/schemas/Problem'
     cameraNotFound:
       description: Camera was not found
       content:
-        application/json:
+        application/problem+json:
           schema:
-            $ref: '#/components/schemas/GenericError'
-          examples:
-            mainCameraNotFound:
-              description: Main camera was not found
-              value:
-                error: camera component of gameObject 'mainCamera' was not found
+            $ref: '#/components/schemas/Problem'
     gameObjectNotFound:
       description: GameObject was not found
       content:
-        application/json:
+        application/problem+json:
           schema:
-            $ref: '#/components/schemas/GenericError'
-          examples:
-            playerNotFound:
-              description: Player_Body was not found
-              value:
-                error: gameObject 'Player_Body' was not found
+            $ref: '#/components/schemas/Problem'
