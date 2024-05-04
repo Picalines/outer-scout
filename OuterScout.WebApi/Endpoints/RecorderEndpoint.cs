@@ -196,7 +196,7 @@ internal sealed class RecorderEndpoint : IRouteMapper
                 => (SceneEndpoint.GetOriginOrNull(gameObjects), SceneEndpoint.OriginResource),
         };
 
-        if (origin)
+        if (origin is null)
         {
             return (CommonResponse.GameObjectNotFound(originName), null);
         }
