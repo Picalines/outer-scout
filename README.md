@@ -66,7 +66,6 @@ Now we need a camera. The mod can create several cameras of different types, but
 ```json5
 // POST /objects/mainCamera/camera
 {
-    "id": "main",
     "type": "perspective",
     "gateFit": "horizontal",
     "resolution": {
