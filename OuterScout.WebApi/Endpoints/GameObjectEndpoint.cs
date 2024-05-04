@@ -47,12 +47,18 @@ internal sealed class GameObjectEndpoint : IRouteMapper
     {
         if (request.Name is "" || request.Name.Contains("/") || request.Name.StartsWith("scene."))
         {
-            return BadRequest("invalid object name");
+            return CommonResponse.InvalidBodyField(
+                "name",
+                "must be non-empty, cannot contain '/' and cannot start with the 'scene.'"
+            );
         }
 
         if (gameObjects.FindOrNull(request.Name) is not null)
         {
-            return BadRequest($"gameObject '{request.Name}' already exists");
+            return CommonResponse.InvalidBodyField(
+                "name",
+                $"gameObject '{request.Name}' already exists"
+            );
         }
 
         var (parent, parentName) = request.Transform switch
@@ -126,7 +132,12 @@ internal sealed class GameObjectEndpoint : IRouteMapper
         {
             if (transformDto.Parent is not null)
             {
-                return BadRequest(new { Error = "parent gameObject cannot be changed" });
+                return BadRequest(
+                    new Problem("parentCannotBeChanged")
+                    {
+                        Title = "Parent of the GameObject cannot be changed"
+                    }
+                );
             }
 
             if (gameObjects.FindOrNull(origin) is not { transform: var originTransform })
