@@ -149,13 +149,49 @@ public sealed partial class HttpServer
                     return response;
                 }
 
-                if (exception is JsonSerializationException or JsonReaderException)
+                if (exception is JsonException)
                 {
-                    return BadRequest(exception.Message);
+                    var problem = new Problem("invalidJson")
+                    {
+                        Title = "Invalid JSON",
+                        Detail = exception.Message,
+                    };
+
+                    var data = problem.Data;
+
+                    (data["lineNumber"], data["linePosition"], data["path"]) = exception switch
+                    {
+                        JsonReaderException
+                        {
+                            LineNumber: var ln,
+                            LinePosition: var lp,
+                            Path: var path
+                        }
+                            => (ln, lp, path),
+                        JsonSerializationException
+                        {
+                            LineNumber: var ln,
+                            LinePosition: var lp,
+                            Path: var path
+                        }
+                            => (ln, lp, path),
+                        _ => (null as int?, null as int?, null as string)
+                    };
+
+                    return BadRequest(problem);
                 }
 
                 return InternalServerError(
-                    $"{exception.GetType()}: {exception.Message}\n{exception.StackTrace}"
+                    new Problem("internalException")
+                    {
+                        Title = "Internal Exception",
+                        Detail = exception.Message,
+                        Data =
+                        {
+                            ["exceptionType"] = exception.GetType().Name,
+                            ["stackTrace"] = exception.StackTrace
+                        }
+                    }
                 );
             }
         }
