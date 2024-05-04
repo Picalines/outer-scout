@@ -92,7 +92,10 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
 
         if (request.Origin.Parent is null)
         {
-            return BadRequest(new { Error = "scene.origin must have a parent GameObject" });
+            return CommonResponse.InvalidBodyField(
+                "origin.parent",
+                "scene.origin must have a parent GameObject"
+            );
         }
 
         if (gameObjects.FindOrNull(request.Origin.Parent) is not { transform: var originParent })
@@ -148,12 +151,12 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
     {
         if (request.StartFrame > request.EndFrame)
         {
-            return BadRequest("invalid frame range");
+            return CommonResponse.InvalidBodyField("startFrame");
         }
 
         if (request.FrameRate < 1)
         {
-            return BadRequest("invalid frame rate");
+            return CommonResponse.InvalidBodyField("frameRate");
         }
 
         var sceneRecorderBuilder =
