@@ -124,7 +124,13 @@ internal sealed class KeyframesEndpoint : IRouteMapper
                     is not { } propertyApplier
                 )
                 {
-                    return BadRequest($"property '{property}' is not animatable");
+                    return BadRequest(
+                        new Problem("propertyIsNotAnimatable")
+                        {
+                            Title = "Property is not animatable",
+                            Detail = $"Property '{property}' is not animatable"
+                        }
+                    );
                 }
 
                 propertyCurve = new AnimationCurve()
