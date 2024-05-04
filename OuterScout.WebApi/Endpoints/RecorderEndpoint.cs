@@ -76,7 +76,7 @@ internal sealed class RecorderEndpoint : IRouteMapper
 
         public required string Format { get; init; }
 
-        public required string Origin { get; init; }
+        public string? Origin { get; init; }
     }
 
     private static IResponse PostGameObjectRecorder(
@@ -188,9 +188,17 @@ internal sealed class RecorderEndpoint : IRouteMapper
             return (BadRequest($"format '{request.Format}' is not supported"), null);
         }
 
-        if (gameObjects.FindOrNull(request.Origin) is not { transform: var origin })
+        var (origin, originName) = request switch
         {
-            return (CommonResponse.GameObjectNotFound(request.Origin), null);
+            { Origin: { } customOriginName }
+                => (gameObjects.FindOrNull(customOriginName)?.transform, customOriginName),
+            { Origin: null }
+                => (SceneEndpoint.GetOriginOrNull(gameObjects), SceneEndpoint.OriginResource),
+        };
+
+        if (origin)
+        {
+            return (CommonResponse.GameObjectNotFound(originName), null);
         }
 
         var transform = gameObject.transform;

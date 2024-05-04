@@ -37,7 +37,7 @@ internal sealed class GameObjectEndpoint : IRouteMapper
     {
         public required string Name { get; init; }
 
-        public required TransformDto Transform { get; init; }
+        public TransformDto? Transform { get; init; }
     }
 
     private static IResponse PostCustomGameObject(
@@ -50,27 +50,27 @@ internal sealed class GameObjectEndpoint : IRouteMapper
             return BadRequest("invalid object name");
         }
 
-        if (request.Transform.Parent is not { } transformDtoParent)
-        {
-            return BadRequest("gameObject must have a parent");
-        }
-
         if (gameObjects.FindOrNull(request.Name) is not null)
         {
             return BadRequest($"gameObject '{request.Name}' already exists");
         }
 
-        var transformDto = request.Transform;
-
-        if (gameObjects.FindOrNull(transformDtoParent) is not { transform: var parent })
+        var (parent, parentName) = request.Transform switch
         {
-            return CommonResponse.GameObjectNotFound(transformDtoParent);
+            { Parent: { } transformDtoParent }
+                => (gameObjects.FindOrNull(transformDtoParent)?.transform, transformDtoParent),
+            _ => (SceneEndpoint.GetOriginOrNull(gameObjects), SceneEndpoint.OriginResource),
+        };
+
+        if (parent is null)
+        {
+            return CommonResponse.GameObjectNotFound(parentName);
         }
 
         var gameObject = new GameObject($"{nameof(OuterScout)}#{request.Name}");
         gameObject.transform.parent = parent;
         gameObject.transform.ResetLocal();
-        transformDto.ApplyLocal(gameObject.transform);
+        request.Transform?.ApplyLocal(gameObject.transform);
 
         gameObjects.AddOwned(request.Name, gameObject);
 
@@ -79,8 +79,8 @@ internal sealed class GameObjectEndpoint : IRouteMapper
 
     private static IResponse GetGameObject(
         [FromUrl] string name,
-        [FromUrl] string origin,
-        GameObjectRepository gameObjects
+        GameObjectRepository gameObjects,
+        [FromUrl] string origin = SceneEndpoint.OriginResource
     )
     {
         if (gameObjects.FindOrNull(name) is not { transform: var transform })
@@ -114,7 +114,7 @@ internal sealed class GameObjectEndpoint : IRouteMapper
         [FromUrl] string name,
         [FromBody] PutGameObjectRequest request,
         GameObjectRepository gameObjects,
-        [FromUrl] string? origin = null
+        [FromUrl] string origin = SceneEndpoint.OriginResource
     )
     {
         if (gameObjects.FindOrNull(name) is not { transform: var transform })
@@ -124,16 +124,6 @@ internal sealed class GameObjectEndpoint : IRouteMapper
 
         if (request is { Transform: { } transformDto })
         {
-            if (origin is null)
-            {
-                return BadRequest(
-                    new
-                    {
-                        Error = "origin parameter is required when changing the objects transform"
-                    }
-                );
-            }
-
             if (transformDto.Parent is not null)
             {
                 return BadRequest(new { Error = "parent gameObject cannot be changed" });
