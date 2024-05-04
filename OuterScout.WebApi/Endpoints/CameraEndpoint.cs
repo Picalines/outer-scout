@@ -98,7 +98,10 @@ internal sealed class CameraEndpoint : IRouteMapper
         if (container.GetResource<ISceneCamera>() is not null)
         {
             return BadRequest(
-                new { Error = $"gameObject '{name}' already contains camera component" }
+                new Problem("alreadyHasCamera")
+                {
+                    Detail = $"The GameObject '{name}' already contains camera component"
+                }
             );
         }
 
