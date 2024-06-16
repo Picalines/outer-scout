@@ -1,4 +1,6 @@
+using System.Collections;
 using OuterScout.Application.Extensions;
+using OuterScout.Infrastructure.Components;
 using OuterScout.Infrastructure.Extensions;
 using OuterScout.WebApi.DTOs;
 using OuterScout.WebApi.Extensions;
@@ -158,11 +160,12 @@ internal sealed class PlayerEndpoint : IRouteMapper
         spawnPoint.transform.position = spawnPosition;
         spawnPoint.transform.rotation = spawnRotation;
 
-        UnityEngine.Object.Destroy(spawnPoint, 10);
         UnpauseForSeconds(0.5f);
         AssignDebugDreamLantern();
 
         playerSpawner.DebugWarp(spawnPoint);
+
+        GlobalCoroutine.Start(DestroyAfter(spawnPoint, 5f));
 
         return Ok();
     }
@@ -199,5 +202,12 @@ internal sealed class PlayerEndpoint : IRouteMapper
             .FirstOrDefault(lantern =>
                 lantern._lanternType.HasFlag(DreamLanternType.Functioning) is true
             );
+    }
+
+    private static IEnumerator DestroyAfter(UnityEngine.Object gameObject, float time)
+    {
+        yield return new WaitForSecondsRealtime(time);
+
+        UnityEngine.Object.Destroy(gameObject);
     }
 }
