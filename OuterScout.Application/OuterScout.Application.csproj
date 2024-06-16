@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net48</TargetFramework>
-		<Copyright>Copyright © 2023 picalines</Copyright>
+		<Copyright>Copyright © 2024 picalines</Copyright>
 		<RootNamespace>OuterScout.Application</RootNamespace>
 	</PropertyGroup>
 	<PropertyGroup>
