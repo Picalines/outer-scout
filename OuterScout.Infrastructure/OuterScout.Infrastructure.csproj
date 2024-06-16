@@ -13,8 +13,8 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Hafner.Compatibility.NullableReferenceTypeAttributes" Version="1.0.0" IncludeAssets="compile" />
-		<PackageReference Include="OWML" Version="2.9.8" IncludeAssets="compile" />
-		<PackageReference Include="OuterWildsGameLibs" Version="1.1.14.768" IncludeAssets="compile" />
+		<PackageReference Include="OWML" Version="2.13.0" IncludeAssets="compile" />
+		<PackageReference Include="OuterWildsGameLibs" Version="1.1.15.1018" IncludeAssets="compile" />
 		<PackageReference Include="HarmonyX" Version="2.10.1" IncludeAssets="compile" />
 	</ItemGroup>
 </Project>
