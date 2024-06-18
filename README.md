@@ -14,6 +14,9 @@ A toolbox for creating and importing cinematic shots from Outer Wilds into Blend
 
 After that, the footage recorded from the game is imported into your Blender project and installed as the background of the camera. This way you can embed any 3D Blender model into a scene from Outer Wilds!
 
+> [!TIP]
+> See the [addon's README](https://github.com/Picalines/outer-scout-blender/blob/master/README.md) for examples with screenshots and videos
+
 ## Requirements
 
 Download the zip archive of the [add-on](https://github.com/Picalines/outer-scout-blender) source code and [install it in Blender](https://docs.blender.org/manual/en/latest/editors/preferences/addons.html#installing-add-ons).
