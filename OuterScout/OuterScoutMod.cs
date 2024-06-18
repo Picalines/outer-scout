@@ -15,6 +15,7 @@ internal sealed class OuterScoutMod : ModBehaviour
     private OuterScoutMod()
     {
         Singleton<IModConfig>.ProvideInstance(() => ModHelper.Config);
+        Singleton<IModManifest>.ProvideInstance(() => ModHelper.Manifest);
         Singleton<IModConsole>.ProvideInstance(() => ModHelper.Console);
     }
 
