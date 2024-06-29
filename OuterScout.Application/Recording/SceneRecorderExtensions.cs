@@ -33,7 +33,6 @@ public static class SceneRecorderExtensions
     )
     {
         OWCamera? activeCamera = null;
-        int targetDisplay = -1;
 
         return builder.WithScenePatch(
             () =>
@@ -41,15 +40,14 @@ public static class SceneRecorderExtensions
                 activeCamera = Locator.GetActiveCamera().OrNull();
                 if (activeCamera is not null)
                 {
-                    targetDisplay = activeCamera.mainCamera.targetDisplay;
-                    activeCamera.mainCamera.targetDisplay = -1;
+                    activeCamera.enabled = false;
                 }
             },
             () =>
             {
                 if (activeCamera is not null)
                 {
-                    activeCamera.mainCamera.targetDisplay = targetDisplay;
+                    activeCamera.enabled = true;
                     activeCamera = null;
                 }
             }
