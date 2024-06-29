@@ -166,9 +166,15 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
             .GetOrderedPropertyAnimators(resources)
             .ForEach(animator => sceneRecorderBuilder.WithAnimator(animator));
 
-        resources
+        var numberOfRecorders = resources
             .GetResources<IRecorder.IBuilder>()
-            .ForEach(recorder => sceneRecorderBuilder.WithRecorder(recorder));
+            .Tap(recorder => sceneRecorderBuilder.WithRecorder(recorder))
+            .Count();
+
+        if (numberOfRecorders is 0)
+        {
+            return BadRequest(new Problem("noRecorders") { Title = "No recorders on the scene", });
+        }
 
         resources.GlobalContainer.DisposeResources<SceneRecorder>();
 
