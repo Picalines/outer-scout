@@ -77,3 +77,4 @@ jobs:
           artifacts: "${{ env.PROJ_USERNAME}}.${{ env.PROJ_NAME }}.zip"
           draft: true
           prerelease: false
+          generateReleaseNotes: true
