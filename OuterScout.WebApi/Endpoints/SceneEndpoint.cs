@@ -117,6 +117,7 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
             .WithTimeScaleRestored()
             .WithInvinciblePlayer()
             .WithAllInputDevicesDisabled()
+            .WithHudDisabled()
             .WithDisplayRenderingDisabled()
             .WithPauseMenuDisabled()
             .WithDisabledQuantumMoon();
@@ -124,6 +125,10 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
         if (request.HidePlayerModel)
         {
             sceneRecorderBuilder.WithHiddenPlayerModel();
+        }
+        else if (Locator.GetActiveCamera() == Locator.GetPlayerCamera())
+        {
+            sceneRecorderBuilder.WithPlayerHeadVisible();
         }
 
         return Created();

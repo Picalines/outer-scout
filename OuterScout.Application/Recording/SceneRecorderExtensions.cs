@@ -158,6 +158,72 @@ public static class SceneRecorderExtensions
         );
     }
 
+    public static SceneRecorder.Builder WithPlayerHeadVisible(this SceneRecorder.Builder builder)
+    {
+        GameObject? headMesh = null;
+        GameObject? helmetMesh = null;
+
+        int defaultLayer = LayerMask.NameToLayer("Default");
+        int visibleToProbeLayer = LayerMask.NameToLayer("VisibleToProbe");
+
+        return builder.WithScenePatch(
+            () =>
+            {
+                headMesh = GameObject.Find(
+                    "Player_Body/Traveller_HEA_Player_v2/player_mesh_noSuit:Traveller_HEA_Player/player_mesh_noSuit:Player_Head"
+                );
+
+                helmetMesh = GameObject.Find(
+                    "Player_Body/Traveller_HEA_Player_v2/Traveller_Mesh_v01:Traveller_Geo/Traveller_Mesh_v01:PlayerSuit_Helmet"
+                );
+
+                if (GetHeadMeshBySuit() is { } meshToEnable)
+                {
+                    meshToEnable.layer = defaultLayer;
+                }
+            },
+            () =>
+            {
+                if (GetHeadMeshBySuit() is { } meshToDisable)
+                {
+                    meshToDisable.layer = visibleToProbeLayer;
+                }
+
+                headMesh = helmetMesh = null;
+            }
+        );
+
+        GameObject? GetHeadMeshBySuit()
+        {
+            return (Locator.GetPlayerSuit().IsWearingSuit() ? helmetMesh : headMesh).OrNull();
+        }
+    }
+
+    public static SceneRecorder.Builder WithHudDisabled(this SceneRecorder.Builder builder)
+    {
+        GameObject? hudRoot = null;
+
+        return builder.WithScenePatch(
+            () =>
+            {
+                if (GUIMode.IsHiddenMode())
+                {
+                    return;
+                }
+
+                hudRoot = GameObject
+                    .Find("Player_Body/PlayerCamera/Helmet/HelmetRoot/HelmetMesh")
+                    .OrNull();
+                hudRoot?.SetActive(false);
+            },
+            () =>
+            {
+                hudRoot?.SetActive(true);
+                hudRoot = null;
+            }
+        );
+    }
+
     public static SceneRecorder.Builder WithDisabledQuantumMoon(this SceneRecorder.Builder builder)
     {
         return builder.WithScenePatch(
