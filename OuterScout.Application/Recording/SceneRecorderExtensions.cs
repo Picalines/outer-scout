@@ -72,10 +72,31 @@ public static class SceneRecorderExtensions
 
     public static SceneRecorder.Builder WithPauseMenuDisabled(this SceneRecorder.Builder builder)
     {
+        var reopenPauseMenu = false;
+
         return builder.WithScenePatch(
             () =>
-                Locator.GetPauseCommandListener().OrNull()?._pauseMenu._pauseMenu.EnableMenu(false),
-            () => Locator.GetPauseCommandListener().OrNull()?._pauseMenu.TryOpenPauseMenu()
+            {
+                if (
+                    Locator.GetPauseCommandListener() is
+                    { _pauseMenu._pauseMenu: { _enabledMenu: true } pauseMenu }
+                )
+                {
+                    pauseMenu.EnableMenu(false);
+                    reopenPauseMenu = true;
+                }
+            },
+            () =>
+            {
+                if (
+                    reopenPauseMenu
+                    && Locator.GetPauseCommandListener() is { _pauseMenu: { } pauseMenuManager }
+                )
+                {
+                    pauseMenuManager.TryOpenPauseMenu();
+                    reopenPauseMenu = false;
+                }
+            }
         );
     }
 
