@@ -77,7 +77,6 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
 
     private static IResponse PostScene(
         [FromBody] CreateSceneRequest request,
-        IModConsole modConsole,
         ApiResourceRepository resources,
         GameObjectRepository gameObjects
     )
@@ -113,7 +112,7 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
         gameObjects.AddOwned(OriginResource, originObject);
 
         sceneRecorderBuilder
-            .WithProgressLoggedToConsole(modConsole)
+            .WithProgressLoggedToConsole(Singleton<IModConsole>.Instance)
             .WithTimeScaleRestored()
             .WithInvinciblePlayer()
             .WithAllInputDevicesDisabled()
