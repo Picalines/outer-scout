@@ -4,7 +4,7 @@
   "author": "picalines",
   "name": "Outer Scout",
   "uniqueName": "picalines.OuterScout",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "owmlVersion": "2.13.0",
   "dependencies": [],
   "warning": {
