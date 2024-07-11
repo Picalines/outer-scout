@@ -56,6 +56,9 @@ public static class OWCameraExtensions
         newOWCamera.useViewmodels = sourceOWCamera.useViewmodels;
         newOWCamera.farCameraDistance = sourceOWCamera.farCameraDistance;
         newOWCamera.useFarCamera = sourceOWCamera.useFarCamera;
+        newOWCamera.cullingMask = sourceOWCamera.cullingMask;
+        newOWCamera.mainCamera.layerCullDistances = sourceOWCamera.mainCamera.layerCullDistances;
+        newOWCamera.mainCamera.layerCullSpherical = sourceOWCamera.mainCamera.layerCullSpherical;
 
         if (copyPostProcessing)
         {
