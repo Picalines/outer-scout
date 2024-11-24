@@ -4,22 +4,15 @@ A toolbox for creating and importing cinematic shots from Outer Wilds into Blend
 
 ![thumbnail](thumbnail.png)
 
-## Basic usage example
+The Outer Scout mod allows other programs to make advanced video recordings from Outer Wilds. It opens a software interface with which you can animate cameras and other objects, and then export video files and other recorded game data
 
-1. Open Blender and Outer Wilds at the same time
-2. Get to the desired location in Outer Wilds and click "create a scene" in the [Outer Scout add-on](https://github.com/Picalines/outer-scout-blender) menu
-3. The Blender add-on imports a planet model from Outer Wilds and sets it to the desired position
-4. Put the camera in Blender and animate it
-5. Click on the record button in the add-on menu!
-
-After that, the footage recorded from the game is imported into your Blender project and installed as the background of the camera. This way you can embed any 3D Blender model into a scene from Outer Wilds!
-
-> [!TIP]
-> See the [addon's README](https://github.com/Picalines/outer-scout-blender/blob/master/README.md) for examples with screenshots and videos
+> [!IMPORTANT]
+> This repository contains only the backend part for the [Outer Scout Blender addon](https://github.com/Picalines/outer-scout-blender/blob/master/README.md) - visit its page to see more sample videos that you can make with this mod!
 
 ## Requirements
 
-Download the zip archive of the [add-on](https://github.com/Picalines/outer-scout-blender) source code and [install it in Blender](https://docs.blender.org/manual/en/latest/editors/preferences/addons.html#installing-add-ons).
+> [!IMPORTANT]
+> These requirements relate specifically to the mod, not the add-on for Blender
 
 [FFmpeg](https://ffmpeg.org/about.html) is required for video recording functionality. The `ffmpeg` command must be available in the PATH (a specific path to the executable can be specified in the settings). On Windows I recommend installing ffmpeg via [scoop](https://bjansen.github.io/scoop-apps/main/ffmpeg)
 
@@ -34,9 +27,14 @@ This mod implements the [API](OuterScout.WebApi/resources/openapi.yaml) that can
 - Create [recorders](OuterScout.WebApi/resources/openapi.yaml#L529) of their RenderTextures (color or depth)
 - [Record](OuterScout.WebApi/resources/openapi.yaml#L119) your scene with a [fixed frame rate](https://docs.unity3d.com/ScriptReference/Time-captureFramerate.html)
 
-All API paths are available in the [swagger-ui](https://github.com/swagger-api/swagger-ui) interface. You can view them by opening a web browser and navigating to `localhost:2209`.
+## Documentation
+
+All API endpoints are available in the [swagger-ui](https://github.com/swagger-api/swagger-ui) interface. You can view them by opening a web browser and navigating to `localhost:2209` while you game's running
 
 ## A more in-depth API example
+
+> [!WARNING]
+> I may forget to update this section if I change the API. Please see the specific documentation only in the OpenAPI schema
 
 Let's do something like the [dolly zoom](https://en.wikipedia.org/wiki/Dolly_zoom) effect. First we need to create an Outer Scout scene:
 
