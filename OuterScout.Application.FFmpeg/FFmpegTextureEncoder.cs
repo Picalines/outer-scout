@@ -1,4 +1,4 @@
-﻿using OuterScout.Infrastructure.Validation;
+﻿using OuterScout.Shared.Validation;
 using UnityEngine;
 
 namespace OuterScout.Application.FFmpeg;

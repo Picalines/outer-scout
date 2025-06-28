@@ -1,6 +1,6 @@
 ﻿using OuterScout.Application.FFmpeg;
-using OuterScout.Infrastructure.DependencyInjection;
-using OuterScout.Infrastructure.Extensions;
+using OuterScout.Shared.DependencyInjection;
+using OuterScout.Shared.Extensions;
 using OuterScout.WebApi;
 using OWML.Common;
 using OWML.ModHelper;

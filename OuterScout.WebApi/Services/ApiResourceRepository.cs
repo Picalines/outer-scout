@@ -1,5 +1,5 @@
-using OuterScout.Infrastructure.DependencyInjection;
-using OuterScout.Infrastructure.Extensions;
+using OuterScout.Shared.DependencyInjection;
+using OuterScout.Shared.Extensions;
 using UnityEngine;
 
 namespace OuterScout.WebApi.Services;

@@ -1,5 +1,5 @@
 using System.Collections;
-using OuterScout.Infrastructure.Validation;
+using OuterScout.Shared.Validation;
 
 namespace OuterScout.Domain;
 

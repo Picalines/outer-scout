@@ -1,6 +1,6 @@
 ﻿using OuterScout.Domain;
-using OuterScout.Infrastructure.Extensions;
-using OuterScout.Infrastructure.Validation;
+using OuterScout.Shared.Extensions;
+using OuterScout.Shared.Validation;
 using UnityEngine;
 using UnityEngine.PostProcessing;
 

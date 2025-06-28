@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace OuterScout.Infrastructure.DependencyInjection;
+namespace OuterScout.Shared.DependencyInjection;
 
 using static ServiceContainer;
 

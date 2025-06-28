@@ -1,8 +1,8 @@
 using OuterScout.Application.Extensions;
 using OuterScout.Domain;
-using OuterScout.Infrastructure.DependencyInjection;
-using OuterScout.Infrastructure.Extensions;
-using OuterScout.Infrastructure.Validation;
+using OuterScout.Shared.DependencyInjection;
+using OuterScout.Shared.Extensions;
+using OuterScout.Shared.Validation;
 using UnityEngine;
 
 namespace OuterScout.Application.SceneCameras;

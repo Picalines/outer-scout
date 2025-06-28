@@ -1,4 +1,4 @@
-﻿using OuterScout.Infrastructure.Extensions;
+﻿using OuterScout.Shared.Extensions;
 using UnityEngine;
 
 namespace OuterScout.Application.Extensions;

@@ -1,4 +1,4 @@
-using OuterScout.Infrastructure.DependencyInjection;
+using OuterScout.Shared.DependencyInjection;
 
 namespace OuterScout.WebApi;
 

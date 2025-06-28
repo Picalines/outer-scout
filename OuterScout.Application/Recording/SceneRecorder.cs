@@ -1,9 +1,9 @@
 using System.Collections;
 using OuterScout.Application.Animation;
 using OuterScout.Domain;
-using OuterScout.Infrastructure.Components;
-using OuterScout.Infrastructure.Extensions;
-using OuterScout.Infrastructure.Validation;
+using OuterScout.Shared.Components;
+using OuterScout.Shared.Extensions;
+using OuterScout.Shared.Validation;
 using UnityEngine;
 
 namespace OuterScout.Application.Recording;

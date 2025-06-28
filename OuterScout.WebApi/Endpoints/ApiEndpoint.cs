@@ -1,7 +1,7 @@
 using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using OuterScout.Infrastructure.DependencyInjection;
+using OuterScout.Shared.DependencyInjection;
 using OuterScout.WebApi.Http;
 using OuterScout.WebApi.Http.Response;
 using OWML.Common;

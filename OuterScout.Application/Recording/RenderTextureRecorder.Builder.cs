@@ -1,6 +1,6 @@
-using OuterScout.Infrastructure.DependencyInjection;
-using OuterScout.Infrastructure.Extensions;
-using OuterScout.Infrastructure.Validation;
+using OuterScout.Shared.DependencyInjection;
+using OuterScout.Shared.Extensions;
+using OuterScout.Shared.Validation;
 using OWML.Common;
 using UnityEngine;
 

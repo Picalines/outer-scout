@@ -1,5 +1,5 @@
 ﻿using System.Web;
-using OuterScout.Infrastructure.Extensions;
+using OuterScout.Shared.Extensions;
 
 namespace OuterScout.WebApi.Http;
 

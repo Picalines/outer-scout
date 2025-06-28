@@ -1,5 +1,5 @@
-using OuterScout.Infrastructure.Extensions;
-using OuterScout.Infrastructure.Validation;
+using OuterScout.Shared.Extensions;
+using OuterScout.Shared.Validation;
 using UnityEngine;
 
 namespace OuterScout.WebApi.Services;
