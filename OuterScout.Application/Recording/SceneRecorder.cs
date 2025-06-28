@@ -2,8 +2,10 @@ using System.Collections;
 using OuterScout.Application.Animation;
 using OuterScout.Shared.Collections;
 using OuterScout.Shared.Components;
+using OuterScout.Shared.DependencyInjection;
 using OuterScout.Shared.Extensions;
 using OuterScout.Shared.Validation;
+using OWML.Common;
 using UnityEngine;
 
 namespace OuterScout.Application.Recording;
@@ -16,7 +18,7 @@ public sealed partial class SceneRecorder
 
     private readonly RecordingParameters _recordingPrameters;
     private readonly ComposedAnimator _animators;
-    private readonly IRecorder.IBuilder[] _recorders;
+    private readonly IRecorder.IBuilder[] _recorderBuilders;
     private readonly ReversableAction[] _scenePatches;
 
     private static readonly WaitForEndOfFrame _waitForEndOfFrame = new();
@@ -32,7 +34,7 @@ public sealed partial class SceneRecorder
 
         _recordingPrameters = recordingParameters;
         _animators = new ComposedAnimator(animators);
-        _recorders = recorders;
+        _recorderBuilders = recorders;
         _scenePatches = scenePatches;
 
         GlobalCoroutine.Start(RecordScene());
@@ -56,28 +58,56 @@ public sealed partial class SceneRecorder
     private IEnumerator RecordScene()
     {
         CurrentFrame = FrameRange.Start;
+        Time.captureFramerate = FrameRate; // NOTE: must be set before start, used by recorders
+        _scenePatches.ForEach(patch => patch.PerformIfNotAlready());
 
-        _scenePatches.ForEach(patch => patch.Perform());
-        Time.captureFramerate = FrameRate;
+        ComposedRecorder? recorders = null;
 
-        var recorders = new ComposedRecorder(_recorders.Select(r => r.StartRecording()).ToArray());
-
-        foreach (var frame in FrameRange)
+        try
         {
-            yield return null;
+            recorders = new ComposedRecorder(StartRecordersOrRecover());
 
-            _animators.ApplyFrame(CurrentFrame = frame);
+            foreach (var frame in FrameRange)
+            {
+                yield return null;
 
-            yield return _waitForEndOfFrame;
+                _animators.ApplyFrame(CurrentFrame = frame);
 
-            recorders.Capture();
+                yield return _waitForEndOfFrame;
+
+                recorders.Capture();
+            }
+        }
+        finally
+        {
+            recorders?.Dispose();
+
+            _scenePatches.Reverse().ForEach(patch => patch.ReverseIfPerformed());
+
+            Time.captureFramerate = 0;
+            IsRecording = false;
+        }
+    }
+
+    private IReadOnlyList<IRecorder> StartRecordersOrRecover()
+    {
+        var startedRecorders = new List<IRecorder>();
+
+        try
+        {
+            foreach (var builder in _recorderBuilders)
+            {
+                startedRecorders.Add(builder.StartRecording());
+            }
+        }
+        catch
+        {
+            // recorders might do heavy operations, so we dispose them back if one crashes
+            startedRecorders.ForEach(recorder => recorder.Dispose());
+            IsRecording = false;
+            throw;
         }
 
-        Time.captureFramerate = 0;
-        _scenePatches.Reverse().ForEach(patch => patch.Reverse());
-
-        recorders.Dispose();
-
-        IsRecording = false;
+        return startedRecorders;
     }
 }
