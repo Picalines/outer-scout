@@ -1,4 +1,4 @@
-﻿using OuterScout.Domain;
+﻿using OuterScout.Application.SceneCameras;
 using OuterScout.Shared.Extensions;
 using OuterScout.Shared.Validation;
 using UnityEngine;
