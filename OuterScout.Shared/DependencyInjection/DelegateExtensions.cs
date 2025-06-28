@@ -12,7 +12,7 @@ public static class DelegateExtensions
 
         if (parameters.Length is 0)
         {
-            return _ => method.Invoke(target, Array.Empty<object>());
+            return _ => method.Invoke(target, []);
         }
 
         return container =>

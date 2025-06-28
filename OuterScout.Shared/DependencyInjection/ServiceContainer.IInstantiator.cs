@@ -22,7 +22,7 @@ public sealed partial class ServiceContainer
 
         private ConstructorInfo? _constructor = null;
 
-        private PropertyInfo[] _requiredProperties = Array.Empty<PropertyInfo>();
+        private PropertyInfo[] _requiredProperties = [];
 
         public DefaultInstantiator()
         {
