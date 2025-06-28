@@ -42,28 +42,29 @@ internal sealed class OuterScoutMod : ModBehaviour
     {
         if (SystemInfo.supportsAsyncGPUReadback is false)
         {
-            ModHelper.Console.WriteLine(
-                "async gpu readback is not supported, texture recording is not available",
-                MessageType.Warning
-            );
+            AddWarning("async gpu readback is not supported, texture recording is not available");
         }
 
         if (SystemInfo.SupportsRenderTextureFormat(RenderTextureFormat.Depth) is false)
         {
-            ModHelper.Console.WriteLine(
-                $"{RenderTextureFormat.Depth.ToStringWithType()} is not supported, depth recording is not available",
-                MessageType.Warning
+            AddWarning(
+                $"{RenderTextureFormat.Depth.ToStringWithType()} is not supported, depth recording is not available"
             );
         }
 
         if (FFmpeg.CheckInstallation() is { } exception)
         {
-            ModHelper.Console.WriteLine(
-                "ffmpeg executable not found, texture recording is not available. See exception below:",
-                MessageType.Warning
+            AddWarning(
+                "ffmpeg executable not found, texture recording is not available. See console for more details"
             );
 
             ModHelper.Console.WriteLine(exception.ToString(), MessageType.Warning);
+        }
+
+        void AddWarning(string message)
+        {
+            ModHelper.MenuHelper.PopupMenuManager.RegisterStartupPopup($"Outer Scout: {message}");
+            ModHelper.Console.WriteLine(message, MessageType.Warning);
         }
     }
 }
