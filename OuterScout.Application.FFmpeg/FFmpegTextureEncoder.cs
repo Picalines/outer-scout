@@ -57,6 +57,11 @@ public sealed class FFmpegTextureEncoder : IDisposable
 
         (_inputWidth, _inputHeight) = (inputOptions.Width, inputOptions.Height);
 
+        if (Path.GetDirectoryName(outputOptions.FilePath) is { Length: > 0 } directoryPath)
+        {
+            Directory.CreateDirectory(directoryPath);
+        }
+
         var bytePipe = new FFmpegPipe(
             ffmpegPath,
             new CommandLineArguments()
