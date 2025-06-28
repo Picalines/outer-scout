@@ -1,6 +1,5 @@
 using OuterScout.Application.Animation;
 using OuterScout.Application.Extensions;
-using OuterScout.Domain;
 
 namespace OuterScout.Application.Recording;
 
