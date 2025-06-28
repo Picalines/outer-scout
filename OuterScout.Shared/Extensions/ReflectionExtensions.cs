@@ -7,7 +7,10 @@ public static class ReflectionExtensions
 {
     public static bool IsRequired(this MemberInfo member)
     {
-        return Attribute.IsDefined(member, typeof(RequiredMemberAttribute));
+        // NOTE: don't use Attribute.IsDefined, because the attribute type comes from PolySharp
+        return member.CustomAttributes.Any(attribute =>
+            attribute.AttributeType.FullName == typeof(RequiredMemberAttribute).FullName
+        );
     }
 
     public static bool IsNullable(this FieldInfo field)
