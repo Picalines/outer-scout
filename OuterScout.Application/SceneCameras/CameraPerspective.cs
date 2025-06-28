@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace OuterScout.Domain;
+namespace OuterScout.Application.SceneCameras;
 
 public record struct CameraPerspective
 {
