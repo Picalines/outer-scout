@@ -184,7 +184,6 @@ internal sealed class RecorderEndpoint : IRouteMapper
 
         if (apiResources.ContainerOf(gameObject).GetResource<ISceneCamera>() is not { } camera)
         {
-            // TODO: gameObject.name is not the same as resource name
             return (CommonResponse.CameraComponentNotFound(gameObject.name), null);
         }
 
