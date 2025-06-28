@@ -40,8 +40,8 @@ jobs:
           echo "exists=${{steps.check-tag.outputs.exists}}" >> $GITHUB_OUTPUT
 
   create-release-draft:
-    needs: read-manifest-job
-    if: ${{ (needs.read-manifest-job.outputs.version != '0.0.0') && (needs.read-manifest-job.outputs.exists == 'false') }}
+    needs: read-manifest-version
+    if: ${{ (needs.read-manifest-version.outputs.version != '0.0.0') && (needs.read-manifest-versioin.outputs.exists == 'false') }}
     name: Create Release Draft
     runs-on: windows-latest
     steps:
