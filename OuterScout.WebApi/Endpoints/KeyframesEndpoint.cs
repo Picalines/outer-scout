@@ -2,7 +2,7 @@
 using System.Text.RegularExpressions;
 using OuterScout.Application.Animation;
 using OuterScout.Application.SceneCameras;
-using OuterScout.Infrastructure.Extensions;
+using OuterScout.Shared.Extensions;
 using OuterScout.WebApi.Extensions;
 using OuterScout.WebApi.Http;
 using OuterScout.WebApi.Http.Response;

@@ -1,6 +1,6 @@
 using System.Diagnostics;
-using OuterScout.Infrastructure.DependencyInjection;
-using OuterScout.Infrastructure.Extensions;
+using OuterScout.Shared.DependencyInjection;
+using OuterScout.Shared.Extensions;
 using OWML.Common;
 
 namespace OuterScout.Application.FFmpeg;

@@ -1,5 +1,5 @@
 using Newtonsoft.Json;
-using OuterScout.Infrastructure.Validation;
+using OuterScout.Shared.Validation;
 
 namespace OuterScout.Application.Recording;
 

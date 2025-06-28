@@ -12,7 +12,7 @@
 		<NoWarn>MSB3270</NoWarn>
 	</PropertyGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\OuterScout.Infrastructure\OuterScout.Infrastructure.csproj" />
+		<ProjectReference Include="..\OuterScout.Shared\OuterScout.Shared.csproj" />
 		<ProjectReference Include="..\OuterScout.Domain\OuterScout.Domain.csproj" />
 		<ProjectReference Include="..\OuterScout.Application.FFmpeg\OuterScout.Application.FFmpeg.csproj" />
 	</ItemGroup>

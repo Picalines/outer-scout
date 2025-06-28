@@ -2,7 +2,7 @@
   <Project Path="OuterScout.Application.FFmpeg/OuterScout.Application.FFmpeg.csproj" />
   <Project Path="OuterScout.Application/OuterScout.Application.csproj" />
   <Project Path="OuterScout.Domain/OuterScout.Domain.csproj" />
-  <Project Path="OuterScout.Infrastructure/OuterScout.Infrastructure.csproj" />
+  <Project Path="OuterScout.Shared/OuterScout.Shared.csproj" />
   <Project Path="OuterScout.WebApi.Http/OuterScout.WebApi.Http.csproj" />
   <Project Path="OuterScout.WebApi/OuterScout.WebApi.csproj" />
   <Project Path="OuterScout/OuterScout.csproj" />

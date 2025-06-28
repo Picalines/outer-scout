@@ -1,5 +1,5 @@
 ﻿using OuterScout.Application.Extensions;
-using OuterScout.Infrastructure.Extensions;
+using OuterScout.Shared.Extensions;
 using OuterScout.WebApi.DTOs;
 using OuterScout.WebApi.Extensions;
 using OuterScout.WebApi.Http;

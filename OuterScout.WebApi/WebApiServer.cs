@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using OuterScout.Infrastructure.DependencyInjection;
-using OuterScout.Infrastructure.Extensions;
+using OuterScout.Shared.DependencyInjection;
+using OuterScout.Shared.Extensions;
 using OuterScout.WebApi.Endpoints;
 using OuterScout.WebApi.Http;
 using OuterScout.WebApi.Json;

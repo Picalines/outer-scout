@@ -1,7 +1,7 @@
 using System.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using OuterScout.Infrastructure.Extensions;
+using OuterScout.Shared.Extensions;
 
 namespace OuterScout.WebApi.Json;
 

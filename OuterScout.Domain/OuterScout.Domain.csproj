@@ -12,6 +12,6 @@
 		<NoWarn>MSB3270</NoWarn>
 	</PropertyGroup>
 	<ItemGroup>
-	  <ProjectReference Include="..\OuterScout.Infrastructure\OuterScout.Infrastructure.csproj" />
+	  <ProjectReference Include="..\OuterScout.Shared\OuterScout.Shared.csproj" />
 	</ItemGroup>
 </Project>

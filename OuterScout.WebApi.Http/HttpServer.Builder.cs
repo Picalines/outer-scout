@@ -1,8 +1,8 @@
 ﻿using System.Collections;
 using System.Reflection;
 using Newtonsoft.Json;
-using OuterScout.Infrastructure.DependencyInjection;
-using OuterScout.Infrastructure.Extensions;
+using OuterScout.Shared.DependencyInjection;
+using OuterScout.Shared.Extensions;
 using OuterScout.WebApi.Http.Response;
 using OuterScout.WebApi.Http.Routing;
 

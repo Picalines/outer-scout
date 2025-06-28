@@ -1,8 +1,8 @@
 ﻿using System.Net;
 using Newtonsoft.Json;
-using OuterScout.Infrastructure.DependencyInjection;
-using OuterScout.Infrastructure.Extensions;
-using OuterScout.Infrastructure.Validation;
+using OuterScout.Shared.DependencyInjection;
+using OuterScout.Shared.Extensions;
+using OuterScout.Shared.Validation;
 using OuterScout.WebApi.Http.Components;
 using OuterScout.WebApi.Http.Response;
 using OuterScout.WebApi.Http.Routing;
