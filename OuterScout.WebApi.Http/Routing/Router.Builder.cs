@@ -30,13 +30,13 @@ internal sealed partial class Router<T>
             {
                 currentNode = routeSegment switch
                 {
-                    { Type: Route.SegmentType.Constant, Value: var pathPart }
-                        => currentNode.PlainChildren.ContainsKey(pathPart)
+                    { Type: Route.SegmentType.Constant, Value: var pathPart } =>
+                        currentNode.PlainChildren.ContainsKey(pathPart)
                             ? currentNode.PlainChildren[pathPart]
                             : (currentNode.PlainChildren[pathPart] = new RouteTreeNode()),
 
-                    { Type: Route.SegmentType.Parameter }
-                        => currentNode.ParameterChild ??= new RouteTreeNode(),
+                    { Type: Route.SegmentType.Parameter } => currentNode.ParameterChild ??=
+                        new RouteTreeNode(),
 
                     _ => throw new NotImplementedException(),
                 };

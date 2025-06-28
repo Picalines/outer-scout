@@ -7,7 +7,7 @@ internal sealed partial class Route
     public enum SegmentType
     {
         Constant,
-        Parameter
+        Parameter,
     }
 
     public sealed record Segment(SegmentType Type, string Value)

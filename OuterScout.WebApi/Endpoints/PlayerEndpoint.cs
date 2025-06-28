@@ -52,7 +52,7 @@ internal sealed class PlayerEndpoint : IRouteMapper
                 new Problem("groundBodyNotFound")
                 {
                     Title = "The ground body not found",
-                    Detail = "The ground body not found. Try to jump and land on the body"
+                    Detail = "The ground body not found. Try to jump and land on the body",
                 }
             );
         }
@@ -66,7 +66,7 @@ internal sealed class PlayerEndpoint : IRouteMapper
                     Position = transform.position,
                     Rotation = transform.rotation,
                     Scale = transform.lossyScale,
-                }
+                },
             }
         );
     }
@@ -136,7 +136,7 @@ internal sealed class PlayerEndpoint : IRouteMapper
             return BadRequest(
                 new Problem("invalidWarpTarget")
                 {
-                    Detail = $"'{request.GroundBody}' is not a valid ground body"
+                    Detail = $"'{request.GroundBody}' is not a valid ground body",
                 }
             );
         }

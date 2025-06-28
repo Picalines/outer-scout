@@ -100,7 +100,7 @@ internal sealed class CameraEndpoint : IRouteMapper
             return BadRequest(
                 new Problem("alreadyHasCamera")
                 {
-                    Detail = $"The GameObject '{name}' already contains camera component"
+                    Detail = $"The GameObject '{name}' already contains camera component",
                 }
             );
         }
@@ -112,22 +112,18 @@ internal sealed class CameraEndpoint : IRouteMapper
                 Resolution: var resolution,
                 GateFit: var gateFit,
                 Perspective: var perspective
-            }
-                => PerspectiveSceneCamera.Create(
-                    gameObject,
-                    new()
-                    {
-                        Resolution = new Vector2Int(resolution.Width, resolution.Height),
-                        GateFit = gateFit,
-                        Perspective = perspective,
-                    }
-                ),
+            } => PerspectiveSceneCamera.Create(
+                gameObject,
+                new()
+                {
+                    Resolution = new Vector2Int(resolution.Width, resolution.Height),
+                    GateFit = gateFit,
+                    Perspective = perspective,
+                }
+            ),
 
-            PostEquirectSceneCameraRequest { FaceResolution: var faceResolution }
-                => EquirectSceneCamera.Create(
-                    gameObject,
-                    new() { CubemapFaceSize = faceResolution }
-                ),
+            PostEquirectSceneCameraRequest { FaceResolution: var faceResolution } =>
+                EquirectSceneCamera.Create(gameObject, new() { CubemapFaceSize = faceResolution }),
 
             _ => null,
         };
@@ -166,8 +162,11 @@ internal sealed class CameraEndpoint : IRouteMapper
 
         CameraResponse? response = sceneCamera switch
         {
-            PerspectiveSceneCamera { Perspective: var perspective }
-                => new() { Type = CameraType.Perspective, Perspective = perspective },
+            PerspectiveSceneCamera { Perspective: var perspective } => new()
+            {
+                Type = CameraType.Perspective,
+                Perspective = perspective,
+            },
 
             EquirectSceneCamera => new() { Type = CameraType.Equirect, Perspective = null },
 
@@ -196,7 +195,7 @@ internal sealed class CameraEndpoint : IRouteMapper
             Perspective = owCamera.mainCamera
                 is { usePhysicalProperties: true, orthographic: false }
                 ? owCamera.GetPerspective()
-                : null
+                : null,
         };
     }
 

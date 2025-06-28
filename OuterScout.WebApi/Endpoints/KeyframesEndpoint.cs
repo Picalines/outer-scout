@@ -129,7 +129,7 @@ internal sealed class KeyframesEndpoint : IRouteMapper
                         new Problem("propertyIsNotAnimatable")
                         {
                             Title = "Property is not animatable",
-                            Detail = $"Property '{property}' is not animatable"
+                            Detail = $"Property '{property}' is not animatable",
                         }
                     );
                 }
@@ -137,7 +137,7 @@ internal sealed class KeyframesEndpoint : IRouteMapper
                 propertyCurve = new AnimationCurve()
                 {
                     preWrapMode = WrapMode.ClampForever,
-                    postWrapMode = WrapMode.ClampForever
+                    postWrapMode = WrapMode.ClampForever,
                 };
 
                 var propertyAnimator = new PropertyAnimator(propertyCurve, propertyApplier);
@@ -190,13 +190,12 @@ internal sealed class KeyframesEndpoint : IRouteMapper
     {
         return gameObject switch
         {
-            not null
-                => TransformPropertyApplier(
-                    GetOrAddTransformApplier(gameObjects, gameObject),
-                    property
-                ) ?? PerspectiveApplier(apiResources, gameObject, property),
+            not null => TransformPropertyApplier(
+                GetOrAddTransformApplier(gameObjects, gameObject),
+                property
+            ) ?? PerspectiveApplier(apiResources, gameObject, property),
 
-            _ => ScenePropertyApplier(property)
+            _ => ScenePropertyApplier(property),
         };
     }
 
@@ -243,28 +242,19 @@ internal sealed class KeyframesEndpoint : IRouteMapper
             "y" => 1,
             "z" => 2,
             "w" => 3,
-            _ => -1
+            _ => -1,
         };
 
         return (groups["component"].Value, axisIndex) switch
         {
-            ("position", >= 0 and <= 2)
-                => axisValue =>
-                    transform.LocalPosition = transform.LocalPosition.WithAxis(
-                        axisIndex,
-                        axisValue
-                    ),
+            ("position", >= 0 and <= 2) => axisValue =>
+                transform.LocalPosition = transform.LocalPosition.WithAxis(axisIndex, axisValue),
 
-            ("rotation", >= 0 and <= 3)
-                => axisValue =>
-                    transform.LocalRotation = transform.LocalRotation.WithAxis(
-                        axisIndex,
-                        axisValue
-                    ),
+            ("rotation", >= 0 and <= 3) => axisValue =>
+                transform.LocalRotation = transform.LocalRotation.WithAxis(axisIndex, axisValue),
 
-            ("scale", >= 0 and <= 2)
-                => axisValue =>
-                    transform.LocalScale = transform.LocalScale.WithAxis(axisIndex, axisValue),
+            ("scale", >= 0 and <= 2) => axisValue =>
+                transform.LocalScale = transform.LocalScale.WithAxis(axisIndex, axisValue),
 
             _ => null,
         };
@@ -295,33 +285,31 @@ internal sealed class KeyframesEndpoint : IRouteMapper
         {
             { Success: true, Value: "x" } => 0,
             { Success: true, Value: "y" } => 1,
-            _ => noAxis
+            _ => noAxis,
         };
 
         return (component: groups["component"].Value, axisIndex) switch
         {
-            ("focalLength", noAxis)
-                => length => camera.Perspective = camera.Perspective with { FocalLength = length },
+            ("focalLength", noAxis) => length =>
+                camera.Perspective = camera.Perspective with { FocalLength = length },
 
-            ("sensorSize", >= 0 and <= 1)
-                => axisValue =>
-                    camera.Perspective = camera.Perspective with
-                    {
-                        SensorSize = camera.Perspective.SensorSize.WithAxis(axisIndex, axisValue)
-                    },
+            ("sensorSize", >= 0 and <= 1) => axisValue =>
+                camera.Perspective = camera.Perspective with
+                {
+                    SensorSize = camera.Perspective.SensorSize.WithAxis(axisIndex, axisValue),
+                },
 
-            ("lensShift", >= 0 and <= 1)
-                => axisValue =>
-                    camera.Perspective = camera.Perspective with
-                    {
-                        LensShift = camera.Perspective.LensShift.WithAxis(axisIndex, axisValue)
-                    },
+            ("lensShift", >= 0 and <= 1) => axisValue =>
+                camera.Perspective = camera.Perspective with
+                {
+                    LensShift = camera.Perspective.LensShift.WithAxis(axisIndex, axisValue),
+                },
 
-            ("nearClipPlane", noAxis)
-                => plane => camera.Perspective = camera.Perspective with { NearClipPlane = plane },
+            ("nearClipPlane", noAxis) => plane =>
+                camera.Perspective = camera.Perspective with { NearClipPlane = plane },
 
-            ("farClipPlane", noAxis)
-                => plane => camera.Perspective = camera.Perspective with { FarClipPlane = plane },
+            ("farClipPlane", noAxis) => plane =>
+                camera.Perspective = camera.Perspective with { FarClipPlane = plane },
 
             _ => null,
         };

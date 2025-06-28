@@ -16,8 +16,8 @@ public static class ServiceContainerExtensions
     public static IRegistration<T> InstantiateAsComponent<T>(this IRegistration<T> registration)
         where T : Component
     {
-        return registration.InstantiateBy(
-            () => new GameObject($"{nameof(OuterScout)}.{typeof(T).Name}").AddComponent<T>()
+        return registration.InstantiateBy(() =>
+            new GameObject($"{nameof(OuterScout)}.{typeof(T).Name}").AddComponent<T>()
         );
     }
 

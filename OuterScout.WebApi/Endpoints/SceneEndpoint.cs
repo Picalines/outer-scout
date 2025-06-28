@@ -177,7 +177,7 @@ internal sealed class SceneEndpoint : IRouteMapper, IServiceConfiguration
 
         if (numberOfRecorders is 0)
         {
-            return BadRequest(new Problem("noRecorders") { Title = "No recorders on the scene", });
+            return BadRequest(new Problem("noRecorders") { Title = "No recorders on the scene" });
         }
 
         resources.GlobalContainer.DisposeResources<SceneRecorder>();

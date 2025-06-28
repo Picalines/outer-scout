@@ -32,7 +32,7 @@ public sealed partial class JsonRecorder
             {
                 CloseOutput = true,
                 AutoCompleteOnClose = true,
-                Indentation = 0
+                Indentation = 0,
             };
 
             jsonWriter.WriteStartObject();

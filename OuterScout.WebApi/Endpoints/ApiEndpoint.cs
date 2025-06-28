@@ -67,7 +67,7 @@ internal sealed class ApiEndpoint : IRouteMapper, IServiceConfiguration
             return NotFound(
                 new Problem("unknownApiSpec")
                 {
-                    Detail = $"API spec of type '{type}' was not found"
+                    Detail = $"API spec of type '{type}' was not found",
                 }
             );
         }
@@ -102,7 +102,7 @@ internal sealed class ApiEndpoint : IRouteMapper, IServiceConfiguration
         {
             Major = majorVersion,
             Minor = minorVersion,
-            Patch = patchVersion
+            Patch = patchVersion,
         };
     }
 }
