@@ -1,4 +1,4 @@
-namespace OuterScout.Domain;
+namespace OuterScout.Application.Recording;
 
 public sealed class ReversableAction
 {
