@@ -58,6 +58,7 @@ internal sealed class KeyframesEndpoint : IRouteMapper
         public required float Value { get; init; }
 
         // TODO: other UnityEngine.Keyframe fields
+        // https://github.com/Picalines/outer-scout/issues/4
     }
 
     private sealed class PropertyAnimationDto
