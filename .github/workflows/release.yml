@@ -26,7 +26,7 @@ jobs:
         run: echo "manifest=$(< ./${{ env.PROJ_NAME }}/manifest.json sed ':a;N;$!ba;s/\n/ /g')" >> $GITHUB_OUTPUT
 
       - name: Check For Release
-        uses: mukunku/tag-exists-action@v1.0.0
+        uses: mukunku/tag-exists-action@v1.6.0
         id: check-tag
         with:
           tag: "v${{fromJson(steps.read-manifest.outputs.manifest).version}}"
@@ -41,7 +41,7 @@ jobs:
 
   create-release-draft:
     needs: read-manifest-version
-    if: ${{ (needs.read-manifest-version.outputs.version != '0.0.0') && (needs.read-manifest-versioin.outputs.exists == 'false') }}
+    if: ${{ (needs.read-manifest-version.outputs.version != '0.0.0') && (needs.read-manifest-version.outputs.exists == 'false') }}
     name: Create Release Draft
     runs-on: windows-latest
     steps:
