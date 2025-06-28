@@ -113,8 +113,8 @@ public sealed partial class HttpServer : IDisposable
 
             if (_router.Match(request) is (var route, var requestHandler))
             {
-                unityThreadExecutor.EnqueueTask(
-                    () => HandleRequest(context, route, request, requestHandler)
+                unityThreadExecutor.EnqueueTask(() =>
+                    HandleRequest(context, route, request, requestHandler)
                 );
             }
             else
@@ -125,8 +125,8 @@ public sealed partial class HttpServer : IDisposable
 
                 var unmatchedPathAndQuery = context.Request.Url.PathAndQuery;
 
-                unityThreadExecutor.EnqueueTask(
-                    () => Log($"route not found: {unmatchedPathAndQuery}", MessageType.Warning)
+                unityThreadExecutor.EnqueueTask(() =>
+                    Log($"route not found: {unmatchedPathAndQuery}", MessageType.Warning)
                 );
             }
         }

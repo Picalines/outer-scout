@@ -166,16 +166,14 @@ public sealed partial class HttpServer
                             LineNumber: var ln,
                             LinePosition: var lp,
                             Path: var path
-                        }
-                            => (ln, lp, path),
+                        } => (ln, lp, path),
                         JsonSerializationException
                         {
                             LineNumber: var ln,
                             LinePosition: var lp,
                             Path: var path
-                        }
-                            => (ln, lp, path),
-                        _ => (null as int?, null as int?, null as string)
+                        } => (ln, lp, path),
+                        _ => (null as int?, null as int?, null as string),
                     };
 
                     return BadRequest(problem);
@@ -189,8 +187,8 @@ public sealed partial class HttpServer
                         Data =
                         {
                             ["exceptionType"] = exception.GetType().Name,
-                            ["stackTrace"] = exception.StackTrace
-                        }
+                            ["stackTrace"] = exception.StackTrace,
+                        },
                     }
                 );
             }

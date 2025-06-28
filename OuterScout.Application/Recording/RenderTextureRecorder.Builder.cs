@@ -38,10 +38,9 @@ public sealed partial class RenderTextureRecorder
                 PixelFormat = _texture.format switch
                 {
                     RenderTextureFormat.ARGB32 => FFmpegPixelFormat.RGBA,
-                    _
-                        => throw new NotImplementedException(
-                            $"{_texture.format.ToStringWithType()} input is not implemented"
-                        ),
+                    _ => throw new NotImplementedException(
+                        $"{_texture.format.ToStringWithType()} input is not implemented"
+                    ),
                 },
             };
 

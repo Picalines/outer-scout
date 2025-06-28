@@ -1,34 +1,34 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<TargetFramework>net48</TargetFramework>
-		<Copyright>Copyright © 2024 picalines</Copyright>
-		<RootNamespace>OuterScout</RootNamespace>
-	</PropertyGroup>
-	<PropertyGroup>
-		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-	</PropertyGroup>
-	<PropertyGroup>
-		<LangVersion>12.0</LangVersion>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
-		<NoWarn>MSB3270</NoWarn>
-	</PropertyGroup>
-	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-		<DebugType>none</DebugType>
-	</PropertyGroup>
-	<ItemGroup>
-		<ProjectReference Include="..\OuterScout.Shared\OuterScout.Shared.csproj" />
-		<ProjectReference Include="..\OuterScout.Application\OuterScout.Application.csproj" />
-		<ProjectReference Include="..\OuterScout.WebApi\OuterScout.WebApi.csproj" />
-	</ItemGroup>
-	<ItemGroup>
-		<None Include="default-config.json" CopyToOutputDirectory="PreserveNewest" />
-		<None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
-	</ItemGroup>
-	<ItemGroup>
-		<Content Include="OuterScout.csproj.user" />
-	</ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <Copyright>Copyright © 2024 picalines</Copyright>
+    <RootNamespace>OuterScout</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>12.0</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <NoWarn>MSB3270</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\OuterScout.Shared\OuterScout.Shared.csproj" />
+    <ProjectReference Include="..\OuterScout.Application\OuterScout.Application.csproj" />
+    <ProjectReference Include="..\OuterScout.WebApi\OuterScout.WebApi.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="default-config.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="manifest.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="OuterScout.csproj.user" />
+  </ItemGroup>
 </Project>

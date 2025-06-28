@@ -25,8 +25,8 @@ public static class FFmpeg
                 StartInfo = new()
                 {
                     FileName = Singleton<IModConfig>.Instance.GetFFmpegExecutablePathSetting(),
-                    Arguments = "-version"
-                }
+                    Arguments = "-version",
+                },
             };
 
             process.Start();

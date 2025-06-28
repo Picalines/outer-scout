@@ -63,8 +63,10 @@ internal sealed class GameObjectEndpoint : IRouteMapper
 
         var (parent, parentName) = request.Transform switch
         {
-            { Parent: { } transformDtoParent }
-                => (gameObjects.FindOrNull(transformDtoParent)?.transform, transformDtoParent),
+            { Parent: { } transformDtoParent } => (
+                gameObjects.FindOrNull(transformDtoParent)?.transform,
+                transformDtoParent
+            ),
             _ => (SceneEndpoint.GetOriginOrNull(gameObjects), SceneEndpoint.OriginResource),
         };
 
@@ -105,8 +107,8 @@ internal sealed class GameObjectEndpoint : IRouteMapper
                 Name = name,
                 Transform = originTransform.InverseDto(transform) with
                 {
-                    Parent = transform.parent.OrNull()?.name
-                }
+                    Parent = transform.parent.OrNull()?.name,
+                },
             }
         );
     }
@@ -135,7 +137,7 @@ internal sealed class GameObjectEndpoint : IRouteMapper
                 return BadRequest(
                     new Problem("parentCannotBeChanged")
                     {
-                        Title = "Parent of the GameObject cannot be changed"
+                        Title = "Parent of the GameObject cannot be changed",
                     }
                 );
             }

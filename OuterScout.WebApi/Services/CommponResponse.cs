@@ -13,7 +13,7 @@ internal static class CommonResponse
                 Title = "Invalid route parameter",
                 Detail =
                     $"The route parameter '{paramName}' is invalid"
-                    + (detail is { } ? $": {detail}" : "")
+                    + (detail is { } ? $": {detail}" : ""),
             }
         );
 
@@ -24,7 +24,7 @@ internal static class CommonResponse
                 Title = "Invalid query parameter",
                 Detail =
                     $"The query parameter '{paramName}' is invalid"
-                    + (detail is { } ? $": {detail}" : "")
+                    + (detail is { } ? $": {detail}" : ""),
             }
         );
 
@@ -35,7 +35,7 @@ internal static class CommonResponse
                 Title = "Invalid field in request body",
                 Detail =
                     $"The request body field '{bodyPath}' is invalid"
-                    + (detail is { } ? $": {detail}" : "")
+                    + (detail is { } ? $": {detail}" : ""),
             }
         );
 

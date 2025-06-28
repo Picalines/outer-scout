@@ -47,7 +47,7 @@ public sealed partial class HttpServer
                     {
                         Title = "Missing required query parameter",
                         Detail =
-                            $"Missing query parameter '{parameter.Name}' ({parameter.ParameterType.Name})"
+                            $"Missing query parameter '{parameter.Name}' ({parameter.ParameterType.Name})",
                     }
                 )
                 .ToException();
@@ -64,7 +64,7 @@ public sealed partial class HttpServer
             new Problem("unexpectedBodyType")
             {
                 Title = "Unexpected body type",
-                Detail = "The operation expects a JSON object in the request body"
+                Detail = "The operation expects a JSON object in the request body",
             }
         );
 
@@ -85,7 +85,7 @@ public sealed partial class HttpServer
                 { } parsedBody => parsedBody,
                 null when parameter.HasDefaultValue => parameter.DefaultValue,
                 null when parameter.IsNullable() => null,
-                _ => throw _unexpectedBodyType.ToException()
+                _ => throw _unexpectedBodyType.ToException(),
             };
         }
     }

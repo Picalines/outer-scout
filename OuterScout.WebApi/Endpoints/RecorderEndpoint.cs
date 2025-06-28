@@ -100,36 +100,37 @@ internal sealed class RecorderEndpoint : IRouteMapper
                 new Problem("recorderAlreadyExists")
                 {
                     Title = "Recorder for property already exists",
-                    Detail = $"Recorder for property '{request.Property}' already exists"
+                    Detail = $"Recorder for property '{request.Property}' already exists",
                 }
             );
         }
 
         var (response, recorder) = request switch
         {
-            PostTextureRecorderRequest textureRecorderRequest
-                => PostRenderTextureRecorder(apiResources, textureRecorderRequest, gameObject),
+            PostTextureRecorderRequest textureRecorderRequest => PostRenderTextureRecorder(
+                apiResources,
+                textureRecorderRequest,
+                gameObject
+            ),
 
-            PostTransformRecorderRequest transformRecorderRequest
-                => PostTransformRecorder(
-                    apiResources,
-                    gameObjects,
-                    jsonSerializer,
-                    transformRecorderRequest,
-                    gameObject
+            PostTransformRecorderRequest transformRecorderRequest => PostTransformRecorder(
+                apiResources,
+                gameObjects,
+                jsonSerializer,
+                transformRecorderRequest,
+                gameObject
+            ),
+
+            _ => (
+                BadRequest(
+                    new Problem("propertyIsNotRecordable")
+                    {
+                        Title = "Property is not recordable",
+                        Detail = $"Property '{request.Property}' is not recordable",
+                    }
                 ),
-
-            _
-                => (
-                    BadRequest(
-                        new Problem("propertyIsNotRecordable")
-                        {
-                            Title = "Property is not recordable",
-                            Detail = $"Property '{request.Property}' is not recordable"
-                        }
-                    ),
-                    null
-                )
+                null
+            ),
         };
 
         if (recorder is not null)
@@ -153,7 +154,7 @@ internal sealed class RecorderEndpoint : IRouteMapper
                     new Problem("ffmpegIsNotAvailable")
                     {
                         Title = "ffmpeg is not available",
-                        Data = { ["exception"] = exception }
+                        Data = { ["exception"] = exception },
                     }
                 ),
                 null
@@ -200,7 +201,7 @@ internal sealed class RecorderEndpoint : IRouteMapper
                 BadRequest(
                     new Problem("unsupportedTextureType")
                     {
-                        Detail = $"Camera cannot record {request.Property}"
+                        Detail = $"Camera cannot record {request.Property}",
                     }
                 ),
                 null
@@ -236,10 +237,14 @@ internal sealed class RecorderEndpoint : IRouteMapper
 
         var (origin, originName) = request switch
         {
-            { Origin: { } customOriginName }
-                => (gameObjects.FindOrNull(customOriginName)?.transform, customOriginName),
-            { Origin: null }
-                => (SceneEndpoint.GetOriginOrNull(gameObjects), SceneEndpoint.OriginResource),
+            { Origin: { } customOriginName } => (
+                gameObjects.FindOrNull(customOriginName)?.transform,
+                customOriginName
+            ),
+            { Origin: null } => (
+                SceneEndpoint.GetOriginOrNull(gameObjects),
+                SceneEndpoint.OriginResource
+            ),
         };
 
         if (origin is null)

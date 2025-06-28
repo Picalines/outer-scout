@@ -94,8 +94,8 @@ public sealed class WebApiServer : IDisposable
                     {
                         NamingStrategy = new CamelCaseNamingStrategy
                         {
-                            ProcessDictionaryKeys = false
-                        }
+                            ProcessDictionaryKeys = false,
+                        },
                     },
                     Converters =
                     {
@@ -104,7 +104,7 @@ public sealed class WebApiServer : IDisposable
                             .GetTypes()
                             .Where(type => type.IsAbstract is false)
                             .Where((typeof(JsonConverter)).IsAssignableFrom)
-                            .Select(type => (JsonConverter)Activator.CreateInstance(type))
+                            .Select(type => (JsonConverter)Activator.CreateInstance(type)),
                     },
                 }
             );
