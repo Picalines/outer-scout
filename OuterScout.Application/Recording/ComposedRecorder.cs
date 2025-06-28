@@ -2,16 +2,9 @@
 
 namespace OuterScout.Application.Recording;
 
-internal sealed class ComposedRecorder : IRecorder
+internal sealed class ComposedRecorder(IReadOnlyList<IRecorder> recorders) : IRecorder
 {
-    private readonly IReadOnlyList<IRecorder> _recorders;
-
     private bool _disposed = false;
-
-    public ComposedRecorder(IReadOnlyList<IRecorder> recorders)
-    {
-        _recorders = recorders;
-    }
 
     public void Capture()
     {
@@ -20,7 +13,7 @@ internal sealed class ComposedRecorder : IRecorder
             throw new InvalidOperationException($"{nameof(ComposedRecorder)} is disposed");
         }
 
-        _recorders.ForEach(recorder => recorder.Capture());
+        recorders.ForEach(recorder => recorder.Capture());
     }
 
     public void Dispose()
@@ -30,7 +23,7 @@ internal sealed class ComposedRecorder : IRecorder
             return;
         }
 
-        _recorders.ForEach(recorder => recorder.Dispose());
+        recorders.ForEach(recorder => recorder.Dispose());
 
         _disposed = true;
     }
