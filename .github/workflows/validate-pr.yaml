@@ -2,6 +2,9 @@ name: Validate PR
 on:
   pull_request:
 
+env:
+  PROJ_NAME: OuterScout
+
 jobs:
   check-formatting:
     name: Check Formatting
@@ -15,3 +18,19 @@ jobs:
 
       - name: Check formatting
         run: dotnet csharpier check .
+
+  check-builds:
+    name: Check Builds
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: "actions/setup-dotnet@v4"
+
+      - name: Remove .csproj.user
+        run: rm ${{ env.PROJ_NAME }}/${{ env.PROJ_NAME }}.csproj.user
+
+      - name: Build
+        run: dotnet build -c Release
