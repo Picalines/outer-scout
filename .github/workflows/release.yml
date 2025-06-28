@@ -2,13 +2,16 @@ name: Create Release Draft
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - master
 
 env:
   PROJ_USERNAME: picalines
   PROJ_NAME: OuterScout
 
 jobs:
-  pre_job:
+  read-manifest-version:
     name: Check For Other Releases
     outputs:
       version: ${{ steps.out.outputs.version }}
@@ -16,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: "actions/checkout@v3"
+        uses: "actions/checkout@v4"
 
       - name: Read Manifest
         id: read-manifest
@@ -36,17 +39,14 @@ jobs:
           echo "version=${{fromJson(steps.read-manifest.outputs.manifest).version}}" >> $GITHUB_OUTPUT
           echo "exists=${{steps.check-tag.outputs.exists}}" >> $GITHUB_OUTPUT
 
-      - name: Error
-        if: ${{ steps.out.outputs.exists != 'false' }}
-        run: echo "::error file=manifest.json,title=Refusing to Release::Your mod was not released because there is already a release with the version in manifest.json"
-  release:
-    needs: pre_job
-    if: ${{ (needs.pre_job.outputs.version != '0.0.0') && (needs.pre_job.outputs.exists == 'false') }}
-    name: Create Release
+  create-release-draft:
+    needs: read-manifest-job
+    if: ${{ (needs.read-manifest-job.outputs.version != '0.0.0') && (needs.read-manifest-job.outputs.exists == 'false') }}
+    name: Create Release Draft
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: "actions/checkout@v3"
+        uses: "actions/checkout@v4"
 
       - name: Setup .NET
         uses: "actions/setup-dotnet@v2"
@@ -58,7 +58,7 @@ jobs:
         run: dotnet build -c Release
 
       - name: Upload Artifact
-        uses: "actions/upload-artifact@v2"
+        uses: "actions/upload-artifact@v4"
         with:
           name: "${{ env.PROJ_USERNAME }}.${{ env.PROJ_NAME }}"
           path: "${{ env.PROJ_NAME }}/bin/Release"
