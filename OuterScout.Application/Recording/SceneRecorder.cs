@@ -1,6 +1,6 @@
 using System.Collections;
 using OuterScout.Application.Animation;
-using OuterScout.Domain;
+using OuterScout.Shared.Collections;
 using OuterScout.Shared.Components;
 using OuterScout.Shared.Extensions;
 using OuterScout.Shared.Validation;

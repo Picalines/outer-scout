@@ -1,4 +1,4 @@
-using OuterScout.Domain;
+using OuterScout.Shared.Collections;
 
 namespace OuterScout.Application.Recording;
 

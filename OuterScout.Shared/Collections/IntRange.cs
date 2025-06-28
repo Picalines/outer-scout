@@ -1,7 +1,7 @@
 using System.Collections;
 using OuterScout.Shared.Validation;
 
-namespace OuterScout.Domain;
+namespace OuterScout.Shared.Collections;
 
 public record struct IntRange : IEnumerable<int>
 {

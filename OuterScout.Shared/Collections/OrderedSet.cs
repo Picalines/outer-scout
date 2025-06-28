@@ -1,8 +1,8 @@
 using System.Collections;
 
-namespace OuterScout.Application.Recording;
+namespace OuterScout.Shared.Collections;
 
-internal sealed class OrderedSet<T> : ICollection<T>
+public sealed class OrderedSet<T> : ICollection<T>
 {
     private readonly IDictionary<T, LinkedListNode<T>> _dictionary;
 
