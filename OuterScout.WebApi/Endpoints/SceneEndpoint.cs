@@ -1,7 +1,7 @@
 using OuterScout.Application.Animation;
 using OuterScout.Application.Extensions;
 using OuterScout.Application.Recording;
-using OuterScout.Domain;
+using OuterScout.Shared.Collections;
 using OuterScout.Shared.DependencyInjection;
 using OuterScout.Shared.Extensions;
 using OuterScout.WebApi.DTOs;
